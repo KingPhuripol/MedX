@@ -1,0 +1,85 @@
+{
+  "permissions": {
+    "defaultMode": "default",
+    "allow": [
+      "Bash(python3 scripts/verify_harness.py)",
+      "Bash(python3 scripts/verify_harness.py *)",
+      "Bash(bash scripts/run_smoke_test.sh)",
+      "Bash(python3 scripts/validate_manifest.py *)",
+      "Bash(python3 scripts/project_status.py)",
+      "Bash(python3 scripts/temporal_leakage_audit.py *)",
+      "Bash(git status)",
+      "Bash(git status *)",
+      "Bash(git diff)",
+      "Bash(git diff *)",
+      "Bash(git log *)"
+    ],
+    "ask": [
+      "Bash(git push *)",
+      "Bash(torchrun *)",
+      "Bash(deepspeed *)",
+      "Bash(accelerate launch *)",
+      "Bash(sbatch *)",
+      "Bash(srun *)",
+      "Bash(hf upload *)",
+      "Bash(huggingface-cli upload *)",
+      "Bash(rm *)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)",
+      "Read(./credentials/**)",
+      "Read(./data/raw/**)",
+      "Read(./data/interim/**)",
+      "Read(./data/processed/**)",
+      "Read(./checkpoints/**)",
+      "Write(./sources/**)",
+      "Edit(./sources/**)",
+      "NotebookEdit(./sources/**)"
+    ]
+  },
+  "worktree": {
+    "baseRef": "head"
+  },
+  "env": {
+    "CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH": "2"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session_context.py"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/approval_gate.py"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/post_edit_checks.py",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}
+

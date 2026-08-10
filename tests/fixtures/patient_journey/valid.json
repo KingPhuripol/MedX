@@ -1,0 +1,67 @@
+{
+  "schema_version": "1.0.0",
+  "journey_id": "journey-syn-0001",
+  "patient_id": "patient-syn-0001",
+  "encounter_id": "encounter-syn-0001",
+  "split": "expert_test",
+  "data_classification": "SYNTHETIC",
+  "source": {"system": "project-fixture", "version": "1.0.0"},
+  "encounter_start": "2026-01-01T09:00:00Z",
+  "events": [
+    {
+      "event_id": "ev-001",
+      "event_type": "CHIEF_COMPLAINT",
+      "modality": "TEXT",
+      "observed_at": "2026-01-01T09:00:00Z",
+      "available_at_time": "2026-01-01T09:00:00Z",
+      "recorded_at": "2026-01-01T09:00:30Z",
+      "status": "AVAILABLE",
+      "data_classification": "SYNTHETIC",
+      "source_ref": {"system": "project-fixture", "version": "1.0.0", "record_ref": "syn-0001-cc"},
+      "payload_ref": "synthetic://journey-syn-0001/ev-001",
+      "checksum": "syn-ev-001-v1",
+      "value": "Chest discomfort reported during the simulated intake.",
+      "code": "chief_complaint",
+      "unit": null,
+      "quality_flags": [],
+      "authorization_tags": ["synthetic-only"]
+    },
+    {
+      "event_id": "ev-002",
+      "event_type": "VITAL",
+      "modality": "STRUCTURED",
+      "observed_at": "2026-01-01T09:10:00Z",
+      "available_at_time": "2026-01-01T09:12:00Z",
+      "recorded_at": "2026-01-01T09:12:00Z",
+      "status": "AVAILABLE",
+      "data_classification": "SYNTHETIC",
+      "source_ref": {"system": "project-fixture", "version": "1.0.0", "record_ref": "syn-0001-vital"},
+      "payload_ref": "synthetic://journey-syn-0001/ev-002",
+      "checksum": "syn-ev-002-v1",
+      "value": {"code": "heart_rate", "value": 104, "unit": "beats/min"},
+      "code": "heart_rate",
+      "unit": "beats/min",
+      "quality_flags": [],
+      "authorization_tags": ["synthetic-only"]
+    },
+    {
+      "event_id": "ev-003",
+      "event_type": "DIAGNOSIS",
+      "modality": "LABEL",
+      "observed_at": "2026-01-01T12:00:00Z",
+      "available_at_time": "2026-01-01T13:00:00Z",
+      "recorded_at": "2026-01-01T13:00:00Z",
+      "status": "AVAILABLE",
+      "data_classification": "SYNTHETIC",
+      "source_ref": {"system": "project-fixture", "version": "1.0.0", "record_ref": "syn-0001-final"},
+      "payload_ref": "synthetic://journey-syn-0001/ev-003",
+      "checksum": "syn-ev-003-v1",
+      "value": {"category": "synthetic-final-label"},
+      "code": "final_label",
+      "unit": null,
+      "quality_flags": [],
+      "authorization_tags": ["synthetic-only", "retrospective-label"]
+    }
+  ]
+}
+

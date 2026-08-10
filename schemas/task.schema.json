@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://senior-project.local/schemas/task.schema.json",
+  "title": "Task Registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "updated_at", "tasks"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["task_id", "title", "owner", "workstream", "milestone", "priority", "status", "dependencies", "planned_start", "due_date", "definition_of_done", "evidence_required", "evidence", "blocker", "risk_level", "updated_at"],
+        "properties": {
+          "task_id": {"type": "string", "pattern": "^TASK-[0-9]{4}$"},
+          "title": {"type": "string", "minLength": 5},
+          "owner": {"type": "string", "minLength": 3},
+          "workstream": {"enum": ["PM", "RESEARCH", "INNOVATION", "DATA", "EVALUATION", "SAFETY", "INTEGRATION", "DOCUMENTATION", "CROSS_TRACK"]},
+          "milestone": {"type": "string", "pattern": "^M[0-9]+$"},
+          "priority": {"enum": ["P0", "P1", "P2", "P3", "P4"]},
+          "status": {"enum": ["BACKLOG", "READY", "IN_PROGRESS", "BLOCKED", "REVIEW", "DONE"]},
+          "dependencies": {"type": "array", "items": {"type": "string", "pattern": "^TASK-[0-9]{4}$"}, "uniqueItems": true},
+          "planned_start": {"type": "string", "format": "date"},
+          "due_date": {"type": "string", "format": "date"},
+          "definition_of_done": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+          "evidence_required": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+          "evidence": {"type": "array", "items": {"type": "string"}},
+          "blocker": {"type": ["string", "null"]},
+          "risk_level": {"enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]},
+          "updated_at": {"type": "string", "format": "date-time"}
+        }
+      }
+    }
+  }
+}
+

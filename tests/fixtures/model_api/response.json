@@ -1,0 +1,47 @@
+{
+  "contract_version": "1.0.0",
+  "request_id": "req-syn-0001",
+  "response_id": "res-syn-0001",
+  "provider": "mock",
+  "model_version": "mock-v1",
+  "status": "ESCALATED",
+  "urgency": {
+    "level": "IMMEDIATE_REVIEW",
+    "confidence": null,
+    "evidence_ids": ["ev-001", "ev-002"]
+  },
+  "red_flags": [
+    {"code": "CHEST_DISCOMFORT_REQUIRES_REVIEW", "state": "UNKNOWN", "evidence_ids": ["ev-001"]}
+  ],
+  "care_pathways": [
+    {"code": "EMERGENCY_ASSESSMENT", "rank": 1, "confidence": null, "evidence_ids": ["ev-001", "ev-002"]}
+  ],
+  "next_information": [
+    {"information_type": "ECG", "rank": 1, "reason_code": "URGENT_INFORMATION_GAP"}
+  ],
+  "uncertainty": {
+    "method": "deterministic-mock-policy",
+    "limitations": ["Synthetic fixture output is not a clinical model prediction"],
+    "out_of_distribution": null,
+    "abstention_reason": "Insufficient information for a lower-urgency pathway"
+  },
+  "human_review": {
+    "required": true,
+    "allowed_actions": ["CONFIRM", "MODIFY", "REJECT", "REQUEST_INFORMATION", "ESCALATE"]
+  },
+  "graph": {
+    "graph_schema_version": "1.0.0",
+    "graph_id": "graph-syn-0001",
+    "graph_ref": "synthetic://graph-syn-0001"
+  },
+  "provenance": {
+    "input_checksum": "request-syn-0001-v1",
+    "provider_version": "mock-provider-v1",
+    "config_version": "mock-config-v1",
+    "policy_version": "safety-policy-v1",
+    "started_at": "2026-01-01T09:15:01Z",
+    "completed_at": "2026-01-01T09:15:01Z"
+  },
+  "errors": []
+}
+
