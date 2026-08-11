@@ -38,7 +38,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 ### Phase 1: Governance Baseline and Project Idea
 **Goal**: The project has a submitted, evidence-traceable Project Idea and a governance baseline solid enough for every later technical claim to rest on.
-**Depends on**: Nothing (M0 Group Application already submitted; harness already verified)
+**Depends on**: Nothing
 **Milestone**: M1 · **Deadline**: DL-0002 Project Idea, 28 Aug 2026 (immutable) · **Window**: 11-28 Aug 2026
 **Requirements**: AC-01, RG-01, GOV-02, GOV-03
 **Success Criteria** (what must be TRUE):
