@@ -111,7 +111,7 @@
       "decision_id": "DEC-0008",
       "date": "2026-08-11",
       "title": "Planning-system ownership boundary",
-      "status": "proposed",
+      "status": "accepted",
       "owner": "Phurinat Polasa",
       "context": "The GSD toolchain introduced .planning/, creating a second vocabulary for work already tracked in docs/project_management/ and project_state/. MILESTONES.md M8 and MASTER_PLAN.md Phase 6 already disagree on the 4B release-candidate window, and recording one Group Application status required editing five files by hand",
       "decision": "project_state/ and docs/ are the sole authoritative record of deadlines, milestones, tasks, risks, decisions, approvals, contracts, and specifications; .planning/ is a subordinate execution layer owning phase sequencing and per-phase artifacts only, and may reference authoritative identifiers but never hold their status, scope, or definition",
@@ -120,7 +120,7 @@
       "consequences": [".planning/README.md states the boundary at the point of use", "verify_harness.py enforces phase-dependency resolution, requirement-to-phase mapping, and identifier existence in project_state/", "Regenerating or deleting .planning/ must never lose project state", "On disagreement project_state/ and docs/ win and the .planning/ artifact is corrected", ".planning/REQUIREMENTS.md is a derived index whose entries must cite a source document"],
       "supersedes": null,
       "evidence": [".planning/README.md", ".planning/INGEST-CONFLICTS.md", "scripts/verify_harness.py"],
-      "approvers": ["Pending human acceptance"]
+      "approvers": ["Project human owners"]
     }
   ]
 }
