@@ -1,0 +1,21 @@
+{
+  "source_path": "/Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent/docs/research/SUCCESS_CRITERIA.md",
+  "type": "SPEC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "Research Success Criteria and Gates",
+  "summary": "Defines cumulative research gates G0-G7 for data integrity, reproducibility, adaptation, faithfulness, and approval milestones before 4B release and public distribution.",
+  "scope": [
+    "research gates",
+    "data integrity verification",
+    "temporal leakage audits",
+    "graph adaptation and reproducibility",
+    "model evaluation and faithfulness",
+    "4B model authorization",
+    "public release compliance",
+    "clinical safety verification"
+  ],
+  "cross_refs": [],
+  "locked": false,
+  "precedence": 2
+}

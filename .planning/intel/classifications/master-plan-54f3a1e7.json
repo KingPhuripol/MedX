@@ -1,0 +1,25 @@
+{
+  "source_path": "/Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent/docs/project_management/MASTER_PLAN.md",
+  "type": "DOC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "PM Master Plan",
+  "summary": "Master plan for semester 1 and full-project delivery using evidence-backed milestones, critical paths, and fallback strategy.",
+  "scope": [
+    "project phases",
+    "academic critical path",
+    "research critical path",
+    "innovation critical path",
+    "integration critical path",
+    "weekly operating cycle",
+    "capacity management",
+    "scope fallback ladder"
+  ],
+  "cross_refs": [
+    "WEEKLY_STATUS.md",
+    "project_state/official_deadlines.json"
+  ],
+  "locked": false,
+  "precedence": 3,
+  "notes": ""
+}

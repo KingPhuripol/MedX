@@ -1,0 +1,25 @@
+{
+  "source_path": "/Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent/docs/shared/HUMAN_APPROVAL_POLICY.md",
+  "type": "SPEC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "Human Approval Policy",
+  "summary": "Operational specification defining when and how human approval is required, what must be recorded, and approval execution procedures.",
+  "scope": [
+    "human approval gates",
+    "compute/training approval (Tier 3/4, GPU, runtime, budget)",
+    "data/privacy approval (external APIs, destructive transforms, licenses)",
+    "publication/external approval (releases, deletions, artifacts)",
+    "governance/safety approval (deadlines, mission, splits, clinical decisions)",
+    "approval record schema",
+    "approval execution procedures",
+    "emergency stop and revocation"
+  ],
+  "cross_refs": [
+    "schemas/human-approval.schema.json",
+    ".claude/hooks/approval_gate.py"
+  ],
+  "locked": true,
+  "precedence": 1,
+  "notes": ""
+}

@@ -1,0 +1,24 @@
+{
+  "source_path": "/Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent/docs/innovation/PRODUCT_SPEC.md",
+  "type": "SPEC",
+  "confidence": "medium",
+  "manifest_override": true,
+  "title": "Product Specification - AI Clinical Front Door",
+  "summary": "Decision-support prototype for supervised intake, urgency screening, care-pathway selection, next-information ranking, and auditable evidence tracking for clinical workflows.",
+  "scope": [
+    "AI Clinical Front Door",
+    "intake",
+    "urgency screening",
+    "care pathway",
+    "next-information selection",
+    "decision support",
+    "audit logging",
+    "evidence tracking"
+  ],
+  "cross_refs": [
+    "MODEL_API_CONTRACT.md"
+  ],
+  "locked": false,
+  "precedence": 2,
+  "notes": "Hybrid PRD+SPEC: primary signals are product requirements (product statement, users, jobs-to-be-done, core screens, release stages); secondary SPEC signals (architecture diagram, non-functional requirements, contract reference). Classified as PRD due to dominant product/user-facing perspective and feature-specification focus."
+}

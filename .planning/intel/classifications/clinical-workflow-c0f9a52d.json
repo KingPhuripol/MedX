@@ -1,0 +1,23 @@
+{
+  "source_path": "/Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent/docs/innovation/CLINICAL_WORKFLOW.md",
+  "type": "SPEC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "Clinical Workflow Specification",
+  "summary": "Technical specification of the AI clinical workflow state machine, safety escalation rules, information gathering, human review requirements, and audit trail requirements.",
+  "scope": [
+    "clinical workflow",
+    "state machine",
+    "red-flag review",
+    "safety escalation",
+    "information gathering",
+    "human review",
+    "urgency taxonomy",
+    "failure handling",
+    "audit trail",
+    "decision support"
+  ],
+  "cross_refs": [],
+  "locked": false,
+  "precedence": 2
+}

@@ -1,0 +1,26 @@
+{
+  "source_path": "/Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent/docs/research/RESEARCH_SPEC.md",
+  "type": "SPEC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "Research Specification",
+  "summary": "Technical specification for adaptive medical multimodal DAG model including research questions, modality interfaces, development stages, and gates.",
+  "scope": [
+    "medical multimodal model",
+    "case-adaptive DAG",
+    "research questions",
+    "modality interfaces",
+    "development stages",
+    "evaluation framework",
+    "reproducibility",
+    "ethics and safety"
+  ],
+  "cross_refs": [
+    "docs/shared/DATA_CONTRACT.md",
+    "docs/shared/PATIENT_JOURNEY_SCHEMA.md",
+    "docs/shared/MODEL_API_CONTRACT.md",
+    "docs/research/SUCCESS_CRITERIA.md"
+  ],
+  "locked": false,
+  "precedence": 2
+}

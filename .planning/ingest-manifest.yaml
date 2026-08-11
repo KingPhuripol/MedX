@@ -1,0 +1,119 @@
+# GSD ingest manifest — authoritative document types and precedence
+#
+# Why this file exists:
+#   Heuristic classification placed docs/DECISION_LOG.md and
+#   docs/project_management/OFFICIAL_DEADLINES.md at type DOC, the LOWEST tier in
+#   GSD's default precedence (ADR > SPEC > PRD > DOC). That inverts the authority
+#   model this project actually operates under. CLAUDE.md states:
+#
+#     "When documents conflict, contracts and accepted Decision Log entries
+#      override plans; plans override status summaries."
+#
+#   Left uncorrected, a contradiction between an accepted DEC-* entry and any
+#   SPEC would be auto-resolved in favour of the SPEC and never surface in
+#   INGEST-CONFLICTS.md.
+#
+# Precedence tiers (lower number = higher authority):
+#   0  Accepted decisions and immutable schedule   -> ADR,  locked
+#   1  Shared contracts and safety rules           -> SPEC, locked
+#   2  Track specifications                        -> SPEC
+#   3  Plans                                       -> DOC
+#   4  Status summaries                            -> DOC
+#
+# `locked: true` makes a contradiction against another locked document a BLOCKER
+# rather than an auto-resolution, forcing human adjudication. That is the
+# behaviour the operating constitution requires for contracts and decisions.
+#
+# PRODUCT_SPEC.md is promoted PRD -> SPEC so it sits at the same tier as
+# ARCHITECTURE_SPEC.md. Leaving it at PRD would make Research win every
+# Research-vs-Innovation contradiction automatically, contradicting DEC-0001
+# ("Neither track may optimize in isolation at the expense of the joint
+# deliverable").
+
+docs:
+  # -- Tier 0: accepted decisions and immutable schedule ---------------------
+  - path: docs/DECISION_LOG.md
+    type: ADR
+    precedence: 0
+    locked: true
+  - path: docs/project_management/OFFICIAL_DEADLINES.md
+    type: ADR
+    precedence: 0
+    locked: true
+
+  # -- Tier 1: shared contracts and safety rules -----------------------------
+  - path: docs/shared/DATA_CONTRACT.md
+    type: SPEC
+    precedence: 1
+    locked: true
+  - path: docs/shared/PATIENT_JOURNEY_SCHEMA.md
+    type: SPEC
+    precedence: 1
+    locked: true
+  - path: docs/shared/MODEL_API_CONTRACT.md
+    type: SPEC
+    precedence: 1
+    locked: true
+  - path: docs/shared/EVALUATION_CONTRACT.md
+    type: SPEC
+    precedence: 1
+    locked: true
+  - path: docs/shared/HUMAN_APPROVAL_POLICY.md
+    type: SPEC
+    precedence: 1
+    locked: true
+  - path: docs/innovation/SAFETY_SPEC.md
+    type: SPEC
+    precedence: 1
+    locked: true
+
+  # -- Tier 2: track specifications ------------------------------------------
+  - path: docs/research/ARCHITECTURE_SPEC.md
+    type: SPEC
+    precedence: 2
+  - path: docs/research/RESEARCH_SPEC.md
+    type: SPEC
+    precedence: 2
+  - path: docs/research/TRAINING_SPEC.md
+    type: SPEC
+    precedence: 2
+  - path: docs/research/BENCHMARK_CONTRACT.md
+    type: SPEC
+    precedence: 2
+  - path: docs/research/SUCCESS_CRITERIA.md
+    type: SPEC
+    precedence: 2
+  - path: docs/innovation/PRODUCT_SPEC.md
+    type: SPEC
+    precedence: 2
+  - path: docs/innovation/CLINICAL_WORKFLOW.md
+    type: SPEC
+    precedence: 2
+  - path: docs/innovation/ACCEPTANCE_CRITERIA.md
+    type: SPEC
+    precedence: 2
+
+  # -- Tier 3: plans ----------------------------------------------------------
+  - path: docs/PROJECT_CHARTER.md
+    type: DOC
+    precedence: 3
+  - path: docs/project_management/MASTER_PLAN.md
+    type: DOC
+    precedence: 3
+  - path: docs/project_management/MILESTONES.md
+    type: DOC
+    precedence: 3
+  - path: docs/project_management/TASK_BOARD.md
+    type: DOC
+    precedence: 3
+  - path: docs/project_management/TEAM_OWNERSHIP.md
+    type: DOC
+    precedence: 3
+
+  # -- Tier 4: status summaries ----------------------------------------------
+  - path: docs/project_management/RISK_REGISTER.md
+    type: DOC
+    precedence: 4
+  - path: docs/project_management/WEEKLY_STATUS.md
+    type: DOC
+    precedence: 4

@@ -1,0 +1,22 @@
+{
+  "source_path": "/Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent/docs/research/TRAINING_SPEC.md",
+  "type": "SPEC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "Training Specification",
+  "summary": "Technical specification for training pipeline tiers, manifest requirements, reproducibility, checkpoints, failure handling, and evaluation contracts.",
+  "scope": [
+    "training tiers",
+    "manifest requirements",
+    "reproducibility policy",
+    "checkpoint recovery",
+    "failure policies",
+    "monitoring",
+    "artifact completion",
+    "evaluation contracts"
+  ],
+  "cross_refs": [],
+  "locked": false,
+  "precedence": 2,
+  "notes": ""
+}

@@ -1,0 +1,22 @@
+{
+  "source_path": "/Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent/docs/project_management/RISK_REGISTER.md",
+  "type": "DOC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "Risk Register",
+  "summary": "Tracks identified project risks with probability/impact ratings, owners, triggers, mitigations, fallbacks, and escalation criteria.",
+  "scope": [
+    "project risks",
+    "risk tracking",
+    "mitigation planning",
+    "escalation",
+    "team ownership",
+    "schedule risk"
+  ],
+  "cross_refs": [
+    "project_state/risks.json"
+  ],
+  "locked": false,
+  "precedence": 4,
+  "notes": ""
+}
