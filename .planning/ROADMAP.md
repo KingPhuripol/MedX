@@ -41,6 +41,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Depends on**: Nothing
 **Milestone**: M1 · **Deadline**: DL-0002 Project Idea, 28 Aug 2026 (immutable) · **Window**: 11-28 Aug 2026
 **Requirements**: AC-01, RG-01, GOV-02, GOV-03
+**Owners**: research-lead, data-governor-engineer, project-manager, documentation-agent
+**Required reviewers**: clinical-safety-reviewer, integration-auditor
 **Success Criteria** (what must be TRUE):
   1. A reader of the Project Idea document (2-4 pages plus references) can trace every claim to a cited source or to a statement explicitly labelled hypothesis or planned work, and the document is delivered before 28 Aug 2026.
   2. Advisor identity and the Group Application submission evidence are recorded in project state from an authoritative source, with no field filled by inference.
@@ -59,6 +61,8 @@ planned around.
 **Depends on**: Phase 1
 **Milestones**: M2, M3 · **Deadlines**: DL-0003 CITI 25 Sep 2026; DL-0004 Proposal Report 2 Oct 2026; DL-0005 Proposal Presentation 8-9 Oct 2026 (all immutable) · **Window**: 29 Aug - 9 Oct 2026
 **Requirements**: AC-02, AC-03, AC-04, GOV-01, IA-01, IT-01, PD-03
+**Owners**: innovation-lead, software-engineer, data-governor-engineer, documentation-agent
+**Required reviewers**: clinical-safety-reviewer, integration-auditor
 **Success Criteria** (what must be TRUE):
   1. A reviewer can drive a valid synthetic Patient Journey through a versioned gateway request to a mock provider with no network access and receive a schema-valid response, while invalid, future-dated, or unauthorized evidence is refused with the correct error code and a safe audit record.
   2. The mock adapter passes all ten contract fixture cases, and any adapter added later is certified by running that identical suite unchanged.
@@ -80,6 +84,8 @@ deliverable — never move a date.
 **Depends on**: Phase 2
 **Milestone**: M4 · **Evidence freeze**: 20 Nov 2026 (internal, feeds DL-0006) · **Window**: 10 Oct - 20 Nov 2026
 **Requirements**: RG-02, RG-03, IA-02, IA-03, IA-04, PD-01, PD-02
+**Owners**: data-governor-engineer, model-architect, software-engineer, innovation-lead
+**Required reviewers**: clinical-safety-reviewer, integration-auditor
 **Success Criteria** (what must be TRUE):
   1. An auditor running the data checks sees disjoint patient-level splits, `available_at_time` on every evidence and label item, preprocessing fitted on training data only, preserved missingness, and a dataset card stating population, exclusions, modality pairing, limitations, and permitted use — and any patient overlap or future evidence fails the run outright rather than being reported as a warning.
   2. A researcher can execute a typed graph, export it, replay it on the same versioned inputs and config within the declared tolerance, and trace the result to a valid manifest and artifact checksums; the fixed-path baseline pipeline and its evaluator run end to end.
@@ -101,6 +107,8 @@ classes of IT-02 land here with the executor; the remaining classes complete in 
 **Depends on**: Phase 3
 **Milestones**: M5, M6 · **Deadlines**: DL-0006 Progress Report 4 Dec 2026; DL-0007 Progress Presentation 14-15 Dec 2026 (both immutable) · **Window**: 21 Nov - 15 Dec 2026
 **Requirements**: AC-05, AC-06, IA-05, IA-08
+**Owners**: evaluation-scientist, documentation-agent, project-manager
+**Required reviewers**: clinical-safety-reviewer, integration-auditor
 **Success Criteria** (what must be TRUE):
   1. A frozen simulated case set covering multiple disease systems, urgency levels, missingness, contradiction, and provider failure is locked before any final result is inspected, and the critical-case sensitivity, under-triage, false-reassurance, pathway, next-information, calibration and abstention, timing, and human-override metrics are implemented and reported with patient-level uncertainty intervals.
   2. Independent safety and integration reviewers — neither of whom implemented the work under review — issue verdicts from the `PASS`/`CONDITIONAL_PASS`/`FAIL`/`CRITICAL_FAIL` vocabulary, and no unresolved `CRITICAL_FAIL` remains.
@@ -119,6 +127,8 @@ performance no matter how good the headline numbers are.
 **Depends on**: Phase 4
 **Milestone**: M7 · **Window**: Jan - Feb 2027 (planning assumption, not an official date)
 **Requirements**: RG-04, RG-05, IA-06, IT-02
+**Owners**: model-architect, training-engineer, evaluation-scientist, research-lead
+**Required reviewers**: clinical-safety-reviewer, integration-auditor
 **Success Criteria** (what must be TRUE):
   1. Executed graphs demonstrably vary with predeclared case, task, modality-availability, and temporal attributes beyond seed noise, with no all-node, single-route, single-operator, or unavailable-modality collapse, and without variation being driven primarily by patient, site, or file identifiers.
   2. At matched data, splits, tokens or steps, optimization opportunity, seeds, search budget, and compute, the dynamic typed DAG is compared against strong fixed-path, same-backbone fixed-path, static typed DAG, and random or shuffled-router controls, and the outcome — including a negative one — is reported with effect sizes, patient-level intervals, and documented compiler overhead.
@@ -141,6 +151,8 @@ human approval and a Decision Log entry.
 **Depends on**: Phase 5
 **Milestone**: M8 · **Window**: Feb - Apr 2027 (planning assumption; see Open Questions — MILESTONES.md and MASTER_PLAN.md give different windows and neither has been chosen)
 **Requirements**: RG-06, RG-07, RG-10
+**Owners**: training-engineer, model-architect, evaluation-scientist, research-lead
+**Required reviewers**: clinical-safety-reviewer, integration-auditor
 **Success Criteria** (what must be TRUE):
   1. No approximately 4B run starts until a reviewer can see the G0-G4 gates closed, a valid Tier 4 manifest, a compute/cost/storage estimate, a hardware reservation, explicit stop criteria and a rollback plan, a schedule-impact statement showing no threat to academic deliverables, data volume, quality, and license permitting the intended training and release, and a specific time-bounded human approval that no agent granted.
   2. A small-scale rehearsal of the same recipe shows stable loss, stable routing, a working checkpoint save/load/resume cycle, and a working evaluation before any full run is requested — and every run's completion record carries terminal status, hashes, actual compute, artifacts and checksums, metrics, and exclusion reasons rather than a job exit code.
@@ -162,6 +174,8 @@ it.
 **Depends on**: Phase 6
 **Milestone**: M9 · **Window**: Apr - May 2027 (planning assumption, pending official faculty dates)
 **Requirements**: RG-08, IA-07
+**Owners**: documentation-agent, innovation-lead, software-engineer, project-manager
+**Required reviewers**: clinical-safety-reviewer, integration-auditor
 **Success Criteria** (what must be TRUE):
   1. An audience watches at least one evolving patient journey run from intake through recorded human review, plus an urgent escalation, a missing-information abstention, and a provider failure, with mock, baseline, and team providers compared without a single client or interface change.
   2. The presentation states the non-deployment boundary and the evaluated limitations explicitly, and describes the system only as supporting, assisting, or suggesting for review — never as diagnosing, treating, prescribing, referring, or discharging.

@@ -65,3 +65,17 @@ Machine-readable decisions are in `project_state/decisions.json` and validated a
 - **Rationale:** Planning buffers may move; faculty deadlines may not.
 - **Consequences:** Corrections require a new official source, human approval, synchronized registry update, and a superseding decision.
 
+## DEC-0008 - Planning-system ownership boundary
+
+- **Date:** 2026-08-11
+- **Status:** proposed
+- **Owner:** Phurinat Polasa
+- **Decision:** `project_state/` and `docs/` remain the sole authoritative record of deadlines, milestones, tasks, risks, decisions, approvals, contracts, and specifications. `.planning/`, introduced by the GSD toolchain, is a subordinate execution layer that owns phase sequencing and per-phase execution artifacts only. `.planning/` may reference an authoritative identifier such as `M1`, `TASK-0003`, or `RISK-0002`, but may never be the place where that item's status, scope, or definition lives. `.planning/REQUIREMENTS.md` is a derived index: every requirement must cite its source document, and any substantive change is made in the source first.
+- **Rationale:** The repository now carries two vocabularies for the same work — `docs/project_management/` (M0-M9, TASK-XXXX, RISK-XXXX) and `.planning/` (Phase 1-7, REQUIREMENTS, STATE). Divergence has already occurred: `MILESTONES.md` M8 and `MASTER_PLAN.md` Phase 6 give different 4B release-candidate windows, and recording one Group Application status required editing five files by hand. Authority must sit with `project_state/` and `docs/` for two reasons. First, they are enforced — 199 harness checks and JSON Schema validation cover them, while `.planning/` had zero coverage when this decision was written. Second, `.planning/` is a third-party format owned by the `@opengsd/gsd-core` release cycle; installing it overwrote 71 skill files in one command, and a future update may change its structure. A project's source of truth may not depend on another project's upgrade path.
+- **Consequences:**
+  - `.planning/README.md` states this boundary at the point of use so future sessions and agents see it without reading this log.
+  - `scripts/verify_harness.py` enforces the boundary: phase dependencies must resolve to real phases, requirement identifiers must map to a phase, and any `TASK-`/`RISK-`/`DEC-` identifier appearing in `.planning/` must exist in `project_state/`.
+  - Deleting or regenerating `.planning/` must never lose project state. If it would, the boundary has been violated and the content belongs in `docs/` or `project_state/`.
+  - Where the two disagree, `project_state/` and `docs/` win, and the `.planning/` artifact is corrected.
+  - This decision is recorded as `proposed`. It takes effect when the human owner accepts it.
+

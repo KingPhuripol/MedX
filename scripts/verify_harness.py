@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import py_compile
+import re
 import sys
 from pathlib import Path
 
@@ -269,6 +270,78 @@ def check_fixtures(checks: Checks) -> None:
     checks.require(response["request_id"] == request["request_id"], "API request/response IDs differ")
 
 
+def check_planning_boundary(checks: Checks) -> None:
+    """Enforce DEC-0008: `.planning/` is a subordinate execution layer.
+
+    Skips silently when `.planning/` is absent, so the harness still passes on a
+    checkout without the GSD toolchain installed.
+    """
+    planning = ROOT / ".planning"
+    if not planning.is_dir():
+        return
+
+    checks.require((planning / "README.md").is_file(), "missing .planning/README.md; DEC-0008 requires the ownership boundary stated at the point of use")
+
+    roadmap = planning / "ROADMAP.md"
+    declared_phases: set[str] = set()
+    if roadmap.is_file():
+        roadmap_text = roadmap.read_text(encoding="utf-8")
+        declared_phases = set(re.findall(r"^### Phase (\d+):", roadmap_text, re.MULTILINE))
+        checks.require(bool(declared_phases), ".planning/ROADMAP.md declares no phases")
+        for clause in re.findall(r"^\*\*Depends on\*\*:\s*(.+)$", roadmap_text, re.MULTILINE):
+            for referenced in re.findall(r"Phase\s+(\d+)", clause):
+                checks.require(referenced in declared_phases, f"ROADMAP.md depends on Phase {referenced}, which is not declared")
+            # Digits outside an explicit "Phase N" reference are prose that the
+            # roadmap parser reads as a dependency. "M0" once became Phase 0 and
+            # silently blocked every phase in the roadmap.
+            prose = re.sub(r"Phase\s+\d+", "", clause)
+            checks.require(not re.search(r"\d", prose), f"'Depends on' carries digits outside a Phase reference and will be misparsed: {clause.strip()}")
+
+    if roadmap.is_file():
+        # Every phase names implementer agents and independent reviewers, and every
+        # named agent exists. CLAUDE.md keeps the read-only reviewers separate: they
+        # must not repair the work they judge, so they may never appear as owners.
+        installed_agents = {path.stem for path in (ROOT / ".claude/agents").glob("*.md")}
+        read_only_reviewers = {"clinical-safety-reviewer", "integration-auditor"}
+        owners_by_phase = re.findall(r"^\*\*Owners\*\*:\s*(.+)$", roadmap_text, re.MULTILINE)
+        reviewers_by_phase = re.findall(r"^\*\*Required reviewers\*\*:\s*(.+)$", roadmap_text, re.MULTILINE)
+        checks.require(len(owners_by_phase) == len(declared_phases), f"{len(declared_phases)} phases declared but {len(owners_by_phase)} carry an Owners line")
+        checks.require(len(reviewers_by_phase) == len(declared_phases), f"{len(declared_phases)} phases declared but {len(reviewers_by_phase)} carry a Required reviewers line")
+        named = {agent.strip() for clause in owners_by_phase + reviewers_by_phase for agent in clause.split(",")}
+        missing_agents = sorted(named - installed_agents)
+        checks.require(not missing_agents, f"ROADMAP.md names agents that are not installed in .claude/agents/: {', '.join(missing_agents)}")
+        for clause in owners_by_phase:
+            owners = {agent.strip() for agent in clause.split(",")}
+            conflict = sorted(owners & read_only_reviewers)
+            checks.require(not conflict, f"read-only reviewers listed as phase owners: {', '.join(conflict)}")
+        for clause in reviewers_by_phase:
+            reviewers = {agent.strip() for agent in clause.split(",")}
+            checks.require(bool(reviewers & read_only_reviewers), f"phase reviewers include no independent read-only reviewer: {clause.strip()}")
+
+    requirements = planning / "REQUIREMENTS.md"
+    if requirements.is_file():
+        requirements_text = requirements.read_text(encoding="utf-8")
+        traced = dict(re.findall(r"^\|\s*([A-Z]{2,4}-[0-9A-Za-z]+)\s*\|\s*Phase\s*(\d+)\s*\|", requirements_text, re.MULTILINE))
+        declared = set(re.findall(r"^- \[[ x]\] \*\*([A-Z]{2,4}-[0-9A-Za-z]+)\*\*", requirements_text, re.MULTILINE))
+        checks.require(bool(traced), ".planning/REQUIREMENTS.md has no traceability rows mapping requirements to phases")
+        untraced = sorted(declared - set(traced))
+        checks.require(not untraced, f"requirements declared but absent from the traceability table: {', '.join(untraced)}")
+        if declared_phases:
+            dangling = sorted({f"{req} -> Phase {phase}" for req, phase in traced.items() if phase not in declared_phases})
+            checks.require(not dangling, f"traceability maps requirements to phases that do not exist: {', '.join(dangling)}")
+
+    known_ids: set[str] = set()
+    for filename, collection, field in (("tasks.json", "tasks", "task_id"), ("risks.json", "risks", "risk_id"), ("decisions.json", "decisions", "decision_id")):
+        source = ROOT / "project_state" / filename
+        if source.exists():
+            known_ids.update(str(item[field]) for item in load_json(source)[collection])
+    referenced_ids: set[str] = set()
+    for document in sorted(planning.rglob("*.md")):
+        referenced_ids.update(re.findall(r"\b(?:TASK|RISK|DEC)-\d{4}\b", document.read_text(encoding="utf-8")))
+    unknown = sorted(referenced_ids - known_ids)
+    checks.require(not unknown, f".planning/ references identifiers that do not exist in project_state/: {', '.join(unknown)}")
+
+
 def check_changed(path_text: str, checks: Checks) -> None:
     path = Path(path_text)
     if not path.is_absolute():
@@ -299,6 +372,7 @@ def main() -> int:
         check_agents_and_skills(checks)
         check_settings_and_scripts(checks)
         check_fixtures(checks)
+        check_planning_boundary(checks)
     except (ValidationError, KeyError, TypeError, OSError) as exc:
         checks.errors.append(f"verification could not complete: {exc}")
 
