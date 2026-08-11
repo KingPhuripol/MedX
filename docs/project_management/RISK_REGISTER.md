@@ -4,7 +4,7 @@ Machine state: `project_state/risks.json`. Probability and impact use `LOW`, `ME
 
 | ID | Risk | P | I | Owner | Trigger | Mitigation | Fallback | Status |
 |---|---|---:|---:|---|---|---|---|---|
-| RISK-0001 | Group Application may be unsubmitted close to deadline | HIGH | CRITICAL | Phurinat | No receipt/confirmation by 12 Aug | Verify immediately; parallel advisor and form preparation | Escalate to course staff/advisor before deadline | OPEN |
+| RISK-0001 | Group Application may be unsubmitted close to deadline | HIGH | CRITICAL | Phurinat | No receipt/confirmation by 12 Aug | Verify immediately; parallel advisor and form preparation | Escalate to course staff/advisor before deadline | CLOSED |
 | RISK-0002 | No dataset supports all desired modalities linked at patient level | HIGH | HIGH | Jakkapat | Feasibility inventory finds incompatible access/linkage/license | Modular dataset mixture with explicit capability subsets; contract shared fields | Narrow evaluated combinations while retaining interfaces and honest limitation | OPEN |
 | RISK-0003 | Temporal or patient-identity leakage invalidates results | MEDIUM | CRITICAL | Jakkapat | Overlap, missing timestamps, future-derived field, post-split transforms | Split first, availability ledger, automated audit, blinded test | Rebuild affected data and rerun all dependent experiments | OPEN |
 | RISK-0004 | Compute cannot support stable approximately 4B training | HIGH | HIGH | Phurinat | No approved budget/hardware plan by 4B gate | Estimate early; parameter-efficient and staged recipe; checkpoint/recovery tests | Deliver strongest valid smaller model and explicitly report scale limitation | OPEN |

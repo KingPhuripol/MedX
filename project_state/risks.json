@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-08-11T04:00:00+07:00",
+  "updated_at": "2026-08-11T09:08:36+07:00",
   "risks": [
     {
       "risk_id": "RISK-0001",
@@ -12,9 +12,9 @@
       "mitigation": "Verify course-system status immediately while preparing the form and advisor path in parallel",
       "fallback": "Escalate to advisor and course staff before the deadline with complete form evidence",
       "review_date": "2026-08-12",
-      "status": "OPEN",
+      "status": "CLOSED",
       "linked_tasks": ["TASK-0001", "TASK-0002"],
-      "updated_at": "2026-08-11T04:00:00+07:00"
+      "updated_at": "2026-08-11T09:08:36+07:00"
     },
     {
       "risk_id": "RISK-0002",

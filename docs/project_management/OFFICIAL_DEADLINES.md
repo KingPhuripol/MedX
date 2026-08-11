@@ -9,7 +9,7 @@ The PDF is referenced by the project but is not present in the current local `so
 
 | Deliverable | Official deadline | Required form/content | Current control |
 |---|---|---|---|
-| Group Application | 14 Aug 2026, 23:55 | Group application; applicable only if not already submitted | Submission state must be confirmed immediately |
+| Group Application | 14 Aug 2026, 23:55 | Group application; applicable only if not already submitted | Submitted (owner confirmation, 11 Aug 2026). Receipt not yet archived |
 | Project Idea | 28 Aug 2026 | 2-4 pages plus references | Internal content and advisor buffers below |
 | CITI | 25 Sep 2026 | Required CITI completion/evidence | Each member completes by internal deadline |
 | Proposal Report | 2 Oct 2026 | Official proposal report | Integrated report and advisor review required |
@@ -19,13 +19,23 @@ The PDF is referenced by the project but is not present in the current local `so
 
 ## Internal review buffers
 
-### Group Application - compressed recovery plan
+### Group Application - compressed recovery plan (SUPERSEDED 11 Aug 2026)
 
-- 11 Aug: verify members, IDs, title, advisor, and whether submission already exists.
-- 12 Aug: obtain advisor confirmation/signature or escalate the blocker.
-- 13 Aug, 18:00: freeze and perform submission-readiness audit.
-- 14 Aug, 18:00: internal submission target, retaining 5h55m contingency.
-- 14 Aug, 23:55: official deadline if not already submitted.
+This plan existed for the case where the application was still unsubmitted. The project owner
+confirmed on 11 Aug 2026 that submission has already occurred, so the recovery ladder no longer
+applies. The official date below is unchanged and remains immutable; only the operational control
+is superseded.
+
+- ~~11 Aug: verify members, IDs, title, advisor, and whether submission already exists.~~ Submission
+  verified by owner confirmation. **Advisor identity remains unrecorded** and is still outstanding
+  under TASK-0001.
+- ~~12 Aug: obtain advisor confirmation/signature or escalate the blocker.~~ Superseded.
+- ~~13 Aug, 18:00: freeze and perform submission-readiness audit.~~ Superseded.
+- ~~14 Aug, 18:00: internal submission target, retaining 5h55m contingency.~~ Superseded.
+- 14 Aug, 23:55: official deadline, unchanged and immutable. Satisfied by the prior submission.
+
+Outstanding evidence: the signed form and the submission receipt are not archived, so TASK-0002 is
+held at `REVIEW` rather than `DONE`.
 
 ### Project Idea - 28 Aug
 

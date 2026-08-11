@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-08-11T04:00:00+07:00",
+  "updated_at": "2026-08-11T09:08:36+07:00",
   "tasks": [
     {
       "task_id": "TASK-0001",
@@ -15,10 +15,10 @@
       "due_date": "2026-08-12",
       "definition_of_done": ["Submission receipt or explicit confirmation of non-submission is recorded", "Advisor identity and contact path are recorded or escalated"],
       "evidence_required": ["Submission receipt, course-system status, or explicit human confirmation"],
-      "evidence": [],
-      "blocker": "The current project context contains no submission receipt and no advisor name",
-      "risk_level": "CRITICAL",
-      "updated_at": "2026-08-11T04:00:00+07:00"
+      "evidence": ["Explicit human confirmation by the project owner on 2026-08-11 that the Group Application has been submitted; no receipt document archived yet"],
+      "blocker": "Advisor identity and contact path are still unrecorded; submission state is now confirmed",
+      "risk_level": "HIGH",
+      "updated_at": "2026-08-11T09:08:36+07:00"
     },
     {
       "task_id": "TASK-0002",
@@ -27,16 +27,16 @@
       "workstream": "PM",
       "milestone": "M0",
       "priority": "P0",
-      "status": "READY",
+      "status": "REVIEW",
       "dependencies": ["TASK-0001"],
       "planned_start": "2026-08-11",
       "due_date": "2026-08-14",
       "definition_of_done": ["Title, five members, student IDs, advisor and signature are verified", "Application is submitted before 23:55 Asia/Bangkok if required", "Receipt is archived"],
       "evidence_required": ["Final signed form", "Submission receipt"],
-      "evidence": [],
-      "blocker": "Conditional on TASK-0001 and advisor confirmation",
-      "risk_level": "CRITICAL",
-      "updated_at": "2026-08-11T04:00:00+07:00"
+      "evidence": ["Explicit human confirmation by the project owner on 2026-08-11 that the application was submitted"],
+      "blocker": "Submission confirmed by the owner, but the signed form and submission receipt are not archived, so the definition of done is not yet met",
+      "risk_level": "HIGH",
+      "updated_at": "2026-08-11T09:08:36+07:00"
     },
     {
       "task_id": "TASK-0003",

@@ -6,8 +6,8 @@ Machine state is authoritative for automation: `project_state/tasks.json`. This 
 
 | ID | Pri | Owner | Track | Status | Due | Task | Definition of done / evidence |
 |---|---|---|---|---|---|---|---|
-| TASK-0001 | P0 | Phurinat | PM | IN_PROGRESS | 2026-08-12 | Confirm Group Application submission state | Receipt or explicit confirmation recorded; if absent, TASK-0002 activated |
-| TASK-0002 | P0 | Phurinat | PM | READY | 2026-08-14 | Finalize and submit Group Application if required | Verified title/members/IDs/advisor/signature; submitted before 23:55; receipt archived |
+| TASK-0001 | P0 | Phurinat | PM | IN_PROGRESS | 2026-08-12 | Confirm Group Application submission state | Submission confirmed by owner 11 Aug; **advisor identity and contact path still unrecorded** |
+| TASK-0002 | P0 | Phurinat | PM | REVIEW | 2026-08-14 | Finalize and submit Group Application if required | Submitted per owner confirmation; **signed form and receipt not archived**, so definition of done is unmet |
 | TASK-0003 | P1 | Phurinat | Cross-track | IN_PROGRESS | 2026-08-14 | Project Idea evidence outline | One integrated outline maps every claim to method, feasibility evidence, evaluation, owner, and reference need |
 | TASK-0004 | P1 | Phurinat | Research | READY | 2026-08-17 | Literature and benchmark novelty matrix | Search protocol, comparable work, baseline candidates, public benchmark access/licensing, novelty boundary |
 | TASK-0005 | P1 | Jakkapat | Shared/Data | READY | 2026-08-17 | Data feasibility and ethics inventory | Candidate datasets, modalities, patient linkage, temporal fields, access, license, CITI/ethics path, fallback |
