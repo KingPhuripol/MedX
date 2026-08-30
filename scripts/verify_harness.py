@@ -173,6 +173,23 @@ def check_json_and_state(checks: Checks) -> None:
         for task_id in item["linked_tasks"]:
             checks.require(task_id in task_ids, f"{item['risk_id']} references unknown task {task_id}")
 
+    # A dataset dimension may only claim VERIFIED if it cites where it was verified.
+    # This is the rule the whole feasibility survey rests on: without it, an assumption
+    # written confidently is indistinguishable from a checked fact.
+    feasibility = ROOT / "project_state/dataset_feasibility.json"
+    if feasibility.is_file():
+        payload = load_json(feasibility)
+        for entry in payload["datasets"]:
+            ds_id = entry["dataset_id"]
+            has_evidence = bool(entry["evidence"])
+            if entry["verdict"] != "UNDER_REVIEW":
+                checks.require(has_evidence, f"{ds_id} has verdict {entry['verdict']} without any evidence")
+            for dimension in ("license", "access", "patient_linkage", "temporal_validity"):
+                if entry[dimension].get("status") == "VERIFIED":
+                    checks.require(has_evidence, f"{ds_id}.{dimension} is VERIFIED without any evidence")
+            for risk_id in entry.get("blocking_risks", []):
+                checks.require(risk_id in risk_ids, f"{ds_id} references unknown risk {risk_id}")
+
     for manifest_path in manifests:
         manifest = load_json(manifest_path)
         checks.require(manifest["task_id"] in task_ids, f"{manifest['experiment_id']} references unknown task")

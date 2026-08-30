@@ -4,6 +4,7 @@
 **Research approval:** Phurinat Polasa  
 **Data approval:** Jakkapat Bunjongruxsa  
 **Status:** policy frozen; named public benchmarks are selected only after access/license feasibility evidence
+**Feasibility survey:** first pass recorded 2026-08-30 — see "Feasibility constraints" below
 
 ## Objective
 
@@ -42,6 +43,37 @@ Changes after seeing test results require an amendment explaining why and must r
 | Proposed dynamic typed DAG | target method |
 
 Do not rely on one proprietary baseline whose evaluation cannot be reproduced. External API results are prototype context, not the primary research baseline unless version, settings, data handling, and access are stable enough to audit.
+
+## Feasibility constraints recorded 2026-08-30
+
+The first dataset feasibility survey (`docs/research/DATASET_FEASIBILITY.md`,
+`project_state/dataset_feasibility.json`, TASK-0005) established constraints that bind benchmark
+selection. No candidate is yet selected; all seven are `CONDITIONAL`.
+
+**Coverage cannot be assumed uniform across modalities.** Patient-level linkage across modalities
+exists only within the MIMIC family (`subject_id` is common to MIMIC-IV and MIMIC-CXR). CheXpert,
+BraTS, CT-RATE, VQA-RAD and SLAKE are separate populations. Therefore:
+
+- Longitudinal, multimodal, single-patient evaluation is possible **only** on the MIMIC core, and only
+  for clinical text, structured data and 2D imaging.
+- 3D evaluation (BraTS for MRI, CT-RATE for CT) is necessarily **unlinked capability evaluation**, not
+  patient-journey evaluation. Any table mixing the two must say which it is.
+- A single headline score across all modalities would conflate a linked-cohort result with unlinked
+  capability results. The reporting template's requirement to label evidence type covers this, and it
+  is not optional here.
+
+**Time-valid evaluation is available only on the MIMIC core.** `available_at_time` must be derived from
+`storetime` (when a result became available), never from `charttime` (when the observation was made);
+deriving it from `charttime` would place future information inside the decision snapshot. BraTS,
+CT-RATE, VQA-RAD and SLAKE carry no clinical timeline at all, so no simulated decision time can be
+constructed on them and the temporal audit does not apply to results drawn from them.
+
+**Licence terms constrain what may be published, not only what may be trained.** Every candidate except
+VQA-RAD (CC0) restricts use to non-commercial research. CT-RATE is CC-BY-NC-SA, whose ShareAlike term
+plausibly reaches derivative works. Whether the PhysioNet Credentialed Health Data License permits
+releasing model weights trained on MIMIC is **undetermined** and must be settled with PhysioNet in
+writing before release. Benchmark selection therefore has to account for its effect on the open-weight
+release, and RISK-0010 tracks this.
 
 ## Medical capability coverage
 
