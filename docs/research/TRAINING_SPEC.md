@@ -12,9 +12,9 @@
 | 1 | one device, under 20 minutes, tiny data | overfit batch, forward/backward, checkpoint round trip | no additional approval if manifest or smoke record exists |
 | 2 | one GPU, at most 60 minutes | small pilot/ablation shard | valid manifest and owner authorization |
 | 3 | beyond Tier 2 but not flagship | controlled experiment, long single-GPU run | explicit human approval with budget |
-| 4 | approximately 4B, multi-GPU, multi-node, or flagship | continual pretraining, full tuning | explicit human approval for every run |
+| 4 | approximately 27B, multi-GPU, multi-node, or flagship | continual pretraining, full tuning | explicit human approval for every run |
 
-Any multi-GPU, multi-node, scheduled cluster job, expected duration over 60 minutes, or substantial cloud charge is Tier 3/4 regardless of label. The 27B stretch is always Tier 4 plus a separate scope decision.
+Any multi-GPU, multi-node, scheduled cluster job, expected duration over 60 minutes, or substantial cloud charge is Tier 3/4 regardless of label. The flagship 27B run is always Tier 4 plus a recorded compute estimate and a time-bounded human approval.
 
 ## Pre-flight contract
 
@@ -49,7 +49,7 @@ The pre-flight command validates the manifest, repository state, availability au
 3. **Soft/sparse routing pilot:** diagnose gradients, balance, graph statistics.
 4. **Discrete routing pilot:** verify estimator and inference equivalence.
 5. **Controlled small experiments:** frozen comparison family and multiple seeds where feasible.
-6. **Approximately 4B base stage:** approved continual pretraining with periodic frozen evaluation.
+6. **Approximately 27B base stage:** approved continual pretraining with periodic frozen evaluation.
 7. **Instruction/safety stage:** separate lineage, data, objective, and evaluation.
 8. **FrontDoor adaptation:** contract-specific head/adapter without weakening general capability evidence.
 

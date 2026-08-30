@@ -5,7 +5,10 @@ These are accepted decisions and the immutable schedule. Under this project's au
 they override every SPEC, plan, and status summary. None may be auto-overridden by synthesis.
 
 Status vocabulary: `locked` = accepted and manifest-locked; `proposed` = not accepted.
-All eight entries below are `locked`. No entry in this ingest set is `proposed`.
+
+> **Updated 2026-08-30.** This snapshot was extracted on 2026-08-11 and captured eight decisions.
+> DEC-0009 has since been accepted and supersedes DEC-0002. Both are recorded below.
+> The authoritative record is `docs/DECISION_LOG.md` and `project_state/decisions.json` (DEC-0008).
 
 ---
 
@@ -18,10 +21,11 @@ All eight entries below are `locked`. No entry in this ingest set is `proposed`.
 - rationale: The model contribution and Clinical Front Door share data, contracts, evaluation, and the final demonstration.
 - consequences: There is one schedule and one integration gate. Neither track may optimize in isolation at the expense of the joint deliverable.
 
-## DEC-0002: Flagship approximately 4B; 27B is stretch
+## DEC-0002: Flagship approximately 4B; 27B is stretch — SUPERSEDED
 
 - source: docs/DECISION_LOG.md
-- status: locked (Accepted, 2026-08-11, owner: Phurinat Polasa)
+- status: **superseded by DEC-0009 on 2026-08-26** (was: locked, accepted 2026-08-11, owner: Phurinat Polasa)
+- **note: this entry is history. The flagship target is approximately 27B. See DEC-0009 below.**
 - decision: Treat approximately 4B parameters as the flagship target. Permit 27B work only after the 4B release candidate passes architecture, data, safety, evaluation, compute, and schedule gates.
 - scope: model scale, flagship target, stretch scope
 - rationale: Evidence at small and 4B scales is more important than unsupported scale.
@@ -87,3 +91,14 @@ All eight entries below are `locked`. No entry in this ingest set is `proposed`.
 `project_state/decisions.json` carries DEC-0001..DEC-0007 with matching IDs, dates, statuses, and
 owners. `docs/DECISION_LOG.md` states it is the readable register and that decisions are
 append-only with superseded entries remaining visible. No entry in this ingest set is superseded.
+
+## DEC-0009: Approximately 27B replaces approximately 4B as the flagship target
+
+- source: docs/DECISION_LOG.md
+- status: locked (Accepted, 2026-08-26, owner: Phurinat Polasa)
+- supersedes: DEC-0002
+- decision: Approximately 27B is the flagship target of the Research Track. The approximately 4B target is withdrawn and no longer appears as a project deliverable. Every gate DEC-0002 attached to the 4B release candidate now attaches unchanged to the 27B release candidate: G0-G4 must close on recorded evidence, and a valid Tier 4 manifest plus explicit time-bounded human approval are required before any flagship run.
+- scope: model scale, flagship target, stretch scope
+- rationale: The flagship scale is the project owner's decision, given directly on 2026-08-26 while the Project Idea was being prepared for the immutable DL-0002 deadline. Recording it as a superseding entry keeps the submitted document consistent with the enforced record.
+- consequences: RISK-0004 restated against 27B with probability raised to CRITICAL. Compute, storage, cost and schedule must be re-estimated against 27B before any Tier 3 or Tier 4 request; no estimate carried over from 4B remains valid (TASK-0018). The scope fallback ladder in MASTER_PLAN.md was rewritten for a 27B flagship. There is no stretch model above the flagship.
+- open concern: this decision records the owner's direction; it does not establish that the compute exists. Feasibility evidence is owed at the flagship gate.

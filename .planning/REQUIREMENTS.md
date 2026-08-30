@@ -75,12 +75,12 @@ Source: `docs/research/SUCCESS_CRITERIA.md`, `docs/DECISION_LOG.md`. Cumulative 
       competitive with same-backbone fixed and static controls or a predeclared efficiency or
       calibration advantage; documented equal budgets; interventions affect outputs in predicted
       directions; replay agreement within tolerance; negative results reported
-- [ ] **RG-06** *(REQ-G5)*: Approximately 4B authorization gate — Tier 4 manifest, compute/cost/
+- [ ] **RG-06** *(REQ-G5)*: Approximately 27B authorization gate — Tier 4 manifest, compute/cost/
       storage estimate, hardware reservation, recorded human approval, stable small-scale recipe,
       explicit stop criteria and rollback, no schedule threat to academic deliverables, and data
       volume/quality/license permitting the intended training and release.
       **Depends on RG-01, RG-02, RG-03, RG-04, RG-05**
-- [ ] **RG-07** *(REQ-G6)*: Approximately 4B release-candidate completeness — checkpoint lineage and
+- [ ] **RG-07** *(REQ-G6)*: Approximately 27B release-candidate completeness — checkpoint lineage and
       checksums, frozen medical and architecture evaluations with valid statistics, safety/
       calibration/robustness/subgroup/contamination/limitations analyses, servable through the stable
       Model API Contract, complete model card and artifacts, and independent integration and clinical

@@ -48,9 +48,9 @@ Does the approach retain useful capability across representative disease systems
 The target family is:
 
 - `Medical-DAG-Base`: small architecture-validation model, expected 300M-700M class.
-- `Medical-DAG-4B`: flagship base model, approximately 4B, conditional on gates.
-- `Medical-DAG-4B-Instruct`: instruction/safety tuned research derivative.
-- `Medical-DAG-4B-FrontDoor`: contract-aligned downstream adapter or tuned variant.
+- `Medical-DAG-27B`: flagship base model, approximately 27B, conditional on gates.
+- `Medical-DAG-27B-Instruct`: instruction/safety tuned research derivative.
+- `Medical-DAG-27B-FrontDoor`: contract-aligned downstream adapter or tuned variant.
 - `Medical-DAG-Large`: 27B-class stretch only after a separate decision.
 
 Names are working identifiers, not public claims. They may change without altering the charter if contracts and lineage remain intact.
@@ -107,7 +107,7 @@ Train/evaluate a small soft/sparse router, measure collapse and graph behavior, 
 
 Freeze splits/config families and run required comparisons and interventions. Stop if core hypotheses fail and document why.
 
-### Stage E - Approximately 4B scaling
+### Stage E - Approximately 27B scaling
 
 Proceed only after `SUCCESS_CRITERIA.md` G0-G4 and Training Spec approvals. Continual pretraining and instruction/safety tuning are separate, traceable stages.
 

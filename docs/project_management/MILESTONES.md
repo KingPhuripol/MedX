@@ -5,15 +5,18 @@ Milestone status uses `NOT_STARTED`, `IN_PROGRESS`, `AT_RISK`, `BLOCKED`, or `CO
 ## M0 - Group and repository control
 
 - **Due:** 14 Aug 2026, before 23:55 if application is unsubmitted
-- **Status:** AT_RISK because submission state and advisor are not recorded
+- **Status:** IN_PROGRESS — submission and advisor are settled; documentary evidence is not
 - **Exit criteria:** group application status proven; advisor identity recorded; repository Harness validated; ownership acknowledged.
-- **Evidence:** submission receipt or confirmed prior submission, advisor confirmation, `make verify` output.
+- **Evidence:** submission confirmed by the project owner on 11 Aug 2026 (RISK-0001 closed); advisor recorded as ดร.สัญญ์สิริ ธารประดับ, independently corroborated on 30 Aug 2026 by the digital signature in the submitted Project Idea (Sansiri Tarnpradab, 28 Aug 2026 13:48:54 +07:00) — see `docs/academic/SUBMISSION_RECORD.md`; `make verify` passing.
+- **Still open:** the submission receipt is not archived and the advisor contact path is not recorded (TASK-0001). The milestone is not marked COMPLETE on an owner's recollection alone.
 
 ## M1 - Project Idea
 
 - **Official due:** 28 Aug 2026
 - **Internal advisor-ready:** 23 Aug 2026
-- **Status:** IN_PROGRESS
+- **Status:** COMPLETE — submitted and signed by the advisor on 28 Aug 2026, within the immutable deadline
+- **Evidence:** `sources/2026-08-28_project_idea_submitted_signed.pdf` (SHA-256 `667271ff7e154a2fa5bf83985daa9241aab7790b909d74135c21443453b28d89`), recorded in `docs/academic/SUBMISSION_RECORD.md`; transcription verified character-identical at `docs/academic/PROJECT_IDEA.md`.
+- **Carried forward, not resolved:** the submitted version has 5 references and no in-text citations, so claims C-01 and C-02 stand without attribution (`docs/academic/PROJECT_IDEA_CLAIMS.md`). The pre-submission review by a member who did not write the document did not happen (Phase 1 CONTEXT D-03); it now runs retrospectively as TASK-0008. Both must close before DL-0004.
 - **Exit criteria:** 2-4 pages plus references; one-project/two-track framing; problem, contribution, scope, data feasibility, methods, evaluation, safety, expected outputs, risks, and references consistent with contracts.
 - **Kill condition:** core dataset/ethics/compute assumptions have no feasible path and no approved fallback.
 
@@ -57,9 +60,9 @@ Milestone status uses `NOT_STARTED`, `IN_PROGRESS`, `AT_RISK`, `BLOCKED`, or `CO
 
 - **Planning target:** Feb 2027
 - **Status:** NOT_STARTED
-- **Exit criteria:** case-dependent graphs, no collapse, competitive controlled results, faithfulness interventions, missing-modality robustness, replay, stable training, and approved 4B plan.
+- **Exit criteria:** case-dependent graphs, no collapse, competitive controlled results, faithfulness interventions, missing-modality robustness, replay, stable training, and an approved 27B plan.
 
-## M8 - Approximately 4B release candidate
+## M8 - Approximately 27B release candidate
 
 - **Planning target:** Mar-Apr 2027
 - **Status:** NOT_STARTED

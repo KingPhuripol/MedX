@@ -3,7 +3,7 @@
 ## What This Is
 
 One Senior Project run as two coordinated tracks by five members. The **Research Track** builds an
-open-weight medical multimodal model (flagship target approximately 4B) that compiles time-valid
+open-weight medical multimodal model (flagship target approximately 27B) that compiles time-valid
 evidence and task context into a discrete, typed, exportable, replayable computation DAG. The
 **Innovation Track** builds an API-first AI Clinical Front Door that uses the same contracts to
 support intake, urgency screening, care-pathway suggestion, next-information selection, calibrated
@@ -34,7 +34,7 @@ Full list with IDs and phase mapping: `.planning/REQUIREMENTS.md`. Summary of co
 
 - [ ] Six remaining official academic deliverables (AC-01..AC-06) delivered on their immutable dates
 - [ ] Research gates G0-G4 closed on recorded evidence before any flagship scaling (RG-01..RG-05)
-- [ ] Approximately 4B authorization, training, and release candidate under recorded human approval
+- [ ] Approximately 27B authorization, training, and release candidate under recorded human approval
       (RG-06, RG-07), or an honestly-reported smaller defensible outcome (RG-10)
 - [ ] Authorized, reproducible public release (RG-08)
 - [ ] Innovation acceptance A0-A6 — contract prototype through final demonstration (IA-01..IA-07)
@@ -93,7 +93,7 @@ sacrificing valid splits, baselines, safety, or reproducibility.
 
 **Open risks carried into planning** (all 10 OPEN in `docs/project_management/RISK_REGISTER.md`):
 no dataset supports all modalities linked at patient level (RISK-0002); temporal or identity leakage
-invalidates results (RISK-0003); compute cannot support stable 4B training (RISK-0004); routing
+invalidates results (RISK-0003); compute cannot support stable 27B training (RISK-0004, now CRITICAL); routing
 collapses or offers no controlled benefit (RISK-0005); cross-track contract drift (RISK-0006); false
 reassurance or critical under-triage (RISK-0007); academic writing absorbs technical capacity
 (RISK-0008); external API privacy/cost/lock-in (RISK-0009); release license or sensitive-artifact
@@ -145,8 +145,9 @@ entry. Source of truth: `docs/DECISION_LOG.md`, `docs/project_management/OFFICIA
 - **D-01 [locked]:** DEC-0001 — Run one Senior Project under one title with Research and Innovation
   as coordinated internal tracks. One schedule, one integration gate; neither track may optimize in
   isolation at the expense of the joint deliverable.
-- **D-02 [locked]:** DEC-0002 — Approximately 4B parameters is the flagship target; 27B-class work is
-  stretch scope permitted only after the 4B release candidate passes every gate and a separate
+- **D-02 [locked]:** DEC-0009 (supersedes DEC-0002) — Approximately 27B is the flagship target; the
+  approximately 4B target is withdrawn. Every gate DEC-0002 attached to the 4B release candidate now
+  attaches unchanged to the 27B release candidate, and a flagship run additionally requires a separate
   approval. No 27B critical-path dependency or resource commitment before that approval.
 - **D-03 [locked]:** DEC-0003 — All Innovation inference uses the versioned Model API Contract
   through a stable Model Gateway. Mock and external APIs are prototype providers only; no
@@ -176,7 +177,7 @@ Project-level decisions made during roadmapping (revisable through the normal De
 | Phases bundle both tracks per gate window rather than splitting Research and Innovation into separate phase chains | DEC-0001 gives one schedule and one integration gate; within a phase the two tracks proceed in parallel by owner | — Pending |
 | Academic deliverables are phase exit criteria, not standalone phases | The immutable deadline is the natural delivery boundary and forces the evidence to exist; standalone writing phases would be PM theater | — Pending |
 | Front Door runtime left unchosen until Phase 2 | A material architecture choice requires a recorded Decision Log entry; assuming a framework now would pre-empt that governance | — Pending |
-| Team-model gateway integration (A5) placed in Phase 5, before 4B scaling | Integrating the small model early is the control for RISK-0006 contract drift, and must be proven before scaling consumes the schedule | — Pending |
+| Team-model gateway integration (A5) placed in Phase 5, before 27B scaling | Integrating the small model early is the control for RISK-0006 contract drift, and must be proven before scaling consumes the schedule | — Pending |
 | 27B stretch gate moved to v2 requirements | DEC-0002 makes it non-critical-path; keeping it in v1 would imply a commitment the decision explicitly withholds | — Pending |
 
 ---

@@ -1,5 +1,10 @@
 # Context
 
+> ⚠️ **Generated snapshot, extracted 2026-08-11 — partially stale.** It still describes the
+> flagship as approximately 4B. DEC-0009 (2026-08-26) makes the flagship approximately 27B and
+> withdraws the 4B target. Authority sits with `docs/` and `project_state/` (DEC-0008); read
+> `docs/DECISION_LOG.md` before relying on any scale figure here.
+
 Topic-keyed notes from `DOC`-typed sources (precedence 3 plans and precedence 4 status
 summaries), plus narrative framing from the track specifications. Under this project's authority
 model, everything here **yields to** `decisions.md` and `constraints.md`.

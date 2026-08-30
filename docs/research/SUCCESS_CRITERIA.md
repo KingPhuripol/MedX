@@ -4,11 +4,27 @@ Success is cumulative. A later gate cannot compensate for an earlier integrity f
 
 ## G0 - Governance and contracts
 
-- [ ] Research questions and claim boundaries accepted.
-- [ ] Data, Patient Journey, Model API, Evaluation, and Approval contracts versioned.
+Status as of 30 Aug 2026: **four of five closed; the gate is open on dataset feasibility.**
+
+- [x] Research questions and claim boundaries accepted.
+      Evidence: `docs/research/RESEARCH_SPEC.md` RQ1-RQ3; claim boundary in `docs/PROJECT_CHARTER.md`
+      and `CLAUDE.md` §Claim boundary; DEC-0001 and DEC-0005 accepted.
+- [x] Data, Patient Journey, Model API, Evaluation, and Approval contracts versioned.
+      Evidence: `project_state/contract_versions.json` registers all five at 1.0.0 with status
+      ACCEPTED, validated against `schemas/contract-versions.schema.json` by the harness.
 - [ ] Dataset access/license/ethics feasibility recorded.
-- [ ] Experiment manifest validation and evidence lineage work.
-- [ ] Official academic plan and owners accepted.
+      **Open.** The inventory and its schema now exist (`project_state/dataset_feasibility.json`,
+      `docs/research/DATASET_FEASIBILITY.md`), but all six candidates are `UNDER_REVIEW` and no
+      dimension is `VERIFIED`. A structure to record findings is not a finding. Closes with TASK-0005;
+      RISK-0002 stays live until it does.
+- [x] Experiment manifest validation and evidence lineage work.
+      Evidence: `scripts/validate_manifest.py` accepts `experiments/manifests/exp_0000_harness_smoke.json`;
+      `bash scripts/run_smoke_test.sh` passes end to end.
+- [x] Official academic plan and owners accepted.
+      Evidence: `project_state/official_deadlines.json` verified by the harness against DEC-0007;
+      `docs/project_management/MASTER_PLAN.md`, `MILESTONES.md` and `TEAM_OWNERSHIP.md`.
+      Residual: the Group Application receipt is still unarchived (TASK-0001) — that is an M0 evidence
+      gap, not a defect in the plan itself.
 
 ## G1 - Data integrity
 
@@ -45,7 +61,7 @@ Any patient overlap or future evidence in a reported evaluation is a hard failur
 - [ ] Missing-modality and temporal-update evaluations pass defined safety/quality gates.
 - [ ] Negative results and failed hypotheses are reported.
 
-## G5 - Approximately 4B authorization
+## G5 - Approximately 27B authorization
 
 Requires G0-G4 plus:
 
@@ -55,7 +71,7 @@ Requires G0-G4 plus:
 - [ ] Schedule impact does not endanger academic deliverables.
 - [ ] Data volume/quality and license permit the intended training/release.
 
-## G6 - Approximately 4B release candidate
+## G6 - Approximately 27B release candidate
 
 - [ ] Base and derived checkpoints have complete lineage and checksums.
 - [ ] Frozen medical and architecture evaluations complete with valid statistics.
@@ -78,4 +94,4 @@ Only after G6 and an approved decision showing additional research value, availa
 
 ## Minimum defensible outcome if scaling fails
 
-A smaller open-weight model may still constitute a valid outcome only if G0-G4, product integration, data/safety integrity, honest limitation reporting, and reproducibility pass. The project must not relabel a smaller model as approximately 4B or hide the scale shortfall.
+A smaller open-weight model may still constitute a valid outcome only if G0-G4, product integration, data/safety integrity, honest limitation reporting, and reproducibility pass. The project must not relabel a smaller model as approximately 27B or hide the scale shortfall.

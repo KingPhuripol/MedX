@@ -18,7 +18,7 @@ Run the academic deliverables and technical program as one dependency network. T
 | 3. First evidence | 10 Oct-20 Nov 2026 | patient split, temporal audit, fixed baseline, small dynamic DAG, export/replay | contract-tested gateway, intake flow, mock/external adapter, audit log | Evidence inventory supports progress report |
 | 4. Progress gate | 21 Nov-15 Dec 2026 | preliminary controlled results and failure analysis | product alpha and cross-track integration evidence | Progress report and presentation delivered |
 | 5. Architecture maturation | Jan-Feb 2027 | discrete/typed DAG, faithfulness, robustness, multi-modality expansion | team-model adapter and multimodal workflow | Small-model kill gates pass |
-| 6. Flagship scaling | Feb-Mar 2027 | approved approximately 4B training and evaluation | product beta on frozen contract | 4B candidate meets release-candidate gates |
+| 6. Flagship scaling | Feb-Mar 2027 | approved approximately 27B training and evaluation | product beta on frozen contract | 27B candidate meets release-candidate gates |
 | 7. Final evidence and release | Apr-May 2027 | result freeze, reproducibility, model card, approved HF staging | clinician/usability evaluation, backup demo, documentation | final integrated package and authorized release |
 
 Dates after Semester 1 are planning assumptions until official faculty dates are received. They are not represented as official deadlines.
@@ -31,7 +31,7 @@ Group status/advisor -> Project Idea -> CITI -> Proposal Report -> Proposal Pres
 
 ### Research
 
-Data/license feasibility -> patient identity and temporal schema -> frozen split -> fixed baseline -> small adaptive model -> graph validity and faithfulness -> controlled ablations -> 4B approval -> 4B training/evaluation -> release candidate.
+Data/license feasibility -> patient identity and temporal schema -> frozen split -> fixed baseline -> small adaptive model -> graph validity and faithfulness -> controlled ablations -> compute estimate -> 27B approval -> 27B training/evaluation -> release candidate.
 
 ### Innovation
 
@@ -62,9 +62,9 @@ If feasibility or time fails, preserve validity in this order:
 
 1. Keep one project, patient-level/temporal integrity, safety, controlled comparisons, stable gateway, and end-to-end demonstration.
 2. Reduce the number of datasets/tasks while retaining representative text, imaging, and temporal evidence.
-3. Reduce training scale while preserving the approximately 4B target as conditional and reporting the limitation honestly.
+3. Reduce the flagship training scale below approximately 27B. The delivered model is named and reported at its true scale, and the shortfall is stated plainly in the report, the model card, and any release. It is never relabelled as approximately 27B.
 4. Defer 3D breadth only through approved scope change if data/access makes it infeasible; retain the 3D interface and limitation analysis.
-5. Remove 27B work entirely.
+5. Drop the flagship training run entirely. Deliver the validated small-model architecture evidence and the integrated Clinical Front Door, and report that the scaling gate was not reached and why.
 
-Never preserve headline scale by sacrificing valid splits, baselines, safety, or reproducibility.
+Never preserve headline scale by sacrificing valid splits, baselines, safety, or reproducibility. RISK-0004 is CRITICAL: DEC-0009 records the owner's direction on scale, not the existence of the compute. Rungs 3 and 5 are live possibilities until TASK-0018 produces an estimate.
 

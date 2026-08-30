@@ -33,7 +33,7 @@ Machine state is authoritative for automation: `project_state/tasks.json`. This 
 - Build fixed-path baseline before claiming an adaptive advantage.
 - Create small dynamic DAG and graph export/replay before discrete scaling.
 - Implement mock gateway and contract tests before connecting an external provider.
-- Start 4B preparation only after M7.
+- Start flagship 27B preparation only after M7.
 - Consider 27B only after M8 and a separate human decision.
 
 ## Movement rules

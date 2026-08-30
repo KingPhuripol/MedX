@@ -2,6 +2,7 @@
 
 **Owner:** Phurinat Polasa  
 **Safety co-owner:** Thanrada Tungweerapornpong  
+**Version:** 1.0.0  
 **Schema:** `schemas/human-approval.schema.json`
 
 ## Principle
@@ -17,7 +18,7 @@ An approval is specific, time-bounded, and recorded. Approval of one run/provide
 - Tier 3 or Tier 4 runs;
 - more than one GPU or any multi-node/cluster scheduler job;
 - expected runtime over 60 minutes or material paid compute;
-- approximately 4B/27B training, full-dataset transforms, or substantial artifact storage;
+- approximately 27B or any flagship-scale training, full-dataset transforms, or substantial artifact storage;
 - increasing approved budget, devices, time, data, or objective after approval.
 
 ### Data/privacy

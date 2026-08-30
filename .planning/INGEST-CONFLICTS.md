@@ -66,18 +66,18 @@ No blockers. Specifically:
   → Confirm submission evidence and advisor identity with the human owner before routing. This is
     a source-data gap, not a document conflict; it does not corrupt the synthesized intel.
 
-[WARNING] WARN-03 — Competing 4B release-candidate windows between two equal-precedence plans
-  Found: docs/project_management/MILESTONES.md (DOC, precedence 3) — M8 "Approximately 4B release
+[WARNING] WARN-03 — Competing flagship release-candidate windows between two equal-precedence plans
+  Found: docs/project_management/MILESTONES.md (DOC, precedence 3) — M8 "Approximately 27B release
     candidate", planning target **Mar-Apr 2027**.
   Found: docs/project_management/MASTER_PLAN.md (DOC, precedence 3) — Phase 6 "Flagship scaling",
-    target window **Feb-Mar 2027**, exit gate "4B candidate meets release-candidate gates".
+    target window **Feb-Mar 2027**, exit gate "27B candidate meets release-candidate gates".
   Impact: Both documents sit at precedence 3, so precedence cannot resolve the divergence.
     Synthesis did not pick a winner. Low material impact: both documents explicitly label
     post-Semester-1 dates as planning assumptions, not official deadlines
     (MASTER_PLAN.md: "Dates after Semester 1 are planning assumptions until official faculty dates
     are received. They are not represented as official deadlines."). Both variants are preserved
     verbatim in `.planning/intel/context.md` under "Phase plan" and "Milestones".
-  → Reconcile the 4B release-candidate window across MILESTONES.md M8 and MASTER_PLAN.md Phase 6,
+  → Reconcile the flagship release-candidate window across MILESTONES.md M8 and MASTER_PLAN.md Phase 6,
     or confirm the overlap is intentional (scaling completes Feb-Mar, RC gate closes Mar-Apr).
     Adjacent milestones M7 (Feb 2027 vs Phase 5 Jan-Feb 2027) and M9 (May 2027 vs Phase 7 Apr-May
     2027) are consistent and need no action.

@@ -26,12 +26,12 @@ represented as such.
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Governance Baseline and Project Idea** - Close the G0 governance gate and deliver an evidence-traceable Project Idea by 28 Aug 2026
+- [~] **Phase 1: Governance Baseline and Project Idea** - Project Idea delivered and signed 28 Aug 2026; the G0 governance gate is still open (TASK-0016)
 - [ ] **Phase 2: Executable Contract Spine and Proposal Defense** - Turn the shared contracts into runnable code behind a mock gateway, and defend the proposal on that evidence
 - [ ] **Phase 3: Time-Valid Data Foundation and Supervised Front Door Alpha** - Audited patient-level splits, a replayable graph executor, and a supervised intake-to-human-review flow
 - [ ] **Phase 4: Frozen Evaluation and Progress Gate** - Freeze the simulated case set, implement the metrics and the release veto, and report honestly at the December deadlines
 - [ ] **Phase 5: Small-Model Architecture Gate and Cross-Track Integration** - Support or falsify the case-adaptive hypothesis at small scale, and serve the team model through the same contract as the mock
-- [ ] **Phase 6: Flagship 4B Authorization, Training and Release Candidate** - Authorize approximately 4B on recorded evidence and human approval, or decline it and report the smaller outcome honestly
+- [ ] **Phase 6: Flagship 27B Authorization, Training and Release Candidate** - Authorize approximately 27B on recorded evidence and human approval, or decline it and report the smaller outcome honestly
 - [ ] **Phase 7: Final Integrated Release and Demonstration** - Ship an authorized reproducible release and a rehearsed demonstration that states its own limits
 
 ## Phase Details
@@ -143,28 +143,28 @@ outcome** — do not scale while any kill condition persists after the predeclar
 A negative RG-05 result reported honestly satisfies this phase; a positive result manufactured by
 tuning on the final test does not. IA-06 is placed here deliberately, ahead of scaling, because early
 cross-track integration is the control for RISK-0006 (contract drift) and because the gateway path
-must be proven before the schedule is committed to a 4B run. Reframing the research claim requires
+must be proven before the schedule is committed to a 27B run. Reframing the research claim requires
 human approval and a Decision Log entry.
 
-### Phase 6: Flagship 4B Authorization, Training and Release Candidate
-**Goal**: Approximately 4B training is either authorized on recorded evidence with explicit human approval and carried to a release candidate, or is explicitly declined in favour of a smaller outcome reported for exactly what it is.
+### Phase 6: Flagship 27B Authorization, Training and Release Candidate
+**Goal**: Approximately 27B training is either authorized on recorded evidence with explicit human approval and carried to a release candidate, or is explicitly declined in favour of a smaller outcome reported for exactly what it is.
 **Depends on**: Phase 5
 **Milestone**: M8 · **Window**: Feb - Apr 2027 (planning assumption; see Open Questions — MILESTONES.md and MASTER_PLAN.md give different windows and neither has been chosen)
 **Requirements**: RG-06, RG-07, RG-10
 **Owners**: training-engineer, model-architect, evaluation-scientist, research-lead
 **Required reviewers**: clinical-safety-reviewer, integration-auditor
 **Success Criteria** (what must be TRUE):
-  1. No approximately 4B run starts until a reviewer can see the G0-G4 gates closed, a valid Tier 4 manifest, a compute/cost/storage estimate, a hardware reservation, explicit stop criteria and a rollback plan, a schedule-impact statement showing no threat to academic deliverables, data volume, quality, and license permitting the intended training and release, and a specific time-bounded human approval that no agent granted.
+  1. No approximately 27B run starts until a reviewer can see the G0-G4 gates closed, a valid Tier 4 manifest, a compute/cost/storage estimate, a hardware reservation, explicit stop criteria and a rollback plan, a schedule-impact statement showing no threat to academic deliverables, data volume, quality, and license permitting the intended training and release, and a specific time-bounded human approval that no agent granted.
   2. A small-scale rehearsal of the same recipe shows stable loss, stable routing, a working checkpoint save/load/resume cycle, and a working evaluation before any full run is requested — and every run's completion record carries terminal status, hashes, actual compute, artifacts and checksums, metrics, and exclusion reasons rather than a job exit code.
   3. Base and derived checkpoints carry complete lineage and verified checksums, and every reported number traces to a manifest, an immutable data and split version, a code revision, a config hash, a seed, an environment lock, and an output artifact.
   4. Frozen medical and architecture evaluations complete with valid statistics, safety, calibration, robustness, subgroup, contamination, and limitations analyses are published, the model is servable through the stable Model API Contract, and independent integration and clinical safety verdicts carry no unresolved critical failure.
-  5. If scaling is declined or fails, the resulting smaller open-weight model is reported as exactly that — the scale shortfall stated plainly, never relabelled as approximately 4B — and its validity still rests on closed G0-G4 gates, product integration, data and safety integrity, honest limitation reporting, and reproducibility.
+  5. If scaling is declined or fails, the resulting smaller open-weight model is reported as exactly that — the scale shortfall stated plainly, never relabelled as approximately 27B — and its validity still rests on closed G0-G4 gates, product integration, data and safety integrity, honest limitation reporting, and reproducibility.
 **Plans**: TBD
 
 **Notes**: Every Tier 3 and Tier 4 run in this phase is an approval gate, never an automatic step:
 more than one GPU, any multi-node or scheduled cluster job, any expected runtime over 60 minutes, and
 any material paid compute each require their own specific recorded approval, and approving one run
-does not approve its successor. RISK-0004 (compute cannot support stable 4B training) is the reason
+does not approve its successor. RISK-0004 (compute cannot support stable 27B training, now CRITICAL) is the reason
 criterion 5 exists — the fallback is a planned outcome with its own success definition, not a failure
 state. Routing collapse triggers graph diagnostics and a stop, never a hope that more scale resolves
 it.
@@ -195,12 +195,12 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Governance Baseline and Project Idea | 0/TBD | Not started | - |
+| 1. Governance Baseline and Project Idea | -/TBD | Partially delivered — Project Idea submitted; G0 gate still open | - |
 | 2. Executable Contract Spine and Proposal Defense | 0/TBD | Not started | - |
 | 3. Time-Valid Data Foundation and Supervised Front Door Alpha | 0/TBD | Not started | - |
 | 4. Frozen Evaluation and Progress Gate | 0/TBD | Not started | - |
 | 5. Small-Model Architecture Gate and Cross-Track Integration | 0/TBD | Not started | - |
-| 6. Flagship 4B Authorization, Training and Release Candidate | 0/TBD | Not started | - |
+| 6. Flagship 27B Authorization, Training and Release Candidate | 0/TBD | Not started | - |
 | 7. Final Integrated Release and Demonstration | 0/TBD | Not started | - |
 
 ## Deadline Ladder
@@ -210,7 +210,7 @@ Immutable, Asia/Bangkok. Never moved, compressed, or reinterpreted by planning.
 | ID | Deliverable | Deadline | Phase | Status |
 |----|-------------|----------|-------|--------|
 | DL-0001 | Group Application | 14 Aug 2026, 23:55 | — | Submitted (M0 complete) |
-| DL-0002 | Project Idea | 28 Aug 2026 | Phase 1 | Pending |
+| DL-0002 | Project Idea | 28 Aug 2026 | Phase 1 | Submitted 28 Aug 2026, advisor-signed (M1 complete) |
 | DL-0003 | CITI | 25 Sep 2026 | Phase 2 | Pending |
 | DL-0004 | Proposal Report | 2 Oct 2026 | Phase 2 | Pending |
 | DL-0005 | Proposal Presentation | 8-9 Oct 2026 | Phase 2 | Pending |
@@ -232,14 +232,14 @@ be presented as such.
 | M5 Progress Report | Phase 4 | |
 | M6 Progress Presentation | Phase 4 | Folded with M5 — same two-week window |
 | M7 Small-model architecture gate | Phase 5 | |
-| M8 Approximately 4B release candidate | Phase 6 | Window unresolved — see Open Questions |
+| M8 Approximately 27B release candidate | Phase 6 | Window unresolved — see Open Questions |
 | M9 Final integrated release | Phase 7 | |
 
 ## Open Questions
 
 Carried forward unresolved. None blocks Phase 1. Each needs a human decision, not an agent guess.
 
-1. **4B release-candidate window is ambiguous (WARN-03).** `docs/project_management/MILESTONES.md`
+1. **27B release-candidate window is ambiguous (WARN-03).** `docs/project_management/MILESTONES.md`
    M8 says Mar-Apr 2027; `docs/project_management/MASTER_PLAN.md` Phase 6 says Feb-Mar 2027. Both sit
    at equal precedence, so precedence cannot resolve it and **no winner has been picked**. Phase 6
    records the union (Feb-Apr 2027) so neither variant is silently discarded. Resolve before Phase 6

@@ -1,5 +1,10 @@
 # Constraints
 
+> ⚠️ **Generated snapshot, extracted 2026-08-11 — partially stale.** It still describes the
+> flagship as approximately 4B. DEC-0009 (2026-08-26) makes the flagship approximately 27B and
+> withdraws the 4B target. Authority sits with `docs/` and `project_state/` (DEC-0008); read
+> `docs/DECISION_LOG.md` before relying on any scale figure here.
+
 Extracted from `SPEC`-typed documents plus the immutable schedule. Ordered by manifest
 precedence: tier 0 (immutable schedule) first, then tier 1 (locked shared contracts and safety
 rules), then tier 2 (track specifications).

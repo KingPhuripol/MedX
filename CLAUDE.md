@@ -8,7 +8,7 @@ Advance one verified milestone at a time. Optimize for research validity, produc
 
 ## Two tracks, one project
 
-**Research Track:** build and release an open-weight multi-disease medical multimodal model. The flagship target is approximately 4B parameters. It must support clinical text, 2D images, 3D CT/MRI, structured data, and longitudinal patient journeys through a case-adaptive discrete, typed, exportable, replayable, inspectable DAG.
+**Research Track:** build and release an open-weight multi-disease medical multimodal model. The flagship target is approximately 27B parameters (DEC-0009, superseding DEC-0002). It must support clinical text, 2D images, 3D CT/MRI, structured data, and longitudinal patient journeys through a case-adaptive discrete, typed, exportable, replayable, inspectable DAG.
 
 **Innovation Track:** build an API-first AI Clinical Front Door for intake, urgency, care-pathway support, next-information selection, calibrated uncertainty, escalation, auditability, and human confirmation.
 
@@ -89,7 +89,7 @@ Run `/data-audit` and `/temporal-leakage-audit` before training and after any da
 
 Architecture comparisons must use fixed, predeclared splits and comparable parameters, tokens/steps, optimization, modality availability, and compute. Report exceptions.
 
-The 4B run is prohibited until small-model evidence shows:
+The flagship 27B run is prohibited until small-model evidence shows:
 
 - case-dependent graph diversity;
 - no routing or all-node collapse;
@@ -98,8 +98,9 @@ The 4B run is prohibited until small-model evidence shows:
 - working graph interventions and faithfulness metrics;
 - stable training, recovery, evaluation, and artifact pipelines;
 - approved data, compute budget, evaluation plan, and rollback plan.
+- a compute, storage, cost, and schedule estimate made against 27B; no estimate carried over from the withdrawn 4B target is valid.
 
-The 27B model is P4 stretch scope. It may begin only after the 4B release candidate satisfies every success gate and humans approve compute and schedule impact.
+There is no larger stretch model above the flagship. The approximately 4B target is withdrawn and is not a project deliverable. If compute cannot support stable 27B training, the fallback is the strongest valid smaller model, reported at its true scale and never relabelled — never a headline figure the evidence does not support.
 
 Never invent results, tune the test set, select metrics after results, hide failed runs, or compare unequal budgets without disclosure.
 
@@ -109,7 +110,7 @@ Never invent results, tune the test set, select metrics after results, hide fail
 - Tier 1: short smoke run on one device; autonomous within documented limits.
 - Tier 2: small experiment, at most one GPU and at most 60 minutes; requires a valid manifest.
 - Tier 3: controlled research run beyond Tier 2; human approval and declared budget required.
-- Tier 4: flagship 4B or any multi-GPU/multi-node run; explicit human approval every run.
+- Tier 4: flagship approximately 27B or any multi-GPU/multi-node run; explicit human approval every run.
 
 Every run requires a validated manifest, code revision, config hash, data/split versions, seed, budget, metrics, artifact locations, and status. Publishing or deleting artifacts always requires human approval.
 
