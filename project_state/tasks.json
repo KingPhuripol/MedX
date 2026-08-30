@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-08-11T09:08:36+07:00",
+  "updated_at": "2026-08-30T17:30:00+07:00",
   "tasks": [
     {
       "task_id": "TASK-0001",
@@ -9,16 +9,25 @@
       "workstream": "PM",
       "milestone": "M0",
       "priority": "P0",
-      "status": "IN_PROGRESS",
+      "status": "BLOCKED",
       "dependencies": [],
       "planned_start": "2026-08-11",
-      "due_date": "2026-08-12",
-      "definition_of_done": ["Submission receipt or explicit confirmation of non-submission is recorded", "Advisor identity and contact path are recorded or escalated"],
-      "evidence_required": ["Submission receipt, course-system status, or explicit human confirmation"],
-      "evidence": ["Explicit human confirmation by the project owner on 2026-08-11 that the Group Application has been submitted; no receipt document archived yet"],
-      "blocker": "Advisor identity and contact path are still unrecorded; submission state is now confirmed",
-      "risk_level": "HIGH",
-      "updated_at": "2026-08-11T09:08:36+07:00"
+      "due_date": "2026-09-05",
+      "definition_of_done": [
+        "Submission receipt or explicit confirmation of non-submission is recorded",
+        "Advisor identity and contact path are recorded or escalated"
+      ],
+      "evidence_required": [
+        "Submission receipt, course-system status, or explicit human confirmation"
+      ],
+      "evidence": [
+        "Explicit human confirmation by the project owner on 2026-08-11 that the Group Application has been submitted; no receipt document archived yet",
+        "Advisor identity recorded 2026-08-26 as ดร.สัญญ์สิริ ธารประดับ, confirmed directly by the project owner; no field inferred",
+        "Advisor identity independently corroborated on 2026-08-30 by the digital signature embedded in sources/2026-08-28_project_idea_submitted_signed.pdf (Sansiri Tarnpradab, signed 2026-08-28 13:48:54 +07:00); see docs/academic/SUBMISSION_RECORD.md"
+      ],
+      "blocker": "Submission itself was confirmed by the project owner on 2026-08-11 and DL-0001 is recorded as met. What is still missing is documentary evidence: the submission receipt is not archived and the advisor contact path is not recorded. Both require a human to retrieve them; no agent may infer or generate them.",
+      "risk_level": "MEDIUM",
+      "updated_at": "2026-08-30T17:30:00+07:00"
     },
     {
       "task_id": "TASK-0002",
@@ -27,16 +36,28 @@
       "workstream": "PM",
       "milestone": "M0",
       "priority": "P0",
-      "status": "REVIEW",
-      "dependencies": ["TASK-0001"],
+      "status": "DONE",
+      "dependencies": [
+        "TASK-0001"
+      ],
       "planned_start": "2026-08-11",
       "due_date": "2026-08-14",
-      "definition_of_done": ["Title, five members, student IDs, advisor and signature are verified", "Application is submitted before 23:55 Asia/Bangkok if required", "Receipt is archived"],
-      "evidence_required": ["Final signed form", "Submission receipt"],
-      "evidence": ["Explicit human confirmation by the project owner on 2026-08-11 that the application was submitted"],
-      "blocker": "Submission confirmed by the owner, but the signed form and submission receipt are not archived, so the definition of done is not yet met",
-      "risk_level": "HIGH",
-      "updated_at": "2026-08-11T09:08:36+07:00"
+      "definition_of_done": [
+        "Title, five members, student IDs, advisor and signature are verified",
+        "Application is submitted before 23:55 Asia/Bangkok if required",
+        "Receipt is archived"
+      ],
+      "evidence_required": [
+        "Final signed form",
+        "Submission receipt"
+      ],
+      "evidence": [
+        "Explicit human confirmation by the project owner on 2026-08-11 that the application was submitted",
+        "Submission confirmed by the project owner on 2026-08-11; RISK-0001 closed; .planning/ROADMAP.md records DL-0001 as submitted. Archiving of the receipt document remains open under TASK-0001."
+      ],
+      "blocker": null,
+      "risk_level": "LOW",
+      "updated_at": "2026-08-30T17:30:00+07:00"
     },
     {
       "task_id": "TASK-0003",
@@ -45,34 +66,59 @@
       "workstream": "CROSS_TRACK",
       "milestone": "M1",
       "priority": "P1",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "dependencies": [],
       "planned_start": "2026-08-11",
       "due_date": "2026-08-14",
-      "definition_of_done": ["One outline maps problem, contribution, feasibility, method, evaluation, safety and risk claims to owners and evidence", "Research and Innovation are presented as one integrated project"],
-      "evidence_required": ["Reviewed outline linked from the Project Idea working document"],
-      "evidence": ["docs/PROJECT_CHARTER.md", "docs/research/RESEARCH_SPEC.md", "docs/innovation/PRODUCT_SPEC.md"],
-      "blocker": null,
+      "definition_of_done": [
+        "One outline maps problem, contribution, feasibility, method, evaluation, safety and risk claims to owners and evidence",
+        "Research and Innovation are presented as one integrated project"
+      ],
+      "evidence_required": [
+        "Reviewed outline linked from the Project Idea working document"
+      ],
+      "evidence": [
+        "docs/PROJECT_CHARTER.md",
+        "docs/research/RESEARCH_SPEC.md",
+        "docs/innovation/PRODUCT_SPEC.md",
+        "docs/academic/PROJECT_IDEA_CLAIMS.md maps every claim in the submitted document to its source or to an explicit hypothesis / planned-work label, with the accountable owner per claim"
+      ],
+      "blocker": "None",
       "risk_level": "HIGH",
-      "updated_at": "2026-08-11T04:00:00+07:00"
+      "updated_at": "2026-08-26T12:30:00+07:00"
     },
     {
       "task_id": "TASK-0004",
       "title": "Build literature and benchmark novelty matrix",
-      "owner": "Phurinat Polasa",
+      "owner": "Thanapol Popit",
       "workstream": "RESEARCH",
       "milestone": "M1",
       "priority": "P1",
       "status": "READY",
-      "dependencies": ["TASK-0003"],
-      "planned_start": "2026-08-12",
-      "due_date": "2026-08-17",
-      "definition_of_done": ["Primary-source literature matrix covers medical multimodal, dynamic/sparse computation, graph faithfulness and Clinical Front Door work", "Public benchmark access, license and reproducibility constraints are verified"],
-      "evidence_required": ["Search protocol", "Citation and benchmark matrix", "Novelty threats and baseline shortlist"],
-      "evidence": [],
-      "blocker": null,
+      "dependencies": [
+        "TASK-0003"
+      ],
+      "planned_start": "2026-09-07",
+      "due_date": "2026-09-18",
+      "definition_of_done": [
+        "Primary-source literature matrix covers medical multimodal, dynamic/sparse computation, graph faithfulness and Clinical Front Door work",
+        "Public benchmark access, license and reproducibility constraints are verified"
+      ],
+      "evidence_required": [
+        "Search protocol",
+        "Citation and benchmark matrix",
+        "Novelty threats and baseline shortlist"
+      ],
+      "evidence": [
+        "Partial 2026-08-26: 18 external references verified against primary sources (Crossref REST, DOI CSL-JSON, PubMed E-utilities, arXiv API, JMLR BibTeX) and formatted in APA 7 in docs/academic/PROJECT_IDEA.md. No reference was written from memory. Still owed for this task: the novelty comparison matrix, the search protocol, and the baseline shortlist required by the definition of done",
+        "Revised 2026-08-26 on the project owner's instruction to drop pre-2020 sources: the reference set is now 19 entries spanning 2020-2026, weighted toward current multimodal medical models (Med-PaLM M, Med-Gemini, LLaVA-Med, BiomedCLIP) and contemporary evidence on deployment failure, leakage, and explanation faithfulness. MIMIC-CXR, CheXpert, BraTS and VQA-RAD were removed from the document but remain on the TASK-0005 dataset feasibility list; the cited candidates are MIMIC-IV, SLAKE and CT-RATE",
+        "Narrowed 2026-08-26 to 8 references on the owner's instruction, rebalanced so that 5 of 8 are AI/ML architecture or method papers (Han 2022 dynamic networks, Jiang 2024 Mixtral, Li 2023 LLaVA-Med, Turpin 2023 CoT faithfulness, Hamamci 2026 3D CT foundation model). Each reference now supports a distinct claim with no redundancy. Deliberately not cited: any base-model family paper, because the project has not decided what it builds on and citing one would pre-empt that decision",
+        "Range tightened 2026-08-26 to 2022-2026 on the owner's instruction. Wong et al. (2021) was the only entry outside it and was replaced by Bedi et al. (2025) JAMA, whose systematic review of 519 health care LLM evaluations reports that 5% used real patient care data, 95.4% measured only accuracy, and 1.2% measured calibration and uncertainty. Those figures were read from the PubMed abstract, not recalled, and they now carry the document's novelty argument",
+        "Extended 2026-08-26 to 13 references (all 2022-2026) by closing four gaps the document claimed but did not support: multimodal biomedical AI as a field (Acosta 2022), EHR and longitudinal foundation models (Wornow 2023), per-patient predictive uncertainty (Banerji 2023), and human-AI collaboration (Goh 2024 RCT), plus the DECIDE-AI reporting guideline for early-stage clinical decision-support evaluation (Vasey 2022). Reported figures from Bedi and Goh were read from PubMed abstracts, not recalled"
+      ],
+      "blocker": "Reassigned from Phurinat on 2026-08-30 to hold P0/P1 concentration under the 40% capacity rule. Citation coverage is partly advanced, but the novelty matrix, the documented search protocol and the baseline shortlist do not exist and are all required for DL-0004.",
       "risk_level": "HIGH",
-      "updated_at": "2026-08-11T04:00:00+07:00"
+      "updated_at": "2026-08-30T17:30:00+07:00"
     },
     {
       "task_id": "TASK-0005",
@@ -80,17 +126,26 @@
       "owner": "Jakkapat Bunjongruxsa",
       "workstream": "DATA",
       "milestone": "M1",
-      "priority": "P1",
-      "status": "READY",
-      "dependencies": ["TASK-0003"],
-      "planned_start": "2026-08-12",
-      "due_date": "2026-08-17",
-      "definition_of_done": ["Candidate data sources have access, license, patient linkage, temporal fields, modalities and fallback documented", "Ethics/CITI and external-transfer constraints are explicit"],
-      "evidence_required": ["Dataset feasibility matrix", "License and authorization notes", "Temporal and patient-linkage assessment"],
+      "priority": "P0",
+      "status": "IN_PROGRESS",
+      "dependencies": [
+        "TASK-0003"
+      ],
+      "planned_start": "2026-08-31",
+      "due_date": "2026-09-06",
+      "definition_of_done": [
+        "Candidate data sources have access, license, patient linkage, temporal fields, modalities and fallback documented",
+        "Ethics/CITI and external-transfer constraints are explicit"
+      ],
+      "evidence_required": [
+        "Dataset feasibility matrix",
+        "License and authorization notes",
+        "Temporal and patient-linkage assessment"
+      ],
       "evidence": [],
-      "blocker": null,
+      "blocker": "Credentialed access to MIMIC-IV and MIMIC-CXR via PhysioNet requires completed CITI training (TASK-0011), so the access dimension of this inventory cannot close before CITI does. The licence, patient-linkage, temporal-availability and modality-coverage dimensions can and must proceed now. This is a documentary survey only: no dataset is downloaded and no patient data is touched.",
       "risk_level": "CRITICAL",
-      "updated_at": "2026-08-11T04:00:00+07:00"
+      "updated_at": "2026-08-30T17:30:00+07:00"
     },
     {
       "task_id": "TASK-0006",
@@ -100,15 +155,24 @@
       "milestone": "M1",
       "priority": "P1",
       "status": "READY",
-      "dependencies": ["TASK-0003"],
-      "planned_start": "2026-08-12",
-      "due_date": "2026-08-17",
-      "definition_of_done": ["End-to-end workflow, users, non-use boundary, gateway adapters, audit events and offline mock path are reviewed", "Canonical API fixture validates"],
-      "evidence_required": ["Workflow review", "Versioned API request and response fixtures", "Provider isolation checklist"],
+      "dependencies": [
+        "TASK-0003"
+      ],
+      "planned_start": "2026-09-07",
+      "due_date": "2026-09-13",
+      "definition_of_done": [
+        "End-to-end workflow, users, non-use boundary, gateway adapters, audit events and offline mock path are reviewed",
+        "Canonical API fixture validates"
+      ],
+      "evidence_required": [
+        "Workflow review",
+        "Versioned API request and response fixtures",
+        "Provider isolation checklist"
+      ],
       "evidence": [],
-      "blocker": null,
+      "blocker": "Overdue since 2026-08-17. Required for the Innovation sections of DL-0004.",
       "risk_level": "HIGH",
-      "updated_at": "2026-08-11T04:00:00+07:00"
+      "updated_at": "2026-08-30T17:30:00+07:00"
     },
     {
       "task_id": "TASK-0007",
@@ -117,34 +181,57 @@
       "workstream": "DOCUMENTATION",
       "milestone": "M1",
       "priority": "P1",
-      "status": "READY",
-      "dependencies": ["TASK-0004", "TASK-0005", "TASK-0006"],
+      "status": "DONE",
+      "dependencies": [
+        "TASK-0004",
+        "TASK-0005",
+        "TASK-0006"
+      ],
       "planned_start": "2026-08-17",
       "due_date": "2026-08-18",
-      "definition_of_done": ["Draft is 2-4 pages plus references", "All sections are internally consistent and planned claims are labeled"],
-      "evidence_required": ["Integrated draft", "Claim-source map"],
-      "evidence": [],
-      "blocker": "Dependent feasibility evidence is not yet complete",
-      "risk_level": "HIGH",
-      "updated_at": "2026-08-11T04:00:00+07:00"
+      "definition_of_done": [
+        "Draft is 2-4 pages plus references",
+        "All sections are internally consistent and planned claims are labeled"
+      ],
+      "evidence_required": [
+        "Integrated draft",
+        "Claim-source map"
+      ],
+      "evidence": [
+        "SUBMITTED AND SIGNED. Evidence of record: sources/2026-08-28_project_idea_submitted_signed.pdf, SHA-256 667271ff7e154a2fa5bf83985daa9241aab7790b909d74135c21443453b28d89, signed by the advisor 2026-08-28 13:48:54 +07:00, before the immutable DL-0002 deadline of 2026-08-28.",
+        "Submission record with checksum and signature metadata: docs/academic/SUBMISSION_RECORD.md",
+        "Transcription of the submitted document: docs/academic/PROJECT_IDEA.md, verified character-identical to the PDF (6,473 Thai characters, exact sequence match). Regenerating docs/academic/SeniorProject_IDEA.docx with `make idea-docx` reproduces the submitted text exactly.",
+        "The submitted version carries 5 references and no in-text citations. The earlier 13-reference draft is retained as docs/academic/PROPOSAL_SOURCE_DRAFT.md as input to the Proposal Report.",
+        "Shipped without the evidence its dependencies TASK-0004, TASK-0005 and TASK-0006 were to supply; the document therefore rests on accepted internal specifications, not on completed feasibility work. Those three tasks remain open and are required for DL-0004."
+      ],
+      "blocker": null,
+      "risk_level": "LOW",
+      "updated_at": "2026-08-30T17:30:00+07:00"
     },
     {
       "task_id": "TASK-0008",
-      "title": "Review Project Idea safety and evaluation design",
+      "title": "Retrospective safety and evaluation review of the submitted Project Idea",
       "owner": "Thanrada Tungweerapornpong",
       "workstream": "SAFETY",
       "milestone": "M1",
       "priority": "P1",
       "status": "READY",
-      "dependencies": ["TASK-0007"],
-      "planned_start": "2026-08-19",
-      "due_date": "2026-08-21",
-      "definition_of_done": ["Safety claims, under-triage emphasis, uncertainty, human review, metric plan and failure modes are assessed independently"],
-      "evidence_required": ["Read-only safety and evaluation findings with verdict"],
+      "dependencies": [
+        "TASK-0007"
+      ],
+      "planned_start": "2026-09-07",
+      "due_date": "2026-09-13",
+      "definition_of_done": [
+        "Safety claims, under-triage emphasis, uncertainty, human review, metric plan and failure modes are assessed independently"
+      ],
+      "evidence_required": [
+        "Written review of the submitted document against SAFETY_SPEC and EVALUATION_CONTRACT",
+        "List of claims to correct or substantiate in the Proposal Report"
+      ],
       "evidence": [],
-      "blocker": "Requires the first integrated draft",
-      "risk_level": "HIGH",
-      "updated_at": "2026-08-11T04:00:00+07:00"
+      "blocker": "The pre-submission review window closed unmet. Phase 1 CONTEXT D-03 requires review by a member who did not write the document; the advisor signature is an approval to submit, not that internal review. This task now runs retrospectively and its findings feed the Proposal Report.",
+      "risk_level": "MEDIUM",
+      "updated_at": "2026-08-30T17:30:00+07:00"
     },
     {
       "task_id": "TASK-0009",
@@ -154,15 +241,23 @@
       "milestone": "M1",
       "priority": "P2",
       "status": "READY",
-      "dependencies": ["TASK-0004", "TASK-0005"],
-      "planned_start": "2026-08-17",
-      "due_date": "2026-08-20",
-      "definition_of_done": ["Smallest prototype, typed operators, discrete path, controls, diagnostics and kill tests are concrete"],
-      "evidence_required": ["Architecture feasibility note", "Prototype test plan"],
+      "dependencies": [
+        "TASK-0004",
+        "TASK-0005"
+      ],
+      "planned_start": "2026-09-14",
+      "due_date": "2026-09-20",
+      "definition_of_done": [
+        "Smallest prototype, typed operators, discrete path, controls, diagnostics and kill tests are concrete"
+      ],
+      "evidence_required": [
+        "Architecture feasibility note",
+        "Prototype test plan"
+      ],
       "evidence": [],
       "blocker": null,
       "risk_level": "HIGH",
-      "updated_at": "2026-08-11T04:00:00+07:00"
+      "updated_at": "2026-08-30T17:30:00+07:00"
     },
     {
       "task_id": "TASK-0010",
@@ -172,15 +267,23 @@
       "milestone": "M1",
       "priority": "P2",
       "status": "READY",
-      "dependencies": ["TASK-0004", "TASK-0006"],
-      "planned_start": "2026-08-17",
-      "due_date": "2026-08-20",
-      "definition_of_done": ["Primary and secondary medical, architecture and Clinical Front Door metrics are defined with denominators and safety priority"],
-      "evidence_required": ["Evaluation metric draft", "Threats-to-validity note"],
+      "dependencies": [
+        "TASK-0004",
+        "TASK-0006"
+      ],
+      "planned_start": "2026-09-14",
+      "due_date": "2026-09-20",
+      "definition_of_done": [
+        "Primary and secondary medical, architecture and Clinical Front Door metrics are defined with denominators and safety priority"
+      ],
+      "evidence_required": [
+        "Evaluation metric draft",
+        "Threats-to-validity note"
+      ],
       "evidence": [],
       "blocker": null,
       "risk_level": "HIGH",
-      "updated_at": "2026-08-11T04:00:00+07:00"
+      "updated_at": "2026-08-30T17:30:00+07:00"
     },
     {
       "task_id": "TASK-0011",
@@ -188,17 +291,22 @@
       "owner": "All five members",
       "workstream": "CROSS_TRACK",
       "milestone": "M2",
-      "priority": "P1",
-      "status": "READY",
+      "priority": "P0",
+      "status": "IN_PROGRESS",
       "dependencies": [],
-      "planned_start": "2026-08-29",
+      "planned_start": "2026-08-31",
       "due_date": "2026-09-18",
-      "definition_of_done": ["Every member completes required CITI content", "Evidence is checked and archived before the internal deadline"],
-      "evidence_required": ["Completion evidence for all five members"],
+      "definition_of_done": [
+        "Every member completes required CITI content",
+        "Evidence is checked and archived before the internal deadline"
+      ],
+      "evidence_required": [
+        "Completion evidence for all five members"
+      ],
       "evidence": [],
-      "blocker": null,
-      "risk_level": "HIGH",
-      "updated_at": "2026-08-11T04:00:00+07:00"
+      "blocker": "On the critical path twice over: DL-0003 is immutable on 2026-09-25, and CITI completion is a precondition for PhysioNet credentialed access, which TASK-0005 needs to accept any MIMIC dataset. Starting late puts the data path, not just the academic deliverable, at risk.",
+      "risk_level": "CRITICAL",
+      "updated_at": "2026-08-30T17:30:00+07:00"
     },
     {
       "task_id": "TASK-0012",
@@ -208,15 +316,23 @@
       "milestone": "M2",
       "priority": "P2",
       "status": "BACKLOG",
-      "dependencies": ["TASK-0008", "TASK-0009", "TASK-0010"],
-      "planned_start": "2026-08-29",
-      "due_date": "2026-09-18",
-      "definition_of_done": ["Research problem, novelty, architecture, training, benchmarks, gates and feasibility sections exist with references"],
-      "evidence_required": ["Proposal Research section draft"],
+      "dependencies": [
+        "TASK-0008",
+        "TASK-0009",
+        "TASK-0010"
+      ],
+      "planned_start": "2026-09-14",
+      "due_date": "2026-09-25",
+      "definition_of_done": [
+        "Research problem, novelty, architecture, training, benchmarks, gates and feasibility sections exist with references"
+      ],
+      "evidence_required": [
+        "Proposal Research section draft"
+      ],
       "evidence": [],
       "blocker": null,
       "risk_level": "HIGH",
-      "updated_at": "2026-08-11T04:00:00+07:00"
+      "updated_at": "2026-08-30T17:30:00+07:00"
     },
     {
       "task_id": "TASK-0013",
@@ -226,15 +342,22 @@
       "milestone": "M2",
       "priority": "P2",
       "status": "BACKLOG",
-      "dependencies": ["TASK-0006", "TASK-0008"],
-      "planned_start": "2026-08-29",
-      "due_date": "2026-09-18",
-      "definition_of_done": ["Product, workflow, gateway, human review, audit, acceptance and demo plan sections exist"],
-      "evidence_required": ["Proposal Innovation section draft"],
+      "dependencies": [
+        "TASK-0006",
+        "TASK-0008"
+      ],
+      "planned_start": "2026-09-14",
+      "due_date": "2026-09-25",
+      "definition_of_done": [
+        "Product, workflow, gateway, human review, audit, acceptance and demo plan sections exist"
+      ],
+      "evidence_required": [
+        "Proposal Innovation section draft"
+      ],
       "evidence": [],
       "blocker": null,
       "risk_level": "HIGH",
-      "updated_at": "2026-08-11T04:00:00+07:00"
+      "updated_at": "2026-08-30T17:30:00+07:00"
     },
     {
       "task_id": "TASK-0014",
@@ -244,15 +367,21 @@
       "milestone": "M2",
       "priority": "P2",
       "status": "BACKLOG",
-      "dependencies": ["TASK-0005"],
-      "planned_start": "2026-08-29",
-      "due_date": "2026-09-18",
-      "definition_of_done": ["Data sources, patient journey, split, temporal integrity, authorization, ethics and fallback sections exist"],
-      "evidence_required": ["Proposal data/governance section draft"],
+      "dependencies": [
+        "TASK-0005"
+      ],
+      "planned_start": "2026-09-14",
+      "due_date": "2026-09-25",
+      "definition_of_done": [
+        "Data sources, patient journey, split, temporal integrity, authorization, ethics and fallback sections exist"
+      ],
+      "evidence_required": [
+        "Proposal data/governance section draft"
+      ],
       "evidence": [],
       "blocker": null,
       "risk_level": "CRITICAL",
-      "updated_at": "2026-08-11T04:00:00+07:00"
+      "updated_at": "2026-08-30T17:30:00+07:00"
     },
     {
       "task_id": "TASK-0015",
@@ -262,15 +391,99 @@
       "milestone": "M2",
       "priority": "P2",
       "status": "BACKLOG",
-      "dependencies": ["TASK-0008", "TASK-0010"],
-      "planned_start": "2026-08-29",
-      "due_date": "2026-09-18",
-      "definition_of_done": ["Frozen evaluation logic, statistics, safety controls, human factors, failure and reviewer plan sections exist"],
-      "evidence_required": ["Proposal evaluation/safety section draft"],
+      "dependencies": [
+        "TASK-0008",
+        "TASK-0010"
+      ],
+      "planned_start": "2026-09-14",
+      "due_date": "2026-09-25",
+      "definition_of_done": [
+        "Frozen evaluation logic, statistics, safety controls, human factors, failure and reviewer plan sections exist"
+      ],
+      "evidence_required": [
+        "Proposal evaluation/safety section draft"
+      ],
       "evidence": [],
       "blocker": null,
       "risk_level": "CRITICAL",
-      "updated_at": "2026-08-11T04:00:00+07:00"
+      "updated_at": "2026-08-30T17:30:00+07:00"
+    },
+    {
+      "task_id": "TASK-0016",
+      "title": "Close the remaining G0 governance artifacts",
+      "owner": "Thanrada Tungweerapornpong",
+      "workstream": "CROSS_TRACK",
+      "milestone": "M2",
+      "priority": "P1",
+      "status": "IN_PROGRESS",
+      "dependencies": [],
+      "planned_start": "2026-08-31",
+      "due_date": "2026-09-06",
+      "definition_of_done": [
+        "project_state/contract_versions.json exists and registers all five shared contracts",
+        "schemas/dataset-feasibility.schema.json exists",
+        "docs/shared/HUMAN_APPROVAL_POLICY.md carries a version header matching the other four contracts",
+        "Both new state files are registered in scripts/verify_harness.py and validated by it"
+      ],
+      "evidence_required": [
+        "Passing python3 scripts/verify_harness.py with a higher check count than the 236 recorded on 2026-08-30"
+      ],
+      "evidence": [],
+      "blocker": "Decided in the Phase 1 context session on 2026-08-11 and not implemented since; blocks the G0 gate.",
+      "risk_level": "HIGH",
+      "updated_at": "2026-08-30T17:30:00+07:00"
+    },
+    {
+      "task_id": "TASK-0017",
+      "title": "Propagate DEC-0009 (27B flagship) across all specifications",
+      "owner": "Phurinat Polasa",
+      "workstream": "PM",
+      "milestone": "M2",
+      "priority": "P1",
+      "status": "IN_PROGRESS",
+      "dependencies": [],
+      "planned_start": "2026-08-31",
+      "due_date": "2026-09-06",
+      "definition_of_done": [
+        "CLAUDE.md, .claude/rules/research.md, PROJECT_CHARTER.md, RESEARCH_SPEC.md, SUCCESS_CRITERIA.md, TRAINING_SPEC.md, MASTER_PLAN.md, MILESTONES.md and .planning/ROADMAP.md agree with DEC-0009",
+        "The MASTER_PLAN scope fallback ladder is rewritten coherently for a 27B flagship",
+        "No document still names approximately 4B as the flagship except where it records DEC-0002 history"
+      ],
+      "evidence_required": [
+        "Harness verification passing after the change",
+        "grep showing no stale 4B flagship references"
+      ],
+      "evidence": [],
+      "blocker": "Must land before Proposal drafting so that no 4B figure reaches DL-0004.",
+      "risk_level": "MEDIUM",
+      "updated_at": "2026-08-30T17:30:00+07:00"
+    },
+    {
+      "task_id": "TASK-0018",
+      "title": "Estimate compute, storage, cost and schedule for a 27B flagship run",
+      "owner": "Phurinat Polasa",
+      "workstream": "RESEARCH",
+      "milestone": "M2",
+      "priority": "P1",
+      "status": "READY",
+      "dependencies": [
+        "TASK-0017"
+      ],
+      "planned_start": "2026-09-07",
+      "due_date": "2026-09-20",
+      "definition_of_done": [
+        "Parameter, token, memory, wall-clock, storage and cost estimates recorded for the 27B target",
+        "Estimates compared against actually available hardware",
+        "A stated position on whether the target is reachable, and which fallback rung applies if it is not"
+      ],
+      "evidence_required": [
+        "Written estimate with its assumptions and sources",
+        "RISK-0004 updated against the estimate"
+      ],
+      "evidence": [],
+      "blocker": "DEC-0009 records the owner direction but establishes no compute feasibility. RISK-0004 is CRITICAL and no estimate carried over from the withdrawn 4B target remains valid. Required before any Tier 3 or Tier 4 request.",
+      "risk_level": "CRITICAL",
+      "updated_at": "2026-08-30T17:30:00+07:00"
     }
   ]
 }

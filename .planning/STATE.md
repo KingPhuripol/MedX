@@ -5,10 +5,10 @@ milestone_name: milestone
 current_phase: 1
 current_phase_name: Governance Baseline and Project Idea
 status: planning
-stopped_at: Phase 1 context gathered
-last_updated: "2026-08-11T02:34:34.834Z"
-last_activity: 2026-08-11
-last_activity_desc: Ingested 23 project documents; wrote PROJECT.md, REQUIREMENTS.md, ROADMAP.md, STATE.md
+stopped_at: Project Idea submitted; G0 gate still open
+last_updated: "2026-08-30T10:30:00.000Z"
+last_activity: 2026-08-30
+last_activity_desc: Archived the signed Project Idea as evidence, synced the repository to the as-submitted version, and re-planned the schedule
 progress:
   total_phases: 1
   completed_phases: 0
@@ -31,11 +31,11 @@ traceable to evidence that was actually available at the simulated decision time
 Phase: 1 of 7 (Governance Baseline and Project Idea)
 Plan: 0 of TBD in current phase
 Status: Ready to plan
-Last activity: 2026-08-11 — Ingested 23 project documents; wrote PROJECT.md, REQUIREMENTS.md, ROADMAP.md, STATE.md
+Last activity: 2026-08-30 — Archived the signed Project Idea as evidence, synced the repository to the as-submitted version, and re-planned the schedule
 
 Progress: [░░░░░░░░░░] 0%
 
-**Next official deadline:** DL-0002 Project Idea — 28 Aug 2026, Asia/Bangkok (17 days out, immutable)
+**Next official deadline:** DL-0003 CITI — 25 Sep 2026, Asia/Bangkok (immutable). DL-0002 Project Idea was submitted and signed on 28 Aug 2026.
 
 ## Performance Metrics
 
@@ -85,7 +85,7 @@ None captured yet.
 - **GOV-02 / WARN-01** — deadline transcription unverified; source PDF absent from `sources/`.
   Dates remain binding (they agree across all three sources); the gap is provenance. Phase 1.
 
-- **WARN-03** — M8 4B release-candidate window unresolved: MILESTONES.md says Mar-Apr 2027,
+- **WARN-03** — M8 flagship release-candidate window unresolved: MILESTONES.md says Mar-Apr 2027,
   MASTER_PLAN.md says Feb-Mar 2027, equal precedence, no winner picked. Phase 6 records the union.
   Needs a human decision before Phase 6 planning.
 
