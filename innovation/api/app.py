@@ -28,7 +28,7 @@ from innovation.frontdoor import (
 )
 from innovation.frontdoor.service import ACTIONS_REQUIRING_REASON, Recommendation
 from innovation.gateway import ModelGateway
-from innovation.gateway.providers import MockProvider
+from innovation.gateway.registry import build_provider
 from shared.contracts.journey import PatientJourney
 from shared.contracts.model_api import GatewayResponse
 
@@ -173,7 +173,9 @@ def _require_synthetic(classification: str) -> None:
 
 def create_app(service: FrontDoorService | None = None) -> FastAPI:
     """Build the app. The service is injectable so tests need no network."""
-    service = service or FrontDoorService(ModelGateway(MockProvider()))
+    # The provider comes from deployment configuration, never from a request payload —
+    # a client cannot ask the API to use a different model.
+    service = service or FrontDoorService(ModelGateway(build_provider()))
 
     def get_journey(journey_id: str) -> PatientJourney:
         try:
@@ -202,6 +204,7 @@ def create_app(service: FrontDoorService | None = None) -> FastAPI:
             "contract_version": "1.0.0",
             "provider": service.gateway.provider.name,
             "policy_version": service.gateway.safety.version,
+            "provider_circuit": service.gateway.breaker.state,
         }
 
     @app.put("/journeys/{journey_id}", status_code=status.HTTP_201_CREATED)

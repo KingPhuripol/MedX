@@ -13,12 +13,14 @@ unauthorized payload never leaves the process.
 
 from __future__ import annotations
 
+import concurrent.futures
 import hashlib
 import json
 import uuid
 from datetime import datetime, timezone
 
 from innovation.gateway.audit import AuditLog, AuditRecord
+from innovation.gateway.breaker import CircuitBreaker
 from innovation.gateway.providers.base import (
     Provider,
     ProviderFailure,
@@ -61,11 +63,24 @@ class ModelGateway:
         *,
         audit_log: AuditLog | None = None,
         safety_policy: SafetyPolicy | None = None,
+        breaker: CircuitBreaker | None = None,
+        enforce_timeout: bool = True,
     ) -> None:
         self.provider = provider
         self.audit = audit_log or AuditLog()
         self.safety = safety_policy or SafetyPolicy()
+        self.breaker = breaker or CircuitBreaker()
+        self._enforce_timeout = enforce_timeout
         self._seen_request_ids: dict[str, GatewayResponse] = {}
+        #: One worker: provider calls are serialised per gateway, which is what makes the
+        #: deadline meaningful rather than merely advisory.
+        self._executor = concurrent.futures.ThreadPoolExecutor(
+            max_workers=1, thread_name_prefix="gateway-provider"
+        )
+
+    def close(self) -> None:
+        """Release the provider worker. Safe to call more than once."""
+        self._executor.shutdown(wait=False, cancel_futures=True)
 
     # ------------------------------------------------------------------ public API
 
@@ -176,29 +191,71 @@ class ModelGateway:
     # ------------------------------------------------------------------- provider
 
     def _call_provider(self, request: GatewayRequest) -> ProviderOutput:
+        # A provider that has been failing is not called at all. Refusing immediately
+        # keeps the human workflow usable instead of stalling it behind a dead service,
+        # and it is what stops a retry storm forming.
+        if not self.breaker.allow():
+            raise ContractViolation(
+                ErrorCode.INTERNAL_SAFE_FAILURE,
+                f"provider circuit is {self.breaker.describe()}; not called",
+                retryable=True,
+            )
+
         try:
-            output = self.provider.infer(request)
+            output = self._invoke_with_deadline(request)
         except ProviderTimeout as exc:
+            self.breaker.record_failure()
             raise ContractViolation(
                 ErrorCode.PROVIDER_TIMEOUT,
                 f"provider exceeded {request.provider_constraints.timeout_ms} ms",
                 retryable=True,
             ) from exc
         except ProviderFailure as exc:
+            self.breaker.record_failure()
             raise ContractViolation(
                 ErrorCode.INTERNAL_SAFE_FAILURE, f"provider failed safely: {exc}"
             ) from exc
         except Exception as exc:
             # An adapter that raises something unexpected is quarantined, never rendered.
+            self.breaker.record_failure()
             raise ContractViolation(
                 ErrorCode.INVALID_PROVIDER_OUTPUT, f"provider raised an unhandled error: {exc}"
             ) from exc
 
         if not isinstance(output, ProviderOutput):
+            # A malformed return is a provider failure too — it must count towards the
+            # breaker, or a consistently broken adapter would be retried forever.
+            self.breaker.record_failure()
             raise ContractViolation(
                 ErrorCode.INVALID_PROVIDER_OUTPUT, "provider did not return a ProviderOutput"
             )
+
+        self.breaker.record_success()
         return output
+
+    def _invoke_with_deadline(self, request: GatewayRequest) -> ProviderOutput:
+        """Call the provider, honouring `provider_constraints.timeout_ms`.
+
+        The deadline was previously passed to providers and enforced by nobody. It runs on
+        a worker thread so that a provider which never returns cannot hold the request
+        open indefinitely.
+
+        Known limitation, stated rather than hidden: Python cannot kill the worker, so a
+        genuinely hung provider leaks one thread until the process ends. The caller is
+        still released on time and the breaker opens after repeated timeouts, so the
+        workflow stays usable — but this is a prototype-grade mitigation, not a fix.
+        """
+        if not self._enforce_timeout:
+            return self.provider.infer(request)
+
+        future = self._executor.submit(self.provider.infer, request)
+        try:
+            return future.result(timeout=request.provider_constraints.timeout_ms / 1000)
+        except concurrent.futures.TimeoutError as exc:
+            future.cancel()
+            raise ProviderTimeout(
+                f"no response within {request.provider_constraints.timeout_ms} ms"
+            ) from exc
 
     # ------------------------------------------------------------------- response
 
