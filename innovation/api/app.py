@@ -13,7 +13,9 @@ the safety behaviour appearing at the edge.
 
 from __future__ import annotations
 
+import os
 from datetime import datetime
+from pathlib import Path
 from typing import Literal
 
 from fastapi import Body, FastAPI, HTTPException, Path, status
@@ -28,7 +30,9 @@ from innovation.frontdoor import (
 )
 from innovation.frontdoor.service import ACTIONS_REQUIRING_REASON, Recommendation
 from innovation.gateway import ModelGateway
+from innovation.gateway.audit import AuditLog
 from innovation.gateway.registry import build_provider
+from innovation.store import SqliteStore
 from shared.contracts.journey import PatientJourney
 from shared.contracts.model_api import GatewayResponse
 
@@ -171,11 +175,31 @@ def _require_synthetic(classification: str) -> None:
         )
 
 
+ENV_DB = "FRONT_DOOR_DB"
+ENV_AUDIT_LOG = "FRONT_DOOR_AUDIT_LOG"
+
+
+def build_default_service() -> FrontDoorService:
+    """Assemble the service from deployment configuration.
+
+    Storage is opt-in. Without FRONT_DOOR_DB the prototype runs entirely in memory, which
+    is what the offline demo wants and what leaves nothing patient-shaped on disk. With
+    it, encounters survive a restart and the audit trail lands in a database whose
+    triggers refuse UPDATE and DELETE.
+
+    The provider likewise comes from deployment configuration, never from a request
+    payload — a client cannot ask the API to use a different model.
+    """
+    db = os.environ.get(ENV_DB)
+    store = SqliteStore(db) if db else None
+    audit_path = os.environ.get(ENV_AUDIT_LOG)
+    audit = AuditLog(path=Path(audit_path) if audit_path else None, store=store)
+    return FrontDoorService(ModelGateway(build_provider(), audit_log=audit), store=store)
+
+
 def create_app(service: FrontDoorService | None = None) -> FastAPI:
     """Build the app. The service is injectable so tests need no network."""
-    # The provider comes from deployment configuration, never from a request payload —
-    # a client cannot ask the API to use a different model.
-    service = service or FrontDoorService(ModelGateway(build_provider()))
+    service = service or build_default_service()
 
     def get_journey(journey_id: str) -> PatientJourney:
         try:
@@ -205,6 +229,7 @@ def create_app(service: FrontDoorService | None = None) -> FastAPI:
             "provider": service.gateway.provider.name,
             "policy_version": service.gateway.safety.version,
             "provider_circuit": service.gateway.breaker.state,
+            "persistent": service.store is not None,
         }
 
     @app.put("/journeys/{journey_id}", status_code=status.HTTP_201_CREATED)

@@ -19,7 +19,10 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Literal, get_args
+from typing import TYPE_CHECKING, Literal, get_args
+
+if TYPE_CHECKING:  # pragma: no cover - import cycle guard
+    from innovation.store import SqliteStore
 
 from innovation.frontdoor.intake import IntakeItem, append_event, build_journey
 from innovation.frontdoor.planner import InterviewPlan, plan_next_information
@@ -27,6 +30,7 @@ from innovation.gateway.gateway import ModelGateway
 from shared.contracts.journey import PatientJourney
 from shared.contracts.model_api import (
     Authorization,
+    GatewayResponse,
     EvidenceRef,
     GatewayRequest,
     GatewayResponse,
@@ -111,14 +115,49 @@ class Recommendation:
 class FrontDoorService:
     """Runs the end-to-end flow for one simulated encounter at a time."""
 
-    def __init__(self, gateway: ModelGateway) -> None:
+    def __init__(self, gateway: ModelGateway, store: "SqliteStore | None" = None) -> None:
         self.gateway = gateway
+        #: Optional durable store. Without it the service is fully in-memory, which is
+        #: what the offline demo and most tests want.
+        self.store = store
         self._journeys: dict[str, PatientJourney] = {}
         self._recommendations: dict[str, Recommendation] = {}
         #: journey_id -> recommendation ids, in the order they were produced. History is
         #: kept so a later assessment shows how new evidence changed the output rather
         #: than quietly replacing it (workflow step 5).
         self._history: dict[str, list[str]] = {}
+        if store is not None:
+            self._rehydrate()
+
+    def _rehydrate(self) -> None:
+        """Load what a previous process wrote, so a restart does not lose an encounter."""
+        assert self.store is not None
+        for journey_id in self.store.journey_ids():
+            journey = self.store.get_journey(journey_id)
+            if journey is not None:
+                self._journeys[journey_id] = journey
+            for row in self.store.recommendations_for(journey_id):
+                response = GatewayResponse.model_validate_json(row["response_json"])
+                reviews = tuple(
+                    ReviewRecord(
+                        reviewer_id=r["reviewer_id"],
+                        action=r["action"],
+                        reviewed_at=datetime.fromisoformat(r["reviewed_at"]),
+                        reason_code=r["reason_code"],
+                        note=r["note"],
+                    )
+                    for r in self.store.reviews_for(row["recommendation_id"])
+                )
+                recommendation = Recommendation(
+                    recommendation_id=row["recommendation_id"],
+                    journey_id=row["journey_id"],
+                    decision_time=datetime.fromisoformat(row["decision_time"]),
+                    snapshot_checksum=row["snapshot_checksum"],
+                    response=response,
+                    reviews=reviews,
+                )
+                self._recommendations[recommendation.recommendation_id] = recommendation
+                self._history.setdefault(journey_id, []).append(recommendation.recommendation_id)
 
     # -------------------------------------------------------------------- encounter
 
@@ -146,12 +185,18 @@ class FrontDoorService:
             data_classification=data_classification,
         )
         self._journeys[journey_id] = journey
+        self._persist_journey(journey)
         return journey
 
     def register(self, journey: PatientJourney) -> PatientJourney:
         """Store a journey built elsewhere, e.g. a fixture."""
         self._journeys[journey.journey_id] = journey
+        self._persist_journey(journey)
         return journey
+
+    def _persist_journey(self, journey: PatientJourney) -> None:
+        if self.store is not None:
+            self.store.put_journey(journey)
 
     def journey(self, journey_id: str) -> PatientJourney:
         if journey_id not in self._journeys:
@@ -171,6 +216,7 @@ class FrontDoorService:
             current, item, default_time=default_time or datetime.now(timezone.utc)
         )
         self._journeys[journey_id] = updated
+        self._persist_journey(updated)
         return updated
 
     def next_information(
@@ -224,6 +270,15 @@ class FrontDoorService:
         )
         self._recommendations[recommendation.recommendation_id] = recommendation
         self._history.setdefault(journey.journey_id, []).append(recommendation.recommendation_id)
+        if self.store is not None:
+            self.store.put_recommendation(
+                recommendation_id=recommendation.recommendation_id,
+                journey_id=journey.journey_id,
+                request_id=response.request_id,
+                decision_time=decision_time,
+                snapshot_checksum=recommendation.snapshot_checksum,
+                response_json=response.model_dump_json(),
+            )
         return recommendation
 
     def _build_request(
@@ -318,6 +373,16 @@ class FrontDoorService:
             note=note,
         )
         recommendation.reviews = recommendation.reviews + (record,)
+        if self.store is not None:
+            # A new row every time. Changing one's mind appends; it never overwrites.
+            self.store.append_review(
+                recommendation_id=recommendation_id,
+                reviewer_id=reviewer_id,
+                action=action,
+                reason_code=reason_code,
+                note=note,
+                reviewed_at=record.reviewed_at,
+            )
 
         # Mirror the human decision into the audit trail beside the gateway call.
         for audit_record in self.gateway.audit.find(recommendation.response.request_id):

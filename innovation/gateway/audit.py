@@ -13,6 +13,10 @@ import json
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover - import cycle guard
+    from innovation.store import SqliteStore
 
 
 @dataclass(frozen=True)
@@ -50,23 +54,31 @@ class AuditRecord:
 
 
 class AuditLog:
-    """Append-only audit sink.
+    """Append-only audit sink, with up to three destinations.
 
-    In-memory by default so tests and the offline demo need no storage. When `path` is
-    given, records are appended as JSON Lines and never rewritten — audit evidence is not
-    deleted to make a failure disappear (`SAFETY_SPEC.md` §Incident response).
+    In-memory by default so tests and the offline demo need no storage. `path` appends
+    JSON Lines; `store` appends rows to a database whose triggers refuse UPDATE and
+    DELETE outright. Two durable sinks is deliberate — the JSONL file is readable without
+    tooling during an incident, and the database makes tampering fail loudly.
+
+    Nothing here ever rewrites: audit evidence is not deleted to make a failure disappear
+    (`SAFETY_SPEC.md` §Incident response).
     """
 
-    def __init__(self, path: Path | None = None) -> None:
+    def __init__(self, path: Path | None = None, store: "SqliteStore | None" = None) -> None:
         self._path = path
+        self._store = store
         self._records: list[AuditRecord] = []
 
     def append(self, record: AuditRecord) -> None:
         self._records.append(record)
+        payload = record.to_json()
         if self._path is not None:
             self._path.parent.mkdir(parents=True, exist_ok=True)
             with self._path.open("a", encoding="utf-8") as handle:
-                handle.write(record.to_json() + "\n")
+                handle.write(payload + "\n")
+        if self._store is not None:
+            self._store.append_audit(record.request_id, payload)
 
     def records(self) -> tuple[AuditRecord, ...]:
         return tuple(self._records)

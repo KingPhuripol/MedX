@@ -31,6 +31,17 @@ SAFETY_POLICY_VERSION = "safety-policy-v1"
 #: an abstention. Absence is not a negative finding — it is an unanswered question.
 REQUIRED_FRONT_DOOR_EVIDENCE: frozenset[str] = frozenset({"CHIEF_COMPLAINT", "VITAL"})
 
+#: Below this, a provider's own stated confidence is treated as too weak to carry a
+#: non-escalating conclusion, and the response abstains with LOW_CONFIDENCE.
+#:
+#: This is an ENGINEERING guard, not a clinical threshold. `SAFETY_SPEC.md` is explicit:
+#: "do not invent universal numerical safety thresholds" until clinical and sample-size
+#: review sets them in the Evaluation Contract. 0.5 is used only because a provider that
+#: is less than half sure of its own answer should not be the reason a case is not
+#: escalated. It gates abstention, never a claim of safety, and must be replaced by a
+#: reviewed value before any clinical claim rests on it.
+LOW_CONFIDENCE_ABSTENTION_THRESHOLD = 0.5
+
 
 #: How much a red-flag state constrains action. A screen finding may be raised by the
 #: provider but never lowered, so these are compared rather than overwritten.
@@ -161,6 +172,7 @@ class SafetyPolicy:
         proposed_urgency: Urgency,
         proposed_red_flags: tuple[RedFlag, ...],
         screen_result: ScreenResult | None = None,
+        out_of_distribution: bool | None = None,
     ) -> SafetyDecision:
         """Return the urgency and status floor that the response must respect.
 
@@ -217,7 +229,35 @@ class SafetyPolicy:
                 + ", ".join(sorted(missing))
             )
 
-        # SR-004 — the gateway sees references, not payloads. Say so, always, so that no
+        # SR-004 — a provider that is unsure of its own answer does not get to be the
+        # reason a case stays un-escalated. Low confidence abstains and says why, rather
+        # than reporting a weak conclusion as though it were a finding.
+        confidence = proposed_urgency.confidence
+        low_confidence = (
+            confidence is not None
+            and confidence < LOW_CONFIDENCE_ABSTENTION_THRESHOLD
+            and URGENCY_SEVERITY[urgency_floor] < URGENCY_SEVERITY["URGENT_REVIEW"]
+        )
+        if low_confidence:
+            raise_to("URGENT_REVIEW", "SR-004-LOW_CONFIDENCE")
+            status_floor = status_floor or "ESCALATED"
+            limitations.append(
+                f"Provider confidence {confidence:.2f} is below the abstention threshold "
+                f"{LOW_CONFIDENCE_ABSTENTION_THRESHOLD}; the case is escalated rather than "
+                "reported at the provider's stated urgency. This threshold is an "
+                "engineering guard and is not clinically validated."
+            )
+
+        # SR-005 — an out-of-distribution input is outside what the provider can speak to.
+        if out_of_distribution:
+            raise_to("URGENT_REVIEW", "SR-005-OUT_OF_DISTRIBUTION")
+            status_floor = status_floor or "ESCALATED"
+            limitations.append(
+                "Provider reported the input as out of distribution; its output is not "
+                "evidence about this case."
+            )
+
+        # SR-006 — the gateway sees references, not payloads. Say so, always, so that no
         # reader infers the deterministic layer inspected clinical content.
         limitations.append(
             "Deterministic safety rules evaluate evidence metadata and declared provider "

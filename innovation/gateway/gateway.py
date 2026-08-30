@@ -267,7 +267,11 @@ class ModelGateway:
         screen_result: "ScreenResult | None" = None,
     ) -> GatewayResponse:
         decision = self.safety.apply(
-            request, output.urgency, output.red_flags, screen_result
+            request,
+            output.urgency,
+            output.red_flags,
+            screen_result,
+            out_of_distribution=output.uncertainty.out_of_distribution,
         )
 
         errors: list[ResponseError] = []
@@ -285,6 +289,15 @@ class ModelGateway:
                 )
             )
             status = "ABSTAINED"
+
+        if any(r.startswith("SR-004") or r.startswith("SR-005") for r in decision.applied_rules):
+            errors.append(
+                ResponseError(
+                    code="LOW_CONFIDENCE",
+                    message="provider output did not meet the abstention policy; escalated for review",
+                    retryable=False,
+                )
+            )
 
         if decision.urgency.level == "INSUFFICIENT_INFORMATION":
             status = "ABSTAINED"
