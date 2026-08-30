@@ -19,7 +19,10 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from typing import Literal, get_args
 
+from innovation.frontdoor.intake import IntakeItem, append_event, build_journey
+from innovation.frontdoor.planner import InterviewPlan, plan_next_information
 from innovation.gateway.gateway import ModelGateway
 from shared.contracts.journey import PatientJourney
 from shared.contracts.model_api import (
@@ -37,8 +40,31 @@ DEFAULT_REQUESTED_OUTPUTS = [
 ]
 
 
+#: Structured reasons a reviewer may give for overriding or rejecting an output.
+#: `PRODUCT_SPEC.md` §Human confirmation requires a *structured* reason, not free text:
+#: free text cannot be counted, so an override-rate metric built on it would be unusable,
+#: and the reason would not survive into evaluation.
+OverrideReason = Literal[
+    "CLINICAL_JUDGEMENT_DIFFERS",
+    "ADDITIONAL_INFORMATION_AVAILABLE",
+    "EVIDENCE_INCORRECT",
+    "URGENCY_TOO_HIGH",
+    "URGENCY_TOO_LOW",
+    "PATHWAY_INAPPROPRIATE",
+    "INFORMATION_REQUEST_UNNECESSARY",
+    "OTHER",
+]
+
+#: Actions that change what the recommendation means, and therefore need a reason.
+ACTIONS_REQUIRING_REASON = frozenset({"MODIFY", "REJECT"})
+
+
 class HumanReviewRequired(Exception):
     """Raised when something tries to act on a recommendation no human has confirmed."""
+
+
+class UnknownJourney(KeyError):
+    """No such journey."""
 
 
 @dataclass(frozen=True)
@@ -48,6 +74,7 @@ class ReviewRecord:
     reviewer_id: str
     action: ReviewAction
     reviewed_at: datetime
+    reason_code: OverrideReason | None = None
     note: str | None = None
 
 
@@ -86,11 +113,76 @@ class FrontDoorService:
 
     def __init__(self, gateway: ModelGateway) -> None:
         self.gateway = gateway
+        self._journeys: dict[str, PatientJourney] = {}
         self._recommendations: dict[str, Recommendation] = {}
         #: journey_id -> recommendation ids, in the order they were produced. History is
         #: kept so a later assessment shows how new evidence changed the output rather
         #: than quietly replacing it (workflow step 5).
         self._history: dict[str, list[str]] = {}
+
+    # -------------------------------------------------------------------- encounter
+
+    def create_encounter(
+        self,
+        *,
+        journey_id: str,
+        patient_id: str,
+        encounter_id: str,
+        encounter_start: datetime,
+        items: list[IntakeItem],
+        split: str = "expert_test",
+        data_classification: str = "SYNTHETIC",
+    ) -> PatientJourney:
+        """Workflow steps 1 and 2: create the encounter and capture intake."""
+        if journey_id in self._journeys:
+            raise ValueError(f"journey {journey_id} already exists; append events instead")
+        journey = build_journey(
+            journey_id=journey_id,
+            patient_id=patient_id,
+            encounter_id=encounter_id,
+            encounter_start=encounter_start,
+            items=items,
+            split=split,
+            data_classification=data_classification,
+        )
+        self._journeys[journey_id] = journey
+        return journey
+
+    def register(self, journey: PatientJourney) -> PatientJourney:
+        """Store a journey built elsewhere, e.g. a fixture."""
+        self._journeys[journey.journey_id] = journey
+        return journey
+
+    def journey(self, journey_id: str) -> PatientJourney:
+        if journey_id not in self._journeys:
+            raise UnknownJourney(journey_id)
+        return self._journeys[journey_id]
+
+    def append_evidence(
+        self, journey_id: str, item: IntakeItem, *, default_time: datetime | None = None
+    ) -> PatientJourney:
+        """Workflow step 5: append new evidence as an immutable event.
+
+        Returns a new journey; earlier recommendations keep pointing at the evidence they
+        actually saw, because a snapshot is taken per assessment and never re-derived.
+        """
+        current = self.journey(journey_id)
+        updated = append_event(
+            current, item, default_time=default_time or datetime.now(timezone.utc)
+        )
+        self._journeys[journey_id] = updated
+        return updated
+
+    def next_information(
+        self,
+        journey_id: str,
+        decision_time: datetime,
+        *,
+        provider_suggestions: tuple[str, ...] = (),
+    ) -> InterviewPlan:
+        """Workflow step 4: what to ask or collect next, as of `decision_time`."""
+        snapshot = take_snapshot(self.journey(journey_id), decision_time)
+        return plan_next_information(snapshot, provider_suggestions=provider_suggestions)
 
     # ------------------------------------------------------------------ assessment
 
@@ -196,6 +288,7 @@ class FrontDoorService:
         *,
         reviewer_id: str,
         action: ReviewAction,
+        reason_code: OverrideReason | None = None,
         note: str | None = None,
     ) -> Recommendation:
         """Record a human decision. The response itself is never edited."""
@@ -207,10 +300,21 @@ class FrontDoorService:
         if action not in allowed:
             raise ValueError(f"action {action} is not permitted; allowed: {allowed}")
 
+        # An override changes what the system's output means, so it carries a structured
+        # reason. Free text alone cannot be aggregated into an override-rate metric.
+        if action in ACTIONS_REQUIRING_REASON and reason_code is None:
+            raise ValueError(
+                f"action {action} requires a structured reason_code; "
+                f"one of {sorted(get_args(OverrideReason))}"
+            )
+        if reason_code == "OTHER" and not (note or "").strip():
+            raise ValueError("reason_code OTHER requires a note explaining it")
+
         record = ReviewRecord(
             reviewer_id=reviewer_id,
             action=action,
             reviewed_at=datetime.now(timezone.utc),
+            reason_code=reason_code,
             note=note,
         )
         recommendation.reviews = recommendation.reviews + (record,)

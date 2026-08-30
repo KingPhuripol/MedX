@@ -84,7 +84,11 @@ def test_recommendation_is_not_effective_until_a_human_acts(service, journey):
 def test_only_confirm_and_modify_make_a_recommendation_effective(service, journey, action, expected):
     """Rejecting a recommendation is a decision not to act on it, not an approval."""
     recommendation = service.assess(journey, LATER)
-    service.review(recommendation.recommendation_id, reviewer_id="clinician-01", action=action)
+    reason = "CLINICAL_JUDGEMENT_DIFFERS" if action in {"MODIFY", "REJECT"} else None
+    service.review(
+        recommendation.recommendation_id, reviewer_id="clinician-01", action=action,
+        reason_code=reason,
+    )
     assert service.get(recommendation.recommendation_id).effective is expected
 
 
@@ -112,6 +116,7 @@ def test_override_preserves_the_original_output(service, journey):
         recommendation.recommendation_id,
         reviewer_id="clinician-01",
         action="MODIFY",
+        reason_code="URGENCY_TOO_HIGH",
         note="Downgrading after bedside assessment.",
     )
     after = service.get(recommendation.recommendation_id)
@@ -123,7 +128,10 @@ def test_override_preserves_the_original_output(service, journey):
 
 def test_review_is_mirrored_into_the_audit_trail(service, journey):
     recommendation = service.assess(journey, LATER)
-    service.review(recommendation.recommendation_id, reviewer_id="clinician-07", action="MODIFY")
+    service.review(
+        recommendation.recommendation_id, reviewer_id="clinician-07", action="MODIFY",
+        reason_code="ADDITIONAL_INFORMATION_AVAILABLE",
+    )
 
     audit = service.gateway.audit.find(recommendation.response.request_id)[0]
     assert audit.reviewer_id == "clinician-07"

@@ -19,8 +19,14 @@ from typing import Literal
 from fastapi import Body, FastAPI, HTTPException, Path, status
 from pydantic import BaseModel, ConfigDict, Field
 
-from innovation.frontdoor import FrontDoorService, HumanReviewRequired
-from innovation.frontdoor.service import Recommendation
+from innovation.frontdoor import (
+    FrontDoorService,
+    HumanReviewRequired,
+    IntakeError,
+    IntakeItem,
+    UnknownJourney,
+)
+from innovation.frontdoor.service import ACTIONS_REQUIRING_REASON, Recommendation
 from innovation.gateway import ModelGateway
 from innovation.gateway.providers import MockProvider
 from shared.contracts.journey import PatientJourney
@@ -41,7 +47,73 @@ class ReviewRequest(BaseModel):
 
     reviewer_id: str = Field(min_length=1)
     action: Literal["CONFIRM", "MODIFY", "REJECT", "REQUEST_INFORMATION", "ESCALATE"]
+    #: Required for MODIFY and REJECT — an override changes what the output means, and a
+    #: structured reason is what makes an override-rate metric possible later.
+    reason_code: Literal[
+        "CLINICAL_JUDGEMENT_DIFFERS",
+        "ADDITIONAL_INFORMATION_AVAILABLE",
+        "EVIDENCE_INCORRECT",
+        "URGENCY_TOO_HIGH",
+        "URGENCY_TOO_LOW",
+        "PATHWAY_INAPPROPRIATE",
+        "INFORMATION_REQUEST_UNNECESSARY",
+        "OTHER",
+    ] | None = None
     note: str | None = None
+
+
+class IntakeItemRequest(BaseModel):
+    """One answer on the intake form — including the answers that are not values."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    information_type: str
+    #: KNOWN / UNKNOWN / REFUSED / NOT_AVAILABLE are recorded distinctly (A1). A gap is an
+    #: event on the timeline, never an omission.
+    state: Literal["KNOWN", "UNKNOWN", "REFUSED", "NOT_AVAILABLE"]
+    value: object | None = None
+    observed_at: datetime | None = None
+    available_at_time: datetime | None = None
+    note: str | None = None
+
+    def to_item(self) -> IntakeItem:
+        return IntakeItem(
+            information_type=self.information_type,
+            state=self.state,
+            value=self.value,
+            observed_at=self.observed_at,
+            available_at_time=self.available_at_time,
+            note=self.note,
+        )
+
+
+class EncounterRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    journey_id: str = Field(min_length=1)
+    patient_id: str = Field(min_length=1)
+    encounter_id: str = Field(min_length=1)
+    encounter_start: datetime
+    items: list[IntakeItemRequest] = Field(min_length=1)
+    split: str = "expert_test"
+
+
+class InterviewView(BaseModel):
+    """The adaptive interview screen's data.
+
+    Declined items are listed separately and are never queued as questions — the system
+    does not nag on a clinician's behalf (`PRODUCT_SPEC.md` §Adaptive interview:
+    "It must not coerce answers").
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    banner: str = BANNER
+    journey_id: str
+    decision_time: datetime
+    candidates: list[dict]
+    declined: list[dict]
+    already_known: list[str]
 
 
 class RecommendationView(BaseModel):
@@ -76,6 +148,7 @@ class RecommendationView(BaseModel):
                     "reviewer_id": r.reviewer_id,
                     "action": r.action,
                     "reviewed_at": r.reviewed_at.isoformat(),
+                    "reason_code": r.reason_code,
                     "note": r.note,
                 }
                 for r in recommendation.reviews
@@ -84,32 +157,31 @@ class RecommendationView(BaseModel):
         )
 
 
-class JourneyStore:
-    """Simple in-memory journey store for the prototype.
+def _require_synthetic(classification: str) -> None:
+    """The prototype accepts synthetic journeys only.
 
-    Journeys are synthetic. Nothing here persists to disk, so a demo run leaves no
-    patient-shaped data behind.
+    Anything else needs an approval path that does not exist yet, and defaulting to
+    permissive here is exactly how real data ends up somewhere it should not (DEC-0006).
     """
-
-    def __init__(self) -> None:
-        self._journeys: dict[str, PatientJourney] = {}
-
-    def put(self, journey: PatientJourney) -> PatientJourney:
-        self._journeys[journey.journey_id] = journey
-        return journey
-
-    def get(self, journey_id: str) -> PatientJourney:
-        if journey_id not in self._journeys:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, f"unknown journey {journey_id}")
-        return self._journeys[journey_id]
+    if classification != "SYNTHETIC":
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "this prototype accepts SYNTHETIC journeys only; other classifications "
+            "require a recorded approval under the Human Approval Policy",
+        )
 
 
-def create_app(
-    service: FrontDoorService | None = None, store: JourneyStore | None = None
-) -> FastAPI:
-    """Build the app. Both collaborators are injectable so tests need no network."""
+def create_app(service: FrontDoorService | None = None) -> FastAPI:
+    """Build the app. The service is injectable so tests need no network."""
     service = service or FrontDoorService(ModelGateway(MockProvider()))
-    store = store or JourneyStore()
+
+    def get_journey(journey_id: str) -> PatientJourney:
+        try:
+            return service.journey(journey_id)
+        except UnknownJourney:
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND, f"unknown journey {journey_id}"
+            ) from None
 
     app = FastAPI(
         title="AI Clinical Front Door",
@@ -121,7 +193,6 @@ def create_app(
         ),
     )
     app.state.service = service
-    app.state.store = store
 
     @app.get("/health")
     def health() -> dict:
@@ -135,27 +206,89 @@ def create_app(
 
     @app.put("/journeys/{journey_id}", status_code=status.HTTP_201_CREATED)
     def put_journey(journey_id: str = Path(...), journey: PatientJourney = Body(...)) -> dict:
-        """Register a synthetic journey. Real patient data is out of scope for this API."""
+        """Register a synthetic journey built elsewhere, e.g. a fixture."""
         if journey.journey_id != journey_id:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST, "journey_id in path and body must match"
             )
-        if journey.data_classification != "SYNTHETIC":
-            # DEC-0006 and the data rules: the prototype accepts synthetic journeys only.
-            # Anything else needs an approval path that does not exist yet, and defaulting
-            # to permissive here is exactly how real data ends up somewhere it should not.
-            raise HTTPException(
-                status.HTTP_403_FORBIDDEN,
-                "this prototype accepts SYNTHETIC journeys only; other classifications "
-                "require a recorded approval under the Human Approval Policy",
-            )
-        store.put(journey)
+        _require_synthetic(journey.data_classification)
+        service.register(journey)
         return {"journey_id": journey.journey_id, "events": len(journey.events)}
+
+    @app.post("/encounters", status_code=status.HTTP_201_CREATED)
+    def create_encounter(body: EncounterRequest) -> dict:
+        """Workflow steps 1-2: create an encounter and capture intake.
+
+        Every intake item is recorded, including the ones with no value: a gap that was
+        asked about is different from a question never asked, and both are different from
+        a refusal.
+        """
+        try:
+            journey = service.create_encounter(
+                journey_id=body.journey_id,
+                patient_id=body.patient_id,
+                encounter_id=body.encounter_id,
+                encounter_start=body.encounter_start,
+                items=[i.to_item() for i in body.items],
+                split=body.split,
+            )
+        except IntakeError as exc:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from None
+        except ValueError as exc:
+            raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from None
+
+        return {
+            "journey_id": journey.journey_id,
+            "events": len(journey.events),
+            "recorded_states": {
+                e.code or e.event_type: e.status for e in journey.events
+            },
+        }
+
+    @app.post("/journeys/{journey_id}/events", status_code=status.HTTP_201_CREATED)
+    def append_event(journey_id: str, body: IntakeItemRequest) -> dict:
+        """Workflow step 5: append evidence. Append-only — nothing is ever edited."""
+        get_journey(journey_id)
+        try:
+            journey = service.append_evidence(journey_id, body.to_item())
+        except IntakeError as exc:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from None
+        appended = journey.events[-1]
+        return {
+            "journey_id": journey.journey_id,
+            "event_id": appended.event_id,
+            "status": appended.status,
+            "available_at_time": appended.available_at_time.isoformat(),
+            "total_events": len(journey.events),
+        }
+
+    @app.get("/journeys/{journey_id}/next-information")
+    def next_information(journey_id: str, decision_time: datetime) -> InterviewView:
+        """Workflow step 4: ranked information to seek, as of `decision_time`."""
+        get_journey(journey_id)
+        plan = service.next_information(journey_id, decision_time)
+        return InterviewView(
+            journey_id=journey_id,
+            decision_time=decision_time,
+            candidates=[
+                {
+                    "information_type": c.information_type,
+                    "rank": c.rank,
+                    "reason_code": c.reason_code,
+                    "reason": c.reason,
+                    "urgency_prerequisite": c.urgency_prerequisite,
+                    "availability_note": c.availability_note,
+                }
+                for c in plan.candidates
+            ],
+            declined=[{"information_type": d.information_type, "note": d.note} for d in plan.declined],
+            already_known=list(plan.already_known),
+        )
 
     @app.post("/journeys/{journey_id}/assessments", status_code=status.HTTP_201_CREATED)
     def assess(journey_id: str, body: AssessmentRequest) -> RecommendationView:
         """Assess the journey as it stood at `decision_time`."""
-        journey = store.get(journey_id)
+        journey = get_journey(journey_id)
         recommendation = service.assess(
             journey,
             body.decision_time,
@@ -178,6 +311,7 @@ def create_app(
                 recommendation_id,
                 reviewer_id=body.reviewer_id,
                 action=body.action,
+                reason_code=body.reason_code,
                 note=body.note,
             )
         except KeyError:
@@ -189,7 +323,7 @@ def create_app(
     @app.get("/journeys/{journey_id}/history")
     def history(journey_id: str) -> list[RecommendationView]:
         """Every recommendation made for this journey, oldest first."""
-        store.get(journey_id)
+        get_journey(journey_id)
         return [RecommendationView.of(r) for r in service.history(journey_id)]
 
     @app.get("/recommendations/{recommendation_id}/effective")
