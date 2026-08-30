@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-08-30T17:30:00+07:00",
+  "updated_at": "2026-08-30T18:00:00+07:00",
   "tasks": [
     {
       "task_id": "TASK-0001",
@@ -415,7 +415,7 @@
       "workstream": "CROSS_TRACK",
       "milestone": "M2",
       "priority": "P1",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "dependencies": [],
       "planned_start": "2026-08-31",
       "due_date": "2026-09-06",
@@ -428,10 +428,17 @@
       "evidence_required": [
         "Passing python3 scripts/verify_harness.py with a higher check count than the 236 recorded on 2026-08-30"
       ],
-      "evidence": [],
-      "blocker": "Decided in the Phase 1 context session on 2026-08-11 and not implemented since; blocks the G0 gate.",
-      "risk_level": "HIGH",
-      "updated_at": "2026-08-30T17:30:00+07:00"
+      "evidence": [
+        "project_state/contract_versions.json registers all five shared contracts at 1.0.0 with owner, reviewer and acceptance date.",
+        "schemas/contract-versions.schema.json and schemas/dataset-feasibility.schema.json created.",
+        "docs/shared/HUMAN_APPROVAL_POLICY.md now carries **Version:** 1.0.0, matching the other four contracts.",
+        "Both new state files registered in scripts/verify_harness.py SCHEMA_BINDINGS; harness 236 -> 241 checks, passing.",
+        "Negative-tested on 2026-08-30: setting datasets[0].verdict to an out-of-enum value makes the harness fail with a schema error, so the new checks are enforced rather than vacuous.",
+        "G0 recorded in docs/research/SUCCESS_CRITERIA.md as four of five closed; it remains open on dataset feasibility (TASK-0005)."
+      ],
+      "blocker": null,
+      "risk_level": "LOW",
+      "updated_at": "2026-08-30T18:00:00+07:00"
     },
     {
       "task_id": "TASK-0017",
@@ -440,7 +447,7 @@
       "workstream": "PM",
       "milestone": "M2",
       "priority": "P1",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "dependencies": [],
       "planned_start": "2026-08-31",
       "due_date": "2026-09-06",
@@ -453,10 +460,18 @@
         "Harness verification passing after the change",
         "grep showing no stale 4B flagship references"
       ],
-      "evidence": [],
-      "blocker": "Must land before Proposal drafting so that no 4B figure reaches DL-0004.",
-      "risk_level": "MEDIUM",
-      "updated_at": "2026-08-30T17:30:00+07:00"
+      "evidence": [
+        "CLAUDE.md, .claude/rules/research.md, docs/PROJECT_CHARTER.md, docs/research/RESEARCH_SPEC.md, SUCCESS_CRITERIA.md, TRAINING_SPEC.md, docs/shared/HUMAN_APPROVAL_POLICY.md, docs/project_management/MASTER_PLAN.md, MILESTONES.md, TASK_BOARD.md and the .planning/ artifacts all name approximately 27B as the flagship.",
+        "The MASTER_PLAN scope fallback ladder was rewritten, not search-replaced: the old rung 5 (\"remove 27B work entirely\") was incoherent once 27B became the flagship. It now descends to a smaller model reported at its true scale, then to dropping the flagship run.",
+        "CLAUDE.md no longer carries a P4 stretch model above the flagship; the 4B target is recorded as withdrawn.",
+        "Generated .planning/intel, codebase and onboarding snapshots from the 11 Aug ingest carry a staleness banner pointing at the authoritative record; .planning/intel/decisions.md was corrected to record DEC-0009 and mark DEC-0002 superseded.",
+        "Remaining \"4B\" strings are deliberate history or withdrawal statements only, confirmed by grep on 2026-08-30.",
+        "Harness passing at 241 checks after the change.",
+        "This closed a documentation inconsistency, not a feasibility question: RISK-0004 remains CRITICAL and TASK-0018 still owes a compute estimate."
+      ],
+      "blocker": null,
+      "risk_level": "LOW",
+      "updated_at": "2026-08-30T18:00:00+07:00"
     },
     {
       "task_id": "TASK-0018",
