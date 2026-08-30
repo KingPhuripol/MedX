@@ -1,0 +1,33 @@
+{
+  "case_id": "case-0003-breathlessness",
+  "scenario": "shortness_of_breath",
+  "description": "Breathlessness with vitals and history.",
+  "journey_id": "journey-case-0003-breathlessness",
+  "encounter_start": "2026-01-01T09:00:00Z",
+  "decision_time": "2026-01-01T09:30:00Z",
+  "intake": [
+    {
+      "information_type": "CHIEF_COMPLAINT",
+      "state": "KNOWN",
+      "value": "Increasing breathlessness over two days."
+    },
+    {
+      "information_type": "VITAL",
+      "state": "KNOWN",
+      "value": {
+        "code": "respiratory_rate",
+        "value": 26,
+        "unit": "per_min"
+      }
+    },
+    {
+      "information_type": "HISTORY",
+      "state": "KNOWN",
+      "value": "Known airways disease."
+    }
+  ],
+  "appended": [],
+  "expected_minimum_urgency": "URGENT_REVIEW",
+  "provider_behaviour": "normal",
+  "notes": null
+}

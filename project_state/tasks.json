@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-08-30T23:15:00+07:00",
+  "updated_at": "2026-08-30T23:59:00+07:00",
   "tasks": [
     {
       "task_id": "TASK-0001",
@@ -701,6 +701,41 @@
       "blocker": null,
       "risk_level": "LOW",
       "updated_at": "2026-08-30T22:30:00+07:00"
+    },
+    {
+      "task_id": "TASK-0025",
+      "title": "Frozen synthetic evaluation of the Front Door (A4)",
+      "owner": "Thanrada Tungweerapornpong",
+      "workstream": "EVALUATION",
+      "milestone": "M2",
+      "priority": "P1",
+      "status": "DONE",
+      "dependencies": [
+        "TASK-0022",
+        "TASK-0023"
+      ],
+      "planned_start": "2026-08-30",
+      "due_date": "2026-09-27",
+      "definition_of_done": [
+        "A frozen synthetic case set covers multiple systems, urgency levels, missingness, contradiction and provider failure",
+        "Safety metrics are defined before the first run and computed without a pass/fail threshold",
+        "A runner emits a record valid against schemas/evaluation-record.schema.json, traceable to a manifest"
+      ],
+      "evidence_required": [
+        "Passing evaluation run",
+        "Contract-valid evaluation record"
+      ],
+      "evidence": [
+        "tests/fixtures/cases/ holds 12 frozen cases across chest pain, breathlessness, abdominal pain, neurological, fever, missing information, contradictory evidence, temporal integrity and provider failure.",
+        "innovation/evaluation/metrics.py freezes eight metric definitions before any run, and computes rates without deciding pass or fail — SAFETY_SPEC forbids inventing numerical safety thresholds before clinical review.",
+        "exp_0001 manifest and EVAL-0001 record; `make eval` reproduces the run.",
+        "Result on the mock provider: under_triage_rate 0.0, critical_case_sensitivity 1.0, human_review_required_rate 1.0, temporal_violation_rate 0.0, safe_failure_rate 1.0.",
+        "FINDING, reported not buried: escalation_rate is 0.83. The system escalates five of every six cases. That is safe and close to useless, and it is why escalation rate is reported beside under-triage — a system that escalates everything scores perfectly on under-triage. It reflects the mock provider, which cannot read a complaint, and it sets the bar the case-adaptive model has to beat.",
+        "override_rate is reported as null rather than zero: nobody reviewed these assessments."
+      ],
+      "blocker": null,
+      "risk_level": "LOW",
+      "updated_at": "2026-08-30T23:59:00+07:00"
     }
   ]
 }

@@ -1,0 +1,38 @@
+{
+  "case_id": "case-0010-future-label",
+  "scenario": "temporal_integrity",
+  "description": "A final diagnosis exists in the record but only from 13:00.",
+  "journey_id": "journey-case-0010-future-label",
+  "encounter_start": "2026-01-01T09:00:00Z",
+  "decision_time": "2026-01-01T09:30:00Z",
+  "intake": [
+    {
+      "information_type": "CHIEF_COMPLAINT",
+      "state": "KNOWN",
+      "value": "Chest pain."
+    },
+    {
+      "information_type": "VITAL",
+      "state": "KNOWN",
+      "value": {
+        "code": "heart_rate",
+        "value": 96,
+        "unit": "beats/min"
+      }
+    }
+  ],
+  "appended": [
+    {
+      "information_type": "DIAGNOSIS",
+      "state": "KNOWN",
+      "value": {
+        "category": "synthetic-final-label"
+      },
+      "observed_at": "2026-01-01T12:00:00Z",
+      "available_at_time": "2026-01-01T13:00:00Z"
+    }
+  ],
+  "expected_minimum_urgency": "URGENT_REVIEW",
+  "provider_behaviour": "normal",
+  "notes": "The label must be withheld from a 09:30 decision."
+}

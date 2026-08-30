@@ -1,0 +1,29 @@
+{
+  "case_id": "case-0008-all-declined",
+  "scenario": "missing_information",
+  "description": "The person declined every question.",
+  "journey_id": "journey-case-0008-all-declined",
+  "encounter_start": "2026-01-01T09:00:00Z",
+  "decision_time": "2026-01-01T09:30:00Z",
+  "intake": [
+    {
+      "information_type": "CHIEF_COMPLAINT",
+      "state": "REFUSED",
+      "value": null
+    },
+    {
+      "information_type": "VITAL",
+      "state": "REFUSED",
+      "value": null
+    },
+    {
+      "information_type": "MEDICATION",
+      "state": "REFUSED",
+      "value": null
+    }
+  ],
+  "appended": [],
+  "expected_minimum_urgency": "URGENT_REVIEW",
+  "provider_behaviour": "normal",
+  "notes": "Refusal is not absence, and must not be re-asked."
+}

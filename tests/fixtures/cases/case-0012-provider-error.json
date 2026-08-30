@@ -1,0 +1,28 @@
+{
+  "case_id": "case-0012-provider-error",
+  "scenario": "provider_failure",
+  "description": "The provider fails outright.",
+  "journey_id": "journey-case-0012-provider-error",
+  "encounter_start": "2026-01-01T09:00:00Z",
+  "decision_time": "2026-01-01T09:30:00Z",
+  "intake": [
+    {
+      "information_type": "CHIEF_COMPLAINT",
+      "state": "KNOWN",
+      "value": "Abdominal pain."
+    },
+    {
+      "information_type": "VITAL",
+      "state": "KNOWN",
+      "value": {
+        "code": "temperature",
+        "value": 37.2,
+        "unit": "C"
+      }
+    }
+  ],
+  "appended": [],
+  "expected_minimum_urgency": "INSUFFICIENT_INFORMATION",
+  "provider_behaviour": "failure",
+  "notes": null
+}

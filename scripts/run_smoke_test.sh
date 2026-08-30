@@ -20,5 +20,10 @@ else
   echo "         Install with: python3 -m pip install -r requirements.txt"
 fi
 
+# Frozen synthetic evaluation. Reports rates; it does not decide pass or fail.
+if python3 -c "import pydantic" >/dev/null 2>&1; then
+  python3 -m innovation.evaluation | tail -14
+fi
+
 echo "SMOKE TEST PASSED: Harness, manifest, contracts, temporal fixture, and gateway tests are valid."
 

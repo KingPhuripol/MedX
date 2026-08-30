@@ -1,4 +1,4 @@
-.PHONY: bootstrap verify smoke test demo api leakage-fixture status idea-docx
+.PHONY: bootstrap verify smoke test demo api eval leakage-fixture status idea-docx
 
 bootstrap:
 	bash scripts/bootstrap.sh
@@ -31,3 +31,7 @@ demo:
 # Optional: FRONT_DOOR_PROVIDER=mock|baseline  FRONT_DOOR_DB=path.sqlite3  FRONT_DOOR_AUDIT_LOG=audit.jsonl
 api:
 	python3 -m uvicorn innovation.api.app:app --reload
+
+# Frozen synthetic evaluation of the Front Door (reports rates; decides no pass/fail)
+eval:
+	python3 -m innovation.evaluation

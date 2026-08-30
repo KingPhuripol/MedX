@@ -1,5 +1,64 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-08-11T04:00:00+07:00",
-  "evaluations": []
+  "updated_at": "2026-08-30T23:59:00+07:00",
+  "evaluations": [
+    {
+      "evaluation_id": "EVAL-0001",
+      "version": "1.0.0",
+      "manifest_ids": [
+        "exp_0001"
+      ],
+      "code_revision": "87b4145",
+      "data_version": "frozen-synthetic-cases-1.0.0",
+      "split_version": "synthetic-expert_test-1.0.0",
+      "model_versions": [
+        "mock:mock-v1"
+      ],
+      "contract_versions": {
+        "model_api": "1.0.0",
+        "patient_journey": "1.0.0",
+        "safety_policy": "safety-policy-v1"
+      },
+      "task": "CLINICAL_FRONT_DOOR",
+      "decision_time_policy": "Each case is assessed at its own declared decision_time. Evidence is selected by shared.snapshot.take_snapshot, which admits only events whose available_at_time is at or before that decision time; LABEL-modality evidence is excluded from live requests entirely. Retrospective labels present in a journey are therefore withheld by construction rather than by convention.",
+      "primary_metrics": [
+        "under_triage_rate=0.0",
+        "critical_case_sensitivity=1.0"
+      ],
+      "secondary_metrics": [
+        "escalation_rate=0.8333",
+        "abstention_rate=0.1667",
+        "safe_failure_rate=1.0",
+        "human_review_required_rate=1.0",
+        "temporal_violation_rate=0.0",
+        "override_rate=None"
+      ],
+      "sample_sizes": {
+        "cases": 12,
+        "scenario:abdominal_pain": 1,
+        "scenario:chest_pain": 2,
+        "scenario:contradictory_evidence": 1,
+        "scenario:fever": 1,
+        "scenario:missing_information": 2,
+        "scenario:neurological": 1,
+        "scenario:provider_failure": 2,
+        "scenario:shortness_of_breath": 1,
+        "scenario:temporal_integrity": 1
+      },
+      "exclusions": [],
+      "statistics_plan": "Descriptive rates over a frozen synthetic case set. No hypothesis test, no confidence interval, and no pass/fail threshold: the sample is small, author-constructed, and carries no clinical reference standard, so an interval would imply a precision the design cannot support. Metric definitions were frozen before the first run. Numerical safety thresholds are deliberately absent until clinical and sample-size review sets them in the Evaluation Contract.",
+      "artifacts": [
+        "tests/fixtures/cases/",
+        "innovation/evaluation/metrics.py"
+      ],
+      "status": "completed",
+      "deviations": [
+        "Synthetic cases only; no real or licensed patient data was used.",
+        "expected_minimum_urgency is an author-declared fixture property, not a clinical reference standard, so these rates are not clinical error rates.",
+        "The only providers are a deterministic mock and a fixed-path baseline; nothing here is evidence about medical capability.",
+        "override_rate is null: no human reviewed these assessments."
+      ],
+      "review_verdict": "NOT_REVIEWED"
+    }
+  ]
 }

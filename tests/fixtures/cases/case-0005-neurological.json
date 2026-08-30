@@ -1,0 +1,28 @@
+{
+  "case_id": "case-0005-neurological",
+  "scenario": "neurological",
+  "description": "Neurological symptom, time-sensitive, vitals present.",
+  "journey_id": "journey-case-0005-neurological",
+  "encounter_start": "2026-01-01T09:00:00Z",
+  "decision_time": "2026-01-01T09:30:00Z",
+  "intake": [
+    {
+      "information_type": "CHIEF_COMPLAINT",
+      "state": "KNOWN",
+      "value": "Sudden one-sided weakness starting 40 minutes ago."
+    },
+    {
+      "information_type": "VITAL",
+      "state": "KNOWN",
+      "value": {
+        "code": "blood_pressure_systolic",
+        "value": 168,
+        "unit": "mmHg"
+      }
+    }
+  ],
+  "appended": [],
+  "expected_minimum_urgency": "URGENT_REVIEW",
+  "provider_behaviour": "normal",
+  "notes": null
+}
