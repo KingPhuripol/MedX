@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-08-11T09:40:00+07:00",
+  "updated_at": "2026-08-26T12:30:00+07:00",
   "decisions": [
     {
       "decision_id": "DEC-0001",
@@ -11,26 +11,48 @@
       "context": "The five-member group needs one coherent Senior Project while supporting research and product responsibilities",
       "decision": "Use one title and one project plan, with Research and Innovation as coordinated internal tracks",
       "rationale": "The model, Clinical Front Door, data, contracts, evaluation, and final demonstration are interdependent",
-      "alternatives": ["Two separate Senior Projects", "One undifferentiated workstream"],
-      "consequences": ["One official schedule and integration gate", "Both tracks share contracts and final evidence"],
+      "alternatives": [
+        "Two separate Senior Projects",
+        "One undifferentiated workstream"
+      ],
+      "consequences": [
+        "One official schedule and integration gate",
+        "Both tracks share contracts and final evidence"
+      ],
       "supersedes": null,
-      "evidence": ["docs/PROJECT_CHARTER.md", "Referenced conversation decision"],
-      "approvers": ["All five project members"]
+      "evidence": [
+        "docs/PROJECT_CHARTER.md",
+        "Referenced conversation decision"
+      ],
+      "approvers": [
+        "All five project members"
+      ]
     },
     {
       "decision_id": "DEC-0002",
       "date": "2026-08-11",
       "title": "Approximately 4B flagship and gated 27B stretch",
-      "status": "accepted",
+      "status": "superseded",
       "owner": "Phurinat Polasa",
       "context": "The project needs a credible open-weight flagship target without letting scale replace architecture evidence",
       "decision": "Target approximately 4B as flagship and allow 27B only after the 4B release candidate passes every gate",
       "rationale": "Small and 4B evidence is feasible and academically stronger than premature 27B resource commitment",
-      "alternatives": ["Make 27B mandatory", "Use only a small prototype with no flagship target"],
-      "consequences": ["27B is not on the critical path", "Tier 4 approval and G0-G5 evidence are required before 4B training"],
+      "alternatives": [
+        "Make 27B mandatory",
+        "Use only a small prototype with no flagship target"
+      ],
+      "consequences": [
+        "27B is not on the critical path",
+        "Tier 4 approval and G0-G5 evidence are required before 4B training"
+      ],
       "supersedes": null,
-      "evidence": ["docs/research/SUCCESS_CRITERIA.md", "docs/research/TRAINING_SPEC.md"],
-      "approvers": ["Project human owners"]
+      "evidence": [
+        "docs/research/SUCCESS_CRITERIA.md",
+        "docs/research/TRAINING_SPEC.md"
+      ],
+      "approvers": [
+        "Project human owners"
+      ]
     },
     {
       "decision_id": "DEC-0003",
@@ -41,11 +63,22 @@
       "context": "Innovation must progress before the team model is complete without becoming coupled to an external provider",
       "decision": "Route mock, external prototype, baseline, and team model providers through one versioned Model API Contract",
       "rationale": "Provider replacement becomes a configuration and adapter change rather than a client rewrite",
-      "alternatives": ["Wait for the team model", "Integrate each provider directly into the client"],
-      "consequences": ["Provider-native fields remain inside adapters", "Every adapter passes identical contract fixtures"],
+      "alternatives": [
+        "Wait for the team model",
+        "Integrate each provider directly into the client"
+      ],
+      "consequences": [
+        "Provider-native fields remain inside adapters",
+        "Every adapter passes identical contract fixtures"
+      ],
       "supersedes": null,
-      "evidence": ["docs/shared/MODEL_API_CONTRACT.md", "docs/innovation/PRODUCT_SPEC.md"],
-      "approvers": ["Project human owners"]
+      "evidence": [
+        "docs/shared/MODEL_API_CONTRACT.md",
+        "docs/innovation/PRODUCT_SPEC.md"
+      ],
+      "approvers": [
+        "Project human owners"
+      ]
     },
     {
       "decision_id": "DEC-0004",
@@ -56,11 +89,22 @@
       "context": "Medical journeys contain correlated encounters and future outcomes that can silently leak into earlier decisions",
       "decision": "Split by stable patient identity before derivation and require available_at_time for all evidence and labels",
       "rationale": "This prevents cross-split identity leakage and future-evidence inflation",
-      "alternatives": ["Encounter-level split", "Use chart-final fields at every snapshot"],
-      "consequences": ["Confirmed leakage invalidates affected evidence", "Temporal audits are mandatory before training and evaluation"],
+      "alternatives": [
+        "Encounter-level split",
+        "Use chart-final fields at every snapshot"
+      ],
+      "consequences": [
+        "Confirmed leakage invalidates affected evidence",
+        "Temporal audits are mandatory before training and evaluation"
+      ],
       "supersedes": null,
-      "evidence": ["docs/shared/DATA_CONTRACT.md", "docs/shared/PATIENT_JOURNEY_SCHEMA.md"],
-      "approvers": ["Project human owners"]
+      "evidence": [
+        "docs/shared/DATA_CONTRACT.md",
+        "docs/shared/PATIENT_JOURNEY_SCHEMA.md"
+      ],
+      "approvers": [
+        "Project human owners"
+      ]
     },
     {
       "decision_id": "DEC-0005",
@@ -71,11 +115,22 @@
       "context": "The prototype operates in a safety-critical clinical domain without deployment-grade validation",
       "decision": "Require human confirmation and prohibit autonomous diagnosis, treatment, referral, prescribing, discharge, or care action",
       "rationale": "The academic prototype must preserve human authority and avoid unsupported clinical claims",
-      "alternatives": ["Patient-facing autonomous triage", "Clinician-optional review"],
-      "consequences": ["Human review is required in the API and workflow", "Safety failures override average accuracy"],
+      "alternatives": [
+        "Patient-facing autonomous triage",
+        "Clinician-optional review"
+      ],
+      "consequences": [
+        "Human review is required in the API and workflow",
+        "Safety failures override average accuracy"
+      ],
       "supersedes": null,
-      "evidence": ["docs/innovation/SAFETY_SPEC.md", "docs/innovation/CLINICAL_WORKFLOW.md"],
-      "approvers": ["Project human owners"]
+      "evidence": [
+        "docs/innovation/SAFETY_SPEC.md",
+        "docs/innovation/CLINICAL_WORKFLOW.md"
+      ],
+      "approvers": [
+        "Project human owners"
+      ]
     },
     {
       "decision_id": "DEC-0006",
@@ -86,11 +141,22 @@
       "context": "External providers may retain or process data under terms that differ from dataset and ethics authorization",
       "decision": "Default to synthetic data and require exact recorded authorization before any real, linkable, de-identified-approved, or restricted patient transfer",
       "rationale": "De-identification or dataset access alone does not authorize vendor transfer",
-      "alternatives": ["Allow de-identified data by default", "Prohibit all external prototype providers"],
-      "consequences": ["External adapters need payload policy tests", "Missing approval blocks transfer"],
+      "alternatives": [
+        "Allow de-identified data by default",
+        "Prohibit all external prototype providers"
+      ],
+      "consequences": [
+        "External adapters need payload policy tests",
+        "Missing approval blocks transfer"
+      ],
       "supersedes": null,
-      "evidence": ["docs/shared/DATA_CONTRACT.md", "docs/shared/HUMAN_APPROVAL_POLICY.md"],
-      "approvers": ["Project human owners"]
+      "evidence": [
+        "docs/shared/DATA_CONTRACT.md",
+        "docs/shared/HUMAN_APPROVAL_POLICY.md"
+      ],
+      "approvers": [
+        "Project human owners"
+      ]
     },
     {
       "decision_id": "DEC-0007",
@@ -101,11 +167,22 @@
       "context": "Internal planning buffers must not overwrite faculty deadlines from the referenced activities PDF",
       "decision": "Lock the supplied Semester 1 dates in the official deadline registry and require a new official source plus human decision for correction",
       "rationale": "Official dates are external constraints while internal review dates are adjustable planning controls",
-      "alternatives": ["Store dates only in prose", "Allow the PM agent to reschedule official dates"],
-      "consequences": ["Verification compares the registry to canonical dates", "The missing local PDF remains a visual-verification action"],
+      "alternatives": [
+        "Store dates only in prose",
+        "Allow the PM agent to reschedule official dates"
+      ],
+      "consequences": [
+        "Verification compares the registry to canonical dates",
+        "The missing local PDF remains a visual-verification action"
+      ],
       "supersedes": null,
-      "evidence": ["docs/project_management/OFFICIAL_DEADLINES.md", "project_state/official_deadlines.json"],
-      "approvers": ["Project human owners"]
+      "evidence": [
+        "docs/project_management/OFFICIAL_DEADLINES.md",
+        "project_state/official_deadlines.json"
+      ],
+      "approvers": [
+        "Project human owners"
+      ]
     },
     {
       "decision_id": "DEC-0008",
@@ -116,12 +193,57 @@
       "context": "The GSD toolchain introduced .planning/, creating a second vocabulary for work already tracked in docs/project_management/ and project_state/. MILESTONES.md M8 and MASTER_PLAN.md Phase 6 already disagree on the 4B release-candidate window, and recording one Group Application status required editing five files by hand",
       "decision": "project_state/ and docs/ are the sole authoritative record of deadlines, milestones, tasks, risks, decisions, approvals, contracts, and specifications; .planning/ is a subordinate execution layer owning phase sequencing and per-phase artifacts only, and may reference authoritative identifiers but never hold their status, scope, or definition",
       "rationale": "Authority belongs where enforcement and ownership are. project_state/ and docs/ are covered by harness checks and JSON Schema validation while .planning/ had none, and .planning/ is a third-party format governed by the @opengsd/gsd-core release cycle rather than by this project",
-      "alternatives": ["Make .planning/ authoritative and reduce docs/project_management/ to generated views", "Maintain both systems in parallel and synchronize by hand", "Remove .planning/ and forgo the GSD phase pipeline"],
-      "consequences": [".planning/README.md states the boundary at the point of use", "verify_harness.py enforces phase-dependency resolution, requirement-to-phase mapping, and identifier existence in project_state/", "Regenerating or deleting .planning/ must never lose project state", "On disagreement project_state/ and docs/ win and the .planning/ artifact is corrected", ".planning/REQUIREMENTS.md is a derived index whose entries must cite a source document"],
+      "alternatives": [
+        "Make .planning/ authoritative and reduce docs/project_management/ to generated views",
+        "Maintain both systems in parallel and synchronize by hand",
+        "Remove .planning/ and forgo the GSD phase pipeline"
+      ],
+      "consequences": [
+        ".planning/README.md states the boundary at the point of use",
+        "verify_harness.py enforces phase-dependency resolution, requirement-to-phase mapping, and identifier existence in project_state/",
+        "Regenerating or deleting .planning/ must never lose project state",
+        "On disagreement project_state/ and docs/ win and the .planning/ artifact is corrected",
+        ".planning/REQUIREMENTS.md is a derived index whose entries must cite a source document"
+      ],
       "supersedes": null,
-      "evidence": [".planning/README.md", ".planning/INGEST-CONFLICTS.md", "scripts/verify_harness.py"],
-      "approvers": ["Project human owners"]
+      "evidence": [
+        ".planning/README.md",
+        ".planning/INGEST-CONFLICTS.md",
+        "scripts/verify_harness.py"
+      ],
+      "approvers": [
+        "Project human owners"
+      ]
+    },
+    {
+      "decision_id": "DEC-0009",
+      "date": "2026-08-26",
+      "title": "Approximately 27B replaces approximately 4B as the flagship target",
+      "status": "accepted",
+      "owner": "Phurinat Polasa",
+      "context": "DEC-0002 fixed approximately 4B as the flagship and confined 27B to gated stretch scope. On 2026-08-26, while preparing the Project Idea document for the immutable DL-0002 deadline, the project owner directed that the model the project will build is approximately 27B and that the 4B target be removed entirely. Because the submitted document states the flagship scale, the record and the submission must agree",
+      "decision": "Approximately 27B is the flagship target of the Research Track. The approximately 4B target is withdrawn and no longer appears as a project deliverable. All gates that DEC-0002 attached to the 4B release candidate now attach to the 27B release candidate, unchanged in substance: G0-G4 must close on recorded evidence, a valid Tier 4 manifest and explicit time-bounded human approval are required before any flagship run, and no gate may be skipped on account of the larger target",
+      "rationale": "The flagship scale is the project owner's decision to make and was given directly. Recording it as a superseding decision keeps the submitted Project Idea consistent with the enforced record rather than leaving the document contradicting a locked entry",
+      "alternatives": [
+        "Keep DEC-0002 and write 4B in the submitted document against the owner's instruction",
+        "Write 27B in the document and leave DEC-0002 unchanged, leaving the record self-contradictory",
+        "Treat 27B as flagship while retaining 4B as a named intermediate deliverable"
+      ],
+      "consequences": [
+        "RISK-0004 is restated against 27B and its probability raised to CRITICAL; compute feasibility is now the dominant threat to the Research Track flagship",
+        "The scope fallback ladder is unchanged and load-bearing: if compute cannot support stable 27B training, the delivered model is reported at its true scale and never relabelled",
+        "Small-scale architecture validation before scaling is unchanged and still gates any flagship run",
+        "docs/PROJECT_CHARTER.md, docs/research/RESEARCH_SPEC.md, docs/research/SUCCESS_CRITERIA.md, docs/research/TRAINING_SPEC.md, docs/project_management/MASTER_PLAN.md, docs/project_management/MILESTONES.md and the .planning/ artifacts still name 4B and must be reconciled before the Proposal Report on 2026-10-02",
+        "Compute budget, hardware reservation, and schedule impact must be re-estimated against 27B before any Tier 3 or Tier 4 request"
+      ],
+      "supersedes": "DEC-0002",
+      "evidence": [
+        "docs/academic/PROJECT_IDEA.md",
+        "docs/DECISION_LOG.md"
+      ],
+      "approvers": [
+        "Phurinat Polasa"
+      ]
     }
   ]
 }
-

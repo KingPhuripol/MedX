@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-08-11T09:08:36+07:00",
+  "updated_at": "2026-08-26T12:30:00+07:00",
   "risks": [
     {
       "risk_id": "RISK-0001",
@@ -13,7 +13,10 @@
       "fallback": "Escalate to advisor and course staff before the deadline with complete form evidence",
       "review_date": "2026-08-12",
       "status": "CLOSED",
-      "linked_tasks": ["TASK-0001", "TASK-0002"],
+      "linked_tasks": [
+        "TASK-0001",
+        "TASK-0002"
+      ],
       "updated_at": "2026-08-11T09:08:36+07:00"
     },
     {
@@ -27,7 +30,10 @@
       "fallback": "Narrow evaluated modality combinations while retaining interfaces and reporting limitations honestly",
       "review_date": "2026-08-17",
       "status": "OPEN",
-      "linked_tasks": ["TASK-0005", "TASK-0014"],
+      "linked_tasks": [
+        "TASK-0005",
+        "TASK-0014"
+      ],
       "updated_at": "2026-08-11T04:00:00+07:00"
     },
     {
@@ -41,22 +47,28 @@
       "fallback": "Invalidate affected evidence, rebuild a new data version, and rerun all dependent experiments",
       "review_date": "2026-08-17",
       "status": "OPEN",
-      "linked_tasks": ["TASK-0005", "TASK-0014"],
+      "linked_tasks": [
+        "TASK-0005",
+        "TASK-0014"
+      ],
       "updated_at": "2026-08-11T04:00:00+07:00"
     },
     {
       "risk_id": "RISK-0004",
-      "description": "Available compute may not support stable approximately 4B training and evaluation",
-      "probability": "HIGH",
+      "description": "Available compute may not support stable approximately 27B training and evaluation",
+      "probability": "CRITICAL",
       "impact": "HIGH",
       "owner": "Phurinat Polasa",
-      "trigger": "No approved hardware, budget, recovery, and time plan exists at the G5 gate",
-      "mitigation": "Estimate early, validate staged recipes, use efficient methods, and prove recovery at small scale",
-      "fallback": "Deliver the strongest valid smaller open-weight model and report the scale limitation explicitly",
+      "trigger": "No approved hardware, budget, recovery, and time plan for approximately 27B exists at the flagship gate",
+      "mitigation": "Re-estimate compute, storage, and cost against 27B before any Tier 3 or Tier 4 request; validate staged recipes and prove checkpoint recovery at small scale first",
+      "fallback": "Deliver the strongest valid smaller open-weight model and report the scale shortfall plainly; never relabel it as approximately 27B",
       "review_date": "2026-08-28",
       "status": "OPEN",
-      "linked_tasks": ["TASK-0009", "TASK-0012"],
-      "updated_at": "2026-08-11T04:00:00+07:00"
+      "linked_tasks": [
+        "TASK-0009",
+        "TASK-0012"
+      ],
+      "updated_at": "2026-08-26T12:30:00+07:00"
     },
     {
       "risk_id": "RISK-0005",
@@ -69,7 +81,10 @@
       "fallback": "Stop scaling and propose a bounded architecture reframing through a human decision",
       "review_date": "2026-09-18",
       "status": "OPEN",
-      "linked_tasks": ["TASK-0009", "TASK-0012"],
+      "linked_tasks": [
+        "TASK-0009",
+        "TASK-0012"
+      ],
       "updated_at": "2026-08-11T04:00:00+07:00"
     },
     {
@@ -83,7 +98,10 @@
       "fallback": "Freeze the last compatible contract and implement an explicit migration before further integration",
       "review_date": "2026-08-21",
       "status": "OPEN",
-      "linked_tasks": ["TASK-0006", "TASK-0013"],
+      "linked_tasks": [
+        "TASK-0006",
+        "TASK-0013"
+      ],
       "updated_at": "2026-08-11T04:00:00+07:00"
     },
     {
@@ -97,7 +115,11 @@
       "fallback": "Disable unsafe pathway output and restrict the demonstration scope until independently re-reviewed",
       "review_date": "2026-08-21",
       "status": "OPEN",
-      "linked_tasks": ["TASK-0008", "TASK-0010", "TASK-0015"],
+      "linked_tasks": [
+        "TASK-0008",
+        "TASK-0010",
+        "TASK-0015"
+      ],
       "updated_at": "2026-08-11T04:00:00+07:00"
     },
     {
@@ -111,7 +133,14 @@
       "fallback": "Cut P3 and P4 technical scope while preserving validity, safety, and the minimum deliverable",
       "review_date": "2026-08-14",
       "status": "OPEN",
-      "linked_tasks": ["TASK-0003", "TASK-0007", "TASK-0012", "TASK-0013", "TASK-0014", "TASK-0015"],
+      "linked_tasks": [
+        "TASK-0003",
+        "TASK-0007",
+        "TASK-0012",
+        "TASK-0013",
+        "TASK-0014",
+        "TASK-0015"
+      ],
       "updated_at": "2026-08-11T04:00:00+07:00"
     },
     {
@@ -125,7 +154,10 @@
       "fallback": "Disable the external adapter and use the mock or approved local baseline provider",
       "review_date": "2026-08-17",
       "status": "OPEN",
-      "linked_tasks": ["TASK-0006", "TASK-0013"],
+      "linked_tasks": [
+        "TASK-0006",
+        "TASK-0013"
+      ],
       "updated_at": "2026-08-11T04:00:00+07:00"
     },
     {
@@ -139,9 +171,11 @@
       "fallback": "Withhold weights or data and release only cleared code/evaluation artifacts",
       "review_date": "2026-10-02",
       "status": "OPEN",
-      "linked_tasks": ["TASK-0005", "TASK-0014"],
+      "linked_tasks": [
+        "TASK-0005",
+        "TASK-0014"
+      ],
       "updated_at": "2026-08-11T04:00:00+07:00"
     }
   ]
 }
-

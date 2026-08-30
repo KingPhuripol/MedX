@@ -18,7 +18,7 @@ Build one coherent Senior Project that contributes both a testable research mode
 | Thanrada Tungweerapornpong | 66070501025 | Safety and evaluation | Innovation / Shared |
 | Supreeya Nuamkhayan | 66070501087 | Product and system development | Innovation |
 
-The advisor name is not recorded in the available project context. Confirming the advisor and submission evidence is an active P0 task; no system or agent may invent this information.
+**Advisor:** ดร.สัญญ์สิริ ธารประดับ. Recorded 2026-08-26 from direct confirmation by the project owner (GOV-03); no field was inferred. The advisor contact path and the Group Application submission receipt are still not archived and remain part of the active P0 task TASK-0001. No system or agent may invent this information.
 
 ## Problem
 
@@ -33,8 +33,8 @@ Many medical AI systems are narrow by disease, modality, or task and apply a sim
 - Case-adaptive discrete, typed, acyclic computation graph that can be exported, replayed, measured, and intervened on.
 - Controlled fixed-path, static-DAG, random-routing, and mixture/sparse-routing comparisons.
 - Medical capability, efficiency, graph diversity, routing behavior, faithfulness, robustness, and calibration evidence.
-- Flagship approximately 4B checkpoint with code, model card, evaluation scripts, and Hugging Face release after approval.
-- 27B scaling only as a gated stretch objective.
+- Flagship approximately 27B checkpoint with code, model card, evaluation scripts, and Hugging Face release after approval.
+- No stretch model above the flagship. If compute cannot support 27B, the delivered model is reported at its true scale, never relabelled.
 
 ### Innovation Track
 
@@ -63,7 +63,7 @@ Primary research-prototype users are supervised triage nurses, intake staff, cli
 - Live clinical use affecting patient care.
 - External transfer of real or linkable patient data.
 - Clinical claims beyond the evaluated population and setting.
-- Training a 27B model before completion of every 4B gate.
+- Training the flagship 27B model before every gate closes, a compute estimate exists, and a Tier 4 approval is recorded.
 - Claiming that an inspectable DAG is a clinical explanation without intervention evidence.
 - Scraping or redistributing data/weights contrary to licenses.
 
@@ -72,7 +72,7 @@ Primary research-prototype users are supervised triage nurses, intake staff, cli
 1. Academic submissions and presentations on the official schedule.
 2. Versioned patient-journey, data, API, evaluation, safety, and approval contracts.
 3. Reproducible Research Track code, manifests, baselines, ablations, and results.
-4. Approximately 4B research release candidate, conditional on gates and compute.
+4. Approximately 27B research release candidate, conditional on gates and compute (RISK-0004 is CRITICAL and unresolved).
 5. AI Clinical Front Door integrated through the Model Gateway.
 6. Safety case, audit evidence, human-review workflow, and end-to-end demonstration.
 7. Final report, documentation, reproducibility package, and authorized public release.

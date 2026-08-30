@@ -14,7 +14,7 @@ Machine-readable decisions are in `project_state/decisions.json` and validated a
 ## DEC-0002 - Flagship approximately 4B; 27B is stretch
 
 - **Date:** 2026-08-11
-- **Status:** accepted
+- **Status:** superseded by DEC-0009 on 2026-08-26
 - **Owner:** Phurinat Polasa
 - **Decision:** Treat approximately 4B parameters as the flagship target. Permit 27B work only after the 4B release candidate passes architecture, data, safety, evaluation, compute, and schedule gates.
 - **Rationale:** Evidence at small and 4B scales is more important than unsupported scale.
@@ -79,3 +79,18 @@ Machine-readable decisions are in `project_state/decisions.json` and validated a
   - Where the two disagree, `project_state/` and `docs/` win, and the `.planning/` artifact is corrected.
   - Accepted by the human owner on 2026-08-11 and in force from that date. Superseding it requires a new Decision Log entry, not an edit to this one.
 
+## DEC-0009 - Approximately 27B replaces approximately 4B as the flagship target
+
+- **Date:** 2026-08-26
+- **Status:** accepted
+- **Supersedes:** DEC-0002
+- **Owner:** Phurinat Polasa
+- **Decision:** Approximately 27B is the flagship target of the Research Track. The approximately 4B target is withdrawn and no longer appears as a project deliverable. Every gate that DEC-0002 attached to the 4B release candidate now attaches to the 27B release candidate, unchanged in substance: G0-G4 must close on recorded evidence, and a valid Tier 4 manifest plus explicit time-bounded human approval are required before any flagship run.
+- **Rationale:** The flagship scale is the project owner's decision and was given directly on 2026-08-26 while the Project Idea document was being prepared for the immutable DL-0002 deadline. Recording it as a superseding entry keeps the submitted document consistent with the enforced record instead of leaving it contradicting a locked decision.
+- **Consequences:**
+  - RISK-0004 is restated against 27B and its probability raised to `CRITICAL`. Compute feasibility is now the dominant threat to the Research Track flagship.
+  - The scope fallback ladder is unchanged and load-bearing. If compute cannot support stable 27B training, the delivered model is reported at its true scale and is never relabelled as approximately 27B.
+  - Small-scale architecture validation before scaling is unchanged and still gates any flagship run. A larger target does not license skipping a gate.
+  - Compute, storage, cost, and schedule impact must be re-estimated against 27B before any Tier 3 or Tier 4 request. No estimate carried over from 4B remains valid.
+  - `docs/PROJECT_CHARTER.md`, `docs/research/RESEARCH_SPEC.md`, `docs/research/SUCCESS_CRITERIA.md`, `docs/research/TRAINING_SPEC.md`, `docs/project_management/MASTER_PLAN.md`, `docs/project_management/MILESTONES.md`, and the `.planning/` artifacts still name 4B. They must be reconciled before the Proposal Report on 2026-10-02.
+- **Open concern recorded, not resolved:** approximately 27B is roughly a sevenfold parameter increase over the withdrawn target, against a risk register that already rated 4B compute feasibility `HIGH`. This decision records the owner's direction; it does not establish that the compute exists. The feasibility evidence is owed at the flagship gate.

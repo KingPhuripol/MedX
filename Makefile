@@ -1,4 +1,4 @@
-.PHONY: bootstrap verify smoke leakage-fixture status
+.PHONY: bootstrap verify smoke leakage-fixture status idea-docx
 
 bootstrap:
 	bash scripts/bootstrap.sh
@@ -15,3 +15,6 @@ leakage-fixture:
 status:
 	python3 scripts/project_status.py
 
+# สร้างไฟล์ .docx ของเอกสาร Senior Project IDEA — ต้องมี python-docx (pip install python-docx)
+idea-docx:
+	python3 tools/build_idea_docx.py docs/academic/PROJECT_IDEA.md docs/academic/SeniorProject_IDEA.docx
