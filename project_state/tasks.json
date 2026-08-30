@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-08-30T20:00:00+07:00",
+  "updated_at": "2026-08-30T22:30:00+07:00",
   "tasks": [
     {
       "task_id": "TASK-0001",
@@ -570,7 +570,7 @@
       "workstream": "CROSS_TRACK",
       "milestone": "M2",
       "priority": "P1",
-      "status": "READY",
+      "status": "DONE",
       "dependencies": [],
       "planned_start": "2026-09-07",
       "due_date": "2026-09-20",
@@ -583,10 +583,17 @@
         "Passing tests over the existing fixtures",
         "A negative test proving invalid input is refused, not silently accepted"
       ],
-      "evidence": [],
-      "blocker": "Unblocked by DEC-0010 (Python + FastAPI), accepted 2026-08-30. schemas/ stays the machine source of truth; the models bind to it rather than restating it.",
-      "risk_level": "MEDIUM",
-      "updated_at": "2026-08-30T20:00:00+07:00"
+      "evidence": [
+        "shared/contracts/ holds Pydantic models for the Patient Journey (journey.py) and the Model API request/response (model_api.py), bound to the JSON Schemas in schemas/, which remain the source of truth.",
+        "All three existing fixtures in tests/fixtures/ validate through both the JSON Schema and the models, and round-trip back to documents the schemas still accept (tests/test_contracts.py).",
+        "Drift guard: the round-trip assertion compares the emitted field set against the fixture, so a model that adds, drops or renames a field fails the suite rather than diverging silently (RISK-0006).",
+        "Negative tests: an unknown field, a duplicate evidence_id, and an available_at_time preceding observed_at are each refused.",
+        "shared/snapshot.py implements the snapshot operation; it reproduces the contract's worked example exactly (at 09:15Z ev-001 and ev-002 available, ev-003 withheld as FUTURE_EVIDENCE), is deterministic by checksum, and never mutates the journey.",
+        "13 tests in tests/test_contracts.py, passing."
+      ],
+      "blocker": null,
+      "risk_level": "LOW",
+      "updated_at": "2026-08-30T22:30:00+07:00"
     },
     {
       "task_id": "TASK-0022",
@@ -595,7 +602,7 @@
       "workstream": "INNOVATION",
       "milestone": "M2",
       "priority": "P1",
-      "status": "READY",
+      "status": "DONE",
       "dependencies": [
         "TASK-0021"
       ],
@@ -611,10 +618,89 @@
         "Ten passing contract fixtures",
         "Audit records for the refusal paths"
       ],
-      "evidence": [],
-      "blocker": "Phase 2 success criteria 1 and 2. Provider SDKs stay inside adapters per DEC-0003 and DEC-0010.",
-      "risk_level": "MEDIUM",
-      "updated_at": "2026-08-30T20:00:00+07:00"
+      "evidence": [
+        "innovation/gateway/ implements the Model Gateway: parse, temporal check, authorization, budget, provider call, deterministic safety layer, response construction, audit — in that order.",
+        "All ten contract cases from MODEL_API_CONTRACT.md pass against the mock adapter (tests/test_gateway.py), parametrised so a future adapter is certified by the same suite unchanged.",
+        "TEMPORAL_VIOLATION, UNAUTHORIZED_DATA and INVALID_REQUEST are blocked before the provider is called; the temporal case uses a tripwire provider that fails the test if it is ever reached.",
+        "Deterministic safety layer (gateway/safety.py, safety-policy-v1): SR-001 a triggered red flag forces IMMEDIATE_REVIEW and ESCALATED; SR-002 an UNKNOWN flag escalates rather than reassuring; SR-003 missing required evidence abstains rather than concluding. A parametrised test asserts urgency is never lowered from any proposal.",
+        "Every response is contract-valid including refusals, and human_review.required is asserted true on every path.",
+        "Audit records every call including refusals, carry references only — a test asserts the fixture complaint text never appears in the trail.",
+        "Runs fully offline with the mock provider; no network is used by any test."
+      ],
+      "blocker": null,
+      "risk_level": "LOW",
+      "updated_at": "2026-08-30T22:30:00+07:00"
+    },
+    {
+      "task_id": "TASK-0023",
+      "title": "Front Door service, human confirmation and offline CLI fixture (release stage 1)",
+      "owner": "Supreeya Nuamkhayan",
+      "workstream": "INNOVATION",
+      "milestone": "M2",
+      "priority": "P1",
+      "status": "DONE",
+      "dependencies": [
+        "TASK-0021",
+        "TASK-0022"
+      ],
+      "planned_start": "2026-08-30",
+      "due_date": "2026-09-27",
+      "definition_of_done": [
+        "The Front Door service runs the CLINICAL_WORKFLOW end-to-end flow: encounter, snapshot at a decision time, deterministic safety screen, gateway call, recommendation held pending human review",
+        "A recommendation cannot take effect without a recorded human confirmation; the original output is preserved immutably when a reviewer overrides it",
+        "A synthetic CLI fixture runs the whole flow offline with no network, satisfying Innovation release stage 1",
+        "Re-assessment at a later decision time preserves the earlier output rather than replacing it"
+      ],
+      "evidence_required": [
+        "Passing tests",
+        "Offline CLI run output"
+      ],
+      "evidence": [
+        "innovation/frontdoor/service.py runs the CLINICAL_WORKFLOW flow: snapshot at a decision time, gateway call, recommendation held pending human review.",
+        "Human confirmation is structural, not advisory: act_on() raises HumanReviewRequired until a reviewer confirms, and only CONFIRM or MODIFY make a recommendation effective — REJECT and ESCALATE do not.",
+        "Overrides preserve the original output immutably; the review is recorded alongside it and mirrored into the audit record with overridden_from.",
+        "Re-assessment at a later decision time appends to history rather than replacing the earlier recommendation; snapshot checksums differ.",
+        "Label-modality evidence is excluded from live decisions even once its available_at_time has passed — an outcome is not a feature.",
+        "Offline CLI fixture: `python3 -m innovation.demo` runs the full flow with no network (Innovation release stage 1).",
+        "13 tests in tests/test_frontdoor.py, passing."
+      ],
+      "blocker": null,
+      "risk_level": "LOW",
+      "updated_at": "2026-08-30T22:30:00+07:00"
+    },
+    {
+      "task_id": "TASK-0024",
+      "title": "Front Door HTTP API (FastAPI)",
+      "owner": "Supreeya Nuamkhayan",
+      "workstream": "INNOVATION",
+      "milestone": "M2",
+      "priority": "P1",
+      "status": "DONE",
+      "dependencies": [
+        "TASK-0023"
+      ],
+      "planned_start": "2026-08-30",
+      "due_date": "2026-09-27",
+      "definition_of_done": [
+        "Every Front Door capability is reachable over HTTP; the UI is one caller of the same API and has no privileged path",
+        "A client speaking only to the API cannot reach a state the safety spec forbids",
+        "Non-synthetic journeys are refused"
+      ],
+      "evidence_required": [
+        "Passing API tests"
+      ],
+      "evidence": [
+        "innovation/api/app.py exposes health, journey registration, assessment, recommendation read, human review, history, an effective-gate endpoint, and audit read.",
+        "The API adds no clinical logic: it parses, delegates and serialises, so no second copy of the safety behaviour exists at the edge.",
+        "GET /recommendations/{id}/effective returns 409 until a human confirms, and 200 with the confirming reviewer afterwards. Rejecting keeps it at 409.",
+        "PUT /journeys refuses any journey whose data_classification is not SYNTHETIC (403) — the prototype has no approval path for real data (DEC-0006).",
+        "A review action outside the contract, and an anonymous reviewer, are both refused by the schema at 422 before any handler runs.",
+        "Every recommendation payload carries the RESEARCH PROTOTYPE - HUMAN REVIEW REQUIRED banner and its effective flag, so a client cannot render one without them.",
+        "13 tests in tests/test_api.py, passing."
+      ],
+      "blocker": null,
+      "risk_level": "LOW",
+      "updated_at": "2026-08-30T22:30:00+07:00"
     }
   ]
 }

@@ -196,7 +196,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Governance Baseline and Project Idea | -/TBD | Partially delivered — Project Idea submitted; G0 gate still open | - |
-| 2. Executable Contract Spine and Proposal Defense | 0/TBD | Not started | - |
+| 2. Executable Contract Spine and Proposal Defense | -/TBD | In progress — contract spine, gateway, Front Door and API built and tested; CITI and the proposal deliverables outstanding | - |
 | 3. Time-Valid Data Foundation and Supervised Front Door Alpha | 0/TBD | Not started | - |
 | 4. Frozen Evaluation and Progress Gate | 0/TBD | Not started | - |
 | 5. Small-Model Architecture Gate and Cross-Track Integration | 0/TBD | Not started | - |

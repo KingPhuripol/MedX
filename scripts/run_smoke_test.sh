@@ -11,5 +11,14 @@ python3 scripts/temporal_leakage_audit.py tests/fixtures/patient_journey/valid.j
   --input-event-id ev-001 \
   --input-event-id ev-002
 
-echo "SMOKE TEST PASSED: Harness, manifest, contracts, and temporal fixture are valid."
+# Contract and gateway tests. Skipped with a loud notice rather than a silent pass when
+# pytest is absent, so "no test runner" can never be mistaken for "tests passed".
+if python3 -c "import pytest" >/dev/null 2>&1; then
+  python3 -m pytest tests/ -q
+else
+  echo "WARNING: pytest is not installed; contract and gateway tests DID NOT RUN."
+  echo "         Install with: python3 -m pip install -r requirements.txt"
+fi
+
+echo "SMOKE TEST PASSED: Harness, manifest, contracts, temporal fixture, and gateway tests are valid."
 

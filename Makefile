@@ -1,4 +1,4 @@
-.PHONY: bootstrap verify smoke leakage-fixture status idea-docx
+.PHONY: bootstrap verify smoke test demo api leakage-fixture status idea-docx
 
 bootstrap:
 	bash scripts/bootstrap.sh
@@ -18,3 +18,15 @@ status:
 # สร้างไฟล์ .docx ของเอกสาร Senior Project IDEA — ต้องมี python-docx (pip install python-docx)
 idea-docx:
 	python3 tools/build_idea_docx.py docs/academic/PROJECT_IDEA.md docs/academic/SeniorProject_IDEA.docx
+
+# Contract, gateway, Front Door and API tests — needs `pip install -r requirements.txt`
+test:
+	python3 -m pytest tests/ -q
+
+# Offline synthetic demonstration of the Clinical Front Door (release stage 1)
+demo:
+	python3 -m innovation.demo
+
+# Front Door API on http://127.0.0.1:8000 (docs at /docs)
+api:
+	python3 -m uvicorn innovation.api.app:app --reload

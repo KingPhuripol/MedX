@@ -74,6 +74,45 @@ schedule is honest: **no task is overdue**, and P0/P1 concentration is back insi
 narrowing; the open-weight claim needs qualifying against the licences; and the modality story must
 distinguish linked-cohort evidence from unlinked-capability evidence rather than reporting one number.
 
+### Third pass, 30 August — the Innovation track has running code
+
+The repository had no implementation at all this morning. It now has the contract spine,
+the gateway, the Front Door and an HTTP API, with 66 passing tests wired into the smoke test.
+
+1. **Release decision recorded (DEC-0011).** The non-commercial ceiling is accepted:
+   released weights are for non-commercial research use only, and the candidate set is not
+   narrowed to avoid it. This is an academic project, so the licence costs nothing it needs,
+   whereas dropping MIMIC or CT-RATE would cost the only patient-linked cohort and the only
+   3D CT source. **An unqualified "open-weight" claim is now a known inaccuracy** for
+   TASK-0008 to correct in the Proposal. RISK-0010 stays OPEN — TASK-0020 and the CT-RATE
+   ShareAlike question are untouched by this.
+2. **TASK-0021 contract models.** `shared/contracts/` binds Pydantic models to the JSON
+   Schemas, which stay the source of truth. The round-trip test compares the emitted field
+   set against the fixture, so the two contracts cannot drift apart quietly (RISK-0006).
+3. **`shared/snapshot.py`** is the single implementation of the temporal rule. It reproduces
+   the contract's worked example exactly and withholds `ev-003` — the final diagnosis sitting
+   in the same file — from any decision made before 13:00.
+4. **TASK-0022 gateway.** All ten contract cases from `MODEL_API_CONTRACT.md` pass. The
+   temporal case uses a tripwire provider that fails the test if it is ever reached, so
+   "blocked before the provider" is proven rather than asserted.
+5. **Deterministic safety layer** (`safety-policy-v1`): a triggered red flag forces
+   IMMEDIATE_REVIEW; an UNKNOWN flag escalates instead of reassuring; missing required
+   evidence abstains instead of concluding. A parametrised test asserts urgency is **never
+   lowered** from any provider proposal. These rules sit in the gateway, not in a provider,
+   so swapping providers cannot change safety behaviour.
+6. **TASK-0023 Front Door + TASK-0024 API.** Human confirmation is structural:
+   `act_on()` raises until a reviewer confirms, and only CONFIRM or MODIFY count — rejecting
+   is a decision not to act. Overrides preserve the original output. `GET /recommendations/
+   {id}/effective` returns 409 until confirmed. Non-synthetic journeys are refused at 403.
+7. **Innovation release stage 1 is complete**: `make demo` runs the whole flow offline with
+   no network. Stage 2's mock-provider prototype now has its API to call.
+
+**Honest limits of what was built.** The gateway routes evidence *references*, never
+payloads, so the deterministic rules reason about which evidence types are present and what
+the provider declared — not about clinical content. Every response says so in its
+limitations. The mock provider is plumbing, not a clinical model, and never claims a red
+flag is absent. Nothing here is validated against real data, and no dataset has been obtained.
+
 ### Not done, and owed
 
 - **TASK-0005 is at REVIEW, not DONE** — evidence gathered, owner sign-off outstanding (TASK-0019),
@@ -81,8 +120,10 @@ distinguish linked-cohort evidence from unlinked-capability evidence rather than
 - **TASK-0004** novelty matrix, search protocol and baseline shortlist still do not exist. Required for DL-0004.
 - **TASK-0006** clinical workflow and gateway feasibility, still not started.
 - **TASK-0018** no compute estimate for 27B exists.
-- **No implementation code exists.** `research/`, `innovation/` and `shared/` contain only READMEs.
-  GOV-01 is now satisfied (DEC-0010) and TASK-0021/0022 are open, so Phase 2 can start.
+- **The Research track still has no code.** `research/` remains a README. The Innovation
+  spine is built; the Case Graph Compiler, encoders and training pipeline are not started.
+- **No model exists.** The gateway's only provider is a deterministic mock. Nothing in this
+  work is evidence about medical capability, and it must not be presented as such.
 - The advisor contact path is still unrecorded.
 
 ### CITI is a data blocker, not just an academic one
