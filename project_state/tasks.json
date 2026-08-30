@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-08-30T18:00:00+07:00",
+  "updated_at": "2026-08-30T20:00:00+07:00",
   "tasks": [
     {
       "task_id": "TASK-0001",
@@ -9,7 +9,7 @@
       "workstream": "PM",
       "milestone": "M0",
       "priority": "P0",
-      "status": "BLOCKED",
+      "status": "DONE",
       "dependencies": [],
       "planned_start": "2026-08-11",
       "due_date": "2026-09-05",
@@ -23,11 +23,13 @@
       "evidence": [
         "Explicit human confirmation by the project owner on 2026-08-11 that the Group Application has been submitted; no receipt document archived yet",
         "Advisor identity recorded 2026-08-26 as ดร.สัญญ์สิริ ธารประดับ, confirmed directly by the project owner; no field inferred",
-        "Advisor identity independently corroborated on 2026-08-30 by the digital signature embedded in sources/2026-08-28_project_idea_submitted_signed.pdf (Sansiri Tarnpradab, signed 2026-08-28 13:48:54 +07:00); see docs/academic/SUBMISSION_RECORD.md"
+        "Advisor identity independently corroborated on 2026-08-30 by the digital signature embedded in sources/2026-08-28_project_idea_submitted_signed.pdf (Sansiri Tarnpradab, signed 2026-08-28 13:48:54 +07:00); see docs/academic/SUBMISSION_RECORD.md",
+        "CLOSED 2026-08-30 WITHOUT DOCUMENTARY EVIDENCE. The project owner confirmed on 2026-08-30 that the Group Application receipt is no longer retrievable. The submission itself rests on the owner's confirmation of 2026-08-11 and nothing else; no receipt, confirmation page or email was archived. This task is closed because no further action can recover the evidence, not because the evidence was found. RISK-0012 is raised so the same gap does not recur on the remaining deadlines.",
+        "Advisor contact path: still not recorded. Advisor identity is independently corroborated by the signature in sources/2026-08-28_project_idea_submitted_signed.pdf."
       ],
-      "blocker": "Submission itself was confirmed by the project owner on 2026-08-11 and DL-0001 is recorded as met. What is still missing is documentary evidence: the submission receipt is not archived and the advisor contact path is not recorded. Both require a human to retrieve them; no agent may infer or generate them.",
+      "blocker": null,
       "risk_level": "MEDIUM",
-      "updated_at": "2026-08-30T17:30:00+07:00"
+      "updated_at": "2026-08-30T20:00:00+07:00"
     },
     {
       "task_id": "TASK-0002",
@@ -127,7 +129,7 @@
       "workstream": "DATA",
       "milestone": "M1",
       "priority": "P0",
-      "status": "IN_PROGRESS",
+      "status": "REVIEW",
       "dependencies": [
         "TASK-0003"
       ],
@@ -142,10 +144,19 @@
         "License and authorization notes",
         "Temporal and patient-linkage assessment"
       ],
-      "evidence": [],
-      "blocker": "Credentialed access to MIMIC-IV and MIMIC-CXR via PhysioNet requires completed CITI training (TASK-0011), so the access dimension of this inventory cannot close before CITI does. The licence, patient-linkage, temporal-availability and modality-coverage dimensions can and must proceed now. This is a documentary survey only: no dataset is downloaded and no patient data is touched.",
-      "risk_level": "CRITICAL",
-      "updated_at": "2026-08-30T17:30:00+07:00"
+      "evidence": [
+        "project_state/dataset_feasibility.json — seven candidates, all CONDITIONAL with named conditions, every verdict citing evidence. DS-0007 CT-RATE added to cover the 3D CT modality no original candidate supplied.",
+        "docs/research/DATASET_FEASIBILITY.md — findings, verdict table and what remains for the owner.",
+        "Finding 1: patient-level cross-modality linkage exists only within the MIMIC family (subject_id, MIMIC-IV v2.2+). A single-patient five-modality journey is not achievable from this candidate set. RISK-0002 raised to CRITICAL probability.",
+        "Finding 2: available_at_time must derive from storetime, not charttime; charttime would place future information in the decision snapshot. Only the MIMIC core carries a usable timeline at all.",
+        "Finding 3: every candidate except VQA-RAD (CC0) is non-commercial; CT-RATE is CC-BY-NC-SA; PhysioNet is silent on releasing trained weights. RISK-0010 raised to HIGH probability.",
+        "Constraints written into docs/research/BENCHMARK_CONTRACT.md.",
+        "scripts/verify_harness.py now refuses any VERIFIED dimension or non-UNDER_REVIEW verdict that cites no evidence; negative-tested 2026-08-30.",
+        "No dataset was downloaded, no registration completed and no DUA accepted — a documentary survey only."
+      ],
+      "blocker": "Evidence gathered and recorded; awaiting the owner's sign-off. reviewed_by is null on all seven records by design — gathering evidence can be done on the owner's behalf, accepting it cannot. Access for the MIMIC core also cannot close before CITI (TASK-0011) and a human-signed DUA.",
+      "risk_level": "HIGH",
+      "updated_at": "2026-08-30T20:00:00+07:00"
     },
     {
       "task_id": "TASK-0006",
@@ -225,13 +236,13 @@
         "Safety claims, under-triage emphasis, uncertainty, human review, metric plan and failure modes are assessed independently"
       ],
       "evidence_required": [
-        "Written review of the submitted document against SAFETY_SPEC and EVALUATION_CONTRACT",
-        "List of claims to correct or substantiate in the Proposal Report"
+        "Written review of the submitted document against SAFETY_SPEC and EVALUATION_CONTRACT by a member who did not write it",
+        "List of claims to correct or substantiate in the Proposal Report, including the 3D CT claim, the unattributed C-01/C-02, and the open-weight claim against the licence findings"
       ],
       "evidence": [],
-      "blocker": "The pre-submission review window closed unmet. Phase 1 CONTEXT D-03 requires review by a member who did not write the document; the advisor signature is an approval to submit, not that internal review. This task now runs retrospectively and its findings feed the Proposal Report.",
-      "risk_level": "MEDIUM",
-      "updated_at": "2026-08-30T17:30:00+07:00"
+      "blocker": "CONFIRMED 2026-08-30 by the project owner: no member other than the author read the Project Idea before submission. Phase 1 CONTEXT D-03 was NOT MET. The advisor signature is approval to submit, not the internal review the criterion requires. This task now runs retrospectively; its output is the list of corrections the Proposal Report must carry. RISK-0011 records the systemic version of this failure.",
+      "risk_level": "HIGH",
+      "updated_at": "2026-08-30T20:00:00+07:00"
     },
     {
       "task_id": "TASK-0009",
@@ -499,6 +510,111 @@
       "blocker": "DEC-0009 records the owner direction but establishes no compute feasibility. RISK-0004 is CRITICAL and no estimate carried over from the withdrawn 4B target remains valid. Required before any Tier 3 or Tier 4 request.",
       "risk_level": "CRITICAL",
       "updated_at": "2026-08-30T17:30:00+07:00"
+    },
+    {
+      "task_id": "TASK-0019",
+      "title": "Confirm dataset feasibility findings and sign off TASK-0005",
+      "owner": "Jakkapat Bunjongruxsa",
+      "workstream": "DATA",
+      "milestone": "M2",
+      "priority": "P1",
+      "status": "READY",
+      "dependencies": [
+        "TASK-0005"
+      ],
+      "planned_start": "2026-09-07",
+      "due_date": "2026-09-13",
+      "definition_of_done": [
+        "The UNVERIFIED dimensions are confirmed at their providers: CheXpert RUA, the year-specific BraTS DUA, VQA-RAD CC0 at OSF, the SLAKE licence, MIMIC-CXR timestamp columns",
+        "reviewed_by is filled on every record the owner accepts",
+        "A position is recorded on whether a non-commercial-only weight release is acceptable, or the candidate set narrows to preserve a freer release"
+      ],
+      "evidence_required": [
+        "Updated project_state/dataset_feasibility.json with reviewed_by set",
+        "A recorded decision on the release-licence question"
+      ],
+      "evidence": [],
+      "blocker": "Depends on TASK-0005, which is at REVIEW. The MIMIC access dimension additionally waits on CITI.",
+      "risk_level": "HIGH",
+      "updated_at": "2026-08-30T20:00:00+07:00"
+    },
+    {
+      "task_id": "TASK-0020",
+      "title": "Put the model-weights release question to PhysioNet in writing",
+      "owner": "Jakkapat Bunjongruxsa",
+      "workstream": "DATA",
+      "milestone": "M2",
+      "priority": "P1",
+      "status": "READY",
+      "dependencies": [
+        "TASK-0005"
+      ],
+      "planned_start": "2026-09-07",
+      "due_date": "2026-09-20",
+      "definition_of_done": [
+        "A written enquiry is sent asking whether the PhysioNet Credentialed Health Data License permits releasing model weights trained on MIMIC data",
+        "The answer, or the absence of one, is recorded against DS-0001 and DS-0002 and against RISK-0010"
+      ],
+      "evidence_required": [
+        "The enquiry and any reply, archived under sources/ with a committed record"
+      ],
+      "evidence": [],
+      "blocker": "The licence forbids sharing the data and is silent on trained weights. The project must not assume the permissive reading; an unanswered question is recorded as unanswered.",
+      "risk_level": "HIGH",
+      "updated_at": "2026-08-30T20:00:00+07:00"
+    },
+    {
+      "task_id": "TASK-0021",
+      "title": "Implement the shared contract models in Python",
+      "owner": "Supreeya Nuamkhayan",
+      "workstream": "CROSS_TRACK",
+      "milestone": "M2",
+      "priority": "P1",
+      "status": "READY",
+      "dependencies": [],
+      "planned_start": "2026-09-07",
+      "due_date": "2026-09-20",
+      "definition_of_done": [
+        "Pydantic models in shared/ for the Patient Journey, Model API request and Model API response, bound to the schemas in schemas/",
+        "The existing fixtures in tests/fixtures/ validate against the models",
+        "A malformed or future-dated fixture is rejected with the correct error code"
+      ],
+      "evidence_required": [
+        "Passing tests over the existing fixtures",
+        "A negative test proving invalid input is refused, not silently accepted"
+      ],
+      "evidence": [],
+      "blocker": "Unblocked by DEC-0010 (Python + FastAPI), accepted 2026-08-30. schemas/ stays the machine source of truth; the models bind to it rather than restating it.",
+      "risk_level": "MEDIUM",
+      "updated_at": "2026-08-30T20:00:00+07:00"
+    },
+    {
+      "task_id": "TASK-0022",
+      "title": "Build the mock provider behind the Model Gateway",
+      "owner": "Supreeya Nuamkhayan",
+      "workstream": "INNOVATION",
+      "milestone": "M2",
+      "priority": "P1",
+      "status": "READY",
+      "dependencies": [
+        "TASK-0021"
+      ],
+      "planned_start": "2026-09-14",
+      "due_date": "2026-09-27",
+      "definition_of_done": [
+        "A valid synthetic Patient Journey drives a versioned gateway request to a mock provider with no network access and returns a schema-valid response",
+        "Invalid, future-dated or unauthorized evidence is refused with the correct error code and a safe audit record",
+        "The mock adapter passes all ten contract fixture cases"
+      ],
+      "evidence_required": [
+        "Offline end-to-end run",
+        "Ten passing contract fixtures",
+        "Audit records for the refusal paths"
+      ],
+      "evidence": [],
+      "blocker": "Phase 2 success criteria 1 and 2. Provider SDKs stay inside adapters per DEC-0003 and DEC-0010.",
+      "risk_level": "MEDIUM",
+      "updated_at": "2026-08-30T20:00:00+07:00"
     }
   ]
 }

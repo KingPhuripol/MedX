@@ -4,7 +4,7 @@ Success is cumulative. A later gate cannot compensate for an earlier integrity f
 
 ## G0 - Governance and contracts
 
-Status as of 30 Aug 2026: **four of five closed; the gate is open on dataset feasibility.**
+Status as of 30 Aug 2026: **all five closed. G0 is closed, with two residuals tracked below.**
 
 - [x] Research questions and claim boundaries accepted.
       Evidence: `docs/research/RESEARCH_SPEC.md` RQ1-RQ3; claim boundary in `docs/PROJECT_CHARTER.md`
@@ -12,19 +12,35 @@ Status as of 30 Aug 2026: **four of five closed; the gate is open on dataset fea
 - [x] Data, Patient Journey, Model API, Evaluation, and Approval contracts versioned.
       Evidence: `project_state/contract_versions.json` registers all five at 1.0.0 with status
       ACCEPTED, validated against `schemas/contract-versions.schema.json` by the harness.
-- [ ] Dataset access/license/ethics feasibility recorded.
-      **Open.** The inventory and its schema now exist (`project_state/dataset_feasibility.json`,
-      `docs/research/DATASET_FEASIBILITY.md`), but all six candidates are `UNDER_REVIEW` and no
-      dimension is `VERIFIED`. A structure to record findings is not a finding. Closes with TASK-0005;
-      RISK-0002 stays live until it does.
+- [x] Dataset access/license/ethics feasibility recorded.
+      Evidence: `project_state/dataset_feasibility.json` records seven candidates (DS-0007 CT-RATE added
+      2026-08-30 to cover the 3D CT modality the original six did not supply), each `CONDITIONAL` with a
+      named condition and each citing its sources. `docs/research/DATASET_FEASIBILITY.md` carries the
+      findings; the resulting constraints are written into `BENCHMARK_CONTRACT.md`. The harness refuses
+      any `VERIFIED` dimension or non-`UNDER_REVIEW` verdict that cites no evidence.
+      The gate asks that feasibility be **recorded**, and it now is — including the negative findings,
+      which are the substantive ones: patient-level cross-modality linkage exists only inside the MIMIC
+      family, and every candidate except VQA-RAD is non-commercial.
+
 - [x] Experiment manifest validation and evidence lineage work.
       Evidence: `scripts/validate_manifest.py` accepts `experiments/manifests/exp_0000_harness_smoke.json`;
       `bash scripts/run_smoke_test.sh` passes end to end.
 - [x] Official academic plan and owners accepted.
       Evidence: `project_state/official_deadlines.json` verified by the harness against DEC-0007;
       `docs/project_management/MASTER_PLAN.md`, `MILESTONES.md` and `TEAM_OWNERSHIP.md`.
-      Residual: the Group Application receipt is still unarchived (TASK-0001) — that is an M0 evidence
-      gap, not a defect in the plan itself.
+      Residual: the Group Application receipt was never archived and is unrecoverable (TASK-0001 closed
+      2026-08-30 without documentary evidence; RISK-0012). That is an M0 evidence gap, not a defect in
+      the plan itself.
+
+**Residuals — G0 is closed, these are not:**
+
+1. **Owner sign-off is outstanding (TASK-0019).** `reviewed_by` is `null` on all seven records. Evidence
+   was gathered on the owner's behalf; acceptance is the owner's. Dimensions resolved only from secondary
+   sources remain `UNVERIFIED` and are listed for confirmation.
+2. **RISK-0002 and RISK-0010 were raised, not retired, by this evidence.** G0 required feasibility to be
+   recorded; it never required the answer to be favourable. The finding that a single-patient
+   five-modality journey is unavailable, and that the open-weight release faces a non-commercial ceiling,
+   flows into G1 and into the Proposal — it does not reopen G0.
 
 ## G1 - Data integrity
 

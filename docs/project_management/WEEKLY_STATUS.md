@@ -40,18 +40,50 @@ schedule is honest: **no task is overdue**, and P0/P1 concentration is back insi
    against real capacity. TASK-0004 moved from Phurinat to Thanapol; TASK-0005 and TASK-0011 raised to
    P0. Workload concentration: **50% → 33%**, inside the 40% rule.
 
+### Second pass, 30 August — feasibility answered and decisions closed
+
+1. **TASK-0005 answered, not just seeded.** All seven candidates now carry a `CONDITIONAL` verdict with
+   a named condition and cited evidence. Sources were read at the providers' own pages where possible;
+   dimensions resolved only from secondary sources stay `UNVERIFIED` and say so.
+2. **DS-0007 CT-RATE added.** The submitted document claims 3D CT; none of the six original candidates
+   supplied it — BraTS is brain MRI. CT-RATE is the dataset behind Hamamci et al. (2026), which the
+   submitted document already cites. Adding it closes the gap, at the cost of a CC-BY-NC-SA licence.
+3. **Three findings that change the project, not just the record:**
+   - Patient-level cross-modality linkage exists **only** inside the MIMIC family. A single-patient
+     five-modality journey is not achievable from this candidate set. RISK-0002 → probability CRITICAL.
+   - `available_at_time` must derive from **`storetime`, not `charttime`**. Using `charttime` would put
+     future information inside the decision snapshot — the exact failure RISK-0003 exists to prevent.
+   - **Every candidate except VQA-RAD is non-commercial**, CT-RATE is ShareAlike, and PhysioNet is silent
+     on whether trained weights may be released. The open-weight promise faces a non-commercial ceiling.
+     RISK-0010 → probability HIGH. TASK-0020 puts the weights question to PhysioNet in writing.
+4. **G0 is closed** — five of five. The gate asked that feasibility be recorded; it is, negative findings
+   included. Owner sign-off (TASK-0019) and the raised risks are tracked as residuals, not as an open gate.
+5. **The harness now enforces the rule the survey rests on**: no dimension may claim `VERIFIED`, and no
+   dataset may carry a verdict, without citing evidence. Negative-tested. 243 → **286 checks, passing**.
+6. **DEC-0010 accepted: Python + FastAPI**, recorded before any Phase 2 file exists, as GOV-01 requires.
+   TASK-0021 and TASK-0022 are open for the contract models and the mock provider.
+7. **The two pending decisions are closed, both unfavourably, and recorded that way:**
+   - Phase 1 CONTEXT **D-03 was NOT MET** — the Project Idea was written and submitted by one person.
+     New **RISK-0011**: the Proposal Report is four times longer with more technical claims, and the same
+     failure there costs proportionally more.
+   - The Group Application receipt is **unrecoverable**. M0 closes on the owner's recollection with the
+     limitation stated in the milestone itself. New **RISK-0012**: capture submission evidence at
+     submission time, as was done for the Project Idea.
+
+**What the Proposal Report now owes**, beyond what was already listed: the 3D CT claim needs CT-RATE or
+narrowing; the open-weight claim needs qualifying against the licences; and the modality story must
+distinguish linked-cohort evidence from unlinked-capability evidence rather than reporting one number.
+
 ### Not done, and owed
 
-- **TASK-0005 data feasibility is seeded, not answered.** All six candidates are `UNDER_REVIEW` with
-  every dimension `UNVERIFIED` and no evidence cited. The structure to record findings is not a
-  finding. This is the single biggest blocker to both G0 and the Proposal's data section.
+- **TASK-0005 is at REVIEW, not DONE** — evidence gathered, owner sign-off outstanding (TASK-0019),
+  and the MIMIC access dimension cannot close before CITI and a human-signed DUA.
 - **TASK-0004** novelty matrix, search protocol and baseline shortlist still do not exist. Required for DL-0004.
 - **TASK-0006** clinical workflow and gateway feasibility, still not started.
 - **TASK-0018** no compute estimate for 27B exists.
 - **No implementation code exists.** `research/`, `innovation/` and `shared/` contain only READMEs.
-  Phase 2 turns the contracts into runnable code and has not started; GOV-01 requires the runtime
-  decision to be recorded before that code is written.
-- The Group Application receipt is still unarchived and the advisor contact path unrecorded (TASK-0001).
+  GOV-01 is now satisfied (DEC-0010) and TASK-0021/0022 are open, so Phase 2 can start.
+- The advisor contact path is still unrecorded.
 
 ### CITI is a data blocker, not just an academic one
 
@@ -77,15 +109,19 @@ live until TASK-0018 produces numbers.
    alongside the first real implementation work, which has not begun.
 4. RISK-0003 temporal or patient-identity leakage.
 
-### Human decisions required this week
+### Human decisions — all three closed on 30 August
 
-1. **TASK-0008** — did a member who did not write the Project Idea review it before submission? The
-   advisor's signature is approval to submit, not that internal review (Phase 1 CONTEXT D-03). If it did
-   not happen, the criterion was not met and the review now runs retrospectively.
-2. **Group Application receipt** — retrievable or not? If not, record that no documentary evidence
-   exists rather than leaving M0 contradicting itself.
-3. **Phase 2 start** — the runtime and framework decision (GOV-01) must be an accepted Decision Log
-   entry *before* gateway or prototype code is written. Nothing can be implemented until it is recorded.
+1. **TASK-0008** — answered: no internal review took place. D-03 recorded as NOT MET; RISK-0011 raised.
+2. **Group Application receipt** — answered: unrecoverable. M0 closed with the limitation stated;
+   RISK-0012 raised.
+3. **Phase 2 runtime** — answered: Python + FastAPI, recorded as DEC-0010 before any code exists.
+
+### Now awaiting a decision
+
+- **The non-commercial ceiling on the release.** Is a weights release restricted to non-commercial
+  research acceptable, or should the candidate set narrow to protect a freer release? This is a scope
+  question about what the project promises, not a technical one (TASK-0019).
+- **RISK-0004** is still CRITICAL with no compute estimate for 27B (TASK-0018).
 
 ### Next update protocol
 

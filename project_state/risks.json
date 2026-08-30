@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-08-26T12:30:00+07:00",
+  "updated_at": "2026-08-30T19:45:00+07:00",
   "risks": [
     {
       "risk_id": "RISK-0001",
@@ -21,20 +21,20 @@
     },
     {
       "risk_id": "RISK-0002",
-      "description": "No authorized dataset may provide every desired modality linked at patient level",
-      "probability": "HIGH",
+      "description": "No authorized dataset provides every desired modality linked at patient level — confirmed 2026-08-30, not merely forecast",
+      "probability": "CRITICAL",
       "impact": "HIGH",
       "owner": "Jakkapat Bunjongruxsa",
-      "trigger": "Feasibility inventory finds incompatible access, linkage, temporal fields, or licenses",
-      "mitigation": "Use a modular capability-dataset strategy with explicit paired versus unpaired evidence and shared contracts",
-      "fallback": "Narrow evaluated modality combinations while retaining interfaces and reporting limitations honestly",
-      "review_date": "2026-08-17",
+      "trigger": "CONFIRMED on 2026-08-30: patient-level cross-modality linkage exists only within the MIMIC family (subject_id shared by MIMIC-IV and MIMIC-CXR). CheXpert, BraTS, CT-RATE, VQA-RAD and SLAKE are separate populations and cannot be joined to it",
+      "mitigation": "Adopt the confirmed architecture: a patient-linked MIMIC core carrying clinical text, structured data, longitudinal history and 2D imaging, plus explicitly unlinked capability subsets for 3D and VQA. Label every result as linked-cohort or unlinked-capability evidence; never merge them into one headline score",
+      "fallback": "Narrow the evaluated modality combinations and state the limitation plainly in the Proposal and the model card, rather than implying a single-patient five-modality journey the data cannot support",
+      "review_date": "2026-10-02",
       "status": "OPEN",
       "linked_tasks": [
         "TASK-0005",
         "TASK-0014"
       ],
-      "updated_at": "2026-08-11T04:00:00+07:00"
+      "updated_at": "2026-08-30T19:45:00+07:00"
     },
     {
       "risk_id": "RISK-0003",
@@ -162,20 +162,57 @@
     },
     {
       "risk_id": "RISK-0010",
-      "description": "A public release may violate licenses or expose sensitive or unintended artifacts",
-      "probability": "LOW",
+      "description": "The open-weight release may be blocked or narrowed by dataset licence terms",
+      "probability": "HIGH",
       "impact": "CRITICAL",
       "owner": "Jakkapat Bunjongruxsa",
-      "trigger": "A release scan finds unresolved provenance, incompatible license, secret, patient content, or prohibited derivative",
-      "mitigation": "Maintain license lineage and run release inventory, secret and sensitive-data scans before approval",
-      "fallback": "Withhold weights or data and release only cleared code/evaluation artifacts",
+      "trigger": "CONFIRMED on 2026-08-30: every candidate except VQA-RAD (CC0) restricts use to non-commercial research. CT-RATE is CC-BY-NC-SA, whose ShareAlike term plausibly reaches derivative works. Whether the PhysioNet Credentialed Health Data License permits releasing model weights trained on MIMIC is undetermined — the licence governs the data and is silent on weights",
+      "mitigation": "Settle the PhysioNet model-weights question with PhysioNet in writing before any release is planned. Decide deliberately whether CT-RATE is worth its ShareAlike cost. Maintain licence lineage per dataset in project_state/dataset_feasibility.json and re-check it at release",
+      "fallback": "Release under the most restrictive applicable terms and say so plainly, or withhold weights and release only cleared code and evaluation artifacts. Never describe the release as more open than its licences permit",
       "review_date": "2026-10-02",
       "status": "OPEN",
       "linked_tasks": [
         "TASK-0005",
         "TASK-0014"
       ],
-      "updated_at": "2026-08-11T04:00:00+07:00"
+      "updated_at": "2026-08-30T19:45:00+07:00"
+    },
+    {
+      "risk_id": "RISK-0011",
+      "description": "Single-author documents ship without independent review, so errors reach examiners uncorrected",
+      "probability": "HIGH",
+      "impact": "HIGH",
+      "owner": "Thanrada Tungweerapornpong",
+      "trigger": "REALISED on the Project Idea: it was written and submitted by one person with no review by a member who did not write it, so Phase 1 CONTEXT D-03 was not met. The submitted document reached the advisor with three unresolved defects — a claim of 3D CT support with no CT dataset in the candidate list, claims C-01 and C-02 left without attribution after the reference list was cut from 13 to 5, and an open-weight promise the licences may not permit. An independent reader would plausibly have caught at least one",
+      "mitigation": "Name a reviewer who is not the author for every graded deliverable, and make review a precondition of submission rather than a courtesy. The Proposal Report is four times the length of the Project Idea and carries more technical claims, so the same failure there is proportionally more costly",
+      "fallback": "If no reviewer is available before a deadline, submit and record explicitly in WEEKLY_STATUS that the document is unreviewed, so the gap is visible rather than silent",
+      "review_date": "2026-09-27",
+      "status": "OPEN",
+      "linked_tasks": [
+        "TASK-0008",
+        "TASK-0012",
+        "TASK-0013",
+        "TASK-0014",
+        "TASK-0015"
+      ],
+      "updated_at": "2026-08-30T19:45:00+07:00"
+    },
+    {
+      "risk_id": "RISK-0012",
+      "description": "Submission evidence is not captured at the moment of submission and becomes unrecoverable",
+      "probability": "MEDIUM",
+      "impact": "HIGH",
+      "owner": "Phurinat Polasa",
+      "trigger": "REALISED on the Group Application: submission is recorded only as the project owner's recollection from 2026-08-11, the receipt was never archived, and it is no longer retrievable. M0 therefore cannot close on documentary evidence and the gap is permanent",
+      "mitigation": "Capture the artefact at the moment of submission for every remaining deadline — the file actually sent, plus its checksum, plus any confirmation page or email — following the pattern established for the Project Idea in docs/academic/SUBMISSION_RECORD.md. Evidence gathered later is evidence that may not exist later",
+      "fallback": "Record the absence explicitly with its date and cause, and never let a milestone read as evidenced when it rests on recollection",
+      "review_date": "2026-09-25",
+      "status": "OPEN",
+      "linked_tasks": [
+        "TASK-0011",
+        "TASK-0012"
+      ],
+      "updated_at": "2026-08-30T19:45:00+07:00"
     }
   ]
 }
