@@ -118,24 +118,122 @@ def test_snapshot_does_not_mutate_the_journey():
     assert len(journey.events) == before
 
 
-def test_outcomes_are_subject_to_the_same_temporal_rule():
-    """An outcome mis-stamped as early is a leak; honouring the stamp would hide it."""
-    payload = _load("tests/fixtures/patient_journey/valid.json")
-    payload["outcomes"] = [
-        {
-            "event_id": "out-001",
-            "event_type": "OUTCOME",
-            "modality": "LABEL",
-            "observed_at": "2026-01-01T20:00:00Z",
-            "available_at_time": "2026-01-01T20:00:00Z",
-            "status": "AVAILABLE",
-            "data_classification": "SYNTHETIC",
-            "source_ref": {"system": "project-fixture", "version": "1.0.0"},
-            "value": {"category": "synthetic-outcome"},
-        }
-    ]
-    journey = PatientJourney.model_validate(payload)
-    snapshot = take_snapshot(journey, datetime(2026, 1, 1, 9, 15, tzinfo=timezone.utc))
+def test_retrospective_label_on_the_timeline_is_withheld():
+    """The real protection: a final diagnosis is an ordinary event and goes through the
+    same rule. The fixture's ev-003 is a DIAGNOSIS/LABEL available at 13:00."""
+    journey = PatientJourney.model_validate(_load("tests/fixtures/patient_journey/valid.json"))
+    label = journey.events[2]
+    assert (label.event_type, label.modality) == ("DIAGNOSIS", "LABEL")
 
-    assert "out-001" not in snapshot.evidence_ids
-    assert ("out-001", "FUTURE_EVIDENCE") in [(r.event_id, r.reason) for r in snapshot.rejected]
+    snapshot = take_snapshot(journey, datetime(2026, 1, 1, 9, 15, tzinfo=timezone.utc))
+    assert label.event_id not in snapshot.evidence_ids
+    assert (label.event_id, "FUTURE_EVIDENCE") in [(r.event_id, r.reason) for r in snapshot.rejected]
+
+
+# ------------------------------------------------------- schema/model constraint parity
+
+
+def _reject_both(payload: dict, schema_path: str, model) -> None:
+    """Assert the machine schema and the executable model both refuse a document.
+
+    Testing that valid fixtures pass is not enough — it leaves the models free to be
+    *looser* than the schema, which is how a document the contract rejects gets accepted
+    in code. These cases pin the refusal surface, not just the acceptance surface.
+    """
+    schema = _load(schema_path)
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate(payload, schema)
+    with pytest.raises(Exception):
+        model.model_validate(payload)
+
+
+JOURNEY_SCHEMA = "schemas/patient-journey.schema.json"
+
+
+def _journey() -> dict:
+    return _load("tests/fixtures/patient_journey/valid.json")
+
+
+def test_parity_journey_rejects_an_undeclared_top_level_field():
+    """`outcomes` is documented in PATIENT_JOURNEY_SCHEMA.md but absent from the machine
+    schema, which sets additionalProperties:false. The models follow the machine schema.
+    This discrepancy between the two contract artifacts is recorded for a human decision.
+    """
+    payload = _journey()
+    payload["outcomes"] = []
+    _reject_both(payload, JOURNEY_SCHEMA, PatientJourney)
+
+
+def test_parity_journey_rejects_a_split_outside_the_enum():
+    payload = _journey()
+    payload["split"] = "test"  # plausible, and not a member of the schema's enum
+    _reject_both(payload, JOURNEY_SCHEMA, PatientJourney)
+
+
+@pytest.mark.parametrize("split", [
+    "train", "validation", "internal_test", "external_test", "expert_test",
+    "architecture_intervention", "missing_modality_test", "unseen_combination_test",
+])
+def test_parity_every_schema_split_is_accepted_by_the_model(split):
+    """The mirror of the case above: the model must not be *narrower* than the schema
+    either, or a valid journey would be refused in code."""
+    payload = dict(_journey(), split=split)
+    jsonschema.validate(payload, _load(JOURNEY_SCHEMA))
+    assert PatientJourney.model_validate(payload).split == split
+
+
+def test_parity_event_rejects_an_undeclared_field():
+    payload = _journey()
+    payload["events"][0]["provider_hint"] = "leak"
+    _reject_both(payload, JOURNEY_SCHEMA, PatientJourney)
+
+
+def test_parity_event_rejects_a_status_outside_the_enum():
+    payload = _journey()
+    payload["events"][0]["status"] = "PROBABLY_FINE"
+    _reject_both(payload, JOURNEY_SCHEMA, PatientJourney)
+
+
+def test_parity_event_rejects_an_event_type_outside_the_enum():
+    payload = _journey()
+    payload["events"][0]["event_type"] = "VIBES"
+    _reject_both(payload, JOURNEY_SCHEMA, PatientJourney)
+
+
+def test_parity_event_source_ref_requires_record_ref():
+    """journey.source and event.source_ref are different shapes in the schema: only the
+    event one requires record_ref, and neither permits extra keys."""
+    payload = _journey()
+    payload["events"][0]["source_ref"].pop("record_ref")
+    _reject_both(payload, JOURNEY_SCHEMA, PatientJourney)
+
+
+def test_parity_journey_source_rejects_record_ref():
+    payload = _journey()
+    payload["source"]["record_ref"] = "not-allowed-here"
+    _reject_both(payload, JOURNEY_SCHEMA, PatientJourney)
+
+
+def test_parity_journey_rejects_an_empty_event_list():
+    payload = _journey()
+    payload["events"] = []
+    _reject_both(payload, JOURNEY_SCHEMA, PatientJourney)
+
+
+def test_parity_request_rejects_an_undeclared_field():
+    payload = _load("tests/fixtures/model_api/request.json")
+    payload["provider_native_hint"] = "leak"
+    _reject_both(payload, "schemas/model-api-request.schema.json", GatewayRequest)
+
+
+def test_parity_response_rejects_an_undeclared_field():
+    payload = _load("tests/fixtures/model_api/response.json")
+    payload["provider_raw_completion"] = "leak"
+    _reject_both(payload, "schemas/model-api-response.schema.json", GatewayResponse)
+
+
+def test_parity_response_rejects_human_review_not_required():
+    """The schema pins human_review.required to const true, and so must the model."""
+    payload = _load("tests/fixtures/model_api/response.json")
+    payload["human_review"]["required"] = False
+    _reject_both(payload, "schemas/model-api-response.schema.json", GatewayResponse)

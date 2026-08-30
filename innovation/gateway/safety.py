@@ -32,6 +32,29 @@ SAFETY_POLICY_VERSION = "safety-policy-v1"
 REQUIRED_FRONT_DOOR_EVIDENCE: frozenset[str] = frozenset({"CHIEF_COMPLAINT", "VITAL"})
 
 
+#: How much a red-flag state constrains action. A screen finding may be raised by the
+#: provider but never lowered, so these are compared rather than overwritten.
+FLAG_SEVERITY: dict[str, int] = {"NOT_TRIGGERED": 0, "UNKNOWN": 1, "TRIGGERED": 2}
+
+
+@dataclass(frozen=True)
+class ScreenResult:
+    """Outcome of the deterministic screen that runs BEFORE learned inference.
+
+    `CLINICAL_WORKFLOW.md` step 3 and acceptance criterion A1 both require the red-flag
+    and required-information rules to run before the model, not merely after it. Running
+    them first means the conservative floor is established independently of whatever the
+    provider goes on to say — and if the provider fails entirely, the screen's findings
+    still reached the audit trail.
+    """
+
+    red_flags: tuple[RedFlag, ...]
+    urgency_floor: str
+    applied_rules: tuple[str, ...]
+    missing_required: frozenset[str]
+    limitations: tuple[str, ...]
+
+
 @dataclass(frozen=True)
 class SafetyDecision:
     """What the deterministic layer concluded, and why.
@@ -59,11 +82,85 @@ class SafetyPolicy:
         present = {e.event_type for e in request.evidence}
         return frozenset(REQUIRED_FRONT_DOOR_EVIDENCE - present)
 
+    def screen(self, request: GatewayRequest) -> ScreenResult:
+        """Deterministic pre-inference screen. Runs before any provider is called.
+
+        It sees evidence *references*, so it reasons about which evidence types are
+        present, not about clinical content. Where it cannot evaluate a rule it says
+        UNKNOWN — it never records NOT_TRIGGERED for a check it did not perform.
+        """
+        rules: list[str] = []
+        limitations: list[str] = []
+        flags: list[RedFlag] = []
+        floor = "INSUFFICIENT_INFORMATION"
+
+        missing = self.missing_required_evidence(request)
+        if missing:
+            flags.append(
+                RedFlag(
+                    code="REQUIRED_INFORMATION_INCOMPLETE",
+                    state="TRIGGERED",
+                    evidence_ids=[],
+                )
+            )
+            floor = "URGENT_REVIEW"
+            rules.append("SCR-001-REQUIRED_INFORMATION_INCOMPLETE")
+            limitations.append(
+                "Pre-inference screen: required evidence was absent at decision time: "
+                + ", ".join(sorted(missing))
+            )
+
+        if request.task == "CLINICAL_FRONT_DOOR":
+            # A complaint exists but no deterministic rule can read it, so the question of
+            # whether it is a red flag is open, not answered. SR-002 then escalates it.
+            complaint = [e.evidence_id for e in request.evidence if e.event_type == "CHIEF_COMPLAINT"]
+            if complaint:
+                flags.append(
+                    RedFlag(
+                        code="COMPLAINT_NOT_EVALUATED_BY_RULE",
+                        state="UNKNOWN",
+                        evidence_ids=complaint,
+                    )
+                )
+                rules.append("SCR-002-COMPLAINT_NOT_RULE_EVALUATED")
+
+        return ScreenResult(
+            red_flags=tuple(flags),
+            urgency_floor=floor,
+            applied_rules=tuple(rules),
+            missing_required=missing,
+            limitations=tuple(limitations),
+        )
+
+    @staticmethod
+    def merge_flags(
+        screen_flags: tuple[RedFlag, ...], provider_flags: tuple[RedFlag, ...]
+    ) -> tuple[RedFlag, ...]:
+        """Union the two sets; on a shared code the more severe state wins.
+
+        This is what stops a provider clearing a flag the deterministic screen raised.
+        The model may add flags and may raise one, but it cannot talk one down.
+        """
+        merged: dict[str, RedFlag] = {}
+        for flag in list(screen_flags) + list(provider_flags):
+            existing = merged.get(flag.code)
+            if existing is None or FLAG_SEVERITY[flag.state] > FLAG_SEVERITY[existing.state]:
+                merged[flag.code] = flag
+            elif FLAG_SEVERITY[flag.state] == FLAG_SEVERITY[existing.state]:
+                # Same severity: keep the union of evidence references.
+                merged[flag.code] = existing.model_copy(
+                    update={
+                        "evidence_ids": sorted(set(existing.evidence_ids) | set(flag.evidence_ids))
+                    }
+                )
+        return tuple(merged[code] for code in sorted(merged))
+
     def apply(
         self,
         request: GatewayRequest,
         proposed_urgency: Urgency,
         proposed_red_flags: tuple[RedFlag, ...],
+        screen_result: ScreenResult | None = None,
     ) -> SafetyDecision:
         """Return the urgency and status floor that the response must respect.
 
@@ -75,6 +172,15 @@ class SafetyPolicy:
         limitations: list[str] = []
         urgency_floor = proposed_urgency.level
         status_floor: str | None = None
+
+        if screen_result is not None:
+            # Findings from before inference are carried forward, and the provider's flags
+            # are merged in without being allowed to lower any of them.
+            proposed_red_flags = self.merge_flags(screen_result.red_flags, proposed_red_flags)
+            rules.extend(screen_result.applied_rules)
+            limitations.extend(screen_result.limitations)
+            if URGENCY_SEVERITY[screen_result.urgency_floor] > URGENCY_SEVERITY[urgency_floor]:
+                urgency_floor = screen_result.urgency_floor
 
         def raise_to(level: str, rule: str) -> None:
             nonlocal urgency_floor

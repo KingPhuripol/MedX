@@ -77,18 +77,18 @@ def take_snapshot(
     """Select the events available at `decision_time`.
 
     An event is included when `available_at_time <= decision_time`. Everything later is
-    rejected as `FUTURE_EVIDENCE` — including labels and outcomes stored in the same
+    rejected as `FUTURE_EVIDENCE` — including retrospective labels stored in the same
     file, which is exactly the case the rule exists for: a final diagnosis sitting in
     the journey must not reach a decision made hours earlier.
 
-    `outcomes` are evaluated under the same rule rather than being trusted to be late;
-    an outcome mis-stamped as early is a leak, and silently honouring the stamp would
-    hide it.
+    Labels are ordinary events on the timeline, so they go through this rule like
+    anything else. A label mis-stamped as early is a leak, and honouring the stamp
+    without checking would hide it.
     """
     included: list[JourneyEvent] = []
     rejected: list[RejectedEvent] = []
 
-    for event in list(journey.events) + list(journey.outcomes or []):
+    for event in journey.events:
         if event.available_at_time > decision_time:
             rejected.append(RejectedEvent(event.event_id, "FUTURE_EVIDENCE"))
             continue

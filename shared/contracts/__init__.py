@@ -7,7 +7,14 @@ silently (RISK-0006).
 """
 
 from shared.contracts.errors import ErrorCode, ContractViolation
-from shared.contracts.journey import PatientJourney, JourneyEvent, SourceRef
+from shared.contracts.journey import (
+    PatientJourney,
+    JourneyEvent,
+    JourneySource,
+    EventSourceRef,
+    SourceRef,
+    NON_EVIDENTIAL_STATUSES,
+)
 from shared.contracts.model_api import (
     GatewayRequest,
     GatewayResponse,
@@ -33,7 +40,10 @@ __all__ = [
     "ContractViolation",
     "PatientJourney",
     "JourneyEvent",
+    "JourneySource",
+    "EventSourceRef",
     "SourceRef",
+    "NON_EVIDENTIAL_STATUSES",
     "GatewayRequest",
     "GatewayResponse",
     "EvidenceRef",

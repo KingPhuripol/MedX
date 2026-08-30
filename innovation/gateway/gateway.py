@@ -1,8 +1,9 @@
 """The Model Gateway.
 
 Every provider is reached through here. The gateway validates, authorizes, checks
-temporal validity, budgets, calls the provider, applies the deterministic safety layer,
-validates the response, and audits — in that order.
+temporal validity, budgets, calls the provider, runs the deterministic
+pre-inference screen, calls the provider, merges the screen with the provider output
+under the safety layer, validates the response, and audits — in that order.
 
 The ordering is the contract, not an implementation detail. `INVALID_REQUEST`,
 `TEMPORAL_VIOLATION` and `UNAUTHORIZED_DATA` are all blocked *before* a provider is
@@ -24,7 +25,7 @@ from innovation.gateway.providers.base import (
     ProviderOutput,
     ProviderTimeout,
 )
-from innovation.gateway.safety import SafetyPolicy
+from innovation.gateway.safety import SafetyPolicy, ScreenResult
 from shared.contracts.errors import ContractViolation, ErrorCode
 from shared.contracts.model_api import (
     CONTRACT_VERSION,
@@ -91,8 +92,11 @@ class ModelGateway:
             self._check_temporal_validity(request)
             self._check_authorization(request)
             self._check_budget(request)
+            # Deterministic screen runs BEFORE the provider (CLINICAL_WORKFLOW step 3, A1).
+            # Its findings are established independently of whatever the model then says.
+            screen_result = self.safety.screen(request)
             output = self._call_provider(request)
-            response = self._build_response(request, output, started_at)
+            response = self._build_response(request, output, started_at, screen_result)
         except ContractViolation as violation:
             response = self._safe_failure(request, violation, started_at)
 
@@ -199,9 +203,15 @@ class ModelGateway:
     # ------------------------------------------------------------------- response
 
     def _build_response(
-        self, request: GatewayRequest, output: ProviderOutput, started_at: datetime
+        self,
+        request: GatewayRequest,
+        output: ProviderOutput,
+        started_at: datetime,
+        screen_result: "ScreenResult | None" = None,
     ) -> GatewayResponse:
-        decision = self.safety.apply(request, output.urgency, output.red_flags)
+        decision = self.safety.apply(
+            request, output.urgency, output.red_flags, screen_result
+        )
 
         errors: list[ResponseError] = []
         status = "COMPLETED"

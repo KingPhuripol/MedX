@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-08-30T22:30:00+07:00",
+  "updated_at": "2026-08-30T23:15:00+07:00",
   "tasks": [
     {
       "task_id": "TASK-0001",
@@ -620,7 +620,7 @@
       ],
       "evidence": [
         "innovation/gateway/ implements the Model Gateway: parse, temporal check, authorization, budget, provider call, deterministic safety layer, response construction, audit — in that order.",
-        "All ten contract cases from MODEL_API_CONTRACT.md pass against the mock adapter (tests/test_gateway.py), parametrised so a future adapter is certified by the same suite unchanged.",
+        "All ten contract cases from MODEL_API_CONTRACT.md pass. CORRECTION 2026-08-30: this evidence originally claimed the suite was \"parametrised so a future adapter is certified by the same suite unchanged\". That was not true when written — tests/test_gateway.py hardcoded MockProvider and only parametrised urgency levels, and the docstring referenced an ADAPTERS list that did not exist. The claim was made accurate on 2026-08-30 by adding BaselineProvider and parametrising the whole suite over ADAPTERS = [MockProvider, BaselineProvider]; verified by collecting test IDs and counting 21 cases per adapter rather than by reading the docstring.",
         "TEMPORAL_VIOLATION, UNAUTHORIZED_DATA and INVALID_REQUEST are blocked before the provider is called; the temporal case uses a tripwire provider that fails the test if it is ever reached.",
         "Deterministic safety layer (gateway/safety.py, safety-policy-v1): SR-001 a triggered red flag forces IMMEDIATE_REVIEW and ESCALATED; SR-002 an UNKNOWN flag escalates rather than reassuring; SR-003 missing required evidence abstains rather than concluding. A parametrised test asserts urgency is never lowered from any proposal.",
         "Every response is contract-valid including refusals, and human_review.required is asserted true on every path.",
@@ -629,7 +629,7 @@
       ],
       "blocker": null,
       "risk_level": "LOW",
-      "updated_at": "2026-08-30T22:30:00+07:00"
+      "updated_at": "2026-08-30T23:15:00+07:00"
     },
     {
       "task_id": "TASK-0023",

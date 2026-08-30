@@ -56,9 +56,14 @@ in the provider, swapping providers would silently change the safety behaviour.
 
 ## Contract tests
 
-`tests/test_gateway.py` implements the ten cases in `docs/shared/MODEL_API_CONTRACT.md`.
-Any new adapter is certified by passing that suite unchanged — a team-model adapter is
-accepted only when it passes the same fixtures as the mock.
+`tests/test_gateway.py` implements the ten cases in `docs/shared/MODEL_API_CONTRACT.md`,
+parametrised over `ADAPTERS`. Both `MockProvider` and `BaselineProvider` run the full
+suite, so a new adapter is certified by being appended to that list — a team-model adapter
+is accepted only when it passes the same fixtures as the others.
+
+The suite asserts contract-level properties, never one provider's particular answers.
+Provider-specific behaviour lives in clearly separated tests at the bottom of the file so
+it cannot be mistaken for a contract requirement.
 
 Do not call external providers directly from UI or business logic, and do not use
 real-patient payloads without an approval recorded under the Human Approval Policy.
