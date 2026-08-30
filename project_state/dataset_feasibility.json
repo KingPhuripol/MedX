@@ -1,0 +1,337 @@
+{
+  "schema_version": "1.0.0",
+  "updated_at": "2026-08-30T17:45:00+07:00",
+  "datasets": [
+    {
+      "dataset_id": "DS-0001",
+      "name": "MIMIC-IV",
+      "version": null,
+      "owner": "Jakkapat Bunjongruxsa",
+      "verdict": "UNDER_REVIEW",
+      "verdict_rationale": "Named in the submitted Project Idea as a candidate under feasibility review. BENCHMARK_CONTRACT.md forbids treating it as selected until access and license evidence exists.",
+      "license": {
+        "name": "UNVERIFIED",
+        "url": null,
+        "redistribution_permitted": "UNKNOWN",
+        "derivatives_permitted": "UNKNOWN",
+        "open_weight_release_compatible": "UNKNOWN",
+        "status": "UNVERIFIED",
+        "notes": "Must be read from the current licence text at the source and cited. The open-weight release plan makes derivatives and redistribution terms decisive, not incidental."
+      },
+      "access": {
+        "mechanism": "UNVERIFIED",
+        "credentialing_required": true,
+        "citi_required": true,
+        "granted": "NOT_REQUESTED",
+        "status": "UNVERIFIED",
+        "notes": "credentialing_required and citi_required are set conservatively to true until the provider's actual requirement is verified. If CITI is genuinely required, this record cannot reach ACCEPTED before TASK-0011 completes."
+      },
+      "patient_linkage": {
+        "stable_patient_identifier": "UNKNOWN",
+        "linkable_across_modalities": "UNKNOWN",
+        "linkable_with": [],
+        "status": "UNVERIFIED",
+        "notes": "The decisive question for RISK-0002: whether one patient can be followed across modalities, and whether a patient can be confined to exactly one split."
+      },
+      "temporal_validity": {
+        "available_at_time_present": "UNKNOWN",
+        "derivation_if_absent": null,
+        "status": "UNVERIFIED",
+        "notes": "If the source carries no per-item availability time, state exactly how it would be derived, or the dataset cannot support a time-valid decision snapshot."
+      },
+      "modalities": [
+        "clinical_text",
+        "structured",
+        "longitudinal"
+      ],
+      "obligations": {
+        "deletion_required": "UNKNOWN",
+        "use_restrictions": [],
+        "external_transfer_permitted": "UNKNOWN",
+        "notes": "External transfer matters directly: no evidence item may reach an external provider without an approval recorded under the Human Approval Policy."
+      },
+      "evidence": [],
+      "blocking_risks": [
+        "RISK-0002",
+        "RISK-0003"
+      ],
+      "reviewed_by": null,
+      "reviewed_on": "2026-08-30",
+      "updated_at": "2026-08-30T17:45:00+07:00"
+    },
+    {
+      "dataset_id": "DS-0002",
+      "name": "MIMIC-CXR",
+      "version": null,
+      "owner": "Jakkapat Bunjongruxsa",
+      "verdict": "UNDER_REVIEW",
+      "verdict_rationale": "Named in the submitted Project Idea as a candidate under feasibility review. BENCHMARK_CONTRACT.md forbids treating it as selected until access and license evidence exists.",
+      "license": {
+        "name": "UNVERIFIED",
+        "url": null,
+        "redistribution_permitted": "UNKNOWN",
+        "derivatives_permitted": "UNKNOWN",
+        "open_weight_release_compatible": "UNKNOWN",
+        "status": "UNVERIFIED",
+        "notes": "Must be read from the current licence text at the source and cited. The open-weight release plan makes derivatives and redistribution terms decisive, not incidental."
+      },
+      "access": {
+        "mechanism": "UNVERIFIED",
+        "credentialing_required": true,
+        "citi_required": true,
+        "granted": "NOT_REQUESTED",
+        "status": "UNVERIFIED",
+        "notes": "credentialing_required and citi_required are set conservatively to true until the provider's actual requirement is verified. If CITI is genuinely required, this record cannot reach ACCEPTED before TASK-0011 completes."
+      },
+      "patient_linkage": {
+        "stable_patient_identifier": "UNKNOWN",
+        "linkable_across_modalities": "UNKNOWN",
+        "linkable_with": [],
+        "status": "UNVERIFIED",
+        "notes": "The decisive question for RISK-0002: whether one patient can be followed across modalities, and whether a patient can be confined to exactly one split."
+      },
+      "temporal_validity": {
+        "available_at_time_present": "UNKNOWN",
+        "derivation_if_absent": null,
+        "status": "UNVERIFIED",
+        "notes": "If the source carries no per-item availability time, state exactly how it would be derived, or the dataset cannot support a time-valid decision snapshot."
+      },
+      "modalities": [
+        "clinical_text",
+        "image_2d"
+      ],
+      "obligations": {
+        "deletion_required": "UNKNOWN",
+        "use_restrictions": [],
+        "external_transfer_permitted": "UNKNOWN",
+        "notes": "External transfer matters directly: no evidence item may reach an external provider without an approval recorded under the Human Approval Policy."
+      },
+      "evidence": [],
+      "blocking_risks": [
+        "RISK-0002",
+        "RISK-0003"
+      ],
+      "reviewed_by": null,
+      "reviewed_on": "2026-08-30",
+      "updated_at": "2026-08-30T17:45:00+07:00"
+    },
+    {
+      "dataset_id": "DS-0003",
+      "name": "CheXpert",
+      "version": null,
+      "owner": "Jakkapat Bunjongruxsa",
+      "verdict": "UNDER_REVIEW",
+      "verdict_rationale": "Named in the submitted Project Idea as a candidate under feasibility review. BENCHMARK_CONTRACT.md forbids treating it as selected until access and license evidence exists.",
+      "license": {
+        "name": "UNVERIFIED",
+        "url": null,
+        "redistribution_permitted": "UNKNOWN",
+        "derivatives_permitted": "UNKNOWN",
+        "open_weight_release_compatible": "UNKNOWN",
+        "status": "UNVERIFIED",
+        "notes": "Must be read from the current licence text at the source and cited. The open-weight release plan makes derivatives and redistribution terms decisive, not incidental."
+      },
+      "access": {
+        "mechanism": "UNVERIFIED",
+        "credentialing_required": true,
+        "citi_required": true,
+        "granted": "NOT_REQUESTED",
+        "status": "UNVERIFIED",
+        "notes": "credentialing_required and citi_required are set conservatively to true until the provider's actual requirement is verified. If CITI is genuinely required, this record cannot reach ACCEPTED before TASK-0011 completes."
+      },
+      "patient_linkage": {
+        "stable_patient_identifier": "UNKNOWN",
+        "linkable_across_modalities": "UNKNOWN",
+        "linkable_with": [],
+        "status": "UNVERIFIED",
+        "notes": "The decisive question for RISK-0002: whether one patient can be followed across modalities, and whether a patient can be confined to exactly one split."
+      },
+      "temporal_validity": {
+        "available_at_time_present": "UNKNOWN",
+        "derivation_if_absent": null,
+        "status": "UNVERIFIED",
+        "notes": "If the source carries no per-item availability time, state exactly how it would be derived, or the dataset cannot support a time-valid decision snapshot."
+      },
+      "modalities": [
+        "image_2d"
+      ],
+      "obligations": {
+        "deletion_required": "UNKNOWN",
+        "use_restrictions": [],
+        "external_transfer_permitted": "UNKNOWN",
+        "notes": "External transfer matters directly: no evidence item may reach an external provider without an approval recorded under the Human Approval Policy."
+      },
+      "evidence": [],
+      "blocking_risks": [
+        "RISK-0002"
+      ],
+      "reviewed_by": null,
+      "reviewed_on": "2026-08-30",
+      "updated_at": "2026-08-30T17:45:00+07:00"
+    },
+    {
+      "dataset_id": "DS-0004",
+      "name": "BraTS",
+      "version": null,
+      "owner": "Jakkapat Bunjongruxsa",
+      "verdict": "UNDER_REVIEW",
+      "verdict_rationale": "Named in the submitted Project Idea as a candidate under feasibility review. BENCHMARK_CONTRACT.md forbids treating it as selected until access and license evidence exists.",
+      "license": {
+        "name": "UNVERIFIED",
+        "url": null,
+        "redistribution_permitted": "UNKNOWN",
+        "derivatives_permitted": "UNKNOWN",
+        "open_weight_release_compatible": "UNKNOWN",
+        "status": "UNVERIFIED",
+        "notes": "Must be read from the current licence text at the source and cited. The open-weight release plan makes derivatives and redistribution terms decisive, not incidental."
+      },
+      "access": {
+        "mechanism": "UNVERIFIED",
+        "credentialing_required": true,
+        "citi_required": true,
+        "granted": "NOT_REQUESTED",
+        "status": "UNVERIFIED",
+        "notes": "credentialing_required and citi_required are set conservatively to true until the provider's actual requirement is verified. If CITI is genuinely required, this record cannot reach ACCEPTED before TASK-0011 completes."
+      },
+      "patient_linkage": {
+        "stable_patient_identifier": "UNKNOWN",
+        "linkable_across_modalities": "UNKNOWN",
+        "linkable_with": [],
+        "status": "UNVERIFIED",
+        "notes": "The decisive question for RISK-0002: whether one patient can be followed across modalities, and whether a patient can be confined to exactly one split."
+      },
+      "temporal_validity": {
+        "available_at_time_present": "UNKNOWN",
+        "derivation_if_absent": null,
+        "status": "UNVERIFIED",
+        "notes": "If the source carries no per-item availability time, state exactly how it would be derived, or the dataset cannot support a time-valid decision snapshot."
+      },
+      "modalities": [
+        "volume_3d"
+      ],
+      "obligations": {
+        "deletion_required": "UNKNOWN",
+        "use_restrictions": [],
+        "external_transfer_permitted": "UNKNOWN",
+        "notes": "External transfer matters directly: no evidence item may reach an external provider without an approval recorded under the Human Approval Policy."
+      },
+      "evidence": [],
+      "blocking_risks": [
+        "RISK-0002"
+      ],
+      "reviewed_by": null,
+      "reviewed_on": "2026-08-30",
+      "updated_at": "2026-08-30T17:45:00+07:00"
+    },
+    {
+      "dataset_id": "DS-0005",
+      "name": "VQA-RAD",
+      "version": null,
+      "owner": "Jakkapat Bunjongruxsa",
+      "verdict": "UNDER_REVIEW",
+      "verdict_rationale": "Named in the submitted Project Idea as a candidate under feasibility review. BENCHMARK_CONTRACT.md forbids treating it as selected until access and license evidence exists.",
+      "license": {
+        "name": "UNVERIFIED",
+        "url": null,
+        "redistribution_permitted": "UNKNOWN",
+        "derivatives_permitted": "UNKNOWN",
+        "open_weight_release_compatible": "UNKNOWN",
+        "status": "UNVERIFIED",
+        "notes": "Must be read from the current licence text at the source and cited. The open-weight release plan makes derivatives and redistribution terms decisive, not incidental."
+      },
+      "access": {
+        "mechanism": "UNVERIFIED",
+        "credentialing_required": true,
+        "citi_required": true,
+        "granted": "NOT_REQUESTED",
+        "status": "UNVERIFIED",
+        "notes": "credentialing_required and citi_required are set conservatively to true until the provider's actual requirement is verified. If CITI is genuinely required, this record cannot reach ACCEPTED before TASK-0011 completes."
+      },
+      "patient_linkage": {
+        "stable_patient_identifier": "UNKNOWN",
+        "linkable_across_modalities": "UNKNOWN",
+        "linkable_with": [],
+        "status": "UNVERIFIED",
+        "notes": "The decisive question for RISK-0002: whether one patient can be followed across modalities, and whether a patient can be confined to exactly one split."
+      },
+      "temporal_validity": {
+        "available_at_time_present": "UNKNOWN",
+        "derivation_if_absent": null,
+        "status": "UNVERIFIED",
+        "notes": "If the source carries no per-item availability time, state exactly how it would be derived, or the dataset cannot support a time-valid decision snapshot."
+      },
+      "modalities": [
+        "clinical_text",
+        "image_2d"
+      ],
+      "obligations": {
+        "deletion_required": "UNKNOWN",
+        "use_restrictions": [],
+        "external_transfer_permitted": "UNKNOWN",
+        "notes": "External transfer matters directly: no evidence item may reach an external provider without an approval recorded under the Human Approval Policy."
+      },
+      "evidence": [],
+      "blocking_risks": [
+        "RISK-0002"
+      ],
+      "reviewed_by": null,
+      "reviewed_on": "2026-08-30",
+      "updated_at": "2026-08-30T17:45:00+07:00"
+    },
+    {
+      "dataset_id": "DS-0006",
+      "name": "SLAKE",
+      "version": null,
+      "owner": "Jakkapat Bunjongruxsa",
+      "verdict": "UNDER_REVIEW",
+      "verdict_rationale": "Named in the submitted Project Idea as a candidate under feasibility review. BENCHMARK_CONTRACT.md forbids treating it as selected until access and license evidence exists.",
+      "license": {
+        "name": "UNVERIFIED",
+        "url": null,
+        "redistribution_permitted": "UNKNOWN",
+        "derivatives_permitted": "UNKNOWN",
+        "open_weight_release_compatible": "UNKNOWN",
+        "status": "UNVERIFIED",
+        "notes": "Must be read from the current licence text at the source and cited. The open-weight release plan makes derivatives and redistribution terms decisive, not incidental."
+      },
+      "access": {
+        "mechanism": "UNVERIFIED",
+        "credentialing_required": true,
+        "citi_required": true,
+        "granted": "NOT_REQUESTED",
+        "status": "UNVERIFIED",
+        "notes": "credentialing_required and citi_required are set conservatively to true until the provider's actual requirement is verified. If CITI is genuinely required, this record cannot reach ACCEPTED before TASK-0011 completes."
+      },
+      "patient_linkage": {
+        "stable_patient_identifier": "UNKNOWN",
+        "linkable_across_modalities": "UNKNOWN",
+        "linkable_with": [],
+        "status": "UNVERIFIED",
+        "notes": "The decisive question for RISK-0002: whether one patient can be followed across modalities, and whether a patient can be confined to exactly one split."
+      },
+      "temporal_validity": {
+        "available_at_time_present": "UNKNOWN",
+        "derivation_if_absent": null,
+        "status": "UNVERIFIED",
+        "notes": "If the source carries no per-item availability time, state exactly how it would be derived, or the dataset cannot support a time-valid decision snapshot."
+      },
+      "modalities": [
+        "clinical_text",
+        "image_2d"
+      ],
+      "obligations": {
+        "deletion_required": "UNKNOWN",
+        "use_restrictions": [],
+        "external_transfer_permitted": "UNKNOWN",
+        "notes": "External transfer matters directly: no evidence item may reach an external provider without an approval recorded under the Human Approval Policy."
+      },
+      "evidence": [],
+      "blocking_risks": [
+        "RISK-0002"
+      ],
+      "reviewed_by": null,
+      "reviewed_on": "2026-08-30",
+      "updated_at": "2026-08-30T17:45:00+07:00"
+    }
+  ]
+}

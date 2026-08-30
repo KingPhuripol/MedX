@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "updated_at": "2026-08-30T17:40:00+07:00",
+  "contracts": [
+    {
+      "contract_id": "CONTRACT-0001",
+      "title": "Data Contract",
+      "document": "docs/shared/DATA_CONTRACT.md",
+      "version": "1.0.0",
+      "owner": "Jakkapat Bunjongruxsa",
+      "reviewer": "Thanrada Tungweerapornpong",
+      "status": "ACCEPTED",
+      "accepted_on": "2026-08-11",
+      "machine_schemas": [],
+      "notes": "Governs patient-level splitting, available_at_time, provenance, licensing and missingness. Dataset selection under it is still open (TASK-0005).",
+      "updated_at": "2026-08-30T17:40:00+07:00"
+    },
+    {
+      "contract_id": "CONTRACT-0002",
+      "title": "Patient Journey Schema",
+      "document": "docs/shared/PATIENT_JOURNEY_SCHEMA.md",
+      "version": "1.0.0",
+      "owner": "Jakkapat Bunjongruxsa",
+      "reviewer": "Supreeya Nuamkhayan",
+      "status": "ACCEPTED",
+      "accepted_on": "2026-08-11",
+      "machine_schemas": ["schemas/patient-journey.schema.json"],
+      "notes": "Fixture tests/fixtures/patient_journey/valid.json is validated by the harness.",
+      "updated_at": "2026-08-30T17:40:00+07:00"
+    },
+    {
+      "contract_id": "CONTRACT-0003",
+      "title": "Model API Contract",
+      "document": "docs/shared/MODEL_API_CONTRACT.md",
+      "version": "1.0.0",
+      "owner": "Supreeya Nuamkhayan and Thanapol Popit",
+      "reviewer": "Thanrada Tungweerapornpong",
+      "status": "ACCEPTED",
+      "accepted_on": "2026-08-11",
+      "machine_schemas": ["schemas/model-api-request.schema.json", "schemas/model-api-response.schema.json"],
+      "notes": "No runtime implementation exists yet; the executable gateway is Phase 2 work.",
+      "updated_at": "2026-08-30T17:40:00+07:00"
+    },
+    {
+      "contract_id": "CONTRACT-0004",
+      "title": "Evaluation Contract",
+      "document": "docs/shared/EVALUATION_CONTRACT.md",
+      "version": "1.0.0",
+      "owner": "Thanrada Tungweerapornpong",
+      "reviewer": "Phurinat Polasa",
+      "status": "ACCEPTED",
+      "accepted_on": "2026-08-11",
+      "machine_schemas": ["schemas/evaluation-record.schema.json"],
+      "notes": "Metrics and thresholds are frozen before results, never selected after them.",
+      "updated_at": "2026-08-30T17:40:00+07:00"
+    },
+    {
+      "contract_id": "CONTRACT-0005",
+      "title": "Human Approval Policy",
+      "document": "docs/shared/HUMAN_APPROVAL_POLICY.md",
+      "version": "1.0.0",
+      "owner": "Phurinat Polasa",
+      "reviewer": "Thanrada Tungweerapornpong",
+      "status": "ACCEPTED",
+      "accepted_on": "2026-08-11",
+      "machine_schemas": ["schemas/human-approval.schema.json"],
+      "notes": "Version header added 2026-08-30; the document was accepted on 2026-08-11 and its content is unchanged.",
+      "updated_at": "2026-08-30T17:40:00+07:00"
+    }
+  ]
+}

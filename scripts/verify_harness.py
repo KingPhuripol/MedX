@@ -88,6 +88,8 @@ SCHEMA_BINDINGS = {
     "project_state/decisions.json": "schemas/decision.schema.json",
     "project_state/approvals.json": "schemas/human-approval.schema.json",
     "project_state/evaluations.json": "schemas/evaluation-record.schema.json",
+    "project_state/contract_versions.json": "schemas/contract-versions.schema.json",
+    "project_state/dataset_feasibility.json": "schemas/dataset-feasibility.schema.json",
     "tests/fixtures/patient_journey/valid.json": "schemas/patient-journey.schema.json",
     "tests/fixtures/model_api/request.json": "schemas/model-api-request.schema.json",
     "tests/fixtures/model_api/response.json": "schemas/model-api-response.schema.json",
