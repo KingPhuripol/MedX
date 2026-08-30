@@ -113,6 +113,54 @@ the provider declared — not about clinical content. Every response says so in 
 limitations. The mock provider is plumbing, not a clinical model, and never claims a red
 flag is absent. Nothing here is validated against real data, and no dataset has been obtained.
 
+### Fourth pass, 30 August — Innovation measured against its acceptance criteria
+
+Measuring the morning's work against `ACCEPTANCE_CRITERIA.md` rather than against
+intuition showed it passed **A0 only**. A0–A4 are now closed; A5 is blocked on there
+being no model; A6 is end-of-project. 222 tests, harness 293 → **300 checks**.
+
+**Three defects the measurement exposed, one of them in my own record.**
+
+1. The contract suite was **not** parametrised over adapters, though TASK-0022's evidence
+   and the README both said a future adapter would be certified by it unchanged. That was
+   untrue when written. It is true now — `BaselineProvider` is a second real adapter and
+   23 cases run per provider — and the record carries the original claim and its
+   correction rather than a quiet fix.
+2. The deterministic screen ran **only after** the provider. Workflow step 3 and A1 require
+   it before learned inference. It now runs first, and a provider that tries to clear every
+   flag cannot lower what the screen found.
+3. The models were **looser than their schema** and would have accepted documents the
+   contract rejects. Testing that valid fixtures pass constrains the acceptance surface and
+   leaves the refusal surface free; constraint-parity tests now pin both.
+
+That third pass also found a genuine contract conflict: `PATIENT_JOURNEY_SCHEMA.md`
+documents an `outcomes` field that `patient-journey.schema.json` forbids. The code follows
+the machine schema; **the discrepancy needs a human decision** and was not settled by
+changing a contract unilaterally.
+
+**Built:** intake distinguishing known / unknown / refused / not-yet-available; immutable
+append; an adaptive interview that will not re-queue a declined question; structured
+override reasons; a second adapter with config-only swap; enforced timeouts and a circuit
+breaker; append-only SQLite whose triggers refuse UPDATE and DELETE; five accessible
+screens; and a frozen 12-case evaluation.
+
+**Verified rather than asserted:** contrast measured in a browser at 8.95:1 against a
+4.5:1 requirement, 0 of 8 controls off the tab order; both providers driven live over HTTP
+by changing one environment variable; an encounter recovered after a process restart.
+
+**The number worth reading: escalation rate 0.83.** The system escalates five cases in six.
+It is safe and close to useless. It is reported beside under-triage precisely because a
+system that escalates everything scores perfectly on the primary safety metric. That is the
+bar the case-adaptive model has to beat, and it is what the Innovation track can honestly
+claim today.
+
+**Two bugs found by writing tests that had not existed.** `_rehydrate` loaded the
+recommendation history and then reset it, so a restart silently lost every prior
+assessment. And the DAG explorer read its withheld-evidence list from the audit record,
+which is always empty — the Front Door filters future evidence before the gateway ever
+sees it. Both fixed; the first was confirmed by re-introducing it and watching the new test
+fail.
+
 ### Not done, and owed
 
 - **TASK-0005 is at REVIEW, not DONE** — evidence gathered, owner sign-off outstanding (TASK-0019),
@@ -120,10 +168,15 @@ flag is absent. Nothing here is validated against real data, and no dataset has 
 - **TASK-0004** novelty matrix, search protocol and baseline shortlist still do not exist. Required for DL-0004.
 - **TASK-0006** clinical workflow and gateway feasibility, still not started.
 - **TASK-0018** no compute estimate for 27B exists.
-- **The Research track still has no code.** `research/` remains a README. The Innovation
-  spine is built; the Case Graph Compiler, encoders and training pipeline are not started.
-- **No model exists.** The gateway's only provider is a deterministic mock. Nothing in this
-  work is evidence about medical capability, and it must not be presented as such.
+- **The Research track still has no code.** `research/` remains a README. The Case Graph
+  Compiler, encoders and training pipeline are not started. This is now the whole gap.
+- **No model exists.** The gateway's providers are a deterministic mock and a fixed-path
+  baseline. Nothing here is evidence about medical capability and must not be presented as
+  such. A5 cannot begin until there is a model to adapt.
+- **The independent safety and integration review has not run.** It cannot be
+  self-certified: those reviewers are read-only and must not judge work they wrote. It is
+  the one A4 item still open.
+- **The `outcomes` contract conflict is unresolved** and needs a human decision.
 - The advisor contact path is still unrecorded.
 
 ### CITI is a data blocker, not just an academic one
