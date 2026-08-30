@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Encounters — AI Clinical Front Door{% endblock %}
+{% block content %}
+<h1>Encounters</h1>
+<p class="muted">Provider <span class="pill">{{ health.provider }}</span>
+  policy <span class="pill">{{ health.policy_version }}</span>
+  circuit <span class="pill">{{ health.provider_circuit }}</span>
+  storage <span class="pill">{{ "persistent" if health.persistent else "in-memory" }}</span></p>
+
+<h2>Open an encounter</h2>
+{% if journeys %}
+<table>
+  <caption class="muted">Synthetic encounters held by this instance.</caption>
+  <thead><tr><th scope="col">Journey</th><th scope="col">Actions</th></tr></thead>
+  <tbody>
+  {% for j in journeys %}
+    <tr>
+      <td class="mono">{{ j }}</td>
+      <td>
+        <a href="/ui/journeys/{{ j }}/interview">Adaptive interview</a> ·
+        <a href="/ui/journeys/{{ j }}/history">Assessment history</a>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No encounters yet.</p>
+{% endif %}
+
+<h2>New intake</h2>
+<p><a href="/ui/intake">Start an intake</a></p>
+{% endblock %}

@@ -33,11 +33,24 @@ Synthetic journey, mock provider, no network. This is Innovation release stage 1
 to demonstrate: evidence that did not exist at the decision time cannot reach the model,
 and nothing takes effect without a human confirming it.
 
-## Run the API
+## Run the API and the screens
 
 ```
 python3 -m uvicorn innovation.api.app:app --reload
 ```
+
+API docs at `/docs`, screens at `/ui/`. Optional configuration:
+`FRONT_DOOR_PROVIDER=mock|baseline`, `FRONT_DOOR_DB=path.sqlite3`,
+`FRONT_DOOR_AUDIT_LOG=audit.jsonl`.
+
+The five screens (`PRODUCT_SPEC.md` §Core screens) call the **same public API** as any
+other client — in-process, but as real HTTP requests through the same app — so no screen
+has a privileged path, and a test asserts the intake screen produces a `POST /encounters`
+rather than reaching past the API into the service.
+
+Urgency is encoded four ways, colour last: written level, shape glyph, border weight, then
+colour. Measured in a browser: lowest text contrast 8.95:1 against a 4.5:1 requirement,
+zero controls removed from the tab order, skip link and visible focus ring present.
 
 ## Where each rule lives
 

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}History — {{ journey_id }}{% endblock %}
+{% block crumbs %} / <span class="mono">{{ journey_id }}</span> / History{% endblock %}
+{% block content %}
+<h1>Assessment history</h1>
+<p class="muted">Each assessment saw the evidence available at its own decision time.
+Earlier ones are kept, not replaced.</p>
+{% if history %}
+<table>
+  <thead><tr>
+    <th scope="col">Decision time</th><th scope="col">Urgency</th><th scope="col">Status</th>
+    <th scope="col">Confirmed</th><th scope="col">Snapshot</th><th scope="col"></th>
+  </tr></thead>
+  <tbody>
+  {% for h in history %}
+    <tr>
+      <td class="mono">{{ h.decision_time }}</td>
+      <td><span class="urgency urgency-{{ h.response.urgency.level }}">
+          <span class="glyph" aria-hidden="true">{{ glyph[h.response.urgency.level] }}</span>
+          {{ h.response.urgency.level.replace("_"," ") }}</span></td>
+      <td>{{ h.response.status }}</td>
+      <td>{{ "yes" if h.effective else "no" }}</td>
+      <td class="mono">{{ h.snapshot_checksum[:12] }}</td>
+      <td><a href="/ui/recommendations/{{ h.recommendation_id }}">Open</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}<p>No assessments yet. <a href="/ui/journeys/{{ journey_id }}/interview">Run one</a>.</p>{% endif %}
+{% endblock %}

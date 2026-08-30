@@ -27,7 +27,7 @@ test:
 demo:
 	python3 -m innovation.demo
 
-# Front Door API on http://127.0.0.1:8000 (docs at /docs)
+# Front Door API + UI. API docs at /docs, screens at /ui/
 # Optional: FRONT_DOOR_PROVIDER=mock|baseline  FRONT_DOOR_DB=path.sqlite3  FRONT_DOOR_AUDIT_LOG=audit.jsonl
 api:
 	python3 -m uvicorn innovation.api.app:app --reload

@@ -96,6 +96,11 @@ class Recommendation:
     decision_time: datetime
     snapshot_checksum: str
     response: GatewayResponse
+    #: What the snapshot excluded at this decision time, and why. Held on the
+    #: recommendation because it describes what *this decision* could not see — the
+    #: gateway never learns of it, since the Front Door filters before the request is
+    #: built. Without it the graph explorer could not answer "what did it not know?".
+    withheld: tuple[tuple[str, str], ...] = field(default=())
     reviews: tuple[ReviewRecord, ...] = field(default=())
 
     @property
@@ -198,6 +203,9 @@ class FrontDoorService:
         if self.store is not None:
             self.store.put_journey(journey)
 
+    def journey_ids(self) -> tuple[str, ...]:
+        return tuple(self._journeys)
+
     def journey(self, journey_id: str) -> PatientJourney:
         if journey_id not in self._journeys:
             raise UnknownJourney(journey_id)
@@ -267,6 +275,7 @@ class FrontDoorService:
             decision_time=decision_time,
             snapshot_checksum=snapshot.checksum(),
             response=response,
+            withheld=tuple((r.event_id, r.reason) for r in snapshot.rejected),
         )
         self._recommendations[recommendation.recommendation_id] = recommendation
         self._history.setdefault(journey.journey_id, []).append(recommendation.recommendation_id)

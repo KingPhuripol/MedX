@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Executed graph — {{ rec.recommendation_id }}{% endblock %}
+{% block crumbs %} / <span class="mono">{{ rec.journey_id }}</span> /
+  <a href="/ui/recommendations/{{ rec.recommendation_id }}">Assessment</a> / Graph{% endblock %}
+{% block content %}
+<h1>DAG explorer</h1>
+<div class="panel">
+  <p>This shows the <strong>executed computation</strong> — the typed structure the system
+  actually ran, its evidence references, and its versions.</p>
+  <p>It deliberately shows <strong>no private reasoning text</strong>. The inspectable
+  artifact is the graph itself, not a narrative written after the answer. A generated
+  explanation can disagree with the computation that produced the answer, which is why it
+  is not what gets displayed here.</p>
+</div>
+
+<h2>Graph reference</h2>
+{% if r.graph %}
+<table>
+  <tbody>
+    <tr><th scope="row">Graph ID</th><td class="mono">{{ r.graph.graph_id or "—" }}</td></tr>
+    <tr><th scope="row">Reference</th><td class="mono">{{ r.graph.graph_ref or "—" }}</td></tr>
+    <tr><th scope="row">Graph schema</th><td class="mono">{{ r.graph.graph_schema_version or "—" }}</td></tr>
+  </tbody>
+</table>
+{% else %}
+<p>This provider returned no graph. That is recorded as an absence, not filled in.</p>
+{% endif %}
+
+<h2>Evidence entering the computation</h2>
+{% if r.urgency.evidence_ids %}
+<ul>{% for e in r.urgency.evidence_ids %}<li class="mono">{{ e }}</li>{% endfor %}</ul>
+{% else %}<p>None.</p>{% endif %}
+
+<h2>Evidence withheld at this decision time</h2>
+{% if withheld %}
+<table>
+  <thead><tr><th scope="col">Event</th><th scope="col">Reason</th></tr></thead>
+  <tbody>{% for w in withheld %}<tr><td class="mono">{{ w.event_id }}</td><td>{{ w.reason }}</td></tr>{% endfor %}</tbody>
+</table>
+<p class="muted">Withheld evidence exists in the record but did not exist yet at
+<span class="mono">{{ rec.decision_time }}</span>, so the computation could not use it.</p>
+{% else %}<p>Nothing was withheld.</p>{% endif %}
+
+<h2>Deterministic rules applied</h2>
+{% if rules %}<ul>{% for rule in rules %}<li class="mono">{{ rule }}</li>{% endfor %}</ul>
+{% else %}<p>None recorded.</p>{% endif %}
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Adaptive interview — {{ journey_id }}{% endblock %}
+{% block crumbs %} / <span class="mono">{{ journey_id }}</span> / Interview{% endblock %}
+{% block content %}
+<h1>Adaptive interview</h1>
+<p class="muted">As of <span class="mono">{{ decision_time }}</span>. These are suggestions for a
+clinician, not test orders.</p>
+
+<h2>Suggested next, in order</h2>
+{% if plan.candidates %}
+<table>
+  <thead><tr>
+    <th scope="col">#</th><th scope="col">Information</th>
+    <th scope="col">Why it is being suggested</th><th scope="col">Waiting</th>
+  </tr></thead>
+  <tbody>
+  {% for c in plan.candidates %}
+    <tr>
+      <td>{{ c.rank }}</td>
+      <td><strong>{{ c.information_type }}</strong>
+        {% if c.availability_note %}<br><span class="muted">{{ c.availability_note }}</span>{% endif %}</td>
+      <td>{{ c.reason }}<br><span class="muted mono">{{ c.reason_code }}</span></td>
+      <td>{% if c.urgency_prerequisite %}<span class="state state-TRIGGERED">waiting is unsafe</span>
+          {% else %}<span class="muted">can wait</span>{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>Nothing outstanding at this decision time.</p>
+{% endif %}
+
+{% if plan.declined %}
+<h2>Declined</h2>
+<div class="panel">
+  <p>The person declined to answer these. They are <strong>not</strong> queued as questions —
+  the system does not press for an answer on a clinician's behalf.</p>
+  <ul>{% for d in plan.declined %}<li><strong>{{ d.information_type }}</strong> — {{ d.note }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<h2>Already known</h2>
+<p>{% if plan.already_known %}{{ plan.already_known | join(", ") }}{% else %}Nothing yet.{% endif %}</p>
+
+<h2>Add information</h2>
+<form method="post" action="/ui/journeys/{{ journey_id }}/events">
+  <fieldset>
+    <legend>Append one item</legend>
+    <label>Information type
+      <select name="information_type">
+        {% for t in information_types %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Status
+      <select name="state">
+        {% for state, text in states %}<option value="{{ state }}">{{ text }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Value (only when known) <input type="text" name="value"></label>
+    <button type="submit">Append</button>
+  </fieldset>
+</form>
+
+<h2>Assess now</h2>
+<form method="post" action="/ui/journeys/{{ journey_id }}/assessments">
+  <label>Decision time (UTC) <input type="text" name="decision_time" value="{{ decision_time }}"></label>
+  <button type="submit">Run assessment</button>
+</form>
+{% endblock %}

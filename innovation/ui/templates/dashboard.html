@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Assessment {{ rec.recommendation_id }}{% endblock %}
+{% block crumbs %} / <span class="mono">{{ rec.journey_id }}</span> / Assessment{% endblock %}
+{% block content %}
+<h1>Clinical dashboard</h1>
+
+<section aria-labelledby="urgency-h">
+  <h2 id="urgency-h">Urgency</h2>
+  <p class="urgency urgency-{{ r.urgency.level }}">
+    <span class="glyph" aria-hidden="true">{{ glyph[r.urgency.level] }}</span>
+    <span>{{ r.urgency.level.replace("_", " ") }}</span>
+  </p>
+  <p class="muted">
+    Confidence: {% if r.urgency.confidence is none %}not stated by the provider{% else %}{{ r.urgency.confidence }}{% endif %}
+    · Status <span class="pill">{{ r.status }}</span>
+    {% if not rec.effective %}· <span class="state state-TRIGGERED">not confirmed — must not inform care yet</span>{% endif %}
+  </p>
+  <p class="muted">Urgency is written out, marked with a shape and given a border weight, so it
+  does not depend on colour.</p>
+</section>
+
+<section aria-labelledby="flags-h">
+  <h2 id="flags-h">Red flags</h2>
+  {% if r.red_flags %}
+  <table>
+    <thead><tr><th scope="col">Flag</th><th scope="col">State</th><th scope="col">Evidence</th></tr></thead>
+    <tbody>
+    {% for f in r.red_flags %}
+      <tr>
+        <td>{{ f.code }}</td>
+        <td><span class="state state-{{ f.state }}">{{ f.state.replace("_", " ") }}</span></td>
+        <td class="mono">{{ f.evidence_ids | join(", ") or "—" }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="muted"><strong>?</strong> means the flag could not be evaluated from the evidence
+  available. It does not mean the flag is absent.</p>
+  {% else %}<p>None reported.</p>{% endif %}
+</section>
+
+<section aria-labelledby="pathways-h">
+  <h2 id="pathways-h">Care pathway candidates</h2>
+  {% if r.care_pathways %}
+  <table>
+    <thead><tr><th scope="col">#</th><th scope="col">Pathway</th><th scope="col">Confidence</th></tr></thead>
+    <tbody>
+    {% for p in r.care_pathways %}
+      <tr><td>{{ p.rank }}</td><td>{{ p.code }}</td>
+      <td>{% if p.confidence is none %}<span class="muted">not stated</span>{% else %}{{ p.confidence }}{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="muted">Ranked candidates for a clinician to consider. Not a diagnosis, and not an order.</p>
+  {% else %}<p>None offered.</p>{% endif %}
+</section>
+
+<section aria-labelledby="gaps-h">
+  <h2 id="gaps-h">Information gaps</h2>
+  {% if r.next_information %}
+  <ul>{% for n in r.next_information %}
+    <li><strong>{{ n.information_type }}</strong> — <span class="mono">{{ n.reason_code }}</span></li>
+  {% endfor %}</ul>
+  {% else %}<p>None recorded.</p>{% endif %}
+</section>
+
+<section aria-labelledby="unc-h">
+  <h2 id="unc-h">Uncertainty and limitations</h2>
+  <div class="panel">
+    <p>Method: <span class="mono">{{ r.uncertainty.method }}</span>
+      · Out of distribution:
+      {% if r.uncertainty.out_of_distribution is none %}not assessed{% else %}{{ r.uncertainty.out_of_distribution }}{% endif %}</p>
+    {% if r.uncertainty.abstention_reason %}
+      <p><strong>Abstention:</strong> {{ r.uncertainty.abstention_reason }}</p>{% endif %}
+    <ul>{% for l in r.uncertainty.limitations %}<li>{{ l }}</li>{% endfor %}</ul>
+  </div>
+</section>
+
+<section aria-labelledby="ev-h">
+  <h2 id="ev-h">Evidence and provenance</h2>
+  <table>
+    <tbody>
+      <tr><th scope="row">Evidence used</th><td class="mono">{{ r.urgency.evidence_ids | join(", ") or "none" }}</td></tr>
+      <tr><th scope="row">Decision time</th><td class="mono">{{ rec.decision_time }}</td></tr>
+      <tr><th scope="row">Snapshot checksum</th><td class="mono">{{ rec.snapshot_checksum[:24] }}…</td></tr>
+      <tr><th scope="row">Provider / model</th><td class="mono">{{ r.provider }} / {{ r.model_version }}</td></tr>
+      <tr><th scope="row">Contract / policy</th><td class="mono">{{ r.contract_version }} / {{ r.provenance.policy_version }}</td></tr>
+      <tr><th scope="row">Request</th><td class="mono">{{ r.request_id }}</td></tr>
+    </tbody>
+  </table>
+  <p><a href="/ui/recommendations/{{ rec.recommendation_id }}/graph">Inspect the executed graph</a></p>
+</section>
+
+{% if r.errors %}
+<section aria-labelledby="err-h">
+  <h2 id="err-h">Errors</h2>
+  <table>
+    <thead><tr><th scope="col">Code</th><th scope="col">Detail</th><th scope="col">Retryable</th></tr></thead>
+    <tbody>{% for e in r.errors %}
+      <tr><td class="mono">{{ e.code }}</td><td>{{ e.message }}</td><td>{{ e.retryable }}</td></tr>
+    {% endfor %}</tbody>
+  </table>
+</section>
+{% endif %}
+
+<section aria-labelledby="review-h">
+  <h2 id="review-h">Human confirmation</h2>
+  {% if rec.reviews %}
+  <table>
+    <thead><tr><th scope="col">Reviewer</th><th scope="col">Action</th><th scope="col">Reason</th><th scope="col">Note</th><th scope="col">At</th></tr></thead>
+    <tbody>{% for rv in rec.reviews %}
+      <tr><td>{{ rv.reviewer_id }}</td><td>{{ rv.action }}</td>
+          <td class="mono">{{ rv.reason_code or "—" }}</td><td>{{ rv.note or "—" }}</td>
+          <td class="mono">{{ rv.reviewed_at }}</td></tr>
+    {% endfor %}</tbody>
+  </table>
+  <p class="muted">Reviews are appended. The assessment above is never edited by one, so the
+  original output stays on the record alongside the correction.</p>
+  {% endif %}
+
+  {% if error %}<div class="panel" role="alert"><strong>Not recorded:</strong> {{ error }}</div>{% endif %}
+
+  <form method="post" action="/ui/recommendations/{{ rec.recommendation_id }}/review">
+    <fieldset>
+      <legend>Record a decision</legend>
+      <label>Reviewer ID <input type="text" name="reviewer_id" required></label>
+      <label>Action
+        <select name="action">
+          {% for a in r.human_review.allowed_actions %}<option value="{{ a }}">{{ a.replace("_"," ") }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Reason (required to modify or reject)
+        <select name="reason_code">
+          <option value="">—</option>
+          {% for rc in reason_codes %}<option value="{{ rc }}">{{ rc.replace("_", " ") }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Note <input type="text" name="note"></label>
+      <button type="submit">Record decision</button>
+    </fieldset>
+  </form>
+</section>
+{% endblock %}

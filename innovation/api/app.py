@@ -136,6 +136,9 @@ class RecommendationView(BaseModel):
     decision_time: datetime
     snapshot_checksum: str
     effective: bool
+    #: Evidence excluded from this decision, with the reason. Exposed so a client can show
+    #: what the decision could not see, not only what it used.
+    withheld: list[dict]
     reviews: list[dict]
     response: GatewayResponse
 
@@ -147,6 +150,10 @@ class RecommendationView(BaseModel):
             decision_time=recommendation.decision_time,
             snapshot_checksum=recommendation.snapshot_checksum,
             effective=recommendation.effective,
+            withheld=[
+                {"event_id": event_id, "reason": reason}
+                for event_id, reason in recommendation.withheld
+            ],
             reviews=[
                 {
                     "reviewer_id": r.reviewer_id,
@@ -393,7 +400,9 @@ def create_app(service: FrontDoorService | None = None) -> FastAPI:
             for r in records
         ]
 
-    return app
+    from innovation.ui import mount_ui
+
+    return mount_ui(app)
 
 
 app = create_app()
