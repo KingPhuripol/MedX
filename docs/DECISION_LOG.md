@@ -113,3 +113,20 @@ Machine-readable decisions are in `project_state/decisions.json` and validated a
   - A dependency file and a virtual environment enter the repository for the first time. `scripts/` stays stdlib-only so `verify_harness.py` keeps running with no install step.
   - A browser UI, if later required, consumes the same API as any other client and does not reopen this decision.
 - **Ordering constraint honoured:** recorded and accepted before any Phase 2 implementation file exists.
+
+## DEC-0011 - Accept a non-commercial research-use ceiling on the open-weight release
+
+- **Date:** 2026-08-30
+- **Status:** accepted
+- **Owner:** Phurinat Polasa
+- **Decision:** Accept the ceiling. Released weights are for **non-commercial research use only**, and the candidate dataset set is not narrowed to avoid it. Every artifact describing the release — Proposal Report, Progress Report, model card, README, any publication — states the restriction explicitly instead of using the unqualified term *open-weight*. The term may still describe what it actually denotes, that the weights are published and inspectable, but never as an implied grant of unrestricted use.
+- **Rationale:** This is an academic Senior Project; its deliverable is research evidence, not a commercial artifact, so a non-commercial licence costs nothing the project needs. Narrowing the candidate set to preserve commercial rights would cost real capability — dropping the MIMIC family removes the only patient-linked multimodal cohort, and dropping CT-RATE removes the only 3D CT source. Paying in evidence quality for a permission the project has no use for is a bad trade.
+- **Alternatives considered:**
+  - Restrict to permissively licensed data only — would leave VQA-RAD as effectively the sole source, removing patient linkage, longitudinal structure and 3D coverage.
+  - Defer the release terms until release — would let the submitted document's unqualified claim stand through two more reports.
+  - Release no weights, only code and evaluation artifacts — remains the RISK-0010 fallback, but is not warranted by the present evidence.
+- **Consequences:**
+  - An unqualified *open-weight* claim is now a **known inaccuracy**, not a pending detail. TASK-0008's retrospective review must list it for correction in the Proposal Report.
+  - **RISK-0010 stays OPEN.** This decision does not settle whether PhysioNet permits releasing weights trained on MIMIC at all (TASK-0020), nor whether CT-RATE's ShareAlike term propagates to the released weights.
+  - If TASK-0020 returns that PhysioNet does not permit a weights release, this decision does not authorise one anyway.
+  - The release licence is chosen at the release gate, and must be at least as restrictive as the most restrictive contributing dataset.

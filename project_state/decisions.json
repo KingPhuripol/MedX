@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-08-30T19:30:00+07:00",
+  "updated_at": "2026-08-30T21:00:00+07:00",
   "decisions": [
     {
       "decision_id": "DEC-0001",
@@ -271,6 +271,37 @@
         "docs/DECISION_LOG.md",
         "docs/shared/MODEL_API_CONTRACT.md",
         "project_state/contract_versions.json"
+      ],
+      "approvers": [
+        "Phurinat Polasa"
+      ]
+    },
+    {
+      "decision_id": "DEC-0011",
+      "date": "2026-08-30",
+      "title": "Accept a non-commercial research-use ceiling on the open-weight release",
+      "status": "accepted",
+      "owner": "Phurinat Polasa",
+      "context": "The dataset feasibility survey of 2026-08-30 established that every candidate dataset except VQA-RAD (CC0) restricts use to non-commercial research: MIMIC-IV and MIMIC-CXR under the PhysioNet Credentialed Health Data License, CheXpert under the Stanford Research Use Agreement, BraTS under a challenge data-use agreement, and CT-RATE under CC-BY-NC-SA, which additionally carries a ShareAlike term. The submitted Project Idea promises an open-weight model, a phrase normally read as weights others may freely use, including commercially. The project owner was asked whether to accept the ceiling or narrow the candidate set to protect a freer release",
+      "decision": "Accept the non-commercial ceiling. The released weights are for non-commercial research use only, and the candidate set is not narrowed to avoid it. Every artifact that describes the release - the Proposal Report, the Progress Report, the model card, the repository README and any publication - states the restriction explicitly rather than using the unqualified term open-weight. The term open-weight may still be used for the property it actually denotes, that the weights are published and inspectable, but never as an implied grant of unrestricted use",
+      "rationale": "This is an academic Senior Project. Its deliverable is research evidence, not a commercial artifact, so a non-commercial research licence costs the project nothing it actually needs. Narrowing the candidate set to preserve commercial rights would cost real capability: dropping the MIMIC family removes the only patient-linked multimodal cohort available, and dropping CT-RATE removes the only 3D CT source. Paying in evidence quality for a permission the project has no use for would be a bad trade",
+      "alternatives": [
+        "Narrow the candidate set to permissively licensed data only: would leave VQA-RAD as effectively the sole unrestricted source, removing patient-level linkage, longitudinal structure and 3D coverage - it would gut the research contribution to protect an unused right",
+        "Leave the release terms undecided until the release itself: would let the submitted document's open-weight claim stand unqualified through the Proposal and Progress reports, which is the claim-accuracy failure the claim boundary exists to prevent",
+        "Release no weights at all and publish only code and evaluation artifacts: remains the fallback under RISK-0010 if the licence position turns out worse than assessed, but it is not warranted by the present evidence"
+      ],
+      "consequences": [
+        "The words describing the release change in every downstream artifact. An unqualified open-weight claim is now a known inaccuracy, not a pending detail, and TASK-0008's retrospective review must list it for correction in the Proposal Report",
+        "RISK-0010 stays OPEN and is not retired by this decision. It covers two things this decision does not settle: whether the PhysioNet licence permits releasing weights trained on MIMIC at all (TASK-0020), and whether CT-RATE's ShareAlike term propagates to the released weights",
+        "If TASK-0020 returns that PhysioNet does not permit a weights release, this decision does not authorise one anyway; the fallback in RISK-0010 applies and only cleared code and evaluation artifacts are released",
+        "If CT-RATE is used in training, the ShareAlike term must be assessed against the release licence before publication, and CT-RATE may be dropped at that point if the terms cannot be reconciled",
+        "The release licence itself is not chosen here; it is selected at the release gate once TASK-0020 and the ShareAlike assessment are resolved, and it must be at least as restrictive as the most restrictive contributing dataset"
+      ],
+      "supersedes": null,
+      "evidence": [
+        "project_state/dataset_feasibility.json",
+        "docs/research/DATASET_FEASIBILITY.md",
+        "docs/research/BENCHMARK_CONTRACT.md"
       ],
       "approvers": [
         "Phurinat Polasa"
