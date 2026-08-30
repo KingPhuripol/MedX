@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-08-26T12:30:00+07:00",
+  "updated_at": "2026-08-30T19:30:00+07:00",
   "decisions": [
     {
       "decision_id": "DEC-0001",
@@ -240,6 +240,37 @@
       "evidence": [
         "docs/academic/PROJECT_IDEA.md",
         "docs/DECISION_LOG.md"
+      ],
+      "approvers": [
+        "Phurinat Polasa"
+      ]
+    },
+    {
+      "decision_id": "DEC-0010",
+      "date": "2026-08-30",
+      "title": "Python and FastAPI as the Clinical Front Door runtime",
+      "status": "accepted",
+      "owner": "Supreeya Nuamkhayan",
+      "context": "GOV-01 requires the runtime and framework choice for the Clinical Front Door to be an accepted Decision Log entry before any gateway or prototype code is written, because a material architecture choice may not be made implicitly by whoever writes the first file. No implementation code exists yet: research/, innovation/ and shared/ contain only READMEs, so the choice is still free and costs nothing to record now. The project owner selected the stack on 2026-08-30",
+      "decision": "The Clinical Front Door API, the Model Gateway and the shared contract runtime are implemented in Python with FastAPI. Contract models are Pydantic models generated from or validated against the JSON Schemas already in schemas/, which remain the machine source of truth for the contracts. Provider SDKs stay inside gateway adapters, per DEC-0003",
+      "rationale": "One language across the project. The Research Track is Python by necessity, scripts/ is already Python (stdlib only, deliberately), and the five shared contracts already exist as JSON Schema. Pydantic binds directly to those schemas, so the executable contract and the machine contract cannot drift into two separate definitions. Choosing a second language would mean maintaining contract models twice and keeping them in sync by hand, which is precisely the drift RISK-0006 describes",
+      "alternatives": [
+        "TypeScript with Node for the Front Door API: better if the project were frontend-heavy, but introduces a second language and a second copy of the contract models, against RISK-0006",
+        "Python with Django REST Framework: heavier than needed for an API-first service with no admin or ORM requirement at this stage",
+        "Defer the choice and let it emerge from the first implementation: forbidden by GOV-01, and it is how architecture decisions become accidents"
+      ],
+      "consequences": [
+        "Phase 2 implementation is unblocked; contract models, the mock provider and the ten contract fixtures can now be written",
+        "shared/ holds the versioned Pydantic contract models; schemas/ remains authoritative and the models are tested against the existing fixtures in tests/fixtures/",
+        "External provider SDKs are confined to gateway adapters; no provider-specific type may appear in Front Door business logic or in a client",
+        "A dependency file and a virtual environment enter the repository for the first time. scripts/ stays stdlib-only so that verify_harness.py keeps running without installing anything",
+        "If a browser UI is later required, it consumes the same API as any other client and does not change this decision"
+      ],
+      "supersedes": null,
+      "evidence": [
+        "docs/DECISION_LOG.md",
+        "docs/shared/MODEL_API_CONTRACT.md",
+        "project_state/contract_versions.json"
       ],
       "approvers": [
         "Phurinat Polasa"

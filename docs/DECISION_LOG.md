@@ -94,3 +94,22 @@ Machine-readable decisions are in `project_state/decisions.json` and validated a
   - Compute, storage, cost, and schedule impact must be re-estimated against 27B before any Tier 3 or Tier 4 request. No estimate carried over from 4B remains valid.
   - `docs/PROJECT_CHARTER.md`, `docs/research/RESEARCH_SPEC.md`, `docs/research/SUCCESS_CRITERIA.md`, `docs/research/TRAINING_SPEC.md`, `docs/project_management/MASTER_PLAN.md`, `docs/project_management/MILESTONES.md`, and the `.planning/` artifacts still name 4B. They must be reconciled before the Proposal Report on 2026-10-02.
 - **Open concern recorded, not resolved:** approximately 27B is roughly a sevenfold parameter increase over the withdrawn target, against a risk register that already rated 4B compute feasibility `HIGH`. This decision records the owner's direction; it does not establish that the compute exists. The feasibility evidence is owed at the flagship gate.
+
+## DEC-0010 - Python and FastAPI as the Clinical Front Door runtime
+
+- **Date:** 2026-08-30
+- **Status:** accepted
+- **Owner:** Supreeya Nuamkhayan
+- **Decision:** Implement the Clinical Front Door API, the Model Gateway and the shared contract runtime in Python with FastAPI. Contract models are Pydantic models bound to the JSON Schemas already in `schemas/`, which remain the machine source of truth. Provider SDKs stay inside gateway adapters per DEC-0003.
+- **Rationale:** One language across the project. The Research Track is Python by necessity and `scripts/` is already Python. The five shared contracts exist as JSON Schema, and Pydantic binds to them directly, so the executable contract and the machine contract cannot drift into two separate definitions. A second language would mean maintaining contract models twice and syncing them by hand — exactly the drift RISK-0006 describes.
+- **Alternatives considered:**
+  - TypeScript with Node — better for a frontend-heavy project, but adds a second language and a second copy of the contract models.
+  - Python with Django REST Framework — heavier than an API-first service with no admin or ORM requirement needs at this stage.
+  - Defer and let the choice emerge from the first implementation — forbidden by GOV-01, and it is how architecture decisions become accidents.
+- **Consequences:**
+  - Phase 2 is unblocked: contract models, the mock provider and the ten contract fixtures can be written.
+  - `shared/` holds the versioned Pydantic contract models; `schemas/` stays authoritative and the models are tested against the existing fixtures in `tests/fixtures/`.
+  - Provider-specific types may not appear in Front Door business logic or in any client.
+  - A dependency file and a virtual environment enter the repository for the first time. `scripts/` stays stdlib-only so `verify_harness.py` keeps running with no install step.
+  - A browser UI, if later required, consumes the same API as any other client and does not reopen this decision.
+- **Ordering constraint honoured:** recorded and accepted before any Phase 2 implementation file exists.
