@@ -2,6 +2,13 @@
 
 Machine state is authoritative for automation: `project_state/tasks.json`. This board is the readable working view. Valid states: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `REVIEW`, `DONE`.
 
+> ⚠️ **This board is behind `project_state/tasks.json` as of 2026-09-02.** The machine record now
+> holds TASK-0001…TASK-0025; this board shows fifteen and several statuses, owners and due dates
+> here contradict it. The TASK-0004 row was corrected on 2026-09-02 because that task was being
+> worked; **the rest has not been reconciled.** Read `project_state/tasks.json` for anything you
+> intend to act on. Per DEC-0008 the machine record wins, and a readable view that disagrees with it
+> is worse than no readable view.
+
 ## Active P0/P1
 
 | ID | Pri | Owner | Track | Status | Due | Task | Definition of done / evidence |
@@ -9,7 +16,7 @@ Machine state is authoritative for automation: `project_state/tasks.json`. This 
 | TASK-0001 | P0 | Phurinat | PM | IN_PROGRESS | 2026-08-12 | Confirm Group Application submission state | Submission confirmed by owner 11 Aug; **advisor identity and contact path still unrecorded** |
 | TASK-0002 | P0 | Phurinat | PM | REVIEW | 2026-08-14 | Finalize and submit Group Application if required | Submitted per owner confirmation; **signed form and receipt not archived**, so definition of done is unmet |
 | TASK-0003 | P1 | Phurinat | Cross-track | IN_PROGRESS | 2026-08-14 | Project Idea evidence outline | One integrated outline maps every claim to method, feasibility evidence, evaluation, owner, and reference need |
-| TASK-0004 | P1 | Phurinat | Research | READY | 2026-08-17 | Literature and benchmark novelty matrix | Search protocol, comparable work, baseline candidates, public benchmark access/licensing, novelty boundary |
+| TASK-0004 | P1 | Thanapol | Research | READY | 2026-09-18 | Build literature and benchmark novelty matrix | Primary-source matrix over medical multimodal, dynamic/sparse computation, graph faithfulness and Clinical Front Door work; public benchmark access, licence and reproducibility verified. Evidence: `docs/research/RELATED_WORK.md`, `project_state/literature.json`. Reassigned from Phurinat 2026-08-30 under the 40% capacity rule |
 | TASK-0005 | P1 | Jakkapat | Shared/Data | READY | 2026-08-17 | Data feasibility and ethics inventory | Candidate datasets, modalities, patient linkage, temporal fields, access, license, CITI/ethics path, fallback |
 | TASK-0006 | P1 | Supreeya | Innovation | READY | 2026-08-17 | Clinical workflow and gateway feasibility | Workflow, users, boundaries, mock flow, API fixture, provider isolation, audit events reviewed |
 | TASK-0007 | P1 | Phurinat | Cross-track | READY | 2026-08-18 | First integrated Project Idea draft | 2-4 pages plus references; internally consistent with source-of-truth contracts |

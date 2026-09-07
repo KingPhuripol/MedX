@@ -62,6 +62,20 @@ BraTS, CT-RATE, VQA-RAD and SLAKE are separate populations. Therefore:
   capability results. The reporting template's requirement to label evidence type covers this, and it
   is not optional here.
 
+**Setting constraint, recorded 2026-09-07 (DEC-0016).** The committed care setting is the
+emergency-department first-contact triage point. The currently-surveyed cohort is MIMIC-IV `hosp` and
+`icu` — a hospital course and an ICU stay, **not a first contact**. These are different populations and
+must never be reported as one. Specifically:
+
+- **No Front Door result may be reported on `hosp`/`icu` data as if it were first-contact triage
+  evidence.** Every results table names its population, and a table that cannot name it does not ship.
+- The fixed-route-set comparison arm added under DEC-0013 runs on that hospital-course cohort. Its
+  results are setting-agnostic architecture evidence, explicitly **not** Front Door evidence.
+- `CHIEF_COMPLAINT` and `TRIAGE_NOTE` have no recorded data source in the surveyed set. MIMIC-IV-ED is
+  the identified candidate and is **unsurveyed** (RISK-0014, TASK-0031). Until DS-0008 exists, every
+  Front Door result in this project is synthetic and is labelled as such.
+- Care setting and arrival mode are declared reporting strata.
+
 **Time-valid evaluation is available only on the MIMIC core.** `available_at_time` must be derived from
 `storetime` (when a result became available), never from `charttime` (when the observation was made);
 deriving it from `charttime` would place future information inside the decision snapshot. BraTS,

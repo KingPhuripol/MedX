@@ -130,3 +130,69 @@ Machine-readable decisions are in `project_state/decisions.json` and validated a
   - **RISK-0010 stays OPEN.** This decision does not settle whether PhysioNet permits releasing weights trained on MIMIC at all (TASK-0020), nor whether CT-RATE's ShareAlike term propagates to the released weights.
   - If TASK-0020 returns that PhysioNet does not permit a weights release, this decision does not authorise one anyway.
   - The release licence is chosen at the release gate, and must be at least as restrictive as the most restrictive contributing dataset.
+
+## DEC-0012 - The literature registry is the single citation contract
+
+- **Date:** 2026-09-02
+- **Status:** proposed
+- **Owner:** Phurinat Polasa
+- **Decision:** Every external factual claim in any project document cites a `LIT-` identifier resolving to `project_state/literature.json`. Formatted references are generated from `citation.apa7` and never retyped. A reference may only be `ACCEPTED` when `verification.status` is `VERIFIED`, which requires a named primary-source method and date. A `CONFLICT` record may never be `ACCEPTED`.
+- **Rationale:** The project maintained two independent reference lists — five entries in the submitted Project Idea and thirteen in the unsubmitted draft — with no machine-readable store and no way to tell a citation that had been checked from one written from memory. Re-verification on 2026-09-02 found a page range carried since August that no primary source confirms (LIT-0008); a prose bibliography could not have caught it. The dataset feasibility survey already proved the pattern works: schema, plus a `project_state` registry, plus a docs page, plus a harness check.
+- **Alternatives considered:**
+  - Keep citations as prose and rely on care at review time — rejected, because that is exactly the regime under which LIT-0008's unconfirmed page range survived five rounds of review.
+  - Adopt an external reference manager and a `.bib` file — rejected, because it would sit outside `project_state/` and so outside DEC-0008's authority boundary and outside the harness.
+- **Consequences:**
+  - Reference lists in the Proposal and every later document are generated from one store.
+  - `scripts/verify_harness.py` gains `check_literature`; the harness rises from 241 to 1123 checks.
+  - An unverified citation cannot reach a project document without failing verification.
+  - `docs/academic/PROJECT_IDEA.md` is **not** edited — it stays byte-identical to the signed PDF, and repayment lands in the Proposal.
+- **Evidence:** `schemas/literature.schema.json` · `project_state/literature.json` · `docs/research/RELATED_WORK.md` · `check_literature` in `scripts/verify_harness.py` · 19 negative tests in `tests/test_literature_registry.py` · `scripts/verify_citations.py`, with 52 of 52 identifiers re-verified online on 2026-09-02.
+
+## DEC-0013 - Accept the baseline shortlist and add two comparison arms
+
+- **Date:** 2026-09-02
+- **Status:** proposed
+- **Owner:** Thanrada Tungweerapornpong
+- **Decision:** Record comparison families 2, 3, 4 and 6 as `INTERNAL_CONTROL`, owing a published method precedent rather than a checkpoint. Add two arms to `docs/research/BENCHMARK_CONTRACT.md`: an **LLM-orchestrated agentic planner** over the same operator vocabulary, and a **fixed-route-set conditional model**. Leave families 1 and 5 `DEFERRED` until SRCH-0006 reports licence, weights and evaluation reproducibility.
+- **Rationale:** Naming baselines materially changes public benchmark rules, which `CLAUDE.md` puts behind human approval. The two new arms exist because without them the two sharpest novelty threats are untested: if an LLM-emitted plan matches the trained compiler at equal compute the architectural claim is dead, and if a ten-route weighting on MIMIC matches a compiled DAG the topology claim collapses to a routing claim.
+- **Alternatives considered:**
+  - Keep the six abstract families and name nothing — rejected; an experiment plan that cannot name its baselines is not yet an experiment plan, and TASK-0009 is blocked on it.
+  - Select Mixtral as the family 5 checkpoint — rejected on evidence: it makes no equal-compute claim, and at 13B active it cannot be matched to a 300–700M model.
+  - Add no new arms — rejected; it leaves the project unable to answer its two strongest challenges.
+- **Consequences:**
+  - `BENCHMARK_CONTRACT.md` gains a named baseline candidates section and two comparison arms.
+  - **Family 4 (random/shuffled routing) becomes the load-bearing experiment of the project**, not a sanity check — LIT-0034 reports hash and random-fixed routing within 1.1–2.2 perplexity of learned routing across 62 controlled runs.
+  - Med-PaLM M and Med-Gemini are fixed as novelty-matrix columns and never baselines, their weights being unavailable.
+  - The compute budget rises by two arms and must be re-estimated against TASK-0018.
+- **Approval:** APR-0001 (`SCOPE_CHANGE`, `PENDING`) — the first entry in an approvals file that has been empty since the project began.
+
+## DEC-0016 - The evaluated care setting is adult non-trauma emergency-department first-contact triage
+
+- **Date:** 2026-09-07
+- **Status:** proposed
+- **Owner:** Supreeya Nuamkhayan
+- **Decision:** The evaluated setting is the **first-contact triage station of a hospital emergency department**, before physician assessment. Population: adults 18+, non-trauma, non-obstetric. Operator: a supervised triage nurse or intake staff member; confirmer: a clinician. **Arrival mode (walk-in vs ambulance) is a declared stratification variable recorded per case, not an inclusion criterion** — it becomes one only if a dataset survey verifies a source field for it. Two decision moments are evaluated:
+  - **T0** — the earliest time at which a chief complaint *and* a first vital set both satisfy `available_at_time <= T0`. Derivable from the journey alone, and already what `REQUIRED_FRONT_DOOR_EVIDENCE` encodes in `innovation/gateway/safety.py`: the code defines T0, the contracts just now say so.
+  - **T1** — the earliest time at which at least one result-class item (first laboratory result or first imaging report) satisfies `available_at_time <= T1`, **capped at T0 + 120 minutes**. A case with no result-class item by the cap is evaluated at the cap with the item recorded *not yet available*, never as normal. 60-90 minutes is a **reporting stratum, not the definition**.
+
+  Every reported claim states which snapshot it was measured at. Explicitly out of scope: operating room, pre-operative assessment, anaesthesia, ICU management, ward deterioration, prehospital and field triage, consumer self-triage, paediatrics, major trauma.
+- **Rationale:** ED first-contact triage is the only candidate setting that is simultaneously implied by the signed Project Idea, already built into the machine contracts (the patient-journey event enum leads with `CHIEF_COMPLAINT` and `TRIAGE_NOTE`), already present in the twelve fixtures, and measured by the declared primary safety metric. The two decision moments are the substantive part: `available_at_time` is the project's own differentiator, and a single snapshot cannot exercise it. LIT-0037 (Aegle) demonstrates per-case specialist activation for clinical intake on a real cohort but is text-only, with no typed operators, no export or replay, no imaging, no compute matching and **no `available_at_time` semantics**. This setting places the project beside that gap, which threat T8 requires any Front Door claim to do explicitly.
+- **Alternatives considered:**
+  - **Operating room, pre-operative assessment or anaesthesia** — rejected on evidence, not preference. Zero candidate datasets carry peri-operative data; the `event_type` enum has no `PROCEDURE`, `SURGERY`, `PREOP_ASSESSMENT`, `INTRAOP_VITAL` or `PACU` value; and MIMIC-IV `procedures_icd` is retrospective billing code, which `DATA_CONTRACT.md` forbids as an early-snapshot input. The literature survey also **never searched** peri-operative work, so under RELATED_WORK.md Rule 4 its silence is `NOT_REPORTED`, not `ABSENT` — the niche could not be claimed open without a new search first.
+  - **ICU management or ward deterioration** — rejected: occupied by NEWS2 and LIT-0046, and not a front door.
+  - **Consumer-facing self-triage** — rejected: occupied by LIT-0055 and contradicts `PRODUCT_SPEC.md`, whose user is a supervised triage nurse, not a patient.
+  - **Outpatient multi-department intake** — rejected: this is precisely the setting LIT-0037 (Aegle) occupies across 24 departments, which would put the project *inside* threat T8 rather than beside it.
+  - **Name no setting and keep deferring** — rejected: it is the status quo that produced an evaluation set which cannot discriminate and a novelty claim with an undefined domain.
+- **Consequences:**
+  - The claim boundary in `PROJECT_CHARTER.md` — "clinical claims beyond the evaluated population and setting" — gains a referent and becomes enforceable rather than a placeholder.
+  - **RISK-0014 raised:** the product setting and the surveyed data setting do not match. **MIMIC-IV-ED is not a candidate dataset** — it appears once in the whole repository, as an unexecuted search string — so `CHIEF_COMPLAINT` and `TRIAGE_NOTE` currently have no recorded data source. RISK-0002 covers modality linkage, not setting mismatch.
+  - The frozen case set must be rebuilt to exercise all four urgency levels and to carry a T1 snapshot, and EVAL-0001 re-run. **The escalation rate will change, and the change is a property of the case set, not a safety improvement.**
+  - `schemas/dataset-feasibility.schema.json` gains a required `care_setting` object and all seven datasets are backfilled — closing the gap that let a seven-dataset survey record no setting while `DATA_CONTRACT.md` mandates population, site and time period at manifest time.
+  - The project **accepts** threats T5 (LIT-0036) and T6 (LIT-0025) rather than moving off MIMIC, because MIMIC is the only corpus supporting patient-level multimodal linkage and time-valid snapshots. The trade is stated in the Proposal, not left implicit.
+  - **No triage taxonomy is adopted**, and none may be without a licence review: ESI requires written ENA permission; ACS Field Triage explicitly forbids incorporation into AI/ML applications; ATS requires ACEM permission; CTAS is unresolved; MTS is licensable but no software implementation holds accreditation; NEWS2 is free but is a deterioration score, not a triage taxonomy. KTAS, JTAS and the Thai national ED triage scale were never read (SRCH-0005 `PARTIAL`).
+  - **Naming a setting is not adopting a protocol.** `CLINICAL_WORKFLOW.md`'s prohibition on mapping to a real operational triage scale without authorized clinical validation stays in force verbatim.
+  - **The comparison cohort and the committed setting are different populations.** DEC-0013's fixed-route-set arm runs on MIMIC-IV `hosp` + `icu` — a hospital course, not a first contact. No Front Door result may be reported on that data as if it were triage-point evidence, and every results table must name its population.
+  - The setting is committed for the **contracts, product, safety screen and synthetic evaluation**, all of which are under project control. Any **dataset-backed** claim in this setting is conditional on DS-0008 and remains a hypothesis until surveyed.
+  - **RISK-0015 raised.** Tracing the deterministic screen shows the evaluation cannot currently discriminate *at all*, and the cause is structural rather than a shortage of cases: SCR-002 raises `COMPLAINT_NOT_EVALUATED_BY_RULE` as `UNKNOWN` for every request carrying a chief complaint, and SR-002 turns any `UNKNOWN` flag into `URGENT_REVIEW` + `ESCALATED` — so **every complaint-bearing case escalates by construction, independently of its content**. The only route to `IMMEDIATE_REVIEW` is a `TRIGGERED` flag, and the only `TRIGGERED` flag produced anywhere is `REQUIRED_INFORMATION_INCOMPLETE`, so **the top urgency level is reachable only through absent information, never through clinical severity**; neither provider ever emits `TRIGGERED`. Adding `ROUTINE_REVIEW` cases therefore cannot make the set discriminate — it makes the failure visible and drives escalation toward 1.0. That is the intended next step (TASK-0032), with the fix designed and deliberately scheduled after the Proposal (TASK-0033).
+- **Approval:** APR-0002 (`SCOPE_CHANGE`, `PENDING`). Sequenced **before or with** APR-0001 — that approval reframes the contribution as "an evaluation contribution in a domain the field has not entered", which is empty until the domain is named.
+- **Evidence:** `docs/academic/PROJECT_IDEA.md` · `docs/innovation/CLINICAL_WORKFLOW.md` · `project_state/dataset_feasibility.json` · `project_state/literature.json` (LIT-0037, LIT-0036, LIT-0025, LIT-0055, LIT-0046, and the sole MIMIC-IV-ED mention) · `docs/research/RELATED_WORK.md` (T5, T6, T8; the triage-taxonomy licence audit; owner decision 6) · `tests/fixtures/cases/` · `docs/innovation/ACCEPTANCE_CRITERIA.md` (EVAL-0001 escalation 0.83).

@@ -11,9 +11,17 @@ The AI Clinical Front Door is a supervised decision-support prototype that organ
 
 It does not diagnose, treat, prescribe, discharge, or autonomously route a real patient.
 
+## Care setting (DEC-0016)
+
+The evaluated setting is the **first-contact triage station of a hospital emergency department**, before physician assessment: adults 18+, non-trauma, non-obstetric. Arrival mode is a recorded stratum, not an inclusion criterion.
+
+Two decision moments are supported and reported separately. **T0** is the earliest time at which a chief complaint and a first vital set are both available — which is exactly what `REQUIRED_FRONT_DOOR_EVIDENCE` already encodes in `innovation/gateway/safety.py`, so the minimum intake *is* T0. **T1** is the earliest time a first laboratory result or imaging report becomes available, capped at T0 + 120 minutes.
+
+Input from outside the setting — paediatric age, trauma mechanism, prehospital origin — is an out-of-distribution condition and abstains or escalates rather than being scored.
+
 ## Users
 
-- supervised triage nurse or intake staff in a simulated/research workflow;
+- supervised triage nurse or intake staff **at the emergency-department first-contact triage point**, in a simulated/research workflow;
 - clinician reviewing recommendations and overrides;
 - evaluator examining safety, agreement, timing, and failure cases;
 - researcher inspecting executed graph and model/provider behavior.
@@ -25,7 +33,7 @@ Patient-facing direct use and production clinical deployment are outside this pr
 1. Capture a chief complaint and known context without forcing a disease-specific form.
 2. Show immediately available red flags and missing critical information.
 3. Ask/rank the next useful questions or evidence items.
-4. Update the state when vitals, labs, ECG, images, or prior records become available.
+4. Update the state when vitals, labs, ECG, images, or prior records become available — the T0 to T1 transition, and the reason `available_at_time` is a sequence rather than a single filter.
 5. Support urgency and care-pathway selection across multiple disease systems.
 6. Express uncertainty and abstain/escalate safely.
 7. Let a human confirm, modify, reject, or request more information with a reason.

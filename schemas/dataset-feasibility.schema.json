@@ -16,7 +16,7 @@
         "additionalProperties": false,
         "required": [
           "dataset_id", "name", "owner", "verdict", "license", "access",
-          "patient_linkage", "temporal_validity", "modalities", "obligations",
+          "patient_linkage", "temporal_validity", "care_setting", "modalities", "obligations",
           "evidence", "reviewed_on", "updated_at"
         ],
         "properties": {
@@ -75,6 +75,26 @@
             "properties": {
               "available_at_time_present": { "enum": ["YES", "NO", "PARTIAL", "UNKNOWN"] },
               "derivation_if_absent": { "type": ["string", "null"], "description": "How available_at_time would be derived, if the source does not carry it" },
+              "status": { "enum": ["VERIFIED", "UNVERIFIED"] },
+              "notes": { "type": ["string", "null"] }
+            }
+          },
+          "care_setting": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Where the data was collected. DATA_CONTRACT.md requires population, site and time period at manifest time; recording it at survey time stops a dataset being adopted for a care setting it does not cover. DEC-0016 fixes the evaluated setting as emergency-department first-contact triage, so `covers_evaluated_setting` is measured against that.",
+            "required": ["setting", "population", "covers_evaluated_setting", "status"],
+            "properties": {
+              "setting": {
+                "type": "string",
+                "description": "The care setting the data was collected in, in the source's own terms. 'NOT_A_CARE_SETTING' for teaching files, challenge archives and question-answer benchmarks."
+              },
+              "population": { "type": "string" },
+              "time_period": { "type": ["string", "null"] },
+              "covers_evaluated_setting": {
+                "enum": ["YES", "NO", "PARTIAL", "UNKNOWN"],
+                "description": "Whether this dataset covers the setting fixed by DEC-0016. NO is a legitimate answer for an unlinked capability subset; it forbids using the dataset as journey evidence, not as capability evidence."
+              },
               "status": { "enum": ["VERIFIED", "UNVERIFIED"] },
               "notes": { "type": ["string", "null"] }
             }

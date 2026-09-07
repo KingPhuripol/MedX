@@ -50,6 +50,7 @@ Provider timeout/circuit breaker, synthetic offline demo, access control in appr
 | Hazard | Example cause | Potential harm | Control | Verification |
 |---|---|---|---|---|
 | under-triage | model misses critical evidence | delayed review | red-flag rule, conservative thresholds, human confirmation | critical sensitivity and under-triage tests |
+| over-triage / alarm fatigue | screen escalates without discriminating | reviewers stop reading escalations; the control that carries safety decays | over-triage rate reported beside under-triage; a case set that contains genuinely routine presentations | over-triage rate and escalation rate, reported together and never alone |
 | false reassurance | confident low-risk text | user trusts unsafe output | uncertainty, limitation, no patient-facing autonomous use | false reassurance review |
 | future leakage | discharge diagnosis in input | inflated evidence and unsafe expectations | availability audit and temporal block | leakage tests |
 | wrong pathway | taxonomy/data mismatch | inappropriate destination | ranked pathways, wrong-cost metric, human override | pathway strata and override review |
@@ -73,6 +74,14 @@ No release/demo candidate passes with:
 - unresolved `CRITICAL_FAIL` safety verdict.
 
 Quantitative thresholds are frozen per task after clinical and sample-size review in the Evaluation Contract. Until then, do not invent universal numerical safety thresholds.
+
+Every safety claim is bounded by the named care setting (DEC-0016). Input from outside it — paediatric age, trauma mechanism, prehospital origin — is an out-of-distribution condition and abstains or escalates; it is never scored as though it were in setting.
+
+**Any under-triage figure must carry its operational definition or it means nothing.** Two peer-reviewed emergency-department sources disagree threefold and in opposite directions — LIT-0048 reports 3.3% under- and 28.9% over-triage over 5.3 million encounters, LIT-0056 reports 10.7% under- and 6.2% over-triage across six studies — and the disagreement is almost certainly definitional rather than factual. It is unresolved. The only numerical under-triage target found anywhere in the surveyed literature, the 5% goal in LIT-0049, is **specific to prehospital trauma field triage**, a setting this project explicitly excludes, and must never be imported here as a threshold.
+
+**`false_reassurance_rate` is a project-defined construct.** SRCH-0005 found no study that operationalises it. It must be labelled as project-defined wherever it is reported, and never presented as a metric with a literature baseline.
+
+**Human confirmation is a requirement whose effectiveness is itself an open evaluation question, not a demonstrated mitigation.** LIT-0050, LIT-0051 and LIT-0052 together report that a confident wrong AI suggestion drops expert accuracy from about 82% to about 46%, and that human-AI combination can underperform the better party alone on decision tasks. The requirement stands; the claim that it works does not.
 
 ## Verdict rubric
 

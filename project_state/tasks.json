@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-08-30T23:59:00+07:00",
+  "updated_at": "2026-09-07T18:15:00+07:00",
   "tasks": [
     {
       "task_id": "TASK-0001",
@@ -96,7 +96,7 @@
       "workstream": "RESEARCH",
       "milestone": "M1",
       "priority": "P1",
-      "status": "READY",
+      "status": "REVIEW",
       "dependencies": [
         "TASK-0003"
       ],
@@ -116,11 +116,19 @@
         "Revised 2026-08-26 on the project owner's instruction to drop pre-2020 sources: the reference set is now 19 entries spanning 2020-2026, weighted toward current multimodal medical models (Med-PaLM M, Med-Gemini, LLaVA-Med, BiomedCLIP) and contemporary evidence on deployment failure, leakage, and explanation faithfulness. MIMIC-CXR, CheXpert, BraTS and VQA-RAD were removed from the document but remain on the TASK-0005 dataset feasibility list; the cited candidates are MIMIC-IV, SLAKE and CT-RATE",
         "Narrowed 2026-08-26 to 8 references on the owner's instruction, rebalanced so that 5 of 8 are AI/ML architecture or method papers (Han 2022 dynamic networks, Jiang 2024 Mixtral, Li 2023 LLaVA-Med, Turpin 2023 CoT faithfulness, Hamamci 2026 3D CT foundation model). Each reference now supports a distinct claim with no redundancy. Deliberately not cited: any base-model family paper, because the project has not decided what it builds on and citing one would pre-empt that decision",
         "Range tightened 2026-08-26 to 2022-2026 on the owner's instruction. Wong et al. (2021) was the only entry outside it and was replaced by Bedi et al. (2025) JAMA, whose systematic review of 519 health care LLM evaluations reports that 5% used real patient care data, 95.4% measured only accuracy, and 1.2% measured calibration and uncertainty. Those figures were read from the PubMed abstract, not recalled, and they now carry the document's novelty argument",
-        "Extended 2026-08-26 to 13 references (all 2022-2026) by closing four gaps the document claimed but did not support: multimodal biomedical AI as a field (Acosta 2022), EHR and longitudinal foundation models (Wornow 2023), per-patient predictive uncertainty (Banerji 2023), and human-AI collaboration (Goh 2024 RCT), plus the DECIDE-AI reporting guideline for early-stage clinical decision-support evaluation (Vasey 2022). Reported figures from Bedi and Goh were read from PubMed abstracts, not recalled"
+        "Extended 2026-08-26 to 13 references (all 2022-2026) by closing four gaps the document claimed but did not support: multimodal biomedical AI as a field (Acosta 2022), EHR and longitudinal foundation models (Wornow 2023), per-patient predictive uncertainty (Banerji 2023), and human-AI collaboration (Goh 2024 RCT), plus the DECIDE-AI reporting guideline for early-stage clinical decision-support evaluation (Vasey 2022). Reported figures from Bedi and Goh were read from PubMed abstracts, not recalled",
+        "2026-09-02: the three artifacts the definition of done requires now exist. schemas/literature.schema.json, project_state/literature.json (6 searches, 58 references, 6 baseline families) and docs/research/RELATED_WORK.md, plus a check_literature function in scripts/verify_harness.py (harness rises from 241 to 1117 checks), 19 negative tests in tests/test_literature_registry.py, and scripts/verify_citations.py for online re-verification. Search protocol, novelty matrix, novelty threats and baseline shortlist all exist for the first time.",
+        "2026-09-02: five searches run in parallel by literature-benchmark-scout with verbatim queries recorded in searches[]: SRCH-0001 medical multimodal (34 screened), SRCH-0002 dynamic/sparse computation (58), SRCH-0003 per-case typed DAG (95), SRCH-0004 graph faithfulness (95), SRCH-0005 triage and safety (95, PARTIAL - hit its turn limit). SRCH-0006 benchmark feasibility has NOT run, so no baseline family has left DEFERRED.",
+        "2026-09-02: every identifier was independently re-verified by the main session, not taken from the scout reports. 36 DOIs against Crossref and 16 arXiv IDs against the arXiv API: all 52 resolve. Every apa7 string is generated from the fetched fields rather than typed. Verdicts: 40 ACCEPTED, 17 CONDITIONAL, 1 UNDER_REVIEW.",
+        "2026-09-02: re-verification found a real defect in the existing citation set. LIT-0008 (Bedi et al. 2025 JAMA) carried page range 319-328 since 2026-08-26; Crossref REST, DOI content negotiation and PubMed E-utilities all return first page 319 with no end page. Recorded as CONFLICT and downgraded to CONDITIONAL rather than corrected silently. Four further CONFLICT records raised: a BiomedGPT licence contradiction, two arXiv identifier/date inconsistencies, and a three-fold disagreement between two peer-reviewed under-triage rates.",
+        "2026-09-02 ADVERSE HEADLINE FINDING, reported unsoftened per RESEARCH_SPEC.md: the project's core computational pattern is NOT novel. LIT-0031 shows the per-case dynamic workflow graph was a named, surveyed research area by March 2026; LIT-0035 shows typed DAG execution with schema validation and determinism is shipped engineering practice; LIT-0033 is peer-reviewed per-input graph generation; LIT-0037 and LIT-0038 demonstrate per-case adaptation in medicine. LIT-0014 (MedGemma 1.5) already occupies the 27B scale, open weights, 3D CT/MRI and longitudinal imaging simultaneously. Twelve novelty threats are tabulated in RELATED_WORK.md with the experiment that would settle each.",
+        "2026-09-02: C-02 resolved AGAINST the claim as written. SRCH-0002 looked for evidence that existing systems are uniformly fixed-path and found the opposite in the medical multimodal domain. Restoring Han et al. (2022) would have weakened rather than supported it, because a TPAMI survey of dynamic networks exists precisely because the field is large. Three defensible replacement wordings are recorded; the choice is the owner's under CLAUDE.md Claim boundary.",
+        "2026-09-02: the strict 2022-2026 window cost less than feared. LIT-0040 (Lyu et al. 2024, Computational Linguistics) supplies an in-window peer-reviewed definition of faithfulness and LIT-0041 a formal graded co-anchor, so RQ3 does not need a project-internal definition. In-window replacements were also found for Futoma 2020 (LIT-0047) and Wong 2021 (LIT-0046). What it still costs is the module-network method ancestry (Andreas 2016, Hu 2017), raised independently by two searches; a narrow recorded exception is on the owner's list.",
+        "2026-09-02: NOT DECIDED, and deliberately so - the base model family, adoption of a triage taxonomy, the C-02 wording, the reframing of the contribution claim, which branch of G4 is primary, two proposed new comparison arms, and whether graph export/replay remains a contribution. Twelve owner decisions are listed in RELATED_WORK.md and carried by TASK-0026."
       ],
-      "blocker": "Reassigned from Phurinat on 2026-08-30 to hold P0/P1 concentration under the 40% capacity rule. Citation coverage is partly advanced, but the novelty matrix, the documented search protocol and the baseline shortlist do not exist and are all required for DL-0004.",
+      "blocker": "Evidence is complete enough to unblock TASK-0009 and TASK-0010. Not DONE: reviewed_by is null on every record by design, SRCH-0006 has not run so no baseline family has left DEFERRED, SRCH-0005 is PARTIAL, and twelve owner decisions are outstanding. Acceptance is TASK-0026.",
       "risk_level": "HIGH",
-      "updated_at": "2026-08-30T17:30:00+07:00"
+      "updated_at": "2026-09-02T19:00:00+07:00"
     },
     {
       "task_id": "TASK-0005",
@@ -736,6 +744,247 @@
       "blocker": null,
       "risk_level": "LOW",
       "updated_at": "2026-08-30T23:59:00+07:00"
+    },
+    {
+      "task_id": "TASK-0026",
+      "title": "Confirm the literature and novelty findings and sign off TASK-0004",
+      "owner": "Phurinat Polasa",
+      "workstream": "RESEARCH",
+      "milestone": "M2",
+      "priority": "P1",
+      "status": "READY",
+      "dependencies": [
+        "TASK-0004"
+      ],
+      "planned_start": "2026-09-14",
+      "due_date": "2026-09-25",
+      "definition_of_done": [
+        "reviewed_by is filled on every ACCEPTED literature record and on all six baseline families",
+        "A position is recorded on each of the twelve owner decisions listed in docs/research/RELATED_WORK.md",
+        "DEC-0012 and DEC-0013 are accepted or rejected, and APR-0001 is decided",
+        "The five CONFLICT records are resolved or explicitly carried with their conflict stated"
+      ],
+      "evidence_required": [
+        "Signed-off literature registry",
+        "Decision Log entries",
+        "Updated claim wording for C-02"
+      ],
+      "evidence": [],
+      "blocker": "Owner is deliberately not the author of the survey. RISK-0011 exists because the Project Idea shipped with no non-author review; this is the first deliverable to have one built in.",
+      "risk_level": "HIGH",
+      "updated_at": "2026-09-02T19:00:00+07:00"
+    },
+    {
+      "task_id": "TASK-0027",
+      "title": "Choose and record the base model family",
+      "owner": "Thanapol Popit",
+      "workstream": "RESEARCH",
+      "milestone": "M2",
+      "priority": "P1",
+      "status": "READY",
+      "dependencies": [
+        "TASK-0004"
+      ],
+      "planned_start": "2026-09-14",
+      "due_date": "2026-09-25",
+      "definition_of_done": [
+        "A base model family is chosen and recorded in an accepted Decision Log entry with its licence position",
+        "Baseline family 2 (same-backbone fixed path) can leave INTERNAL_CONTROL/blocked status"
+      ],
+      "evidence_required": [
+        "Decision Log entry",
+        "Licence reading recorded in the literature registry"
+      ],
+      "evidence": [],
+      "blocker": "Deliberately deferred since 2026-08-26: citing a base model before deciding would pre-empt an architecture decision with no Decision Log entry. TASK-0004 supplies candidates as evidence and makes no choice. Owed before the Proposal Report.",
+      "risk_level": "MEDIUM",
+      "updated_at": "2026-09-02T19:00:00+07:00"
+    },
+    {
+      "task_id": "TASK-0028",
+      "title": "Repair the seven Front Door defects and lay the service foundation",
+      "owner": "Supreeya Nuamkhayan",
+      "workstream": "INNOVATION",
+      "milestone": "M2",
+      "priority": "P1",
+      "status": "REVIEW",
+      "dependencies": [],
+      "planned_start": "2026-09-02",
+      "due_date": "2026-09-08",
+      "definition_of_done": [
+        "All seven defects fixed, each with a regression test that fails without the fix",
+        "Settings object, /v1 router, error envelope, structured logging with redaction, graceful shutdown",
+        "The full suite, the harness and the smoke test pass, and the service is exercised end to end over HTTP"
+      ],
+      "evidence_required": [
+        "Passing suite",
+        "Live end-to-end run",
+        "Decision Log entries"
+      ],
+      "evidence": [
+        "2026-09-02: seven defects fixed. D1 pathlib.Path shadowed by fastapi.Path meant the app could not start with FRONT_DOOR_AUDIT_LOG set, so the JSONL audit sink had never worked through the API. D2 re-assessment at the same decision time silently erased human reviews. D3/D7 httpx, jinja2 and python-multipart were imported and undeclared. D4 the audit endpoint did not survive a restart. D5 reviewer identity was written by mutating a frozen dataclass and never persisted. D6 two unrelated objects named EXTERNAL_PROVIDERS meant an adapter registered under any name outside a hardcoded frozenset silently bypassed the DEC-0006 authorization gate. D7b one SQLite connection shared across the threadpool with no lock.",
+        "2026-09-02: foundation added — innovation/config.py (Settings, refusing to start unauthenticated on a non-loopback bind), build_router extracted so the router mounts at /v1 and unprefixed, one error envelope with a correlation id, JSON logging with a redaction filter, /ready separated from /health, provider pool size configurable (was fixed at one), and a lifespan that finally calls the close() methods that already existed.",
+        "2026-09-02: 257 tests pass (was 241), harness 1123 checks, smoke test passes. Verified live on http://localhost:8137: encounter to assessment to 409 to human confirmation to 200; re-assessment returned the same id with the confirmation intact; the audit trail returned two records with the reviewer on the second.",
+        "2026-09-02 NOT ADDRESSED, by design: escalation is still structural. The live run returned URGENT_REVIEW/ESCALATED on a case with a clear complaint and vitals, both red flags UNKNOWN. That is P1 and P2 work and depends on the Model API Contract 1.1.0 approval (APR-0002)."
+      ],
+      "blocker": "DEC-0014 and DEC-0015 are drafted as proposed and need a human to accept them. Authentication, pagination and Docker are P6, not done here.",
+      "risk_level": "MEDIUM",
+      "updated_at": "2026-09-02T20:00:00+07:00"
+    },
+    {
+      "task_id": "TASK-0029",
+      "title": "Record and propagate the care-setting decision",
+      "owner": "Supreeya Nuamkhayan",
+      "workstream": "INNOVATION",
+      "milestone": "M2",
+      "priority": "P1",
+      "status": "IN_PROGRESS",
+      "dependencies": [],
+      "planned_start": "2026-09-07",
+      "due_date": "2026-09-19",
+      "definition_of_done": [
+        "DEC-0016 recorded in project_state/decisions.json and docs/DECISION_LOG.md, and APR-0002 raised",
+        "The setting, its population, its two decision moments and its exclusions appear in PROJECT_CHARTER.md, PRODUCT_SPEC.md and CLINICAL_WORKFLOW.md",
+        "The four abstract urgency levels and the prohibition on mapping to a real operational triage scale are unchanged, and the documents say so explicitly",
+        "SAFETY_SPEC.md requires every under-triage figure to carry its operational definition, and labels false_reassurance_rate a project-defined construct",
+        "BENCHMARK_CONTRACT.md and RESEARCH_SPEC.md position the contribution against LIT-0037 (Aegle) per threat T8",
+        "Harness, full test suite and smoke test pass"
+      ],
+      "evidence_required": [
+        "DEC-0016 and APR-0002 records",
+        "Diff of the propagated documents",
+        "Passing harness, suite and smoke test"
+      ],
+      "evidence": [],
+      "blocker": "DEC-0016 is proposed. APR-0002 is PENDING and needs Phurinat Polasa (scope) and Thanrada Tungweerapornpong (safety). Documents may be written under the proposed decision, but no claim rests on it until the approval is decided.",
+      "risk_level": "MEDIUM",
+      "updated_at": "2026-09-07T17:30:00+07:00"
+    },
+    {
+      "task_id": "TASK-0030",
+      "title": "Record care setting in the dataset feasibility survey and enforce it",
+      "owner": "Supreeya Nuamkhayan",
+      "workstream": "DATA",
+      "milestone": "M2",
+      "priority": "P1",
+      "status": "READY",
+      "dependencies": [
+        "TASK-0029"
+      ],
+      "planned_start": "2026-09-19",
+      "due_date": "2026-09-22",
+      "definition_of_done": [
+        "schemas/dataset-feasibility.schema.json carries a required care_setting object with setting, population, basis and status",
+        "All seven existing datasets are backfilled, and a dimension resolved only from secondary sources stays UNVERIFIED and says so",
+        "scripts/verify_harness.py requires care_setting on every dataset and refuses a VERIFIED status with no cited evidence",
+        "Both rules are negative-tested: removing care_setting, and claiming VERIFIED with no evidence, each make the harness fail"
+      ],
+      "evidence_required": [
+        "Schema diff and backfilled records",
+        "Harness check count before and after",
+        "Negative test output showing the harness failing on each violation"
+      ],
+      "evidence": [],
+      "blocker": "Reassigned from Jakkapat Bunjongruxsa on 2026-09-07 under the 40% capacity rule; Jakkapat retains TASK-0031, the dimension work that needs the data owner. The schema surface is the Product owner's.",
+      "risk_level": "LOW",
+      "updated_at": "2026-09-07T17:30:00+07:00"
+    },
+    {
+      "task_id": "TASK-0031",
+      "title": "Survey MIMIC-IV-ED as DS-0008",
+      "owner": "Jakkapat Bunjongruxsa",
+      "workstream": "DATA",
+      "milestone": "M2",
+      "priority": "P1",
+      "status": "READY",
+      "dependencies": [
+        "TASK-0030"
+      ],
+      "planned_start": "2026-09-19",
+      "due_date": "2026-09-30",
+      "definition_of_done": [
+        "DS-0008 recorded against all six dimensions plus care_setting, with cited evidence read at the provider's own pages where possible",
+        "Patient-level linkage to DS-0001 and DS-0002 through subject_id is confirmed or refused on evidence",
+        "The timestamp columns that yield available_at_time at the triage point are named, and the storetime rather than charttime rule is confirmed to apply or an alternative is documented",
+        "Whether the acuity field derives from a licence-restricted taxonomy is established, since PhysioNet distribution does not settle ENA permission",
+        "MC-BEC (arXiv:2311.04937) is screened and recorded in project_state/literature.json"
+      ],
+      "evidence_required": [
+        "DS-0008 record with per-dimension evidence",
+        "Named timestamp columns",
+        "Licence finding on the acuity field",
+        "MC-BEC literature record"
+      ],
+      "evidence": [],
+      "blocker": "The access dimension cannot close before CITI (TASK-0011) and a human-signed DUA. The licence, linkage, temporal-validity, modality and care-setting dimensions do not depend on CITI and proceed now.",
+      "risk_level": "HIGH",
+      "updated_at": "2026-09-07T17:30:00+07:00"
+    },
+    {
+      "task_id": "TASK-0032",
+      "title": "Make the frozen case set able to discriminate, and freeze the metric that shows it cannot",
+      "owner": "Thanrada Tungweerapornpong",
+      "workstream": "EVALUATION",
+      "milestone": "M2",
+      "priority": "P1",
+      "status": "READY",
+      "dependencies": [
+        "TASK-0029"
+      ],
+      "planned_start": "2026-09-19",
+      "due_date": "2026-09-27",
+      "definition_of_done": [
+        "over_triage_rate is defined in innovation/evaluation/metrics.py and committed BEFORE any new case runs, because EVALUATION_CONTRACT.md requires metrics frozen before results are inspected and adding one after seeing 0.83 would be metric-shopping",
+        "Cases gain a nullable expected_maximum_urgency beside expected_minimum_urgency, so a case can declare a band and over-triage becomes measurable",
+        "The case set exercises all four urgency levels: at least one case declares a ROUTINE_REVIEW ceiling and at least one an IMMEDIATE_REVIEW floor on complete evidence, alongside the existing cases",
+        "At least one case carries a T1 snapshot of the same patient, so available_at_time is tested as a sequence and not as a single filter",
+        "At least one out-of-setting case (paediatric age, or trauma mechanism) declares an abstain-or-escalate expectation, making the DEC-0016 boundary testable rather than decorative",
+        "Every case records its care_setting and presentation type",
+        "The twelve existing cases stay byte-identical and tests/fixtures/cases/README.md keeps its statement that expectations are author-declared and not clinical ground truth",
+        "EVAL-0001 is preserved unmodified and the run is recorded as EVAL-0002 with its own data_version",
+        "The escalation-rate change is reported with its cause named, and the report states plainly that the number is expected to get WORSE"
+      ],
+      "evidence_required": [
+        "The metric-freeze commit, dated before the run",
+        "New and amended fixtures with the twelve originals unchanged in the diff",
+        "EVAL-0002 recorded beside a preserved EVAL-0001",
+        "A written before-and-after comparison naming the mechanism, not just the numbers"
+      ],
+      "evidence": [],
+      "blocker": "RISK-0015: adding cases cannot by itself make the set discriminate. SCR-002 flags every complaint-bearing request UNKNOWN and SR-002 escalates every UNKNOWN, so a ROUTINE_REVIEW case cannot return ROUTINE_REVIEW and escalation will rise toward 1.0. That is the intended outcome of this task: make the failure visible and measured. Making the levels reachable is TASK-0033. Owned by the Safety and Evaluation owner by design — the Product owner must not author the cases that grade her own service.",
+      "risk_level": "HIGH",
+      "updated_at": "2026-09-07T18:15:00+07:00"
+    },
+    {
+      "task_id": "TASK-0033",
+      "title": "Design the content-reading deterministic screen that makes the urgency levels reachable",
+      "owner": "Supreeya Nuamkhayan",
+      "workstream": "SAFETY",
+      "milestone": "M4",
+      "priority": "P2",
+      "status": "BACKLOG",
+      "dependencies": [
+        "TASK-0032"
+      ],
+      "planned_start": "2026-10-20",
+      "due_date": "2026-11-14",
+      "definition_of_done": [
+        "A versioned deterministic rule set reads structured VITAL values and an explicit complaint-token list in the Front Door service, which already holds IntakeItem.value, and passes the resulting flags to the gateway as declared flags",
+        "The gateway stays reference-only: no patient payload text crosses it and the audit-trail test asserting that still passes",
+        "SCR-002 fires only where the new rule set could not evaluate the complaint, so UNKNOWN becomes a real state rather than a constant",
+        "SAFETY_POLICY_VERSION is bumped and a Decision Log entry records the change, as SAFETY_SPEC.md requires for any red-flag rule change",
+        "The rule set carries the same explicit engineering-heuristic label the confidence threshold already carries, because no one on the team is licensed to validate a clinical-content reader"
+      ],
+      "evidence_required": [
+        "Rule set with per-rule tests",
+        "Passing audit-boundary test proving no payload crosses the gateway",
+        "Decision Log entry and SAFETY_POLICY_VERSION bump",
+        "EVAL-0003 showing whether escalation and over-triage fall"
+      ],
+      "evidence": [],
+      "blocker": "Deliberately scheduled after the Proposal. Changing a safety rule three weeks before an immutable deadline spends exactly the review capacity RISK-0008 and RISK-0011 are about, and the alternative to rushing it is a defensible Proposal finding: the screen cannot discriminate, here is the measured proof and the designed fix. Needs a human decision on who validates a rule-based complaint reader.",
+      "risk_level": "HIGH",
+      "updated_at": "2026-09-07T18:15:00+07:00"
     }
   ]
 }

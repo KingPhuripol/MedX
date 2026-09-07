@@ -52,6 +52,24 @@ class AuditRecord:
     def to_json(self) -> str:
         return json.dumps(asdict(self), sort_keys=True, separators=(",", ":"), default=str)
 
+    @classmethod
+    def from_json(cls, payload: str) -> "AuditRecord":
+        """Rebuild a record read back from a durable sink.
+
+        JSON has no tuples, so the sequence fields come back as lists and are coerced
+        here. Without this the trail is only readable while the process that wrote it is
+        still running, which is the opposite of an audit trail.
+        """
+        raw = json.loads(payload)
+        raw["evidence_ids"] = tuple(raw.get("evidence_ids") or ())
+        raw["rejected_evidence"] = tuple(
+            tuple(pair) for pair in raw.get("rejected_evidence") or ()
+        )
+        raw["applied_safety_rules"] = tuple(raw.get("applied_safety_rules") or ())
+        raw["error_codes"] = tuple(raw.get("error_codes") or ())
+        raw["notes"] = tuple(raw.get("notes") or ())
+        return cls(**raw)
+
 
 class AuditLog:
     """Append-only audit sink, with up to three destinations.
@@ -84,6 +102,18 @@ class AuditLog:
         return tuple(self._records)
 
     def find(self, request_id: str) -> tuple[AuditRecord, ...]:
+        """Every record for a request, oldest first.
+
+        Reads the database when one is configured, because the in-memory list belongs to
+        the process that wrote it. It used to be the only source, so after a restart the
+        audit endpoint answered 404 for every call made before the restart even with a
+        database attached — the rows were there and nothing read them.
+        """
+        if self._store is not None:
+            return tuple(
+                AuditRecord.from_json(row["record_json"])
+                for row in self._store.audit_for(request_id)
+            )
         return tuple(r for r in self._records if r.request_id == request_id)
 
 

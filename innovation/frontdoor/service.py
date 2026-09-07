@@ -17,7 +17,7 @@ recommendation effective without a reviewer identity.
 from __future__ import annotations
 
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Literal, get_args
 
@@ -267,10 +267,18 @@ class FrontDoorService:
             approval_id=approval_id,
             timeout_ms=timeout_ms,
         )
+        # An identical question already answered returns the answer already given, with
+        # its review history intact. Re-running it would build a fresh Recommendation with
+        # reviews=() and drop a human confirmation on the floor.
+        existing_id = f"rec-{uuid.uuid5(uuid.NAMESPACE_URL, request.request_id).hex[:12]}"
+        already = self._recommendations.get(existing_id)
+        if already is not None:
+            return already
+
         response = self.gateway.infer(request)
 
         recommendation = Recommendation(
-            recommendation_id=f"rec-{uuid.uuid5(uuid.NAMESPACE_URL, request.request_id).hex[:12]}",
+            recommendation_id=existing_id,
             journey_id=journey.journey_id,
             decision_time=decision_time,
             snapshot_checksum=snapshot.checksum(),
@@ -316,10 +324,15 @@ class FrontDoorService:
             # LABEL evidence is an outcome, not an input to a live decision.
             if event.modality != "LABEL"
         ]
-        # Deterministic request ID: the same journey at the same decision time is the
-        # same question, which is what makes gateway idempotency meaningful here.
+        # Deterministic request ID: the same journey, at the same decision time, over the
+        # same evidence is the same question — which is what makes gateway idempotency
+        # meaningful here. The snapshot checksum is part of the identity (DEC-0015): it
+        # used to be journey and decision time alone, so appending evidence and
+        # re-assessing at the same instant produced a *different* answer under the *same*
+        # id, silently replacing a recommendation a human had already confirmed.
         request_id = "req-" + uuid.uuid5(
-            uuid.NAMESPACE_URL, f"{journey.journey_id}|{decision_time.isoformat()}"
+            uuid.NAMESPACE_URL,
+            f"{journey.journey_id}|{decision_time.isoformat()}|{snapshot.checksum()}",
         ).hex[:12]
 
         return GatewayRequest(
@@ -393,14 +406,26 @@ class FrontDoorService:
                 reviewed_at=record.reviewed_at,
             )
 
-        # Mirror the human decision into the audit trail beside the gateway call.
-        for audit_record in self.gateway.audit.find(recommendation.response.request_id):
-            object.__setattr__(audit_record, "reviewer_id", reviewer_id)
-            object.__setattr__(audit_record, "review_action", action)
-            if action == "MODIFY":
-                object.__setattr__(
-                    audit_record, "overridden_from", recommendation.response.urgency.level
+        # Mirror the human decision into the audit trail beside the gateway call, as a
+        # new record. It used to overwrite the gateway's record in place via
+        # object.__setattr__, which defeated the frozen dataclass, was never written back
+        # to either durable sink — so the stored row said reviewer_id: null forever — and
+        # was the wrong shape besides: an append-only log records that a review happened,
+        # it does not edit the call that preceded it.
+        gateway_records = self.gateway.audit.find(recommendation.response.request_id)
+        if gateway_records:
+            self.gateway.audit.append(
+                replace(
+                    gateway_records[0],
+                    reviewer_id=reviewer_id,
+                    review_action=action,
+                    overridden_from=(
+                        recommendation.response.urgency.level if action == "MODIFY" else None
+                    ),
+                    notes=tuple(gateway_records[0].notes)
+                    + (f"human review recorded at {record.reviewed_at.isoformat()}",),
                 )
+            )
         return recommendation
 
     def act_on(self, recommendation_id: str) -> Recommendation:

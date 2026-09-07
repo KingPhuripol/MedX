@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-08-30T19:00:00+07:00",
+  "updated_at": "2026-09-07T17:30:00+07:00",
   "datasets": [
     {
       "dataset_id": "DS-0001",
@@ -41,6 +41,14 @@
         "status": "VERIFIED",
         "notes": "PARTIAL, not YES: the dataset carries timestamps that support a correct derivation, but it does not itself publish an availability time."
       },
+      "care_setting": {
+        "setting": "Inpatient hospital admission and ICU stay",
+        "population": "Adults admitted to a single US tertiary academic medical centre; the surveyed evidence covers the hosp and icu modules",
+        "time_period": null,
+        "covers_evaluated_setting": "NO",
+        "status": "VERIFIED",
+        "notes": "VERIFIED against this record's own evidence, which names the hosp and icu modules and nothing else. The MIMIC-IV ED module was never surveyed and is not part of this record, so DS-0001 as surveyed cannot supply a triage-point snapshot: it has no first-contact chief complaint and no triage note. This is the direct basis of RISK-0014. Closing the gap requires MIMIC-IV-ED as DS-0008 (TASK-0031), not a re-reading of this record."
+      },
       "modalities": [
         "clinical_text",
         "structured",
@@ -71,7 +79,7 @@
       ],
       "reviewed_by": null,
       "reviewed_on": "2026-08-30",
-      "updated_at": "2026-08-30T19:00:00+07:00"
+      "updated_at": "2026-09-07T17:30:00+07:00"
     },
     {
       "dataset_id": "DS-0002",
@@ -112,6 +120,14 @@
         "status": "UNVERIFIED",
         "notes": "The linkage and licence were read at source; the exact timestamp columns were not. Must be confirmed against the MIMIC-CXR table documentation before any snapshot is built."
       },
+      "care_setting": {
+        "setting": "Radiology archive attached to the MIMIC hospital cohort",
+        "population": "Patients of the same institution as DS-0001, linkable by subject_id",
+        "time_period": null,
+        "covers_evaluated_setting": "UNKNOWN",
+        "status": "UNVERIFIED",
+        "notes": "The survey recorded DICOM images plus free-text reports and never recorded which encounters the studies come from. Whether the archive is emergency, inpatient or mixed is unestablished, so no claim may rest on its covering the evaluated triage setting. Resolving this is part of TASK-0031, since a chest film ordered at triage and one ordered on the ward are different evidence at the same decision moment."
+      },
       "modalities": [
         "clinical_text",
         "image_2d"
@@ -138,7 +154,7 @@
       ],
       "reviewed_by": null,
       "reviewed_on": "2026-08-30",
-      "updated_at": "2026-08-30T19:00:00+07:00"
+      "updated_at": "2026-09-07T17:30:00+07:00"
     },
     {
       "dataset_id": "DS-0003",
@@ -177,6 +193,14 @@
         "status": "UNVERIFIED",
         "notes": null
       },
+      "care_setting": {
+        "setting": "Chest radiograph archive",
+        "population": "A separate patient population from the MIMIC family; the collecting department is not recorded",
+        "time_period": null,
+        "covers_evaluated_setting": "NO",
+        "status": "UNVERIFIED",
+        "notes": "The setting was never recorded by the survey and is not derivable from the evidence held. Irrespective of setting, this record is already linkable_across_modalities NO with no clinical timeline, so it can only ever be unlinked capability evidence and never journey evidence for any setting."
+      },
       "modalities": [
         "image_2d"
       ],
@@ -200,7 +224,7 @@
       ],
       "reviewed_by": null,
       "reviewed_on": "2026-08-30",
-      "updated_at": "2026-08-30T19:00:00+07:00"
+      "updated_at": "2026-09-07T17:30:00+07:00"
     },
     {
       "dataset_id": "DS-0004",
@@ -239,6 +263,14 @@
         "status": "UNVERIFIED",
         "notes": "Recorded NO on the strength of the documented preprocessing pipeline; to be confirmed against the challenge data description for the year actually used."
       },
+      "care_setting": {
+        "setting": "NOT_A_CARE_SETTING",
+        "population": "Multi-institutional neuro-oncology MRI challenge archive",
+        "time_period": null,
+        "covers_evaluated_setting": "NO",
+        "status": "VERIFIED",
+        "notes": "VERIFIED against this record's own evidence, which states the data is supplied skull-stripped, co-registered to the SRI24 atlas and resampled to 1mm isotropic, that is, as a preprocessed segmentation benchmark rather than as a clinical record. There is no care episode and no acquisition time to attach a decision moment to."
+      },
       "modalities": [
         "volume_3d"
       ],
@@ -262,7 +294,7 @@
       ],
       "reviewed_by": null,
       "reviewed_on": "2026-08-30",
-      "updated_at": "2026-08-30T19:00:00+07:00"
+      "updated_at": "2026-09-07T17:30:00+07:00"
     },
     {
       "dataset_id": "DS-0005",
@@ -301,6 +333,14 @@
         "status": "UNVERIFIED",
         "notes": null
       },
+      "care_setting": {
+        "setting": "NOT_A_CARE_SETTING",
+        "population": "MedPix teaching-file images; no patient cohort exists",
+        "time_period": null,
+        "covers_evaluated_setting": "NO",
+        "status": "VERIFIED",
+        "notes": "VERIFIED against this record's own evidence: built from MedPix teaching images, with no patient cohort to link. It supports a question-answering evaluation task and nothing about patient journeys in any setting."
+      },
       "modalities": [
         "clinical_text",
         "image_2d"
@@ -319,7 +359,7 @@
       "blocking_risks": [],
       "reviewed_by": null,
       "reviewed_on": "2026-08-30",
-      "updated_at": "2026-08-30T19:00:00+07:00"
+      "updated_at": "2026-09-07T17:30:00+07:00"
     },
     {
       "dataset_id": "DS-0006",
@@ -358,6 +398,14 @@
         "status": "UNVERIFIED",
         "notes": null
       },
+      "care_setting": {
+        "setting": "NOT_A_CARE_SETTING",
+        "population": "Bilingual visual question-answering benchmark over 642 images; no patient cohort",
+        "time_period": null,
+        "covers_evaluated_setting": "NO",
+        "status": "UNVERIFIED",
+        "notes": "The absence of a care setting follows from the record holding no patient identifier, no linkage and no temporal structure, but the survey never read a source statement on provenance, so this stays UNVERIFIED. The licence ambiguity on this record is unresolved and is the more urgent question."
+      },
       "modalities": [
         "clinical_text",
         "image_2d"
@@ -378,7 +426,7 @@
       ],
       "reviewed_by": null,
       "reviewed_on": "2026-08-30",
-      "updated_at": "2026-08-30T19:00:00+07:00"
+      "updated_at": "2026-09-07T17:30:00+07:00"
     },
     {
       "dataset_id": "DS-0007",
@@ -417,6 +465,14 @@
         "status": "VERIFIED",
         "notes": null
       },
+      "care_setting": {
+        "setting": "Chest CT and radiology-report archive",
+        "population": "21,304 patients; the collecting department, institution and country are not recorded",
+        "time_period": null,
+        "covers_evaluated_setting": "NO",
+        "status": "UNVERIFIED",
+        "notes": "The survey recorded volume counts and the filename identifier structure but no provenance of care setting. The record already documents no timestamps and no longitudinal structure, so it cannot supply a decision snapshot in the evaluated setting or any other; it is unlinked 3D capability evidence only."
+      },
       "modalities": [
         "clinical_text",
         "volume_3d"
@@ -443,7 +499,7 @@
       ],
       "reviewed_by": null,
       "reviewed_on": "2026-08-30",
-      "updated_at": "2026-08-30T19:00:00+07:00"
+      "updated_at": "2026-09-07T17:30:00+07:00"
     }
   ]
 }

@@ -13,13 +13,19 @@ the safety behaviour appearing at the edge.
 
 from __future__ import annotations
 
-import os
 from datetime import datetime
-from pathlib import Path
 from typing import Literal
 
-from fastapi import Body, FastAPI, HTTPException, Path, status
+from contextlib import asynccontextmanager
+
+from fastapi import APIRouter, Body, FastAPI, HTTPException, Path, Request, Response, status
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict, Field
+
+from innovation.api.errors import install_error_handlers
+from innovation.config import BANNER, Settings
+from innovation.logging import configure as configure_logging
+from innovation.logging import set_request_id
 
 from innovation.frontdoor import (
     FrontDoorService,
@@ -35,9 +41,6 @@ from innovation.gateway.registry import build_provider
 from innovation.store import SqliteStore
 from shared.contracts.journey import PatientJourney
 from shared.contracts.model_api import GatewayResponse
-
-BANNER = "RESEARCH PROTOTYPE - HUMAN REVIEW REQUIRED"
-
 
 class AssessmentRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -182,11 +185,7 @@ def _require_synthetic(classification: str) -> None:
         )
 
 
-ENV_DB = "FRONT_DOOR_DB"
-ENV_AUDIT_LOG = "FRONT_DOOR_AUDIT_LOG"
-
-
-def build_default_service() -> FrontDoorService:
+def build_default_service(settings: Settings | None = None) -> FrontDoorService:
     """Assemble the service from deployment configuration.
 
     Storage is opt-in. Without FRONT_DOOR_DB the prototype runs entirely in memory, which
@@ -197,16 +196,29 @@ def build_default_service() -> FrontDoorService:
     The provider likewise comes from deployment configuration, never from a request
     payload — a client cannot ask the API to use a different model.
     """
-    db = os.environ.get(ENV_DB)
-    store = SqliteStore(db) if db else None
-    audit_path = os.environ.get(ENV_AUDIT_LOG)
-    audit = AuditLog(path=Path(audit_path) if audit_path else None, store=store)
-    return FrontDoorService(ModelGateway(build_provider(), audit_log=audit), store=store)
+    settings = settings or Settings()
+    store = SqliteStore(settings.db) if settings.db else None
+    audit = AuditLog(path=settings.audit_log, store=store)
+    return FrontDoorService(
+        ModelGateway(
+            build_provider(settings.provider),
+            audit_log=audit,
+            max_workers=settings.provider_concurrency,
+        ),
+        store=store,
+    )
 
 
-def create_app(service: FrontDoorService | None = None) -> FastAPI:
-    """Build the app. The service is injectable so tests need no network."""
-    service = service or build_default_service()
+def build_router(service: FrontDoorService) -> APIRouter:
+    """Every resource route, in one router that can be mounted more than once.
+
+    The routes used to be closures on the app itself, which meant that adding a version
+    prefix later would have to touch each one. As a router they are registered twice —
+    under `/v1` and unprefixed for compatibility — and the UI needs one line changed
+    rather than eleven. That is the payoff of `PRODUCT_SPEC.md`'s rule that the UI is one
+    caller of this API and never a privileged path.
+    """
+    router = APIRouter()
 
     def get_journey(journey_id: str) -> PatientJourney:
         try:
@@ -216,30 +228,7 @@ def create_app(service: FrontDoorService | None = None) -> FastAPI:
                 status.HTTP_404_NOT_FOUND, f"unknown journey {journey_id}"
             ) from None
 
-    app = FastAPI(
-        title="AI Clinical Front Door",
-        version="1.0.0",
-        description=(
-            f"{BANNER}. Research and clinical decision-support prototype. It does not "
-            "diagnose, prescribe, order tests, refer, or discharge, and every output "
-            "requires human confirmation before it may inform care."
-        ),
-    )
-    app.state.service = service
-
-    @app.get("/health")
-    def health() -> dict:
-        return {
-            "status": "ok",
-            "banner": BANNER,
-            "contract_version": "1.0.0",
-            "provider": service.gateway.provider.name,
-            "policy_version": service.gateway.safety.version,
-            "provider_circuit": service.gateway.breaker.state,
-            "persistent": service.store is not None,
-        }
-
-    @app.put("/journeys/{journey_id}", status_code=status.HTTP_201_CREATED)
+    @router.put("/journeys/{journey_id}", status_code=status.HTTP_201_CREATED)
     def put_journey(journey_id: str = Path(...), journey: PatientJourney = Body(...)) -> dict:
         """Register a synthetic journey built elsewhere, e.g. a fixture."""
         if journey.journey_id != journey_id:
@@ -250,7 +239,7 @@ def create_app(service: FrontDoorService | None = None) -> FastAPI:
         service.register(journey)
         return {"journey_id": journey.journey_id, "events": len(journey.events)}
 
-    @app.post("/encounters", status_code=status.HTTP_201_CREATED)
+    @router.post("/encounters", status_code=status.HTTP_201_CREATED)
     def create_encounter(body: EncounterRequest) -> dict:
         """Workflow steps 1-2: create an encounter and capture intake.
 
@@ -280,7 +269,7 @@ def create_app(service: FrontDoorService | None = None) -> FastAPI:
             },
         }
 
-    @app.post("/journeys/{journey_id}/events", status_code=status.HTTP_201_CREATED)
+    @router.post("/journeys/{journey_id}/events", status_code=status.HTTP_201_CREATED)
     def append_event(journey_id: str, body: IntakeItemRequest) -> dict:
         """Workflow step 5: append evidence. Append-only — nothing is ever edited."""
         get_journey(journey_id)
@@ -297,7 +286,7 @@ def create_app(service: FrontDoorService | None = None) -> FastAPI:
             "total_events": len(journey.events),
         }
 
-    @app.get("/journeys/{journey_id}/next-information")
+    @router.get("/journeys/{journey_id}/next-information")
     def next_information(journey_id: str, decision_time: datetime) -> InterviewView:
         """Workflow step 4: ranked information to seek, as of `decision_time`."""
         get_journey(journey_id)
@@ -320,7 +309,7 @@ def create_app(service: FrontDoorService | None = None) -> FastAPI:
             already_known=list(plan.already_known),
         )
 
-    @app.post("/journeys/{journey_id}/assessments", status_code=status.HTTP_201_CREATED)
+    @router.post("/journeys/{journey_id}/assessments", status_code=status.HTTP_201_CREATED)
     def assess(journey_id: str, body: AssessmentRequest) -> RecommendationView:
         """Assess the journey as it stood at `decision_time`."""
         journey = get_journey(journey_id)
@@ -331,14 +320,14 @@ def create_app(service: FrontDoorService | None = None) -> FastAPI:
         )
         return RecommendationView.of(recommendation)
 
-    @app.get("/recommendations/{recommendation_id}")
+    @router.get("/recommendations/{recommendation_id}")
     def get_recommendation(recommendation_id: str) -> RecommendationView:
         try:
             return RecommendationView.of(service.get(recommendation_id))
         except KeyError:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "unknown recommendation") from None
 
-    @app.post("/recommendations/{recommendation_id}/review")
+    @router.post("/recommendations/{recommendation_id}/review")
     def review(recommendation_id: str, body: ReviewRequest) -> RecommendationView:
         """Record a human decision. The recommendation itself is never edited."""
         try:
@@ -355,13 +344,13 @@ def create_app(service: FrontDoorService | None = None) -> FastAPI:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from None
         return RecommendationView.of(recommendation)
 
-    @app.get("/journeys/{journey_id}/history")
+    @router.get("/journeys/{journey_id}/history")
     def history(journey_id: str) -> list[RecommendationView]:
         """Every recommendation made for this journey, oldest first."""
         get_journey(journey_id)
         return [RecommendationView.of(r) for r in service.history(journey_id)]
 
-    @app.get("/recommendations/{recommendation_id}/effective")
+    @router.get("/recommendations/{recommendation_id}/effective")
     def effective(recommendation_id: str) -> dict:
         """Whether this recommendation may inform care. 409 until a human confirms it."""
         try:
@@ -376,7 +365,7 @@ def create_app(service: FrontDoorService | None = None) -> FastAPI:
             "confirmed_by": recommendation.latest_review.reviewer_id,
         }
 
-    @app.get("/audit/{request_id}")
+    @router.get("/audit/{request_id}")
     def audit(request_id: str) -> list[dict]:
         """Audit records for a gateway call. References only, never payloads."""
         records = service.gateway.audit.find(request_id)
@@ -399,6 +388,107 @@ def create_app(service: FrontDoorService | None = None) -> FastAPI:
             }
             for r in records
         ]
+
+    return router
+
+
+def create_app(
+    service: FrontDoorService | None = None, settings: Settings | None = None
+) -> FastAPI:
+    """Build the app. The service and settings are injectable so tests need no network."""
+    settings = settings or Settings()
+    service = service or build_default_service(settings)
+    configure_logging(settings.log_level, settings.log_format)
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        yield
+        # Both of these existed and neither was ever called: the provider threadpool and
+        # the database connection outlived the process's willingness to use them.
+        service.gateway.close()
+        if service.store is not None:
+            service.store.close()
+
+    app = FastAPI(
+        title="AI Clinical Front Door",
+        version="1.1.0",
+        lifespan=lifespan,
+        description=(
+            f"{BANNER}. Research and clinical decision-support prototype. It does not "
+            "diagnose, prescribe, order tests, refer, or discharge, and every output "
+            "requires human confirmation before it may inform care."
+        ),
+    )
+    app.state.service = service
+    app.state.settings = settings
+
+    @app.middleware("http")
+    async def correlate(request: Request, call_next):
+        request_id = set_request_id(request.headers.get("X-Request-Id"))
+        response = await call_next(request)
+        response.headers["X-Request-Id"] = request_id
+        return response
+
+    if settings.cors_origins:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=list(settings.cors_origins),
+            allow_credentials=False,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+
+    install_error_handlers(app)
+
+    # Probes are infrastructure, not API: they stay unversioned so a deployment does not
+    # have to learn the contract version to know whether the process is alive.
+    @app.get("/health")
+    def health() -> dict:
+        """Liveness. Touches nothing, so it answers even when a dependency is down."""
+        return {
+            "status": "ok",
+            "banner": BANNER,
+            "contract_version": "1.0.0",
+            "policy_version": service.gateway.safety.version,
+            "provider_circuit": service.gateway.breaker.state,
+            **settings.public_view(),
+        }
+
+    @app.get("/ready")
+    def ready(response: Response) -> dict:
+        """Readiness. Whether this process should be given traffic.
+
+        Distinct from /health on purpose. A Front Door whose storage is unreachable can
+        still answer "the process is up" — but it must not be sent a patient encounter it
+        cannot record.
+        """
+        checks: dict[str, str] = {"provider": "ok", "storage": "ok"}
+        if service.store is not None:
+            try:
+                service.store.audit_count()
+            except Exception:
+                checks["storage"] = "unreachable"
+        if service.gateway.breaker.state == "OPEN":
+            checks["provider"] = "circuit_open"
+
+        ready_now = all(value == "ok" for value in checks.values())
+        if not ready_now:
+            response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return {
+            "ready": ready_now,
+            "checks": checks,
+            "banner": BANNER,
+            "boundary": (
+                "Research prototype. Not authorised for clinical use, and every output "
+                "requires human confirmation before it may inform care."
+            ),
+        }
+
+    router = build_router(service)
+    app.include_router(router, prefix="/v1")
+    # The unprefixed routes stay so nothing that already calls this API breaks. They are
+    # hidden from the schema, so /docs shows one surface rather than each path twice.
+    app.include_router(router, include_in_schema=False)
 
     from innovation.ui import mount_ui
 

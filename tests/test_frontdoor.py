@@ -127,16 +127,45 @@ def test_override_preserves_the_original_output(service, journey):
 
 
 def test_review_is_mirrored_into_the_audit_trail(service, journey):
+    """A review appends a record; it does not edit the call that preceded it.
+
+    The mirror used to overwrite the gateway's own record in place. That defeated the
+    frozen dataclass, was never written back to either durable sink — so a stored row
+    said reviewer_id: null however many times it was reviewed — and was the wrong shape
+    for an append-only log besides.
+    """
     recommendation = service.assess(journey, LATER)
     service.review(
         recommendation.recommendation_id, reviewer_id="clinician-07", action="MODIFY",
         reason_code="ADDITIONAL_INFORMATION_AVAILABLE",
     )
 
-    audit = service.gateway.audit.find(recommendation.response.request_id)[0]
-    assert audit.reviewer_id == "clinician-07"
-    assert audit.review_action == "MODIFY"
-    assert audit.overridden_from == recommendation.response.urgency.level
+    trail = service.gateway.audit.find(recommendation.response.request_id)
+    assert len(trail) == 2
+
+    call, review = trail
+    # The gateway's own record still says what it said at the time: nobody had reviewed it.
+    assert call.reviewer_id is None
+    assert call.review_action is None
+
+    assert review.reviewer_id == "clinician-07"
+    assert review.review_action == "MODIFY"
+    assert review.overridden_from == recommendation.response.urgency.level
+    assert review.request_id == call.request_id
+
+
+def test_a_second_review_appends_rather_than_replacing(service, journey):
+    """Changing one's mind is a new record. The first decision stays visible."""
+    recommendation = service.assess(journey, LATER)
+    service.review(recommendation.recommendation_id, reviewer_id="nurse-01", action="CONFIRM")
+    service.review(
+        recommendation.recommendation_id, reviewer_id="clinician-07", action="REJECT",
+        reason_code="CLINICAL_JUDGEMENT_DIFFERS",
+    )
+
+    trail = service.gateway.audit.find(recommendation.response.request_id)
+    assert [r.reviewer_id for r in trail] == [None, "nurse-01", "clinician-07"]
+    assert [r.review_action for r in trail] == [None, "CONFIRM", "REJECT"]
 
 
 # ------------------------------------------------------------------------ history

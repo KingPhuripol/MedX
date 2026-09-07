@@ -86,6 +86,16 @@ Represent `NOT_MEASURED`, `MEASURED_UNKNOWN`, `NOT_AVAILABLE_YET`, `WITHHELD`, `
 
 A dataset version records source/license/citation, access date, governance, population/site/time period, inclusion/exclusion, modalities and pairing, patient/encounter counts by split, target definitions, availability mapping, preprocessing, duplicate audit, quality/missingness, known bias, permitted use/redistribution, retention/deletion, and checksums.
 
+The care setting is part of population/site and is recorded at **survey** time, not only at manifest
+time: `schemas/dataset-feasibility.schema.json` requires a `care_setting` block on every surveyed
+dataset, and a dataset may only claim to cover the evaluated setting (DEC-0016) on a `VERIFIED` basis.
+Recording it only at manifest time is what allowed seven datasets to be surveyed without one, while a
+product was being built for a setting none of them covers.
+
+Urgency targets are defined **within** a care setting and are not transferable across settings. A
+threshold, rate or label established in one setting may not be carried into another without a source
+that measured it there.
+
 ## External API payload
 
 Default to synthetic fixtures. Before any non-synthetic transfer, verify approval ID, provider, purpose, fields, classification, consent/ethics/license, region, retention/training policy, encryption/access, cost cap, deletion date, and audit owner. Minimize fields and use opaque session identifiers.

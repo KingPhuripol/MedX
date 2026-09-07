@@ -1,4 +1,4 @@
-.PHONY: bootstrap verify smoke test demo api eval leakage-fixture status idea-docx
+.PHONY: bootstrap verify smoke test demo api eval leakage-fixture status idea-docx citations citations-online
 
 bootstrap:
 	bash scripts/bootstrap.sh
@@ -14,6 +14,17 @@ leakage-fixture:
 
 status:
 	python3 scripts/project_status.py
+
+# Offline consistency pass over the literature registry: the APA string, the structured
+# fields and the identifiers must agree.
+citations:
+	python3 scripts/verify_citations.py
+
+# Re-fetch every ACCEPTED reference from Crossref, the arXiv API or PubMed and diff it
+# against the registry. Needs network; deliberately kept out of the smoke test. Run this
+# before the Proposal freeze on 29 Sep.
+citations-online:
+	python3 scripts/verify_citations.py --online
 
 # สร้างไฟล์ .docx ของเอกสาร Senior Project IDEA — ต้องมี python-docx (pip install python-docx)
 idea-docx:

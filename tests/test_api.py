@@ -14,6 +14,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from innovation.api.app import create_app
+from innovation.config import BANNER
 
 ROOT = Path(__file__).resolve().parents[1]
 JOURNEY = json.loads((ROOT / "tests/fixtures/patient_journey/valid.json").read_text())
@@ -51,7 +52,7 @@ def test_non_synthetic_journey_is_refused(client):
                    data_classification="IDENTIFIABLE_OR_LINKABLE")
     response = client.put("/journeys/journey-real-0001", json=payload)
     assert response.status_code == 403
-    assert "SYNTHETIC" in response.json()["detail"]
+    assert "SYNTHETIC" in response.json()["error"]["message"]
 
 
 def test_mismatched_journey_id_is_refused(client):
@@ -272,7 +273,7 @@ def test_override_without_a_structured_reason_is_refused(client, action):
         json={"reviewer_id": "clinician-01", "action": action},
     )
     assert response.status_code == 400
-    assert "reason_code" in response.json()["detail"]
+    assert "reason_code" in response.json()["error"]["message"]
 
 
 @pytest.mark.parametrize("action", ["CONFIRM", "REQUEST_INFORMATION", "ESCALATE"])
@@ -313,3 +314,61 @@ def test_the_reason_is_recorded_on_the_recommendation(client):
 
     assert body["reviews"][0]["reason_code"] == "URGENCY_TOO_HIGH"
     assert body["effective"] is True
+
+
+# ------------------------------------------------------------------ error envelope
+
+
+def test_every_error_uses_one_envelope(client):
+    """Errors used to be FastAPI's default `{"detail": ...}`, and the shape differed
+    between an HTTPException and a validation failure. A client had to handle two shapes
+    and could rely on neither carrying a correlation id."""
+    not_found = client.get("/recommendations/rec-does-not-exist")
+    assert not_found.status_code == 404
+    body = not_found.json()
+    assert body["error"]["code"] == "NOT_FOUND"
+    assert body["banner"] == BANNER
+    assert "request_id" in body["error"]
+
+    invalid = client.post("/encounters", json={"nonsense": True})
+    assert invalid.status_code == 422
+    body = invalid.json()
+    assert body["error"]["code"] == "SCHEMA_INVALID"
+    assert body["error"]["details"], "a schema failure should say which field failed"
+
+
+def test_a_validation_error_does_not_echo_the_submitted_value(client):
+    """Field locations are safe to return. The submitted value is not, because for this
+    API the submitted value can be clinical content."""
+    canary = "CANARY-crushing-central-chest-pain"
+    response = client.post(
+        "/journeys/journey-syn-0001/events",
+        json={"information_type": canary, "state": "NOT_A_STATE", "value": canary},
+    )
+    assert response.status_code in {400, 404, 422}
+    assert canary not in response.text
+
+
+def test_the_same_routes_answer_under_v1_and_unprefixed(client):
+    """The version prefix was added by mounting one router twice, so the existing
+    unprefixed surface keeps working rather than breaking every caller at once."""
+    assert client.get("/v1/journeys/journey-syn-0001/history").status_code == 200
+    assert client.get("/journeys/journey-syn-0001/history").status_code == 200
+
+
+def test_health_and_ready_are_distinct(client):
+    health = client.get("/health").json()
+    assert health["status"] == "ok"
+    assert health["banner"] == BANNER
+
+    ready = client.get("/ready")
+    assert ready.status_code == 200
+    body = ready.json()
+    assert body["ready"] is True
+    assert set(body["checks"]) == {"provider", "storage"}
+    assert "Not authorised for clinical use" in body["boundary"]
+
+
+def test_the_correlation_id_is_echoed(client):
+    response = client.get("/health", headers={"X-Request-Id": "trace-abc-123"})
+    assert response.headers["X-Request-Id"] == "trace-abc-123"

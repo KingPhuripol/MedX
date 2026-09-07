@@ -222,3 +222,155 @@ live until TASK-0018 produces numbers.
 Replace this section at weekly review with completed evidence, carry-over reasons, changed risks,
 workload concerns, decisions, and the next seven-day plan. Do not report a task complete without its
 referenced evidence.
+
+---
+
+## 2 September 2026 - TASK-0004 literature and novelty survey, wave 1
+
+**The headline is adverse and is reported first.** The project's core computational pattern is not
+novel. As of March 2026 the per-case dynamic workflow graph is a **named, surveyed research area**
+(LIT-0031). Typed DAG execution with schema validation, determinism and full auditability is shipped
+engineering practice (LIT-0035). Per-input graph generation is peer-reviewed prior art (LIT-0033).
+Per-case adaptation in medicine is demonstrated in clinical intake (LIT-0037) and medical
+decision-making (LIT-0038). **MedGemma 1.5 (LIT-0014) already holds the 27B scale, open weights, 3D
+CT/MRI and longitudinal imaging simultaneously**, which removes breadth, scale and open weights as
+differentiators.
+
+Any Proposal sentence of the form *"we are the first to compile a per-case typed DAG"* would be false
+as written. What survives is a **composite claim plus an evaluation contribution in a domain the
+dynamic-workflow literature has not entered** — that survey confirms zero clinical applications and
+names *structural credit assignment* an open problem, and across every system screened **not one
+scored DEMONSTRATED on equal-compute evidence**. RISK-0013 is raised REALIZED. Reframing the claim is
+a human decision requiring a Decision Log entry.
+
+**C-02 resolved against the claim as written.** SRCH-0002 looked for evidence that existing systems
+are uniformly fixed-path and found the opposite in the medical multimodal domain — the very domain
+the project claims differentiation in. Restoring Han et al. (2022) would have weakened it, not
+supported it: a TPAMI survey of dynamic networks exists because the field is large. Three defensible
+replacement wordings are recorded; the choice is the owner's.
+
+**The strict 2022-2026 window cost less than feared.** LIT-0040 supplies an in-window, peer-reviewed
+definition of faithfulness and LIT-0041 a formal *graded* co-anchor, so RQ3 does not need a
+project-internal definition. In-window replacements were found for Futoma 2020 and Wong 2021 — and
+the Wong replacement (LIT-0046) is a better fit, being an emergency-department validation. What the
+window still costs is the module-network method ancestry (Andreas 2016, Hu 2017), raised
+independently by two searches; a narrow recorded exception is on the owner's list.
+
+**Verification found a real defect in the existing citation set.** LIT-0008 (Bedi et al. 2025, *JAMA*)
+has carried the page range 319-328 since 26 Aug. Crossref REST, DOI content negotiation and PubMed
+E-utilities all return first page 319 and no end page. Recorded as `CONFLICT` and downgraded to
+`CONDITIONAL` rather than corrected silently. Four further conflicts were raised: a BiomedGPT licence
+contradiction, two arXiv identifier/date inconsistencies, and a three-fold disagreement between two
+peer-reviewed under-triage rates that is almost certainly definitional — which is itself the finding.
+
+**Safety consequence worth escalating.** LIT-0050, LIT-0051 and LIT-0052 together are evidence that
+mandatory human confirmation — the project's principal safety control — is of unproven and possibly
+negative reliability: a confident wrong AI suggestion drops expert accuracy from about 82% to about
+46%, and a preregistered meta-analysis reports human-AI combination underperforming the better party
+alone on decision tasks. `SAFETY_SPEC.md` should stop calling human confirmation a *mitigation* and
+start calling it a *requirement whose effectiveness is itself an open evaluation question*. Safety
+owner's call.
+
+**State changes.** TASK-0004 to `REVIEW` (not `DONE`: `reviewed_by` is null by design, SRCH-0006 has
+not run, SRCH-0005 is PARTIAL). TASK-0026 created for non-author sign-off, owned by Phurinat — the
+first deliverable in this project with independent review built in rather than owed, which partly
+answers RISK-0011. TASK-0027 created to hold the base-model decision. DEC-0012 and DEC-0013 recorded
+`proposed`. **APR-0001 is the first entry in an approvals file that has been empty since the project
+began.**
+
+**Workload flag.** Thanapol Popit owns TASK-0004 (HIGH, 18 Sep) and TASK-0009 (HIGH, 20 Sep) back to
+back, with TASK-0011 (CITI, P0) across both, and now TASK-0027. The mechanical work here was
+delegable; the novelty judgement, the threat assessment and the shortlist rationale are not.
+
+**Verification run:** `scripts/verify_harness.py` 1123 checks pass (was 241); `run_smoke_test.sh`
+passes; 241 pytest tests pass including 19 new negative tests; `verify_citations.py --online`
+re-verified 52 of 52 identifiers against Crossref, the arXiv API and PubMed.
+
+**Still open from this work:** SRCH-0006 has not run, so **no baseline family has left `DEFERRED`**.
+SRCH-0005 is PARTIAL and did not reach KTAS, JTAS or the Thai national triage scale. Twelve owner
+decisions are listed in `docs/research/RELATED_WORK.md`.
+
+---
+
+## 7 September 2026 - the project commits to a care setting
+
+**The project had been running a month with no committed care setting.** Not vague in one document —
+absent everywhere: the advisor-signed Project Idea names "ด่านหน้าของโรงพยาบาล" only in background
+prose, `CLINICAL_WORKFLOW.md` deliberately deferred the question, no schema carried a `care_setting`
+field, and DEC-0001…DEC-0015 contained no decision about setting or taxonomy.
+
+**DEC-0016 (proposed, APR-0002 pending): adult, non-trauma, emergency-department first-contact triage.**
+Two decision moments — T0 when a chief complaint and a first vital set are both available, T1 when the
+first result-class item arrives, capped at T0 + 120 minutes. Arrival mode is a recorded stratum, **not**
+an inclusion criterion, because no surveyed dataset has a verified arrival-mode field and this project
+does not write down inclusion criteria without sources. T1 is event-anchored rather than clock-anchored
+because `available_at_time` derives from `storetime`, a non-trivial share of MIMIC rows carry
+`charttime > storetime`, and nothing has been recorded about result turnaround in this setting.
+
+**Ruled out on evidence, not taste.** Operating room, pre-op and anaesthesia: zero candidate datasets,
+no `PROCEDURE`/`PREOP` event types, and `procedures_icd` is retrospective billing code the Data
+Contract forbids as an early-snapshot input. The literature survey also **never searched**
+peri-operative work, so its silence is `NOT_REPORTED`, not `ABSENT` — the niche could not be claimed
+open without a new search. ICU and ward deterioration are occupied and are not a front door. Outpatient
+multi-department intake is exactly where Aegle (LIT-0037) sits, which would put the project *inside*
+threat T8 rather than beside it.
+
+### Two findings that are worse than the decision they came from
+
+1. **The data does not cover the setting the product was built for.** The surveyed cohort is MIMIC-IV
+   `hosp` and `icu` — a hospital course. **MIMIC-IV-ED is not a candidate dataset**; it appears once in
+   the whole repository, as an unexecuted search string. So `CHIEF_COMPLAINT` and `TRIAGE_NOTE` have no
+   recorded data source, and under-triage cannot be measured on a cohort that was never triaged.
+   RISK-0002 covers modality linkage, not setting mismatch — this was genuinely uncovered. **RISK-0014.**
+
+2. **The evaluation cannot discriminate, and adding cases will not fix it.** Tracing the screen rather
+   than trusting the plan: `SCR-002` raises `COMPLAINT_NOT_EVALUATED_BY_RULE` as `UNKNOWN` for *every*
+   request carrying a chief complaint, and `SR-002` escalates any `UNKNOWN` — so **every
+   complaint-bearing case escalates by construction, independently of its content**. The only route to
+   `IMMEDIATE_REVIEW` is a `TRIGGERED` flag, and the only one produced anywhere is missing required
+   evidence, so **the top urgency level is reachable only through absent information, never through
+   clinical severity**; neither provider ever emits `TRIGGERED`. `under_triage_rate` is therefore 0.0 by
+   construction and no metric records the opposite error. **RISK-0015, raised REALIZED.**
+
+   This corrects the plan this work started from, which assumed adding `ROUTINE_REVIEW` cases would make
+   the set discriminate. It will not: escalation will climb toward 1.0. That is now the *intended*
+   outcome of TASK-0032 — make the failure visible and measured — with `over_triage_rate` frozen first,
+   because `EVALUATION_CONTRACT.md` requires metrics frozen before results and adding one after seeing
+   0.83 would be metric-shopping. The fix (TASK-0033) is deliberately scheduled **after** the Proposal.
+
+**The case set was not rebuilt today, on purpose.** Rebuilding it before the metric is frozen and before
+the mechanism was understood would have produced a number that moved for unexplained reasons.
+
+### Landed
+
+`care_setting` is a required dimension in `schemas/dataset-feasibility.schema.json` with all seven
+datasets backfilled, and DS-0001 now carries `covers_evaluated_setting: NO` as a machine fact rather
+than a sentence in a document. The harness enforces two rules — a `VERIFIED` care setting must cite
+evidence, and a dataset may only claim to cover the evaluated setting on a `VERIFIED` basis — both
+negative-tested. A seventh test pins RISK-0014 itself: it fails the day any dataset claims coverage, so
+closing the gap requires deleting that test deliberately rather than a document quietly changing.
+
+Propagated to `PROJECT_CHARTER.md`, `PRODUCT_SPEC.md`, `CLINICAL_WORKFLOW.md`, `SAFETY_SPEC.md`,
+`DATA_CONTRACT.md`, `BENCHMARK_CONTRACT.md` and `ACCEPTANCE_CRITERIA.md` (A4 reopened as A4.1). The
+highest-value edit is the Setting constraint paragraph in the benchmark contract: **no Front Door result
+may be reported on `hosp`/`icu` data as if it were first-contact triage**, and DEC-0013's fixed-route-set
+arm is setting-agnostic architecture evidence, explicitly not Front Door evidence.
+
+`SAFETY_SPEC.md` gained an over-triage/alarm-fatigue hazard row, which the log had never carried — it
+had under-triage but nothing penalising a system that escalates everything, which is precisely the 0.83
+problem. It also now requires every under-triage figure to carry its operational definition (LIT-0048's
+3.3% and LIT-0056's 10.7% disagree threefold in opposite directions and the disagreement is unresolved),
+labels `false_reassurance_rate` a project-defined construct, and restates human confirmation as a
+requirement of unproven effectiveness rather than a demonstrated mitigation.
+
+**Not changed, deliberately:** the four abstract urgency levels; the prohibition on mapping to a real
+operational triage scale (`git diff` shows zero deletions in that file); the twelve case fixtures,
+byte-identical; EVAL-0001; the signed Project Idea. **Naming the room is not adopting the protocol** —
+every instrument surveyed is closed or unresolved, and ACS Field Triage forbids AI incorporation outright.
+
+**Verification:** harness 1123 → **1135 checks**, passing; **264 tests** (was 257), including 7 new
+negative tests; smoke test passes; EVAL-0001 re-run unchanged at escalation 0.83; workload concentration
+27%, inside the 40% rule.
+
+**Awaiting a human:** APR-0002, and DEC-0016 itself, which is `proposed`. Its rationale is written so it
+does not depend on APR-0001's outcome, so the two may be decided in either order.

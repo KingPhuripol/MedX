@@ -31,6 +31,7 @@ SOURCE_DOCS = [
     "docs/research/TRAINING_SPEC.md",
     "docs/research/BENCHMARK_CONTRACT.md",
     "docs/research/SUCCESS_CRITERIA.md",
+    "docs/research/RELATED_WORK.md",
     "docs/innovation/PRODUCT_SPEC.md",
     "docs/innovation/CLINICAL_WORKFLOW.md",
     "docs/innovation/SAFETY_SPEC.md",
@@ -90,6 +91,7 @@ SCHEMA_BINDINGS = {
     "project_state/evaluations.json": "schemas/evaluation-record.schema.json",
     "project_state/contract_versions.json": "schemas/contract-versions.schema.json",
     "project_state/dataset_feasibility.json": "schemas/dataset-feasibility.schema.json",
+    "project_state/literature.json": "schemas/literature.schema.json",
     "tests/fixtures/patient_journey/valid.json": "schemas/patient-journey.schema.json",
     "tests/fixtures/model_api/request.json": "schemas/model-api-request.schema.json",
     "tests/fixtures/model_api/response.json": "schemas/model-api-response.schema.json",
@@ -104,6 +106,7 @@ SCRIPT_FILES = [
     "scripts/new_experiment.py",
     "scripts/temporal_leakage_audit.py",
     "scripts/project_status.py",
+    "scripts/verify_citations.py",
     ".claude/hooks/approval_gate.py",
     ".claude/hooks/post_edit_checks.py",
     ".claude/hooks/session_context.py",
@@ -184,9 +187,23 @@ def check_json_and_state(checks: Checks) -> None:
             has_evidence = bool(entry["evidence"])
             if entry["verdict"] != "UNDER_REVIEW":
                 checks.require(has_evidence, f"{ds_id} has verdict {entry['verdict']} without any evidence")
-            for dimension in ("license", "access", "patient_linkage", "temporal_validity"):
-                if entry[dimension].get("status") == "VERIFIED":
+            # A missing dimension is already a schema failure recorded above. Read
+            # defensively so this loop reports that failure rather than masking it
+            # behind a KeyError traceback.
+            for dimension in ("license", "access", "patient_linkage", "temporal_validity", "care_setting"):
+                if (entry.get(dimension) or {}).get("status") == "VERIFIED":
                     checks.require(has_evidence, f"{ds_id}.{dimension} is VERIFIED without any evidence")
+            # DEC-0016 names one evaluated care setting. A dataset may only be said to
+            # cover it on a verified basis: claiming coverage from an unread provenance
+            # is exactly how a product built for one setting gets evaluated on another.
+            # NO is a legitimate answer — it marks unlinked capability evidence — and
+            # carries no evidence burden.
+            care_setting = entry.get("care_setting") or {}
+            if care_setting.get("covers_evaluated_setting") == "YES":
+                checks.require(
+                    care_setting["status"] == "VERIFIED",
+                    f"{ds_id}.care_setting claims it covers the evaluated setting but its status is {care_setting['status']}",
+                )
             for risk_id in entry.get("blocking_risks", []):
                 checks.require(risk_id in risk_ids, f"{ds_id} references unknown risk {risk_id}")
 
@@ -199,6 +216,169 @@ def check_json_and_state(checks: Checks) -> None:
         checks.require(manifest["approvals"]["required"] == tier_requires, f"{manifest['experiment_id']} approval requirement does not match tier")
         if manifest["status"] in {"approved", "running", "completed"} and tier_requires:
             checks.require(bool(manifest["approvals"]["approval_ids"]), f"{manifest['experiment_id']} lacks approval ID")
+
+
+BASELINE_FAMILIES = {
+    "fixed_path_medical_open",
+    "same_backbone_fixed_path",
+    "static_typed_dag",
+    "random_or_shuffled_router",
+    "sparse_moe_routing",
+    "proposed_dynamic_typed_dag",
+}
+
+# TASK-0004 names these four coverage areas in its definition of done. Asserting
+# them here is what turns the DoD from a sentence someone narrates into a
+# condition the harness can fail on.
+REQUIRED_COVERAGE = {
+    "medical_multimodal",
+    "dynamic_sparse_computation",
+    "graph_faithfulness",
+    "clinical_front_door",
+}
+
+
+def check_literature(checks: Checks) -> None:
+    """Enforce the citation contract behind TASK-0004.
+
+    The rule the whole registry rests on: a reference may only be ACCEPTED if it
+    was checked against a primary source and says where. Without it a citation
+    written from memory is indistinguishable from one that was verified, which is
+    precisely the failure mode `PROJECT_IDEA_CLAIMS.md` was written to prevent.
+    """
+
+    registry = ROOT / "project_state/literature.json"
+    if not registry.is_file():
+        return
+    payload = load_json(registry)
+    searches = payload["searches"]
+    references = payload["references"]
+    families = payload["baseline_families"]
+
+    search_ids = [item["search_id"] for item in searches]
+    reference_ids = [item["reference_id"] for item in references]
+    checks.require(len(search_ids) == len(set(search_ids)), "literature search IDs are not unique")
+    checks.require(len(reference_ids) == len(set(reference_ids)), "literature reference IDs are not unique")
+    known_searches = set(search_ids)
+    known_references = set(reference_ids)
+
+    known_tasks: set[str] = set()
+    known_risks: set[str] = set()
+    known_datasets: set[str] = set()
+    for filename, collection, field, sink in (
+        ("tasks.json", "tasks", "task_id", known_tasks),
+        ("risks.json", "risks", "risk_id", known_risks),
+        ("dataset_feasibility.json", "datasets", "dataset_id", known_datasets),
+    ):
+        source = ROOT / "project_state" / filename
+        if source.exists():
+            sink.update(str(item[field]) for item in load_json(source)[collection])
+
+    claims_file = ROOT / "docs/academic/PROJECT_IDEA_CLAIMS.md"
+    known_claims: set[str] = set()
+    if claims_file.is_file():
+        known_claims = set(re.findall(r"\bC-\d{2}[a-z]?\b", claims_file.read_text(encoding="utf-8")))
+
+    for item in searches:
+        sid = item["search_id"]
+        # A round whose queries were never written down may say so, but it may not
+        # pretend the protocol exists. RECONSTRUCTED buys honesty, not silence.
+        if item["protocol_status"] == "RECONSTRUCTED":
+            checks.require(bool(item.get("notes")), f"{sid} is RECONSTRUCTED without notes explaining why the protocol was not recorded")
+        else:
+            # RECONSTRUCTED exists so a round with no written-down queries can still be
+            # recorded honestly. It must not become the door a RECORDED search walks through.
+            placeholder = [q for q in item["queries"] if q.strip().upper().startswith("NOT RECORDED")]
+            checks.require(not placeholder, f"{sid} claims protocol_status RECORDED but carries a 'NOT RECORDED' placeholder query")
+        checks.require(item["date_window_from"] <= item["date_window_to"], f"{sid} has an inverted date window")
+        for reference_id in item["yielded"]:
+            checks.require(reference_id in known_references, f"{sid} yielded unknown reference {reference_id}")
+
+    accepted_coverage: set[str] = set()
+    for item in references:
+        lid = item["reference_id"]
+        verdict = item["verdict"]
+        verification = item["verification"]
+        has_evidence = bool(item["evidence"])
+
+        checks.require(item["found_by"] in known_searches, f"{lid} was found by unknown search {item['found_by']}")
+        if verdict != "UNDER_REVIEW":
+            checks.require(has_evidence, f"{lid} has verdict {verdict} without any evidence")
+        if verdict == "ACCEPTED":
+            checks.require(verification["status"] == "VERIFIED", f"{lid} is ACCEPTED while its verification status is {verification['status']}")
+            accepted_coverage.update(item["coverage_areas"])
+        if verdict == "REJECTED":
+            checks.require(bool(item.get("excluded_reason")), f"{lid} is REJECTED without an excluded_reason")
+        if verification["status"] == "VERIFIED":
+            checks.require(verification["method"] != "not_verified", f"{lid} claims VERIFIED with method not_verified")
+            checks.require(bool(verification["verified_on"]), f"{lid} claims VERIFIED without a verification date")
+            checks.require(bool(verification["verified_fields"]), f"{lid} claims VERIFIED without naming a single verified field")
+            checks.require(has_evidence, f"{lid} claims VERIFIED without any evidence")
+        if verification["status"] == "CONFLICT":
+            checks.require(bool(verification.get("conflict_note")), f"{lid} is in CONFLICT without a conflict_note")
+            checks.require(verdict != "ACCEPTED", f"{lid} is ACCEPTED despite a verification conflict")
+
+        identifiers = item["identifiers"]
+        checks.require(any(identifiers[key] for key in ("doi", "arxiv_id", "pmid", "url")), f"{lid} carries no identifier of any kind")
+
+        # A formatted string drifts from its fields the moment either is edited by
+        # hand. These two checks catch the drift at the point it happens.
+        citation = item["citation"]
+        checks.require(str(citation["year"]) in citation["apa7"], f"{lid}: apa7 string does not contain the recorded year {citation['year']}")
+        if identifiers["doi"]:
+            checks.require(identifiers["doi"] in citation["apa7"], f"{lid}: apa7 string does not contain the recorded DOI")
+
+        has_comparison = item.get("comparison") is not None
+        checks.require(has_comparison == (item["role"] == "baseline_candidate"), f"{lid}: comparison block and role baseline_candidate must appear together")
+
+        for claim in item.get("supports_claims", []):
+            checks.require(claim in known_claims, f"{lid} supports unknown claim {claim}")
+        for risk_id in item.get("blocking_risks", []):
+            checks.require(risk_id in known_risks, f"{lid} references unknown risk {risk_id}")
+        for task_id in item.get("linked_tasks", []):
+            checks.require(task_id in known_tasks, f"{lid} references unknown task {task_id}")
+        for dataset_id in item.get("related_datasets", []):
+            checks.require(dataset_id in known_datasets, f"{lid} references unknown dataset {dataset_id}; survey it in dataset_feasibility.json first")
+
+    missing_coverage = sorted(REQUIRED_COVERAGE - accepted_coverage)
+    checks.require(not missing_coverage, f"TASK-0004 coverage areas with no ACCEPTED reference: {', '.join(missing_coverage)}")
+
+    observed_families = [item["family"] for item in families]
+    checks.require(sorted(observed_families) == sorted(BASELINE_FAMILIES), f"baseline families must be exactly the six in BENCHMARK_CONTRACT.md, got {sorted(observed_families)}")
+    checks.require(len(observed_families) == len(set(observed_families)), "a baseline family is recorded more than once")
+    verdict_by_reference = {item["reference_id"]: item["verdict"] for item in references}
+    for item in families:
+        family = item["family"]
+        selected = item["selected_reference"]
+        if item["resolution"] in {"CANDIDATE_SELECTED", "CANDIDATE_CONDITIONAL"}:
+            checks.require(bool(selected), f"baseline family {family} claims a candidate but names no reference")
+            if selected:
+                checks.require(verdict_by_reference.get(selected) in {"ACCEPTED", "CONDITIONAL"}, f"baseline family {family} selects {selected}, whose verdict does not permit use")
+        if item["resolution"] == "NO_VALID_CANDIDATE":
+            checks.require(bool(item["considered"]), f"baseline family {family} reports no valid candidate without listing what was considered")
+        for reference_id in item["considered"]:
+            checks.require(reference_id in known_references, f"baseline family {family} considered unknown reference {reference_id}")
+        for risk_id in item.get("blocking_risks", []):
+            checks.require(risk_id in known_risks, f"baseline family {family} references unknown risk {risk_id}")
+
+    # LIT ids earn the same referential integrity TASK/RISK/DEC already have: an id
+    # written into a document must resolve, and an accepted reference nobody reads
+    # must still be visible in the human-readable survey.
+    referenced: set[str] = set()
+    for folder in ("docs", ".planning"):
+        base = ROOT / folder
+        if not base.is_dir():
+            continue
+        for document in sorted(base.rglob("*.md")):
+            referenced.update(re.findall(r"\bLIT-\d{4}\b", document.read_text(encoding="utf-8")))
+    dangling = sorted(referenced - known_references)
+    checks.require(not dangling, f"documents cite literature IDs that do not exist: {', '.join(dangling)}")
+
+    related_work = ROOT / "docs/research/RELATED_WORK.md"
+    if related_work.is_file():
+        survey_text = related_work.read_text(encoding="utf-8")
+        unlisted = sorted(item["reference_id"] for item in references if item["verdict"] == "ACCEPTED" and item["reference_id"] not in survey_text)
+        checks.require(not unlisted, f"ACCEPTED references absent from RELATED_WORK.md: {', '.join(unlisted)}")
 
 
 def check_deadlines(checks: Checks) -> None:
@@ -387,6 +567,7 @@ def main() -> int:
             check_changed(args.changed, checks)
         check_files(checks)
         check_json_and_state(checks)
+        check_literature(checks)
         check_deadlines(checks)
         check_agents_and_skills(checks)
         check_settings_and_scripts(checks)

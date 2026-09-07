@@ -49,6 +49,18 @@ Many medical AI systems are narrow by disease, modality, or task and apply a sim
 
 Primary research-prototype users are supervised triage nurses, intake staff, clinicians, evaluators, and researchers. It is not for unsupervised patient self-diagnosis, treatment decisions, prescribing, autonomous referral, discharge, or real-world clinical deployment without separate governance and validation.
 
+## Care setting (DEC-0016, APR-0002)
+
+The evaluated setting is the **first-contact triage station of a hospital emergency department**, before physician assessment: adults 18+, non-trauma, non-obstetric. Arrival mode is a recorded stratification variable, not an inclusion criterion.
+
+Two decision moments are evaluated. **T0** is the earliest time at which a chief complaint and a first vital set both satisfy `available_at_time <= T0`. **T1** is the earliest time at which a first laboratory result or first imaging report satisfies `available_at_time <= T1`, capped at T0 + 120 minutes; an absent result-class item at the cap is recorded *not yet available*, never as normal. Every reported claim states which snapshot it was measured at.
+
+Out of setting: operating room, pre-operative assessment, anaesthesia, ICU management, ward deterioration, prehospital and field triage, consumer self-triage, paediatrics, major trauma. Input from outside the setting is an out-of-distribution condition and abstains or escalates.
+
+**Naming the setting is not adopting a triage protocol.** The four abstract urgency levels are unchanged, and no operational triage scale is adopted or mapped to.
+
+The setting is committed for the contracts, product, safety screen and synthetic evaluation. **A dataset-backed claim in this setting is conditional on DS-0008 and remains a hypothesis until surveyed** (RISK-0014).
+
 ## In scope
 
 - Public, licensed, approved, synthetic, de-identified, or otherwise authorized data only.

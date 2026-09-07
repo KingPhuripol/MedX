@@ -55,15 +55,29 @@ DEFAULT_FORM_ITEMS = [
 ]
 
 
+#: The API version the screens speak. One constant, one place to change it.
+API_PREFIX = "/v1"
+
+
 def mount_ui(app: FastAPI) -> FastAPI:
     """Attach the screens to an app that already carries the API."""
     router = APIRouter(prefix="/ui", include_in_schema=False)
 
-    async def api(method: str, path: str, **kwargs) -> httpx.Response:
-        """Call this app's own API over HTTP, in-process and with no network."""
+    async def api(method: str, path: str, *, versioned: bool = True, **kwargs) -> httpx.Response:
+        """Call this app's own API over HTTP, in-process and with no network.
+
+        Every screen goes through here, which is why adding the version prefix cost one
+        line rather than one per screen. The UI is a client of the public API and gets no
+        privileged path into the service (`PRODUCT_SPEC.md` §Architecture).
+
+        `versioned=False` reaches the probes, which are deliberately unversioned: a
+        deployment should not have to know the contract version to ask whether the
+        process is alive.
+        """
         transport = httpx.ASGITransport(app=app)
+        target = (API_PREFIX + path) if versioned else path
         async with httpx.AsyncClient(transport=transport, base_url="http://frontdoor") as client:
-            return await client.request(method, path, **kwargs)
+            return await client.request(method, target, **kwargs)
 
     def render(request: Request, template: str, **context) -> HTMLResponse:
         return TEMPLATES.TemplateResponse(request, template, {"glyph": GLYPH, **context})
@@ -72,7 +86,7 @@ def mount_ui(app: FastAPI) -> FastAPI:
 
     @router.get("/", response_class=HTMLResponse)
     async def index(request: Request):
-        health = (await api("GET", "/health")).json()
+        health = (await api("GET", "/health", versioned=False)).json()
         journeys = app.state.service.journey_ids()
         return render(request, "index.html", health=health, journeys=journeys)
 

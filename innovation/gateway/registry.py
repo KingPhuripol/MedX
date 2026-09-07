@@ -28,6 +28,12 @@ LOCAL_PROVIDERS: dict[str, type] = {
 #: exists so that adding one is a registry entry plus an approval, not an edit to a client.
 EXTERNAL_PROVIDERS: dict[str, type] = {}
 
+#: Every provider name that reaches outside the process, whether or not an adapter for it
+#: is implemented here. `ProviderName` in the Model API Contract declares
+#: `external_prototype` before any class exists, and the authorization check has to treat
+#: it as external from that moment — not from the moment someone writes the adapter.
+EXTERNAL_PROVIDER_NAMES: frozenset[str] = frozenset({"external_prototype"})
+
 ENV_VAR = "FRONT_DOOR_PROVIDER"
 ENV_ALLOW_EXTERNAL = "FRONT_DOOR_ALLOW_EXTERNAL"
 
@@ -36,6 +42,18 @@ DEFAULT_PROVIDER = "mock"
 
 class ProviderNotAvailable(ValueError):
     """The requested provider is unknown, or known but not permitted here."""
+
+
+def is_external(name: str) -> bool:
+    """Whether calling this provider would reach outside the process.
+
+    The gateway's authorization check keys off this, so it must be derived from the
+    registry that adapters actually register in. It previously kept its own hardcoded
+    name list, which meant an adapter registered under any other name was silently
+    treated as local: `is_external` was False, restricted classifications passed, and no
+    approval was required. One registry, one answer.
+    """
+    return name in EXTERNAL_PROVIDER_NAMES or name in EXTERNAL_PROVIDERS
 
 
 def available_providers(*, include_external: bool = False) -> tuple[str, ...]:

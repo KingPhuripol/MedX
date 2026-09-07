@@ -21,6 +21,7 @@ from datetime import datetime, timezone
 
 from innovation.gateway.audit import AuditLog, AuditRecord
 from innovation.gateway.breaker import CircuitBreaker
+from innovation.gateway.registry import is_external
 from innovation.gateway.providers.base import (
     Provider,
     ProviderFailure,
@@ -49,8 +50,6 @@ EXTERNAL_RESTRICTED_CLASSIFICATIONS = frozenset(
     {"DEIDENTIFIED_APPROVED", "IDENTIFIABLE_OR_LINKABLE", "RESTRICTED_DERIVATIVE"}
 )
 
-EXTERNAL_PROVIDERS = frozenset({"external_prototype"})
-
 ALL_REVIEW_ACTIONS = ["CONFIRM", "MODIFY", "REJECT", "REQUEST_INFORMATION", "ESCALATE"]
 
 
@@ -65,6 +64,7 @@ class ModelGateway:
         safety_policy: SafetyPolicy | None = None,
         breaker: CircuitBreaker | None = None,
         enforce_timeout: bool = True,
+        max_workers: int = 4,
     ) -> None:
         self.provider = provider
         self.audit = audit_log or AuditLog()
@@ -75,7 +75,7 @@ class ModelGateway:
         #: One worker: provider calls are serialised per gateway, which is what makes the
         #: deadline meaningful rather than merely advisory.
         self._executor = concurrent.futures.ThreadPoolExecutor(
-            max_workers=1, thread_name_prefix="gateway-provider"
+            max_workers=max_workers, thread_name_prefix="gateway-provider"
         )
 
     def close(self) -> None:
@@ -158,13 +158,13 @@ class ModelGateway:
     def _check_authorization(self, request: GatewayRequest) -> None:
         """Refuse classification/provider combinations that are not approved."""
         auth = request.authorization
-        is_external = self.provider.name in EXTERNAL_PROVIDERS
+        provider_is_external = is_external(self.provider.name)
 
         classifications = {e.data_classification for e in request.evidence}
         classifications.add(auth.data_classification)
         restricted = classifications & EXTERNAL_RESTRICTED_CLASSIFICATIONS
 
-        if is_external and restricted:
+        if provider_is_external and restricted:
             if not auth.external_provider_allowed:
                 raise ContractViolation(
                     ErrorCode.UNAUTHORIZED_DATA,

@@ -5,5 +5,12 @@
 pydantic>=2.9,<3
 fastapi>=0.115,<1
 uvicorn>=0.30,<1
+# Used by innovation/ui: httpx for the in-process ASGI client, jinja2 for the templates,
+# python-multipart for the Form(...) parameters. All three were imported and undeclared,
+# so a clean install produced an app that could not import innovation.ui.
+httpx>=0.27,<1
+jinja2>=3.1,<4
+python-multipart>=0.0.9,<1
+pydantic-settings>=2.4,<3
 pytest>=8,<9
 jsonschema>=4.23,<5

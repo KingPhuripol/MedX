@@ -54,6 +54,26 @@ system that escalates everything scores perfectly on the primary safety metric. 
 a mock provider that cannot read a complaint, and it is the bar the case-adaptive model has
 to beat.
 
+## A4.1 - Evaluation readiness in the committed setting — REOPENED 7 Sep
+
+A4 was closed on a 12-case set that contains **no `IMMEDIATE_REVIEW` and no `ROUTINE_REVIEW`
+expectation**. DEC-0016 names the care setting and reopens the question, and tracing the screen showed
+the problem is structural rather than a shortage of cases (RISK-0015).
+
+- [ ] `over_triage_rate` is defined and frozen **before** any new run. `EVALUATION_CONTRACT.md` requires metrics frozen before results are inspected; adding one after seeing 0.83 would be metric-shopping.
+- [ ] Cases carry a declared band (`expected_maximum_urgency` beside `expected_minimum_urgency`), a `care_setting`, and a presentation type.
+- [ ] The set exercises all four urgency levels, carries a T1 snapshot of one patient, and contains at least one out-of-setting case whose correct answer is abstain-or-escalate.
+- [ ] EVAL-0002 is recorded beside a preserved, unmodified EVAL-0001, and the escalation change is reported **with its cause named**.
+
+**Why the number is expected to get worse.** `SCR-002` raises `COMPLAINT_NOT_EVALUATED_BY_RULE` as
+`UNKNOWN` for every request carrying a chief complaint and `SR-002` escalates any `UNKNOWN`, so every
+complaint-bearing case escalates by construction, independently of content. `IMMEDIATE_REVIEW` is
+reachable only through a `TRIGGERED` flag, and the only one produced anywhere is missing required
+evidence — so the top level is reachable only through absent information, never clinical severity, and
+neither provider ever emits `TRIGGERED`. Adding routine cases therefore cannot make the set
+discriminate; it makes the failure **visible and measured**, which is the point. Making the levels
+reachable is TASK-0033, deliberately scheduled after the Proposal.
+
 ## A5 - Research-model integration — BLOCKED on the model, groundwork done
 
 - [ ] Team model adapter passes the same fixtures as mock provider. — **no model exists**; the Research track has no code. Adding it is an entry in `ADAPTERS` plus one in the registry.

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import threading
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
@@ -115,6 +116,15 @@ class SqliteStore:
             Path(self.path).parent.mkdir(parents=True, exist_ok=True)
         self._conn = sqlite3.connect(self.path, check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
+        #: Serialises writes across FastAPI's threadpool. See _write.
+        self._lock = threading.Lock()
+        if self.path != ":memory:":
+            # WAL lets readers proceed during a write; busy_timeout waits rather than
+            # raising "database is locked" the moment two requests overlap. Neither
+            # applies to an in-memory database.
+            self._conn.execute("PRAGMA journal_mode=WAL")
+            self._conn.execute("PRAGMA busy_timeout=5000")
+        self._conn.execute("PRAGMA foreign_keys=ON")
         self._conn.executescript(_SCHEMA)
         self._conn.executescript(_append_only_triggers())
         self._conn.commit()
@@ -125,13 +135,18 @@ class SqliteStore:
     # ------------------------------------------------------------------- internals
 
     def _write(self, sql: str, params: Iterable[Any]) -> None:
-        try:
-            self._conn.execute(sql, tuple(params))
-            self._conn.commit()
-        except sqlite3.IntegrityError as exc:
-            if "append-only" in str(exc):
-                raise AppendOnlyViolation(str(exc)) from exc
-            raise
+        # One connection is shared across FastAPI's threadpool with check_same_thread
+        # disabled, so execute-then-commit is not atomic between threads: a second
+        # thread's write can land inside the first one's transaction and be committed by
+        # it. Invisible with one user, a real corruption path with several.
+        with self._lock:
+            try:
+                self._conn.execute(sql, tuple(params))
+                self._conn.commit()
+            except sqlite3.IntegrityError as exc:
+                if "append-only" in str(exc):
+                    raise AppendOnlyViolation(str(exc)) from exc
+                raise
 
     @staticmethod
     def _now() -> str:
@@ -145,9 +160,12 @@ class SqliteStore:
         Re-storing a journey after an append writes only the new events; the header and
         the existing rows are untouched, because the triggers would refuse anything else.
         """
-        existing = self._conn.execute(
-            "SELECT 1 FROM journeys WHERE journey_id = ?", (journey.journey_id,)
-        ).fetchone()
+        # Read-then-insert under the same lock the write takes, so two threads storing
+        # the same journey cannot both observe "absent" and both insert.
+        with self._lock:
+            existing = self._conn.execute(
+                "SELECT 1 FROM journeys WHERE journey_id = ?", (journey.journey_id,)
+            ).fetchone()
         if existing is None:
             self._write(
                 "INSERT INTO journeys (journey_id, patient_id, encounter_id, split, "

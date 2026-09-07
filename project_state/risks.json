@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-08-30T19:45:00+07:00",
+  "updated_at": "2026-09-07T18:15:00+07:00",
   "risks": [
     {
       "risk_id": "RISK-0001",
@@ -77,7 +77,7 @@
       "impact": "HIGH",
       "owner": "Thanapol Popit",
       "trigger": "Graphs converge, all nodes activate, replay fails, or the method loses controlled comparisons without trade-off",
-      "mitigation": "Use small kill tests, routing diagnostics, curricula, load/budget objectives, and matched ablations",
+      "mitigation": "Use small kill tests, routing diagnostics, curricula, load/budget objectives, and matched ablations Strengthened by evidence recorded 2026-09-02: LIT-0026 reports that at fixed active parameters memorisation improves while reasoning saturates, and LIT-0034 reports hash and random-fixed routing within 1.1-2.2 perplexity of learned routing across 62 controlled runs. The project's regime is fine-tuned clinical reasoning, the unfavourable case. Baseline family 4 (random/shuffled routing) is therefore the load-bearing experiment, and which branch of G4 is primary must be predeclared before Stage C produces a number.",
       "fallback": "Stop scaling and propose a bounded architecture reframing through a human decision",
       "review_date": "2026-09-18",
       "status": "OPEN",
@@ -85,7 +85,7 @@
         "TASK-0009",
         "TASK-0012"
       ],
-      "updated_at": "2026-08-11T04:00:00+07:00"
+      "updated_at": "2026-09-02T19:00:00+07:00"
     },
     {
       "risk_id": "RISK-0006",
@@ -184,7 +184,7 @@
       "impact": "HIGH",
       "owner": "Thanrada Tungweerapornpong",
       "trigger": "REALISED on the Project Idea: it was written and submitted by one person with no review by a member who did not write it, so Phase 1 CONTEXT D-03 was not met. The submitted document reached the advisor with three unresolved defects — a claim of 3D CT support with no CT dataset in the candidate list, claims C-01 and C-02 left without attribution after the reference list was cut from 13 to 5, and an open-weight promise the licences may not permit. An independent reader would plausibly have caught at least one",
-      "mitigation": "Name a reviewer who is not the author for every graded deliverable, and make review a precondition of submission rather than a courtesy. The Proposal Report is four times the length of the Project Idea and carries more technical claims, so the same failure there is proportionally more costly",
+      "mitigation": "Name a reviewer who is not the author for every graded deliverable, and make review a precondition of submission rather than a courtesy. The Proposal Report is four times the length of the Project Idea and carries more technical claims, so the same failure there is proportionally more costly TASK-0026 introduces a non-author reviewer for the TASK-0004 deliverable, which is the first time this project has built one in rather than owed one.",
       "fallback": "If no reviewer is available before a deadline, submit and record explicitly in WEEKLY_STATUS that the document is unreviewed, so the gap is visible rather than silent",
       "review_date": "2026-09-27",
       "status": "OPEN",
@@ -195,7 +195,7 @@
         "TASK-0014",
         "TASK-0015"
       ],
-      "updated_at": "2026-08-30T19:45:00+07:00"
+      "updated_at": "2026-09-02T19:00:00+07:00"
     },
     {
       "risk_id": "RISK-0012",
@@ -213,6 +213,60 @@
         "TASK-0012"
       ],
       "updated_at": "2026-08-30T19:45:00+07:00"
+    },
+    {
+      "risk_id": "RISK-0013",
+      "description": "The novelty claim does not survive contact with prior work. The per-case typed dynamic DAG is a named, surveyed research area as of March 2026 (LIT-0031); typed DAG execution with replay is engineering practice (LIT-0035); per-input graph generation is peer-reviewed (LIT-0033); and MedGemma 1.5 (LIT-0014) already holds the 27B scale, open weights, 3D and longitudinal ground. What survives is a composite plus an evaluation contribution, which is weaker than a mechanism claim.",
+      "probability": "HIGH",
+      "impact": "HIGH",
+      "owner": "Phurinat Polasa",
+      "trigger": "Realised. Confirmed 2026-09-02 by SRCH-0001 and SRCH-0003 and recorded as twelve novelty threats in docs/research/RELATED_WORK.md. Escalates further if an examiner names a system demonstrating dynamic graph topology, typed operators and case-level adaptation together with medical multimodal breadth.",
+      "mitigation": "State the composite claim honestly and foreground the evaluation contribution: the workflow survey confirms zero clinical applications in the dynamic-workflow literature and names structural credit assignment as an open problem. Not one system screened scored DEMONSTRATED on equal-compute evidence.",
+      "fallback": "Narrow the contribution to the axes that survive, via an accepted Decision Log entry. Reframing is a valid research outcome under RESEARCH_SPEC.md; overstating is not.",
+      "review_date": "2026-09-25",
+      "status": "REALIZED",
+      "linked_tasks": [
+        "TASK-0004",
+        "TASK-0009",
+        "TASK-0012",
+        "TASK-0026"
+      ],
+      "updated_at": "2026-09-02T19:00:00+07:00"
+    },
+    {
+      "risk_id": "RISK-0014",
+      "description": "The product setting and the surveyed data setting do not match. DEC-0016 fixes the evaluated setting as emergency-department first-contact triage, but the dataset feasibility survey recorded MIMIC-IV as the hosp and icu modules only. MIMIC-IV-ED has never been surveyed and is not a candidate dataset; it appears once in the repository, as an unexecuted SRCH-0005 query string. CHIEF_COMPLAINT and TRIAGE_NOTE therefore have no recorded data source, and under-triage cannot be measured on a cohort that was never triaged.",
+      "probability": "HIGH",
+      "impact": "HIGH",
+      "owner": "Jakkapat Bunjongruxsa",
+      "trigger": "DS-0008 is not surveyed, or its survey returns that MIMIC-IV-ED cannot supply time-valid triage-point snapshots linked to the DS-0001 and DS-0002 cohort",
+      "mitigation": "Survey MIMIC-IV-ED as DS-0008 under the same six dimensions (TASK-0031). Its licence, patient-linkage, temporal-validity and modality dimensions do not depend on CITI and proceed now; only the access dimension waits on CITI (TASK-0011) and a human-signed DUA. Open MC-BEC (arXiv:2311.04937), the multimodal emergency-care benchmark the literature survey surfaced but did not screen.",
+      "fallback": "State the setting in the Proposal as the intended evaluation setting, name MIMIC-IV-ED as the intended corpus, and say plainly that the survey is outstanding. Do not present emergency-department triage as data-backed before DS-0008 exists. If MIMIC-IV-ED proves unusable, either narrow the evaluated claim to the hospital encounter the surveyed data actually covers, or report triage-point results as synthetic-only and label them as such.",
+      "review_date": "2026-09-30",
+      "status": "OPEN",
+      "linked_tasks": [
+        "TASK-0031",
+        "TASK-0011",
+        "TASK-0005"
+      ],
+      "updated_at": "2026-09-07T17:30:00+07:00"
+    },
+    {
+      "risk_id": "RISK-0015",
+      "description": "The evaluation cannot distinguish a safe system from one that escalates everything, and the cause is structural rather than a shortage of cases. Tracing innovation/gateway/safety.py: SCR-002 raises COMPLAINT_NOT_EVALUATED_BY_RULE as UNKNOWN for every CLINICAL_FRONT_DOOR request carrying a chief complaint, and SR-002 turns any UNKNOWN flag into URGENT_REVIEW and ESCALATED. Every complaint-bearing case therefore escalates by construction, independently of its content. The only route to IMMEDIATE_REVIEW is a TRIGGERED flag, and the only TRIGGERED flag produced anywhere is REQUIRED_INFORMATION_INCOMPLETE, so the top urgency level is reachable only through absent information and never through clinical severity; neither the mock nor the baseline provider ever emits TRIGGERED. under_triage_rate is consequently 0.0 by construction, and no metric in METRIC_DEFINITIONS records the opposite error. Distinct from RISK-0007, which is that the system may under-triage: this is that the evaluation could not detect it either way.",
+      "probability": "HIGH",
+      "impact": "HIGH",
+      "owner": "Thanrada Tungweerapornpong",
+      "trigger": "Realised. EVAL-0001 reports escalation 0.83 with under-triage 0.0 and critical sensitivity 1.0, which are the values this mechanism produces whatever the cases contain.",
+      "mitigation": "Freeze an over_triage_rate definition before any new run, since EVALUATION_CONTRACT.md requires metrics frozen before results are inspected and adding one after seeing 0.83 would be metric-shopping. Give cases a declared band by adding expected_maximum_urgency beside expected_minimum_urgency. Then rebuild the case set (TASK-0032) knowing the number will get worse, and design the content-reading screen that makes the levels reachable (TASK-0033).",
+      "fallback": "Report the limitation as the finding. A measured demonstration that the deterministic screen cannot discriminate, with the mechanism named and the fix designed, is a defensible Proposal result; a rebuilt case set whose escalation rate moved for unexplained reasons is not.",
+      "review_date": "2026-09-27",
+      "status": "REALIZED",
+      "linked_tasks": [
+        "TASK-0032",
+        "TASK-0033"
+      ],
+      "updated_at": "2026-09-07T18:15:00+07:00"
     }
   ]
 }

@@ -90,8 +90,12 @@ def test_the_ui_goes_through_the_public_api(client):
         instrumented.post("/ui/intake", data=INTAKE_FORM, follow_redirects=False)
 
     assert any(c == "POST /ui/intake" for c in calls)
-    assert any(c == "POST /encounters" for c in calls), (
+    assert any(c == "POST /v1/encounters" for c in calls), (
         "the intake screen did not call the public API; it reached past it"
+    )
+    assert not any(c == "POST /encounters" for c in calls), (
+        "the screens should speak the versioned surface, so the unprefixed compatibility "
+        "routes have no internal consumers left to break when they are retired"
     )
 
 
