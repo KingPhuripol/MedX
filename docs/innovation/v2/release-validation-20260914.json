@@ -1,0 +1,51 @@
+{
+  "verified_at": "2026-09-14",
+  "scope": "synthetic software behavior only",
+  "manifest": {
+    "code_revision": "5f73ff4e086e95d417b6d0779e70ecfaf22950a0",
+    "source_hash": "2f1948c2ba1be8eab0a23c19c5447700f7bbc17352d05625db3093c637944743",
+    "scenario_version": "969030986c16ac46af6d22516d06881c54e0a2e47353c9101095f546ca6c868d",
+    "configuration_hash": "0162119713311939df808340ee556b97e9581dc5b2529eeb49a7f53782cb23b1",
+    "policy": "synthetic-workflow-v2",
+    "provider_mode": "mock",
+    "clinical_verdict": "NOT_REVIEWED"
+  },
+  "software_checks": {
+    "python_tests_passed": 465,
+    "vitest_tests_passed": 3,
+    "playwright_tests_passed": 8,
+    "playwright_viewports": ["1440x900", "768x1024"],
+    "axe_critical_or_serious": 0,
+    "repository_harness_checks": 1135,
+    "npm_production_vulnerabilities": 0,
+    "raw_component_colors_outside_tokens": 0,
+    "five_user_non_provider_p95_requirement_ms": 500
+  },
+  "regression": {
+    "runs": 24,
+    "valid_runs": 24,
+    "invalid_runs": 0,
+    "success_rate": 1.0,
+    "p95_ms": 6.74912499380298
+  },
+  "selection": {
+    "design_id": "fixed",
+    "reason": "searched designs tied the fixed baseline on validation success; the baseline was retained",
+    "validation_runs": 60,
+    "validation_success_rate": 1.0,
+    "selection_checksum": "6d2b6cb23f6ffecedfff2a5e40ad973363d20252a3cfbb7d688604d713aaf731"
+  },
+  "heldout": [
+    {"design_id": "form", "runs": 150, "success_rate": 0.8, "pass_5": 0.8, "invalid_runs": 0},
+    {"design_id": "single", "runs": 150, "success_rate": 0.8, "pass_5": 0.8, "invalid_runs": 0},
+    {"design_id": "fixed_baseline", "runs": 150, "success_rate": 1.0, "pass_5": 1.0, "invalid_runs": 0},
+    {"design_id": "fixed_selected", "runs": 150, "success_rate": 1.0, "pass_5": 1.0, "invalid_runs": 0}
+  ],
+  "external_status": {
+    "live_reasoning": "NOT_CONFIGURED_NOT_TESTED",
+    "live_transcription": "NOT_CONFIGURED_NOT_TESTED",
+    "live_synthesis": "NOT_CONFIGURED_NOT_TESTED",
+    "clinical_validation": "NOT_REVIEWED",
+    "paid_calls": 0
+  }
+}

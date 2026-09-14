@@ -53,6 +53,31 @@ class Settings(BaseSettings):
     #: entire API behind a single provider thread.
     provider_concurrency: int = Field(default=4, ge=1, le=32)
 
+    # V2 is a separate synthetic workflow; disable to roll back without deleting data.
+    v2_enabled: bool = True
+    v2_readiness_report: Path | None = None
+    v2_experiment_dir: Path = Path("artifacts/v2/experiments")
+    v2_transport: Literal["gateway", "openai_compatible"] = "gateway"
+    v2_local_free: bool = False
+    v2_json_mode: Literal["json_schema", "json_object"] = "json_schema"
+    v2_max_tokens: int = Field(default=2048, ge=64, le=8192)
+    v2_speech_model: str = "unconfigured"
+    v2_speech_token: str = Field(default="", repr=False)
+
+    v2_provider_url: str | None = None
+    v2_provider_token: str = Field(default="", repr=False)
+    v2_model: str = "unconfigured"
+    v2_paid_budget_usd: float = Field(default=0, ge=0, allow_inf_nan=False)
+    v2_call_reservation_usd: float = Field(default=0, ge=0, allow_inf_nan=False)
+    v2_budget_db: Path | None = None
+    v2_capabilities: tuple[str, ...] = ("summary", "conversation")
+    v2_differential: bool = False
+    v2_speech_url: str | None = None
+    v2_synthesis_url: str | None = None
+    v2_synthesis_token: str = Field(default="", repr=False)
+    v2_synthesis_model: str = "unconfigured"
+    v2_synthesis_voice: str = "alloy"
+
     # ----------------------------------------------------------------------- auth
     auth_mode: AuthMode = "none"
     principals_file: Path | None = None
@@ -101,13 +126,18 @@ class Settings(BaseSettings):
                 "would rest on a caller-supplied reviewer_id. Set FRONT_DOOR_AUTH_MODE=token "
                 "and FRONT_DOOR_PRINCIPALS_FILE, or bind to loopback."
             )
-        if self.auth_mode == "none" and self.allow_external:
+        if self.auth_mode == "none" and (self.allow_external or self.v2_provider_url or self.v2_speech_url or self.v2_synthesis_url):
             raise ValueError(
                 "refusing to enable an external provider with auth_mode=none: an "
                 "unauthenticated caller could cause content to leave the process."
             )
         if self.auth_mode == "token" and self.principals_file is None:
             raise ValueError("auth_mode=token requires FRONT_DOOR_PRINCIPALS_FILE")
+        if self.v2_provider_url or self.v2_speech_url or self.v2_synthesis_url:
+            if not self.allow_external or not self.v2_budget_db:
+                raise ValueError("v2 external adapters require allow_external and a dedicated persistent budget DB")
+            if self.db and self.v2_budget_db.resolve() == self.db.resolve():
+                raise ValueError("budget DB must be separate from clinical data DB")
         return self
 
     def public_view(self) -> dict:

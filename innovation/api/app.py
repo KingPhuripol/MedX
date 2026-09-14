@@ -328,12 +328,12 @@ def build_router(service: FrontDoorService) -> APIRouter:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "unknown recommendation") from None
 
     @router.post("/recommendations/{recommendation_id}/review")
-    def review(recommendation_id: str, body: ReviewRequest) -> RecommendationView:
+    def review(recommendation_id: str, body: ReviewRequest, request: Request) -> RecommendationView:
         """Record a human decision. The recommendation itself is never edited."""
         try:
             recommendation = service.review(
                 recommendation_id,
-                reviewer_id=body.reviewer_id,
+                reviewer_id=(request.state.principal.subject if hasattr(request.state, "principal") else body.reviewer_id),
                 action=body.action,
                 reason_code=body.reason_code,
                 note=body.note,
@@ -397,6 +397,10 @@ def create_app(
 ) -> FastAPI:
     """Build the app. The service and settings are injectable so tests need no network."""
     settings = settings or Settings()
+    ownership = None
+    if settings.v2_enabled and settings.db:
+        from innovation.v2.ownership import ProcessOwnership
+        ownership = ProcessOwnership(settings.db)
     service = service or build_default_service(settings)
     configure_logging(settings.log_level, settings.log_format)
 
@@ -405,6 +409,18 @@ def create_app(
         yield
         # Both of these existed and neither was ever called: the provider threadpool and
         # the database connection outlived the process's willingness to use them.
+        if hasattr(app.state, "v2_experiments"):
+            app.state.v2_experiments.close()
+        if hasattr(app.state, "v2_jobs"):
+            app.state.v2_jobs.close()
+        if hasattr(app.state, "v2_service"):
+            app.state.v2_service.store.close()
+        if hasattr(app.state, "v2_budget"):
+            app.state.v2_budget.close()
+        if hasattr(app.state, 'v2_experiment_temp'):
+            app.state.v2_experiment_temp.cleanup()
+        if ownership:
+            ownership.close()
         service.gateway.close()
         if service.store is not None:
             service.store.close()
@@ -421,6 +437,8 @@ def create_app(
     )
     app.state.service = service
     app.state.settings = settings
+    from innovation.v2.auth import install_auth
+    install_auth(app)
 
     @app.middleware("http")
     async def correlate(request: Request, call_next):
@@ -492,6 +510,44 @@ def create_app(
 
     from innovation.ui import mount_ui
 
+    if settings.v2_enabled:
+        from innovation.v2.store import Store
+        from innovation.v2.providers import MockProvider, HttpProvider, HttpSpeech, UnavailableSpeech, ExternalConfig
+        from innovation.v2.runtime import Runtime
+        from innovation.v2.service import Service
+        from innovation.v2.api import mount
+        provider, speech = MockProvider(), UnavailableSpeech()
+        if settings.v2_provider_url or settings.v2_speech_url or settings.v2_synthesis_url:
+            budget = Store(settings.v2_budget_db)
+            app.state.v2_budget = budget
+            def external(url, speech_model=False):
+                config = ExternalConfig(url, (settings.v2_speech_token or settings.v2_provider_token) if speech_model else settings.v2_provider_token,
+                    settings.v2_speech_model if speech_model else settings.v2_model,
+                    settings.v2_paid_budget_usd, settings.v2_call_reservation_usd)
+                if settings.v2_transport == 'openai_compatible':
+                    from innovation.v2.compatible import CompatibleProvider
+                    return CompatibleProvider(config, budget, settings.v2_capabilities,
+                        local_free=settings.v2_local_free, json_mode=settings.v2_json_mode,
+                        max_tokens=settings.v2_max_tokens)
+                return HttpProvider(config, budget, settings.v2_capabilities)
+            if settings.v2_provider_url:
+                provider = external(settings.v2_provider_url)
+            if settings.v2_speech_url:
+                if settings.v2_transport == 'openai_compatible':
+                    from innovation.v2.compatible import CompatibleSpeech
+                    speech = CompatibleSpeech(external(settings.v2_speech_url, speech_model=True))
+                else:
+                    speech = HttpSpeech(external(settings.v2_speech_url, speech_model=True))
+        if settings.v2_synthesis_url:
+            from innovation.v2.compatible import CompatibleProvider, CompatibleSynthesis
+            synthesis_provider = CompatibleProvider(ExternalConfig(settings.v2_synthesis_url,
+                settings.v2_synthesis_token, settings.v2_synthesis_model,
+                settings.v2_paid_budget_usd, settings.v2_call_reservation_usd),
+                budget, [], local_free=settings.v2_local_free)
+            app.state.v2_synthesis = CompatibleSynthesis(synthesis_provider, settings.v2_synthesis_voice)
+        app.state.v2_service = Service(Store(settings.db), Runtime(provider, settings.v2_differential))
+        app.state.v2_service.recover_interrupted()
+        mount(app, app.state.v2_service, speech)
     return mount_ui(app)
 
 

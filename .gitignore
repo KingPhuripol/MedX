@@ -28,3 +28,9 @@ mlruns/
 *.sqlite3
 *.sqlite3-journal
 audit*.jsonl
+
+node_modules/
+test-results/
+playwright-report/
+
+.secrets/

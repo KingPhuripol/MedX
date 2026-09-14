@@ -189,3 +189,14 @@ def test_same_journey_and_decision_time_is_the_same_question(service, journey):
     b = service.assess(journey, LATER)
     assert a.response.request_id == b.response.request_id
     assert len(service.gateway.audit.find(a.response.request_id)) == 1
+
+
+def test_later_rejection_revokes_legacy_confirmation(service, journey):
+    recommendation = service.assess(journey, LATER)
+    service.review(recommendation.recommendation_id, reviewer_id='clinician-01', action='CONFIRM')
+    assert recommendation.effective
+    service.review(recommendation.recommendation_id, reviewer_id='clinician-01', action='REJECT',
+                   reason_code='EVIDENCE_INCORRECT')
+    assert not recommendation.effective
+    with pytest.raises(HumanReviewRequired):
+        service.act_on(recommendation.recommendation_id)

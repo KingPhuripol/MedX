@@ -1,0 +1,54 @@
+{
+  "version": "topic-groups-v2",
+  "limitation": "Workflow patterns are shared across groups; these are software scenarios, not clinically independent disease families.",
+  "groups": {
+    "1": {
+      "group": "respiratory",
+      "split": "development"
+    },
+    "2": {
+      "group": "gastrointestinal",
+      "split": "development"
+    },
+    "3": {
+      "group": "neurologic",
+      "split": "development"
+    },
+    "4": {
+      "group": "musculoskeletal",
+      "split": "validation"
+    },
+    "5": {
+      "group": "skin",
+      "split": "development"
+    },
+    "6": {
+      "group": "urinary",
+      "split": "validation"
+    },
+    "7": {
+      "group": "ent",
+      "split": "development"
+    },
+    "8": {
+      "group": "cardiovascular",
+      "split": "validation"
+    },
+    "9": {
+      "group": "fatigue",
+      "split": "development"
+    },
+    "10": {
+      "group": "medication-history",
+      "split": "test"
+    },
+    "11": {
+      "group": "eye",
+      "split": "test"
+    },
+    "12": {
+      "group": "sleep",
+      "split": "test"
+    }
+  }
+}

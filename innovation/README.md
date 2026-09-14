@@ -1,5 +1,7 @@
 # Innovation Implementation Area
 
+The additive synthetic Clinical Front Door v2 workspace and bounded Agent Design implementation are documented in [the v2 handoff](../docs/innovation/v2/README.md). Start at `/workspace`; `/ui/v2` remains the recovery fallback and legacy screens remain at `/ui/`.
+
 AI Clinical Front Door — an API-first clinical decision-support **research prototype**.
 It does not diagnose, prescribe, order tests, refer, or discharge, and every output
 requires human confirmation before it may inform care.

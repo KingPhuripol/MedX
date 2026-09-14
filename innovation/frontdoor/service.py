@@ -110,7 +110,7 @@ class Recommendation:
         REJECT and ESCALATE are human actions but they do not make a recommendation
         effective — rejecting it is precisely a decision not to act on it.
         """
-        return any(r.action in {"CONFIRM", "MODIFY"} for r in self.reviews)
+        return bool(self.reviews and self.reviews[-1].action in {"CONFIRM", "MODIFY"})
 
     @property
     def latest_review(self) -> ReviewRecord | None:
