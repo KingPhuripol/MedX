@@ -10,6 +10,10 @@ The system must use semantic tokens for all components. Teams should extend an e
 
 The implementation source of truth is `innovation/workspace/src/tokens.css`.
 
+### Brand identity
+
+The product mark is a blue rounded square containing a doorway and a small signal star. The doorway represents a calm clinical entry point; the star identifies the JARVIS assistant. The reusable implementation is `innovation/workspace/src/components/BrandLogo.tsx`, and the browser favicon is `innovation/workspace/public/favicon.svg`. The mark must always be paired with the “Clinical Front Door” wordmark in the full sidebar and login lockup. The compact mark may stand alone in dense contexts. The interface must not use a BDMS logo, name or endorsement language.
+
 | Token family | Required behavior |
 |---|---|
 | Brand primitives | Black `#000000`, white `#ffffff`, link blue `#0000ee`, brand blue `#005cb9` and reference gray `#919eab` must retain their supplied values. |
@@ -24,6 +28,24 @@ The implementation source of truth is `innovation/workspace/src/tokens.css`.
 Component CSS must not contain raw hex values. Raw colors belong only in the token source.
 
 ## Component-level rules
+
+### Focused clinical workspace
+
+The case workspace must use three focused steps: **รับข้อมูล**, **ตรวจข้อมูล** and **ตรวจร่าง**. A persistent case context bar must show the synthetic case identifier, current revision and draft status. Step navigation should show completed, active, attention and not-started states, while the backend remains the authority for permissions and revision decisions.
+
+The intake view must keep the composer attached to the conversation and show assistant proposals as pending review cards. The facts view must separate pending proposals, confirmed facts and consistency conflicts. The draft view must show only the latest draft in the primary flow, with evidence, outstanding items and older versions available through progressive disclosure.
+
+### Side sheet, notification and metric cards
+
+A side sheet must trap keyboard focus, close with Escape, provide a labeled close action and return focus to the control that opened it. It must remain usable at tablet width and must not hide unsaved changes. Notification cards should describe the next safe action, such as “มีข้อมูลจากผู้ช่วยรอตรวจ” and link to the facts step.
+
+Metric cards should show one number, a short Thai label and an optional status icon. They must not be the only place where a blocking state is explained. Queue, readiness and experiment metrics must use the same spacing, border and type tokens.
+
+### Experiment stepper and version timeline
+
+The Agent Design workspace must expose the sequence **ค้นหา → ตรวจ validation → ตรึงแบบ → ประเมิน held-out**. The active stage and completed stages must be readable without color. Technical identifiers, raw JSON and trace details must stay behind a disclosure control and must be visible only to evaluator roles.
+
+Draft history should use a version timeline. Each version must show its revision, status and creation time; selecting an older version must never make it confirmable when it is stale or superseded.
 
 ### Buttons and links
 
@@ -45,7 +67,7 @@ The case list must expose search, workflow status and attention state without op
 
 The workspace must separate conversation, proposed information, confirmed facts and draft review. A conversation must never visually imply that proposed information has already been confirmed.
 
-The selected case must begin with one compact overview containing identity, confirmed-fact count, pending-review count and latest-draft state. A four-step tracker must expose the current position from intake through physician confirmation. The tracker must supplement the underlying status and must not become the authority for review decisions.
+The selected case must begin with one compact overview containing identity, confirmed-fact count, pending-review count and latest-draft state. A three-step tracker must expose the current position from intake through draft confirmation. The tracker must supplement the underlying status and must not become the authority for review decisions.
 
 The conversation composer must remain visually attached to the conversation, preserve unsent text and expose one primary send action. Only the newest draft should appear in the operational flow; older drafts must remain available through progressive disclosure or history.
 

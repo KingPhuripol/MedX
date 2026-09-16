@@ -17,11 +17,14 @@ test("critical synthetic intake flow and accessibility", async ({ page }, testIn
 
   await page.getByLabel("ข้อความถึงผู้ช่วย").fill("อาการ: ไอสองวัน เป็นข้อมูลสังเคราะห์");
   await page.getByRole("button", { name: "ส่งข้อความ" }).click();
+  await page.getByRole("button", { name: /มีข้อมูลจากผู้ช่วยรอตรวจ 1 รายการ/ }).click();
+  await expect(page).toHaveURL(/#\/cases\/[^/]+\/facts$/);
   await expect(page.getByRole("heading", { name: "ตรวจข้อเสนอจากผู้ช่วย" })).toBeVisible();
   await page.getByRole("button", { name: /ยืนยันข้อมูลที่เลือก 1 รายการ/ }).click();
   await expect(page.getByText("ไอสองวัน เป็นข้อมูลสังเคราะห์", { exact: false }).first()).toBeVisible();
 
   await page.getByRole("button", { name: "เตรียมร่างส่งต่อ" }).click();
+  await expect(page).toHaveURL(/#\/cases\/[^/]+\/draft$/);
   await expect(page.getByRole("heading", { name: /ตรวจร่างฉบับที่/ }).first()).toBeVisible();
   await expect(page.getByText(/CHIEF_COMPLAINT|HISTORY|STALE|CONFIRM/, { exact: false })).toHaveCount(0);
   await page.getByRole("button", { name: "แก้ไขหรือปฏิเสธ" }).first().click();
@@ -50,7 +53,7 @@ test("keyboard focus and unsent message survive reload", async ({ page }) => {
   await page.getByLabel("ยืนยันว่าเคสนี้ไม่มีข้อมูลที่ระบุตัวผู้ป่วยจริง").check();
   await page.getByRole("button", { name: "สร้างและเปิดเคส" }).click();
   await page.getByRole("button", { name: "ควรถามอะไรต่อ" }).click();
-  await expect(page.getByLabel("ข้อความถึงผู้ช่วย")).toContainText("ควรถามอะไรต่อ");
+  await expect(page.getByLabel("ข้อความถึงผู้ช่วย")).toHaveValue(/ควรถามอะไรต่อ/);
   await page.getByLabel("ข้อความถึงผู้ช่วย").fill("ข้อความที่ยังไม่ส่ง");
   await page.reload();
   await expect(page.getByLabel("ข้อความถึงผู้ช่วย")).toHaveValue("ข้อความที่ยังไม่ส่ง");
@@ -78,6 +81,6 @@ test("expired session returns to a recoverable sign-in screen", async ({ page })
     body: JSON.stringify({ error: "AUTHENTICATION_REQUIRED" }),
   }));
   await page.getByRole("button", { name: "ค้นหา" }).click();
-  await expect(page.getByRole("heading", { name: "เข้าสู่พื้นที่ทำงาน" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "ยินดีต้อนรับกลับ" })).toBeVisible();
   await expect(page.getByText("เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่")).toBeVisible();
 });

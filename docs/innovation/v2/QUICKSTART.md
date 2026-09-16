@@ -13,7 +13,7 @@ python3 -m venv .venv
 .venv/bin/python -m uvicorn innovation.api.app:app --host 127.0.0.1 --port 8000
 ```
 
-Open http://127.0.0.1:8000/workspace. `/ui/v2` remains a recovery fallback. Use one API process; do not run multiple uvicorn workers against the same demo database. Default: offline mock, in-memory data, local demonstration physician identity. For persistence set `FRONT_DOOR_DB=artifacts/v2/demo.sqlite3` before starting. Restart recovers interrupted case reservations without automatically replaying uncertain provider calls; retrying that old command returns `INTERRUPTED_RUN_USE_NEW_KEY`. Reload the case and submit a new reviewed command. Interrupted runs conservatively consume one turn and eight calls from the case budget.
+Open http://127.0.0.1:8000/workspace. `/ui/v2` remains a recovery fallback. Use one API process; do not run multiple uvicorn workers against the same demo database. Default: offline mock, in-memory data, local demonstration physician identity. For persistence set `FRONT_DOOR_DB=artifacts/v2/demo.sqlite3` before starting. The primary case routes are `#/cases`, `#/cases/{id}/intake`, `#/cases/{id}/facts` and `#/cases/{id}/draft`; the application also preserves `#/drafts/{id}` deep links. Restart recovers interrupted case reservations without automatically replaying uncertain provider calls; retrying that old command returns `INTERRUPTED_RUN_USE_NEW_KEY`. Reload the case and submit a new reviewed command. Interrupted runs conservatively consume one turn and eight calls from the case budget.
 
 The CLI demo is the offline backup and checks conversation → edited proposal → accepted fact → correction → draft → modified draft → confirmation. It raises on an integrity failure rather than reporting false success.
 
@@ -26,6 +26,8 @@ The CLI demo is the offline backup and checks conversation → edited proposal �
 5. Click **เตรียมร่างส่งต่อ**. Inspect evidence and outstanding items.
 6. Expand the draft edit form, change the summary and enter a reason. Save; the new draft revision still requires confirmation. Confirm it explicitly.
 7. Add a fact or correction. Existing drafts become stale. Current facts and full event history are separate views.
+
+The left navigation opens **รายการเคส**, **Agent Design** and **ตั้งค่า** according to the signed-in role. In Agent Design, run the four visible stages in order: ค้นหา, ตรวจ validation, ตรึงแบบ and ประเมิน held-out. Raw design IDs and JSON are available only under the evaluator disclosure panel.
 
 A failed network mutation exposes **ตรวจคำขอเดิม** and retains its exact body/key in page memory. Resolve it before making another mutation. Unsent conversation text is stored in session storage per encounter and survives a page refresh; credentials and uncertain mutation bodies are never persisted there. Speech transcripts append to existing editable text and are never submitted or confirmed automatically.
 

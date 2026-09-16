@@ -34,3 +34,5 @@ test-results/
 playwright-report/
 
 .secrets/
+
+.codex_work/

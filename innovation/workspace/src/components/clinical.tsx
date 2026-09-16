@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createIdempotencyKey } from "../api";
+import { Icon, type IconName } from "./Icon";
 import {
   type Draft,
   type Fact,
@@ -14,8 +15,8 @@ export function StatusBadge({ tone = "neutral", children }: {
   tone?: "neutral" | "success" | "warning" | "danger" | "info";
   children: React.ReactNode;
 }) {
-  const symbol = { neutral: "•", success: "✓", warning: "!", danger: "×", info: "i" }[tone];
-  return <span className={`status-badge status-${tone}`}><span aria-hidden="true">{symbol}</span>{children}</span>;
+  const icon: IconName = tone === "success" ? "check" : tone === "warning" || tone === "danger" ? "alert" : "spark";
+  return <span className={`status-badge status-${tone}`}><Icon name={icon} size={14} />{children}</span>;
 }
 
 export function FactView({ fact, onEdit }: { fact: Fact; onEdit?: (fact: Fact) => void }) {

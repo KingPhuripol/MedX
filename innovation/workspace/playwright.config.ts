@@ -18,7 +18,7 @@ export default defineConfig({
     { name: "tablet", use: { ...devices["Desktop Chrome"], channel: "chrome", viewport: { width: 768, height: 1024 }, hasTouch: true } },
   ],
   webServer: {
-    command: "cd ../.. && FRONT_DOOR_DB=/tmp/frontdoor-playwright.sqlite3 /opt/anaconda3/bin/python3 -m uvicorn innovation.api.app:app --host 127.0.0.1 --port 8771",
+    command: "cd ../.. && FRONT_DOOR_DB=/tmp/frontdoor-playwright.sqlite3 ${PYTHON:-python3} -m uvicorn innovation.api.app:app --host 127.0.0.1 --port 8771",
     url: "http://127.0.0.1:8771/ready",
     reuseExistingServer: false,
     timeout: 30_000,
