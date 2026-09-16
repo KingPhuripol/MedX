@@ -320,12 +320,12 @@
         "Evidence is checked and archived before the internal deadline"
       ],
       "evidence_required": [
-        "Completion evidence for all five members"
+        "Completion evidence for all five members, recorded with filename and SHA-256 in docs/academic/CITI_EVIDENCE.md"
       ],
       "evidence": [],
-      "blocker": "On the critical path twice over: DL-0003 is immutable on 2026-09-25, and CITI completion is a precondition for PhysioNet credentialed access, which TASK-0005 needs to accept any MIMIC dataset. Starting late puts the data path, not just the academic deliverable, at risk.",
+      "blocker": "On the critical path twice over: DL-0003 is immutable on 2026-09-25, and CITI completion is a precondition for PhysioNet credentialed access, which TASK-0005 needs to accept any MIMIC dataset and TASK-0031 needs to survey MIMIC-IV-ED as DS-0008 against RISK-0014. As of 2026-09-16, with the internal deadline two days away, no member has submitted evidence and this record has been IN_PROGRESS with an empty evidence list since 2026-08-30. The required-module list is not recorded anywhere in this repository either; it comes from the programme announcement and from PhysioNet, and nobody has written it down.",
       "risk_level": "CRITICAL",
-      "updated_at": "2026-08-30T17:30:00+07:00"
+      "updated_at": "2026-09-16T18:00:00+07:00"
     },
     {
       "task_id": "TASK-0012",
