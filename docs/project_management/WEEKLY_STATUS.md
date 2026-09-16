@@ -374,3 +374,124 @@ negative tests; smoke test passes; EVAL-0001 re-run unchanged at escalation 0.83
 
 **Awaiting a human:** APR-0002, and DEC-0016 itself, which is `proposed`. Its rationale is written so it
 does not depend on APR-0001's outcome, so the two may be decided in either order.
+
+## 16 September 2026 - the web system was finished and the record never said so
+
+**Project health:** RED (`scripts/project_status.py`, unchanged derivation: 4 critical-impact risks,
+2 P0 tasks open). **Next official deadline: CITI, 25 Sep 2026 — 8.7 conservative days, immutable.**
+
+This entry exists because the question that started the day was "the web is not finished yet, is it?
+we planned to finish this week." Both halves of that sentence turned out to be wrong, and the second
+error is the expensive one.
+
+### The web was already finished, and nothing in the record said so
+
+Measured on HEAD before any change was made today: `verify_harness.py` 1,135 checks passed,
+`pytest -q` 465 passed, `vitest` 7 passed, `tsc --noEmit` clean, and a `grep` for
+`TODO|FIXME|NotImplementedError` across `innovation/` outside `node_modules` returned **nothing**.
+
+And yet **no `TASK-` record tracked the v2 workspace at all.** `project_state/tasks.json` read
+`updated_at: 2026-09-07T18:15`, nine days stale, predating the entire 12–14 Sep delivery, and this
+file had no entry for the week the system was built. A team reading its own planning system would
+have concluded the work had not started. That is the failure DEC-0008 exists to prevent, arriving
+from the opposite direction than expected: not a document contradicting the machine record, but a
+machine record that had simply stopped being written to.
+
+**No source-of-truth document ever scheduled the web for this week.** `docs/innovation/v2/README.md`
+calls 11–17 Sep a *review* week. `tasks.json` gives 14–20 Sep to TASK-0004, 0009, 0010, 0011, 0018
+and 0029 — research, CITI and the Proposal. The feeling of being behind came from the absence of a
+record, not from a slip.
+
+### The finding that matters: two Front Doors, and the safety evidence was on the wrong one
+
+Three greps over `innovation/v2/` returned zero hits each: `ModelGateway|SafetyPolicy`,
+`red_flag|urgency`, and `audit`. The same greps over `innovation/workspace/src/` returned zero for
+urgency and red flags.
+
+So the interface `innovation/config.py:57` enables **by default**, and `QUICKSTART.md` calls the
+primary one while naming `/ui/v2` a "recovery fallback", produced clinical drafts carrying **no
+red-flag findings, no urgency floor, no uncertainty and no audit record.** The deterministic screen,
+the no-downgrade merge, SR-001..006, the urgency taxonomy and the DAG explorer all exist and are
+tested — in v1, behind `/ui`. `MODEL_API_CONTRACT.md` opens by requiring every provider to reach the
+model through the Model Gateway; the default UI path did not.
+
+This was invisible for a specific, correctable reason: **commit `8c1f601`, which delivered v2, did
+not touch `ACCEPTANCE_CRITERIA.md`.** No criterion pointed at `/workspace`, so nothing could fail.
+A0–A6 had been silently scoped to a system that was no longer the one users opened. **RISK-0016.**
+
+### Landed
+
+`SafetyPolicy.screen()` now delegates to `screen_evidence()`, which takes evidence *types* instead
+of a `GatewayRequest`, and `innovation/v2/safety.py` translates a `CaseRevision` into that call.
+**One implementation of SCR-001 and SCR-002, two callers** — not a second copy, which would drift.
+v1 behaviour is unchanged and its 465 tests pass untouched.
+
+`SafetyScreen` is attached to `ClinicalDraft`, deliberately **not** to `DraftContent`: `content` is
+what a provider produces and what a physician `MODIFY` replaces, so a finding stored there would be
+one a reviewer could overwrite, which is not a safety control. A test asserts a review body cannot
+carry its own screen.
+
+Evidence counts as present **by kind, not by whether the answer was known** — matching v1 exactly,
+where `EvidenceRef` carries no intake state, so an asked-but-unknown vital already satisfies SCR-001.
+Tightening that is a clinical rule change needing review, tests and a Decision Log entry under
+`SAFETY_SPEC.md`. It must not arrive as a side effect of wiring a second caller, so it did not.
+
+Two claim-boundary defects closed with it. The v2 banner said only "synthetic data"; it now carries
+`RESEARCH PROTOTYPE — HUMAN REVIEW REQUIRED` and the non-deployment sentence, which
+`innovation/ui/templates/base.html:86` has always had and A3.1 requires. And `ESCALATE`, accepted by
+`ReviewDecision` since v2 shipped but never sent by any client, was reachable from nowhere while
+reading as implemented; the review panel now offers it under the same reason requirement as `REJECT`.
+
+`playwright.config.ts` hardcoded `/opt/anaconda3/bin/python3`, so the e2e suite ran on one
+developer's machine and nowhere else. It now uses `${PYTHON:-python3}`.
+
+The case-id field's `pattern` was `[A-Za-z0-9_-]+`, which **throws under the RegExp `v` flag**, so
+Chrome had silently disabled that field's client-side validation. Verified in the browser after the
+fix: the field now rejects a Thai name and a space while still accepting `demo-001`. The server-side
+pydantic pattern was never affected, so this restored defence in depth rather than closing a hole —
+but the guard that was dead is precisely the one that stops a real patient name being typed as a
+case identifier.
+
+### Corrected in the record, not in reality
+
+- **TASK-0034** created retrospectively for the v2 workspace, with the evidence it already had.
+- **TASK-0028** REVIEW → DONE, re-verified on HEAD.
+- **TASK-0012..0015** BACKLOG → IN_PROGRESS. `docs/academic/PROPOSAL_SOURCE_DRAFT.md` carries drafted
+  material with 13 references, each verified against a primary source. `BACKLOG` said no work existed.
+- **DL-0002** `IN_PROGRESS` → `SUBMITTED`. The Project Idea was submitted and advisor-signed on
+  28 Aug; the registry had said otherwise for 19 days. **No official date was changed**, and an
+  attempt to add a `submission_evidence` note to that file was rejected by the schema and dropped
+  rather than the schema loosened — that evidence belongs in `SUBMISSION_RECORD.md`, where it is.
+
+### Not done, deliberately
+
+**A0 and A3.5 do not hold on v2 and are recorded as `no` in the new per-criterion table.** v2 does
+not route through the Model Gateway, and it has no audit record tying model version, provider
+version, reviewer identity and overrides together. Closing either is a decision under DEC-0003, not
+a defect fix, and it is TASK-0034's remaining scope. Until it is made, **no claim that the Clinical
+Front Door satisfies A0–A4 may be made about `/workspace` without naming those two rows.**
+
+A5 waits on a model — `research/` still contains only `README.md`. A6 is end-of-project. TASK-0033 is
+scheduled after the Proposal by `ACCEPTANCE_CRITERIA.md`. No live provider or Thai ASR was tested;
+none is configured and no paid call was made.
+
+### Verification
+
+Harness 1123 → 1135 → **1137 checks**, passing. **468 tests** (was 465), including three that fail if
+the v2 screen call is deleted — checked by deleting it. Smoke test passes. Frontend quality gate:
+vitest **9** (was 7), `tsc` clean, vite build, Playwright **8 passed** at 1440×900 and 768×1024 with
+Axe reporting no critical or serious findings. Browser walkthrough on a case with a chief complaint
+and no vital sign shows urgency floor `URGENT_REVIEW`, both red flags with their states in text, and
+the missing `VITAL` named.
+
+### Awaiting a human
+
+**APR-0001 and APR-0002 are both still `PENDING`**, and they are now blocking: TASK-0029 cannot
+close, and TASK-0032 depends on it. DEC-0014 and DEC-0015 were transcribed into
+`docs/DECISION_LOG.md` today after two weeks in `decisions.json` alone; both remain `proposed` and
+need their owner.
+
+**CITI is the real deadline pressure and no one has produced evidence.** TASK-0011 is P0,
+`risk_level: CRITICAL`, `evidence: []`, owned by all five members, internal completion 18 Sep,
+immutable 25 Sep — and it gates PhysioNet credentialed access that TASK-0005 needs, so a late CITI
+costs the data path, not only a certificate.

@@ -26,7 +26,7 @@
       "planning_deadline": "2026-08-28T00:00:00+07:00",
       "condition": null,
       "requirements": "2-4 pages plus references",
-      "status": "IN_PROGRESS"
+      "status": "SUBMITTED"
     },
     {
       "deadline_id": "DL-0003",
@@ -85,4 +85,3 @@
     }
   ]
 }
-

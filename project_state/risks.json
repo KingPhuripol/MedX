@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-09-07T18:15:00+07:00",
+  "updated_at": "2026-09-16T18:00:00+07:00",
   "risks": [
     {
       "risk_id": "RISK-0001",
@@ -267,6 +267,22 @@
         "TASK-0033"
       ],
       "updated_at": "2026-09-07T18:15:00+07:00"
+    },
+    {
+      "risk_id": "RISK-0016",
+      "description": "The project has two Front Doors and the safety evidence is on the one users do not see. innovation/gateway/ and innovation/frontdoor/ carry the Model Gateway, the audit log, the urgency taxonomy, uncertainty and the DAG explorer, all tested, behind the Jinja screens at /ui. innovation/v2/ behind the React workspace at /workspace is a separate implementation with its own providers, its own store and its own review flow, and innovation/config.py enables it by default while QUICKSTART.md calls /ui/v2 a recovery fallback. Verified by grep on 2026-09-16: ModelGateway, SafetyPolicy, red_flag and urgency each returned zero hits across innovation/v2/, and audit returned zero hits there as well. MODEL_API_CONTRACT.md opens by requiring every provider to implement the contract through the Model Gateway, so the default UI path violated it. The deterministic screen was connected on 2026-09-16 (both paths now call one screen_evidence), which closes A1.2 and A3.2 on v2. Two gaps remain open: v2 does not route through the Model Gateway (A0) and v2 has no audit record tying model version, provider version, reviewer identity and overrides together (A3.5). Distinct from RISK-0006, which is Research/Innovation contract drift; this is drift between two implementations inside Innovation itself.",
+      "probability": "HIGH",
+      "impact": "HIGH",
+      "owner": "Supreeya Nuamkhayan",
+      "trigger": "Realised and partly mitigated. The gap existed from the v2 delivery of 2026-09-12 to 2026-09-16 and was invisible because ACCEPTANCE_CRITERIA.md was never updated by the v2 commit, so no criterion pointed at /workspace and nothing could fail.",
+      "mitigation": "Done: one implementation of SCR-001 and SCR-002 in innovation/gateway/safety.py:screen_evidence, called by both paths, with a regression test that fails when the v2 call is removed; the RESEARCH PROTOTYPE - HUMAN REVIEW REQUIRED banner added to v2; a per-criterion v1/v2 table added to ACCEPTANCE_CRITERIA.md so a future divergence has something to fail against. Open: decide under DEC-0003 whether v2 routes through the Model Gateway or keeps its own provider protocol, and give v2 an audit sink either way.",
+      "fallback": "Demonstrate on /ui and state plainly that /workspace is the intake and review surface while the gateway path carries the audited decision. That is a weaker product story but a true one; claiming A0-A4 for /workspace without the audit record would not be.",
+      "review_date": "2026-09-27",
+      "status": "OPEN",
+      "linked_tasks": [
+        "TASK-0034"
+      ],
+      "updated_at": "2026-09-16T18:00:00+07:00"
     }
   ]
 }

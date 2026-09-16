@@ -166,6 +166,43 @@ Machine-readable decisions are in `project_state/decisions.json` and validated a
   - The compute budget rises by two arms and must be re-estimated against TASK-0018.
 - **Approval:** APR-0001 (`SCOPE_CHANGE`, `PENDING`) — the first entry in an approvals file that has been empty since the project began.
 
+## DEC-0014 - The Front Door target is a deployable multi-user research service
+
+- **Date:** 2026-09-02
+- **Status:** proposed
+- **Owner:** Supreeya Nuamkhayan
+- **Decision:** Target a deployable multi-user service: settings from the environment, a versioned API surface, a single error envelope, structured logging with correlation ids and redaction, token authentication tied to the human-review gate, readiness gating on the safety rules, SQLite in WAL on a volume, and one container. It remains a RESEARCH PROTOTYPE: the banner, the mandatory human confirmation and the non-deployment boundary stay, and `PRODUCT_SPEC.md`'s exclusion of production clinical deployment is unchanged.
+- **Rationale:** Deployability and safety are the same requirement in two places. The human-review gate rests on `reviewer_id`, which is a caller-supplied string; on a network that gate is decoration. Authentication is what makes it real, so hardening is not separable from the safety claim.
+- **Alternatives considered:**
+  - Stay a local demo — rejected: the owner asked for a usable system, and the defects found on 2026-09-02 (a broken audit sink, silently erased human reviews) were invisible precisely because nothing exercised the deployment path.
+  - Go to a full platform with Postgres, OIDC and metrics — rejected as ceremony: the append-only guarantee is implemented as SQLite triggers, and porting them buys a new failure mode and no marks.
+- **Consequences:**
+  - The service refuses to start unauthenticated on a non-loopback address.
+  - `/ready` gates traffic on the safety rule set: a Front Door without its rules must not take work.
+  - One uvicorn worker, documented — the circuit breaker is per-process.
+  - A deployment beyond loopback needs APR-0005 under the Human Approval Policy.
+- **Evidence:** `innovation/config.py` · `innovation/api/errors.py` · `innovation/logging.py` · `build_router` and `create_app` in `innovation/api/app.py` · `tests/test_service_wiring.py`
+- **Approval:** Pending — Supreeya Nuamkhayan (owner). This entry is proposed, not accepted.
+- **Recorded in this document on 2026-09-16.** It was accepted into `project_state/decisions.json` on 2026-09-02 and never transcribed here, so the readable log jumped DEC-0013 to DEC-0016 for two weeks. The machine record is authoritative under DEC-0008; a readable log missing two of its entries is the failure `TASK_BOARD.md` already warns about in its own domain.
+
+## DEC-0015 - Re-assessment at an unchanged decision point is idempotent
+
+- **Date:** 2026-09-02
+- **Status:** proposed
+- **Owner:** Supreeya Nuamkhayan
+- **Decision:** Request identity includes the snapshot checksum. An identical question already answered returns the answer already given, with its review history intact. A changed evidence set changes the checksum and is therefore a genuinely new question with a new recommendation.
+- **Rationale:** A recommendation's identity was derived from journey and decision time alone, so re-assessing at the same instant built a fresh recommendation under the same identifier with an empty review history: a recommendation a clinician had confirmed silently reverted to unconfirmed, and `/recommendations/{id}/effective` flipped from 200 back to 409 with nothing raised. The natural keys were already deterministic; they were simply incomplete.
+- **Alternatives considered:**
+  - Require an `Idempotency-Key` header — rejected: it adds a client obligation to work around a server-side identity bug.
+  - Refuse a duplicate assessment with 409 — rejected: re-reading a decision point is a normal clinical action, not a client error.
+- **Consequences:**
+  - A confirmed recommendation cannot be silently unconfirmed by a repeated request.
+  - History no longer gains duplicate entries for the same question.
+  - Recommendation identifiers change shape; nothing persists them across the change.
+- **Evidence:** `assess` and `_build_request` in `innovation/frontdoor/service.py` · `tests/test_service_wiring.py::test_re_assessing_the_same_question_keeps_the_human_review`
+- **Approval:** Pending — Supreeya Nuamkhayan (owner). This entry is proposed, not accepted.
+- **Recorded in this document on 2026-09-16**, with DEC-0014, for the same reason.
+
 ## DEC-0016 - The evaluated care setting is adult non-trauma emergency-department first-contact triage
 
 - **Date:** 2026-09-07

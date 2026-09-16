@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-09-07T18:15:00+07:00",
+  "updated_at": "2026-09-16T18:00:00+07:00",
   "tasks": [
     {
       "task_id": "TASK-0001",
@@ -334,7 +334,7 @@
       "workstream": "RESEARCH",
       "milestone": "M2",
       "priority": "P2",
-      "status": "BACKLOG",
+      "status": "IN_PROGRESS",
       "dependencies": [
         "TASK-0008",
         "TASK-0009",
@@ -348,10 +348,12 @@
       "evidence_required": [
         "Proposal Research section draft"
       ],
-      "evidence": [],
+      "evidence": [
+        "2026-09-16: docs/academic/PROPOSAL_SOURCE_DRAFT.md carries drafted Research material with 13 references, each verified against a primary source (Crossref, DOI content negotiation, arXiv API, NeurIPS proceedings) rather than written from memory. Status corrected from BACKLOG, which said no work existed."
+      ],
       "blocker": null,
       "risk_level": "HIGH",
-      "updated_at": "2026-08-30T17:30:00+07:00"
+      "updated_at": "2026-09-16T18:00:00+07:00"
     },
     {
       "task_id": "TASK-0013",
@@ -360,7 +362,7 @@
       "workstream": "INNOVATION",
       "milestone": "M2",
       "priority": "P2",
-      "status": "BACKLOG",
+      "status": "IN_PROGRESS",
       "dependencies": [
         "TASK-0006",
         "TASK-0008"
@@ -373,10 +375,12 @@
       "evidence_required": [
         "Proposal Innovation section draft"
       ],
-      "evidence": [],
+      "evidence": [
+        "2026-09-16: docs/academic/PROPOSAL_SOURCE_DRAFT.md carries drafted Innovation material with 13 references, each verified against a primary source (Crossref, DOI content negotiation, arXiv API, NeurIPS proceedings) rather than written from memory. Status corrected from BACKLOG, which said no work existed."
+      ],
       "blocker": null,
       "risk_level": "HIGH",
-      "updated_at": "2026-08-30T17:30:00+07:00"
+      "updated_at": "2026-09-16T18:00:00+07:00"
     },
     {
       "task_id": "TASK-0014",
@@ -385,7 +389,7 @@
       "workstream": "DATA",
       "milestone": "M2",
       "priority": "P2",
-      "status": "BACKLOG",
+      "status": "IN_PROGRESS",
       "dependencies": [
         "TASK-0005"
       ],
@@ -397,10 +401,12 @@
       "evidence_required": [
         "Proposal data/governance section draft"
       ],
-      "evidence": [],
+      "evidence": [
+        "2026-09-16: docs/academic/PROPOSAL_SOURCE_DRAFT.md carries drafted data and governance material with 13 references, each verified against a primary source (Crossref, DOI content negotiation, arXiv API, NeurIPS proceedings) rather than written from memory. Status corrected from BACKLOG, which said no work existed."
+      ],
       "blocker": null,
       "risk_level": "CRITICAL",
-      "updated_at": "2026-08-30T17:30:00+07:00"
+      "updated_at": "2026-09-16T18:00:00+07:00"
     },
     {
       "task_id": "TASK-0015",
@@ -409,7 +415,7 @@
       "workstream": "EVALUATION",
       "milestone": "M2",
       "priority": "P2",
-      "status": "BACKLOG",
+      "status": "IN_PROGRESS",
       "dependencies": [
         "TASK-0008",
         "TASK-0010"
@@ -422,10 +428,12 @@
       "evidence_required": [
         "Proposal evaluation/safety section draft"
       ],
-      "evidence": [],
+      "evidence": [
+        "2026-09-16: docs/academic/PROPOSAL_SOURCE_DRAFT.md carries drafted evaluation and safety material with 13 references, each verified against a primary source (Crossref, DOI content negotiation, arXiv API, NeurIPS proceedings) rather than written from memory. Status corrected from BACKLOG, which said no work existed."
+      ],
       "blocker": null,
       "risk_level": "CRITICAL",
-      "updated_at": "2026-08-30T17:30:00+07:00"
+      "updated_at": "2026-09-16T18:00:00+07:00"
     },
     {
       "task_id": "TASK-0016",
@@ -807,7 +815,7 @@
       "workstream": "INNOVATION",
       "milestone": "M2",
       "priority": "P1",
-      "status": "REVIEW",
+      "status": "DONE",
       "dependencies": [],
       "planned_start": "2026-09-02",
       "due_date": "2026-09-08",
@@ -825,11 +833,12 @@
         "2026-09-02: seven defects fixed. D1 pathlib.Path shadowed by fastapi.Path meant the app could not start with FRONT_DOOR_AUDIT_LOG set, so the JSONL audit sink had never worked through the API. D2 re-assessment at the same decision time silently erased human reviews. D3/D7 httpx, jinja2 and python-multipart were imported and undeclared. D4 the audit endpoint did not survive a restart. D5 reviewer identity was written by mutating a frozen dataclass and never persisted. D6 two unrelated objects named EXTERNAL_PROVIDERS meant an adapter registered under any name outside a hardcoded frozenset silently bypassed the DEC-0006 authorization gate. D7b one SQLite connection shared across the threadpool with no lock.",
         "2026-09-02: foundation added — innovation/config.py (Settings, refusing to start unauthenticated on a non-loopback bind), build_router extracted so the router mounts at /v1 and unprefixed, one error envelope with a correlation id, JSON logging with a redaction filter, /ready separated from /health, provider pool size configurable (was fixed at one), and a lifespan that finally calls the close() methods that already existed.",
         "2026-09-02: 257 tests pass (was 241), harness 1123 checks, smoke test passes. Verified live on http://localhost:8137: encounter to assessment to 409 to human confirmation to 200; re-assessment returned the same id with the confirmation intact; the audit trail returned two records with the reviewer on the second.",
-        "2026-09-02 NOT ADDRESSED, by design: escalation is still structural. The live run returned URGENT_REVIEW/ESCALATED on a case with a clear complaint and vitals, both red flags UNKNOWN. That is P1 and P2 work and depends on the Model API Contract 1.1.0 approval (APR-0002)."
+        "2026-09-02 NOT ADDRESSED, by design: escalation is still structural. The live run returned URGENT_REVIEW/ESCALATED on a case with a clear complaint and vitals, both red flags UNKNOWN. That is P1 and P2 work and depends on the Model API Contract 1.1.0 approval (APR-0002).",
+        "2026-09-16: re-verified on HEAD after the v2 workspace and safety-screen commits — pytest 468 passed, verify_harness.py 1135 checks, run_smoke_test.sh passed."
       ],
       "blocker": "DEC-0014 and DEC-0015 are drafted as proposed and need a human to accept them. Authentication, pagination and Docker are P6, not done here.",
       "risk_level": "MEDIUM",
-      "updated_at": "2026-09-02T20:00:00+07:00"
+      "updated_at": "2026-09-16T18:00:00+07:00"
     },
     {
       "task_id": "TASK-0029",
@@ -985,6 +994,38 @@
       "blocker": "Deliberately scheduled after the Proposal. Changing a safety rule three weeks before an immutable deadline spends exactly the review capacity RISK-0008 and RISK-0011 are about, and the alternative to rushing it is a defensible Proposal finding: the screen cannot discriminate, here is the measured proof and the designed fix. Needs a human decision on who validates a rule-based complaint reader.",
       "risk_level": "HIGH",
       "updated_at": "2026-09-07T18:15:00+07:00"
+    },
+    {
+      "task_id": "TASK-0034",
+      "title": "Close the v1/v2 Front Door split so the default UI carries the safety evidence",
+      "owner": "Supreeya Nuamkhayan",
+      "workstream": "INNOVATION",
+      "milestone": "M2",
+      "priority": "P1",
+      "status": "IN_PROGRESS",
+      "dependencies": [],
+      "planned_start": "2026-09-16",
+      "due_date": "2026-09-27",
+      "definition_of_done": [
+        "The deterministic screen runs on the /workspace path from one implementation shared with the v1 gateway, with a regression test that fails when the v2 call is removed",
+        "The RESEARCH PROTOTYPE - HUMAN REVIEW REQUIRED label and the non-deployment sentence appear in the v2 interface",
+        "ACCEPTANCE_CRITERIA.md states per criterion whether it was measured on v1, on v2, or neither, so a future divergence has something to fail against",
+        "A decision is recorded under DEC-0003 on whether v2 routes through the Model Gateway or keeps its own provider protocol",
+        "v2 writes an audit record tying model version, provider version, reviewer identity and overrides together, or the gap is stated as a named limitation in every claim about /workspace",
+        "Harness, full suite, smoke test and the frontend quality gate pass"
+      ],
+      "evidence_required": [
+        "Passing suite with the new regression tests",
+        "Browser walkthrough showing the screen findings on a case that is missing a required evidence type",
+        "RISK-0016 record and the v1/v2 table in ACCEPTANCE_CRITERIA.md"
+      ],
+      "evidence": [
+        "2026-09-16: SafetyPolicy.screen refactored to delegate to screen_evidence(); innovation/v2/safety.py calls the same function from Service.turn. SafetyScreen is attached to ClinicalDraft rather than DraftContent, so neither a provider nor a physician MODIFY can replace it. Three regression tests added in tests/test_v2.py; deleting the screen= argument fails two of them. v2 banner now carries the required label. ESCALATE, previously accepted by ReviewDecision but never sent by any client, is now reachable from the review panel. Verified: pytest 468 passed, harness 1135 checks, smoke test passed, vitest 9 passed, tsc clean, playwright 8 passed including Axe. Browser walkthrough on a case with a chief complaint and no vital shows urgency floor URGENT_REVIEW, both red flags with their states in text, and the missing VITAL named.",
+        "docs/innovation/ACCEPTANCE_CRITERIA.md: per-criterion v1/v2 table added; A0 and A3.5 recorded as NOT holding on v2."
+      ],
+      "blocker": "Two criteria remain open on v2 and both need a decision, not more code: A0 (v2 does not route through the Model Gateway) and A3.5 (v2 has no audit record). DEC-0014 is still proposed and APR-0002 is still PENDING.",
+      "risk_level": "HIGH",
+      "updated_at": "2026-09-16T18:00:00+07:00"
     }
   ]
 }

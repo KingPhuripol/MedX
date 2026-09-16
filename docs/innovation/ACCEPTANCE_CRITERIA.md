@@ -4,6 +4,35 @@
 A5 cannot start — no team model exists, the Research track has no code. A6 is end-of-project.
 Evidence: `make smoke` (222 tests), `make eval` (EVAL-0001), `make demo`.
 
+## Which system each criterion was measured on — added 16 Sep 2026
+
+A0–A6 below were written against **v1**: the Model Gateway, `innovation/frontdoor/`, and the
+Jinja screens at `/ui`. The v2 delivery of 12–14 Sep added a second Front Door —
+`innovation/v2/` behind the React workspace at `/workspace` — and **did not touch this file**,
+so for four days the interface `innovation/config.py` enables by default and `QUICKSTART.md`
+calls primary was mapped to no acceptance criterion at all.
+
+| Criterion | Measured on v1 | Holds on v2 (`/workspace`) |
+|---|---|---|
+| A0 contract prototype | yes | **no** — v2 does not route through the Model Gateway; it has its own providers and its own store |
+| A1.1 four intake states | yes | yes — `ClinicalFact.state` carries the same four |
+| A1.2 red-flag screen before inference | yes | **yes as of 16 Sep** — `innovation/v2/safety.py` calls the same `screen_evidence` |
+| A1.3 append-only history | yes | yes — SQLite `RAISE(ABORT,'append-only')` triggers |
+| A1.4 dashboard separates urgency, gaps, uncertainty | yes | **partial** — urgency floor, red flags and outstanding items render; uncertainty and care pathways do not exist in `DraftContent` |
+| A1.6 no completion without human review | yes | yes — physician-only `CONFIRM` |
+| A2 provider independence | yes | **not assessed** — v2 has its own provider protocol; the shared adapter fixtures do not run against it |
+| A3.1 prototype and human-review labels | yes | **yes as of 16 Sep** — previously the v2 banner said only "synthetic data" |
+| A3.2 model cannot downgrade a screen finding | yes | yes — the screen is on `ClinicalDraft`, outside the content a provider or a `MODIFY` can replace |
+| A3.5 immutable audit events | yes — `innovation/gateway/audit.py` | **no** — `grep -rn audit innovation/v2/` returns nothing. The append-only store is an implicit trail, but no record ties model version, provider version, reviewer identity and overrides together. **RISK-0016.** |
+| A3.7 accessibility | manual measurement | yes, and better — Axe runs in CI at two viewports |
+| A4 / A4.1 evaluation | yes | not applicable — the frozen case set runs against v1 |
+| A5 research-model integration | groundwork on v1 | not applicable — no model exists |
+
+**This table is the honest state, not a plan.** Two rows say **no**. Closing A0 and A3.5 on v2
+means either routing v2 through the Model Gateway or giving it its own audit sink, and that is a
+decision under DEC-0003, not a defect fix. Until it is made, no claim that "the Clinical Front
+Door satisfies A0–A4" may be made about `/workspace` without naming these two rows.
+
 ## A0 - Contract prototype — CLOSED
 
 - [x] Valid synthetic Patient Journey creates a versioned gateway request. — `shared/contracts/`, `innovation/frontdoor/service.py`
