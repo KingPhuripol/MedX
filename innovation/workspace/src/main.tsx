@@ -222,7 +222,7 @@ function App() {
     </aside>
     <div className="app-body">
       <header className="topbar"><div><span className="eyebrow">Clinical workspace · synthetic_intake_v1</span><h1>{pageTitle}</h1><p className="topbar__subtitle">{pageDescription}</p></div><StatusBadge tone={caps?.provider === "mock-v2" ? "warning" : "info"}>{caps?.provider === "mock-v2" ? "Offline · Mock provider" : "รอผลประเมินโมเดลจริง"}</StatusBadge></header>
-      <div className="synthetic-banner" role="note"><span aria-hidden="true">i</span><strong>ใช้ข้อมูลสังเคราะห์เท่านั้น</strong><p>ห้ามกรอกชื่อ เลขบัตรประชาชน หมายเลขโรงพยาบาล หรือข้อมูลที่ระบุตัวผู้ป่วยจริง</p></div>
+      <div className="synthetic-banner" role="note"><span aria-hidden="true">i</span><strong>RESEARCH PROTOTYPE — HUMAN REVIEW REQUIRED · ต้นแบบวิจัย ต้องให้แพทย์ยืนยันทุกครั้ง</strong><p>ใช้ข้อมูลสังเคราะห์เท่านั้น ห้ามกรอกชื่อ เลขบัตรประชาชน หมายเลขโรงพยาบาล หรือข้อมูลที่ระบุตัวผู้ป่วยจริง ระบบนี้ไม่วินิจฉัยโรค ไม่สั่งยา ไม่สั่งตรวจ ไม่ส่งต่อและไม่จำหน่ายผู้ป่วย</p></div>
       <main id="main" tabIndex={-1}>
         <div className="global-status" aria-live="polite">
           {job && ["queued", "running"].includes(job.status) ? <div className="inline-message inline-message--info"><div><strong>{job.status === "queued" ? "งานอยู่ในคิว" : "ผู้ช่วยกำลังทำงาน"}</strong><span>เคส {job.encounter_id}</span></div><button className="button button--text" onClick={() => work(async () => setJob(await apiCall<Job>(`/jobs/${job.job_id}/cancel`, "POST")))}>ยกเลิกงาน</button></div> : null}

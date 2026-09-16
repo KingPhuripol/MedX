@@ -200,6 +200,13 @@ textarea { min-height: 108px; resize: vertical; }
 .older-drafts div article { display: flex; justify-content: space-between; gap: var(--space-5); padding: var(--space-4) 0; border-top: 1px solid var(--border-subtle); }
 .older-drafts article span { color: var(--text-muted); font-size: var(--font-size-sm); }
 .summary-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+/* Deterministic screen. A left border plus explicit text carries the finding, so it
+   survives greyscale printing and a screen reader — never color alone. */
+.screen-findings { margin: var(--space-6) 0; padding: var(--space-5) var(--space-6); background: var(--surface-warning); border-left: var(--space-2) solid var(--border-warning); border-radius: var(--radius-control); }
+.screen-findings h3 { margin-bottom: var(--space-3); }
+.screen-findings__flags { margin: 0 0 var(--space-4); padding-left: var(--space-7); color: var(--text-warning); }
+.screen-findings .supporting-text { margin-bottom: 0; }
+
 .outstanding { margin: var(--space-6) 0; padding: var(--space-5) var(--space-6); background: var(--surface-subtle); border-radius: var(--radius-control); }
 .outstanding ul { margin-bottom: 0; padding-left: var(--space-7); }
 .facts-panel { padding-bottom: var(--space-6); }

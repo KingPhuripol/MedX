@@ -186,3 +186,49 @@ def test_auth_stays_enabled_when_v2_disabled(tmp_path):
     with TestClient(create_app(settings=Settings(v2_enabled=False, auth_mode='token', principals_file=path))) as c:
         assert c.get('/v1/journeys/a/history').status_code == 401
         assert c.get('/health').status_code == 200
+
+
+def test_deterministic_screen_reaches_the_v2_draft(service):
+    """SCR-001/SCR-002 must run on the /workspace path, not only on the v1 gateway.
+
+    This is the regression for the gap found on 16 Sep 2026: `innovation/v2` shipped with
+    no reference to the safety layer at all, so every draft the default UI produced
+    carried no red flags and no urgency floor. Deleting the `screen=` argument in
+    `Service.turn` fails this test.
+    """
+    create(service); add(service)
+    draft = service.draft(turn(service)['draft_id'], ACTOR)
+
+    screen = draft['screen']
+    assert screen['policy_version'] == 'safety-policy-v1'
+    # Only a HISTORY fact exists, so both required Front Door types are absent.
+    assert sorted(screen['missing_required']) == ['CHIEF_COMPLAINT', 'VITAL']
+    assert screen['urgency_floor'] == 'URGENT_REVIEW'
+    assert [f['code'] for f in screen['red_flags']] == ['REQUIRED_INFORMATION_INCOMPLETE']
+    assert screen['applied_rules'] == ['SCR-001-REQUIRED_INFORMATION_INCOMPLETE']
+
+
+def test_screen_flags_an_unread_complaint_and_survives_physician_modification(service):
+    create(service)
+    add(service, id='c', kind='CHIEF_COMPLAINT', value='ไอสองวัน เป็นข้อมูลสังเคราะห์')
+    draft = service.draft(turn(service, revision=1)['draft_id'], ACTOR)
+
+    complaint = next(f for f in draft['screen']['red_flags']
+                     if f['code'] == 'COMPLAINT_NOT_EVALUATED_BY_RULE')
+    # No deterministic rule reads free text, so the question is open, never answered.
+    assert complaint['state'] == 'UNKNOWN'
+    assert complaint['evidence_ids'] == ['c']
+
+    # A physician MODIFY replaces `content`. It must not be able to drop the screen:
+    # a finding a reviewer can overwrite is not a safety control.
+    edited = DraftContent(**{**draft['content'], 'summary': draft['content']['summary'] + '\nแก้ไข'})
+    after = review(service, draft['draft_id'], 'MODIFY', content=edited, reason='ตรวจแก้ร่าง')
+    assert after['draft_revision'] == 2
+    assert after['screen'] == draft['screen']
+
+
+def test_a_review_body_cannot_carry_its_own_screen(service):
+    with pytest.raises(Exception):
+        ReviewDecision(expected_revision=1, idempotency_key='k', draft_revision=1,
+                       expected_review_sequence=0, action='CONFIRM',
+                       screen={'policy_version': 'forged', 'urgency_floor': 'ROUTINE_REVIEW'})

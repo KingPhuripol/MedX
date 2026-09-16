@@ -5,10 +5,14 @@ import {
   type Draft,
   type Fact,
   type Run,
+  type SafetyScreen,
   displayFact,
   factKinds,
   factStates,
   humanizeClinicalText,
+  redFlagLabels,
+  redFlagStates,
+  urgencyLabels,
 } from "../types";
 
 export function StatusBadge({ tone = "neutral", children }: {
@@ -17,6 +21,55 @@ export function StatusBadge({ tone = "neutral", children }: {
 }) {
   const icon: IconName = tone === "success" ? "check" : tone === "warning" || tone === "danger" ? "alert" : "spark";
   return <span className={`status-badge status-${tone}`}><Icon name={icon} size={14} />{children}</span>;
+}
+
+/** The deterministic screen, rendered above the model's summary.
+ *
+ * It is read-only on purpose: a physician reviews the draft, never the screen. Urgency
+ * and each flag state are carried by text and a glyph, not by color alone, so the
+ * finding survives greyscale and a screen reader. */
+export function ScreenFindings({ screen }: { screen: SafetyScreen | null }) {
+  if (!screen) {
+    return (
+      <div className="inline-message inline-message--warning" role="status">
+        ร่างนี้สร้างก่อนระบบคัดกรองอัตโนมัติ ไม่มีผลคัดกรองกำกับ
+      </div>
+    );
+  }
+  const triggered = screen.red_flags.some((flag) => flag.state === "TRIGGERED");
+  return (
+    <section className="screen-findings" aria-label="ผลคัดกรองอัตโนมัติก่อนใช้แบบจำลอง">
+      <div className="section-heading">
+        <div>
+          <span className="eyebrow">คัดกรองอัตโนมัติ ({screen.policy_version})</span>
+          <h3>ระดับความเร่งด่วนอย่างน้อย: {urgencyLabels[screen.urgency_floor] || screen.urgency_floor}</h3>
+        </div>
+        <StatusBadge tone={triggered ? "danger" : "warning"}>
+          {triggered ? "เข้าเงื่อนไขคัดกรอง" : "ยังตอบไม่ครบ"}
+        </StatusBadge>
+      </div>
+      {screen.red_flags.length ? (
+        <ul className="screen-findings__flags">
+          {screen.red_flags.map((flag) => (
+            <li key={flag.code}>
+              <strong>{redFlagLabels[flag.code] || flag.code}</strong>
+              {" — "}
+              {redFlagStates[flag.state] || flag.state}
+              {flag.evidence_ids.length ? ` (${flag.evidence_ids.length} รายการ)` : ""}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {screen.missing_required.length ? (
+        <p className="supporting-text">
+          ยังขาด: {screen.missing_required.map((kind) => factKinds[kind] || kind).join(", ")}
+        </p>
+      ) : null}
+      <p className="supporting-text">
+        การคัดกรองนี้ดูว่ามีข้อมูลชนิดใดบ้าง ไม่ได้อ่านเนื้อหาทางคลินิก แบบจำลองลดระดับผลนี้ไม่ได้
+      </p>
+    </section>
+  );
 }
 
 export function FactView({ fact, onEdit }: { fact: Fact; onEdit?: (fact: Fact) => void }) {
@@ -126,7 +179,7 @@ export function Review({ draft, revision, canReview, act, onDirty }: {
   }, [draft.draft_revision, draft.review_sequence]);
   useEffect(() => { onDirty(dirty); return () => onDirty(false); }, [dirty, onDirty]);
 
-  const review = async (action: "CONFIRM" | "MODIFY" | "REJECT") => act(`/drafts/${draft.draft_id}/reviews`, {
+  const review = async (action: "CONFIRM" | "MODIFY" | "REJECT" | "ESCALATE") => act(`/drafts/${draft.draft_id}/reviews`, {
     expected_revision: revision,
     idempotency_key: createIdempotencyKey(),
     draft_revision: draft.draft_revision,
@@ -147,6 +200,7 @@ export function Review({ draft, revision, canReview, act, onDirty }: {
       </div>
       <p className="supporting-text">อ้างอิงข้อมูลเคสรุ่น {draft.case_revision}</p>
       {stale ? <div role="status" className="inline-message inline-message--warning">ข้อมูลเคสเปลี่ยนแล้ว กรุณาตรวจหรือสร้างร่างฉบับล่าสุด</div> : null}
+      <ScreenFindings screen={draft.screen} />
       {editing ? <div className="edit-surface">
         <label>ข้อความสรุป<textarea className="summary-editor" value={summary} onChange={(event) => setSummary(event.target.value)} /></label>
         <label>งานค้าง หนึ่งรายการต่อบรรทัด<textarea value={outstanding} onChange={(event) => setOutstanding(event.target.value)} /></label>
@@ -164,6 +218,7 @@ export function Review({ draft, revision, canReview, act, onDirty }: {
         {editing ? <>
           <button className="button button--secondary" disabled={stale || !dirty || !reason.trim() || reviewConflict} onClick={() => review("MODIFY")}>บันทึกเป็นฉบับใหม่</button>
           <button className="button button--danger" disabled={stale || !reason.trim() || dirty} onClick={() => review("REJECT")}>ปฏิเสธร่าง</button>
+          <button className="button button--danger" disabled={stale || !reason.trim() || dirty} onClick={() => review("ESCALATE")}>ส่งต่อให้ทบทวน</button>
         </> : null}
       </div> : <p className="supporting-text">บัญชีแพทย์เป็นผู้ยืนยันร่างส่งต่อ</p>}
     </section>

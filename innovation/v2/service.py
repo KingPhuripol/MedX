@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from uuid import uuid4
 from innovation.v2.models import (ClinicalFact, CaseRevision, ClinicalDraft, now, DraftContent)
+from innovation.v2.safety import screen_case
 from innovation.v2.store import DomainError, digest
 from innovation.v2.runtime import DESIGNS, validate_content
 
@@ -158,7 +159,8 @@ class Service:
                 if content.differentials and actor.role != "physician":
                     content = content.model_copy(update={"differentials": []})
                 draft = ClinicalDraft(draft_id=uuid4().hex, encounter_id=encounter_id,
-                    case_revision=snapshot.case_revision, snapshot=snapshot, content=content, created_by=actor.subject)
+                    case_revision=snapshot.case_revision, snapshot=snapshot, content=content,
+                    screen=screen_case(snapshot), created_by=actor.subject)
                 self.store.append("draft", draft.draft_id, draft.model_dump(mode="json"))
                 run.draft_id = draft.draft_id
             data = run.model_dump(mode="json")
@@ -295,7 +297,8 @@ class Service:
             if body.action == 'MODIFY':
                 snapshot = CaseRevision.model_validate(current['snapshot'])
                 validate_content(body.content, snapshot, self.runtime.allow_differential)
-                version = ClinicalDraft.model_validate({k: current[k] for k in ClinicalDraft.model_fields})
+                version = ClinicalDraft.model_validate(
+                    {k: current[k] for k in ClinicalDraft.model_fields if k in current})
                 version = version.model_copy(update={'draft_revision': version.draft_revision+1,
                     'content': body.content, 'created_by': actor.subject, 'created_at': now()})
                 self.store.append('draft', draft_id, version.model_dump(mode='json'))

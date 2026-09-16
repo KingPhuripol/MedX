@@ -16,6 +16,7 @@ Changing any rule here requires clinical review, tests, and a Decision Log entry
 
 from __future__ import annotations
 
+from collections.abc import Collection
 from dataclasses import dataclass
 
 from shared.contracts.model_api import (
@@ -81,6 +82,84 @@ class SafetyDecision:
     limitations: tuple[str, ...]
 
 
+def missing_required_evidence(present_kinds: Collection[str]) -> frozenset[str]:
+    """Required Front Door evidence types absent from `present_kinds`.
+
+    Absence is not a negative finding. A missing vital sign means nobody has recorded
+    one, never that the vital sign is normal.
+    """
+    return frozenset(REQUIRED_FRONT_DOOR_EVIDENCE - set(present_kinds))
+
+
+def screen_evidence(
+    present_kinds: Collection[str],
+    complaint_evidence_ids: Collection[str] = (),
+    front_door: bool = True,
+) -> ScreenResult:
+    """The deterministic pre-inference screen, over evidence *types* alone.
+
+    This is the single implementation of SCR-001 and SCR-002. Both Front Door paths call
+    it: the v1 gateway through `SafetyPolicy.screen`, and the v2 case service through
+    `innovation.v2.safety`. Duplicating it would let a provider swap or a UI rewrite
+    silently change the safety behaviour on one path only, which is the failure this
+    module exists to prevent.
+
+    It reasons about which evidence types are present, never about clinical content.
+    Where it cannot evaluate a rule it says UNKNOWN — it never records NOT_TRIGGERED for
+    a check it did not perform.
+    """
+    if not front_door:
+        return ScreenResult(
+            red_flags=(),
+            urgency_floor="INSUFFICIENT_INFORMATION",
+            applied_rules=(),
+            missing_required=frozenset(),
+            limitations=(),
+        )
+
+    rules: list[str] = []
+    limitations: list[str] = []
+    flags: list[RedFlag] = []
+    floor = "INSUFFICIENT_INFORMATION"
+
+    missing = missing_required_evidence(present_kinds)
+    if missing:
+        flags.append(
+            RedFlag(
+                code="REQUIRED_INFORMATION_INCOMPLETE",
+                state="TRIGGERED",
+                evidence_ids=[],
+            )
+        )
+        floor = "URGENT_REVIEW"
+        rules.append("SCR-001-REQUIRED_INFORMATION_INCOMPLETE")
+        limitations.append(
+            "Pre-inference screen: required evidence was absent at decision time: "
+            + ", ".join(sorted(missing))
+        )
+
+    # A complaint exists but no deterministic rule can read it, so the question of
+    # whether it is a red flag is open, not answered. SR-002 then escalates it.
+    complaint = sorted(set(complaint_evidence_ids))
+    if complaint:
+        flags.append(
+            RedFlag(
+                code="COMPLAINT_NOT_EVALUATED_BY_RULE",
+                state="UNKNOWN",
+                evidence_ids=complaint,
+            )
+        )
+        rules.append("SCR-002-COMPLAINT_NOT_RULE_EVALUATED")
+
+    return ScreenResult(
+        red_flags=tuple(flags),
+        urgency_floor=floor,
+        applied_rules=tuple(rules),
+        missing_required=missing,
+        limitations=tuple(limitations),
+    )
+
+
 class SafetyPolicy:
     """Applies the deterministic rules to a provider's proposed output."""
 
@@ -90,57 +169,22 @@ class SafetyPolicy:
         """Required evidence types absent from the request, for front-door tasks."""
         if request.task != "CLINICAL_FRONT_DOOR":
             return frozenset()
-        present = {e.event_type for e in request.evidence}
-        return frozenset(REQUIRED_FRONT_DOOR_EVIDENCE - present)
+        return missing_required_evidence({e.event_type for e in request.evidence})
 
     def screen(self, request: GatewayRequest) -> ScreenResult:
-        """Deterministic pre-inference screen. Runs before any provider is called.
+        """Deterministic pre-inference screen for a v1 gateway request.
 
-        It sees evidence *references*, so it reasons about which evidence types are
-        present, not about clinical content. Where it cannot evaluate a rule it says
-        UNKNOWN — it never records NOT_TRIGGERED for a check it did not perform.
+        The rules themselves live in `screen_evidence` so that the v2 Front Door path,
+        which carries `ClinicalFact` records rather than a `GatewayRequest`, runs the
+        same screen rather than a second copy of it.
         """
-        rules: list[str] = []
-        limitations: list[str] = []
-        flags: list[RedFlag] = []
-        floor = "INSUFFICIENT_INFORMATION"
-
-        missing = self.missing_required_evidence(request)
-        if missing:
-            flags.append(
-                RedFlag(
-                    code="REQUIRED_INFORMATION_INCOMPLETE",
-                    state="TRIGGERED",
-                    evidence_ids=[],
-                )
-            )
-            floor = "URGENT_REVIEW"
-            rules.append("SCR-001-REQUIRED_INFORMATION_INCOMPLETE")
-            limitations.append(
-                "Pre-inference screen: required evidence was absent at decision time: "
-                + ", ".join(sorted(missing))
-            )
-
-        if request.task == "CLINICAL_FRONT_DOOR":
-            # A complaint exists but no deterministic rule can read it, so the question of
-            # whether it is a red flag is open, not answered. SR-002 then escalates it.
-            complaint = [e.evidence_id for e in request.evidence if e.event_type == "CHIEF_COMPLAINT"]
-            if complaint:
-                flags.append(
-                    RedFlag(
-                        code="COMPLAINT_NOT_EVALUATED_BY_RULE",
-                        state="UNKNOWN",
-                        evidence_ids=complaint,
-                    )
-                )
-                rules.append("SCR-002-COMPLAINT_NOT_RULE_EVALUATED")
-
-        return ScreenResult(
-            red_flags=tuple(flags),
-            urgency_floor=floor,
-            applied_rules=tuple(rules),
-            missing_required=missing,
-            limitations=tuple(limitations),
+        if request.task != "CLINICAL_FRONT_DOOR":
+            return screen_evidence(set(), front_door=False)
+        return screen_evidence(
+            {e.event_type for e in request.evidence},
+            complaint_evidence_ids=[
+                e.evidence_id for e in request.evidence if e.event_type == "CHIEF_COMPLAINT"
+            ],
         )
 
     @staticmethod

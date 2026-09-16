@@ -4,6 +4,8 @@ from datetime import datetime, timezone
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, AwareDatetime, model_validator
 
+from shared.contracts.model_api import RedFlag
+
 
 def now() -> datetime:
     return datetime.now(timezone.utc)
@@ -83,6 +85,25 @@ class DraftContent(Model):
     limitations: list[str] = Field(default_factory=lambda: ["Synthetic research prototype; clinical validation pending"])
 
 
+class SafetyScreen(Model):
+    """Result of the deterministic pre-inference screen, attached to a draft.
+
+    It sits beside `content` rather than inside it because `content` is what a provider
+    produces and what a physician MODIFY replaces. A screen finding that a reviewer or a
+    provider could overwrite would not be a safety control. The service computes this
+    from the snapshot; no request body can set it.
+    """
+
+    policy_version: str
+    urgency_floor: Literal[
+        "IMMEDIATE_REVIEW", "URGENT_REVIEW", "ROUTINE_REVIEW", "INSUFFICIENT_INFORMATION"
+    ]
+    red_flags: list[RedFlag] = Field(default_factory=list)
+    applied_rules: list[str] = Field(default_factory=list)
+    missing_required: list[str] = Field(default_factory=list)
+    limitations: list[str] = Field(default_factory=list)
+
+
 class ClinicalDraft(Model):
     draft_id: str
     encounter_id: str
@@ -90,6 +111,7 @@ class ClinicalDraft(Model):
     draft_revision: int = 1
     snapshot: CaseRevision
     content: DraftContent
+    screen: SafetyScreen | None = None
     created_by: str
     created_at: AwareDatetime = Field(default_factory=now)
 

@@ -20,6 +20,16 @@ const content = {
   outstanding: [],
   differentials: [],
 };
+const screening = {
+  policy_version: "safety-policy-v1",
+  urgency_floor: "URGENT_REVIEW",
+  red_flags: [
+    { code: "REQUIRED_INFORMATION_INCOMPLETE", state: "TRIGGERED" as const, evidence_ids: [] },
+  ],
+  applied_rules: ["SCR-001-REQUIRED_INFORMATION_INCOMPLETE"],
+  missing_required: ["CHIEF_COMPLAINT", "VITAL"],
+  limitations: [],
+};
 const draft = {
   draft_id: "d",
   draft_revision: 1,
@@ -28,6 +38,7 @@ const draft = {
   status: "PENDING_REVIEW",
   effective: false,
   content,
+  screen: screening,
   snapshot: { evidence: [fact] },
   versions: [{ draft_revision: 1, content }],
 };
@@ -102,4 +113,24 @@ it("accepts two proposals together and preserves structured values", () => {
   expect(act.mock.calls[0][1].proposals[1].fact.value).toEqual(
     measurement.value,
   );
+});
+
+it("shows the deterministic screen above the model summary and can escalate", () => {
+  const act = vi.fn().mockResolvedValue(undefined);
+  render(<Review draft={draft} revision={1} canReview act={act} onDirty={() => {}} />);
+  // The finding must be readable without color: text carries urgency and flag state.
+  expect(screen.getByText(/ต้องให้แพทย์ดูโดยเร็ว/)).toBeTruthy();
+  expect(screen.getByText("ข้อมูลที่จำเป็นยังไม่ครบ")).toBeTruthy();
+
+  fireEvent.click(screen.getByRole("button", { name: "แก้ไขหรือปฏิเสธ" }));
+  fireEvent.change(screen.getByLabelText("เหตุผลที่แก้ไขหรือปฏิเสธ"), {
+    target: { value: "ต้องให้แพทย์อีกท่านดู" },
+  });
+  fireEvent.click(screen.getByText("ส่งต่อให้ทบทวน"));
+  expect(act.mock.calls[0][1].action).toBe("ESCALATE");
+});
+
+it("says so when a draft predates the screen instead of implying it passed", () => {
+  render(<Review draft={{ ...draft, screen: null }} revision={1} canReview act={vi.fn()} onDirty={() => {}} />);
+  expect(screen.getByText(/ไม่มีผลคัดกรองกำกับ/)).toBeTruthy();
 });

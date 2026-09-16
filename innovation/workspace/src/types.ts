@@ -35,6 +35,22 @@ export type DraftContent = {
   differentials: unknown[];
 };
 
+export type RedFlag = {
+  code: string;
+  state: "TRIGGERED" | "NOT_TRIGGERED" | "UNKNOWN";
+  evidence_ids: string[];
+};
+
+/** Deterministic pre-inference screen. The service computes it; no client may set it. */
+export type SafetyScreen = {
+  policy_version: string;
+  urgency_floor: string;
+  red_flags: RedFlag[];
+  applied_rules: string[];
+  missing_required: string[];
+  limitations: string[];
+};
+
 export type Draft = {
   draft_id: string;
   draft_revision: number;
@@ -43,6 +59,7 @@ export type Draft = {
   status: string;
   effective: boolean;
   content: DraftContent;
+  screen: SafetyScreen | null;
   snapshot: { evidence: Fact[] };
   versions: { draft_revision: number; content: DraftContent }[];
 };
@@ -115,6 +132,24 @@ export const factStates: Record<string, string> = {
   UNKNOWN: "ผู้ป่วยไม่ทราบ",
   REFUSED: "ผู้ป่วยไม่สะดวกตอบ",
   NOT_AVAILABLE: "ยังไม่มีข้อมูล",
+};
+
+export const urgencyLabels: Record<string, string> = {
+  IMMEDIATE_REVIEW: "ต้องให้แพทย์ดูทันที",
+  URGENT_REVIEW: "ต้องให้แพทย์ดูโดยเร็ว",
+  ROUTINE_REVIEW: "ให้แพทย์ดูตามคิวปกติ",
+  INSUFFICIENT_INFORMATION: "ข้อมูลยังไม่พอสรุป",
+};
+
+export const redFlagLabels: Record<string, string> = {
+  REQUIRED_INFORMATION_INCOMPLETE: "ข้อมูลที่จำเป็นยังไม่ครบ",
+  COMPLAINT_NOT_EVALUATED_BY_RULE: "ยังไม่มีกฎอ่านอาการสำคัญนี้",
+};
+
+export const redFlagStates: Record<string, string> = {
+  TRIGGERED: "เข้าเงื่อนไข",
+  UNKNOWN: "ยังตอบไม่ได้",
+  NOT_TRIGGERED: "ไม่เข้าเงื่อนไข",
 };
 
 export const handoffLabels: Record<string, string> = {
