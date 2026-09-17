@@ -53,7 +53,7 @@ it("blocks approval while edits are unsaved, then sends actual modified content"
       onDirty={() => {}}
     />,
   );
-  fireEvent.click(screen.getByRole("button", { name: "แก้ไขหรือปฏิเสธ" }));
+  fireEvent.click(screen.getByRole("button", { name: "แก้ไขข้อความ" }));
   fireEvent.change(screen.getByLabelText("ข้อความสรุป"), {
     target: { value: "Corrected summary" },
   });
@@ -61,9 +61,7 @@ it("blocks approval while edits are unsaved, then sends actual modified content"
   expect(confirm.disabled).toBe(true);
   fireEvent.click(confirm);
   expect(act).not.toHaveBeenCalled();
-  fireEvent.change(screen.getByLabelText("เหตุผลที่แก้ไขหรือปฏิเสธ"), {
-    target: { value: "Correction" },
-  });
+  fireEvent.change(screen.getByLabelText(/เหตุผล/), { target: { value: "Correction" } });
   fireEvent.click(screen.getByText("บันทึกเป็นฉบับใหม่"));
   expect(act.mock.calls[0][1].content.summary).toBe("Corrected summary");
   expect(act.mock.calls[0][1].action).toBe("MODIFY");
@@ -122,10 +120,7 @@ it("shows the deterministic screen above the model summary and can escalate", ()
   expect(screen.getByText(/ต้องให้แพทย์ดูโดยเร็ว/)).toBeTruthy();
   expect(screen.getByText("ข้อมูลที่จำเป็นยังไม่ครบ")).toBeTruthy();
 
-  fireEvent.click(screen.getByRole("button", { name: "แก้ไขหรือปฏิเสธ" }));
-  fireEvent.change(screen.getByLabelText("เหตุผลที่แก้ไขหรือปฏิเสธ"), {
-    target: { value: "ต้องให้แพทย์อีกท่านดู" },
-  });
+  fireEvent.change(screen.getByLabelText(/เหตุผล/), { target: { value: "ต้องให้แพทย์อีกท่านดู" } });
   fireEvent.click(screen.getByText("ส่งต่อให้ทบทวน"));
   expect(act.mock.calls[0][1].action).toBe("ESCALATE");
 });
@@ -133,4 +128,39 @@ it("shows the deterministic screen above the model summary and can escalate", ()
 it("says so when a draft predates the screen instead of implying it passed", () => {
   render(<Review draft={{ ...draft, screen: null }} revision={1} canReview act={vi.fn()} onDirty={() => {}} />);
   expect(screen.getByText(/ไม่มีผลคัดกรองกำกับ/)).toBeTruthy();
+});
+
+it("does not rewrite stored clinical text that the reviewer never edited", () => {
+  // The edit surface renders Thai labels over machine values. Sending the humanized
+  // string back would silently replace HISTORY with ประวัติ in stored content on every
+  // MODIFY. Only the field the reviewer actually changed may be sent.
+  const coded = {
+    ...content,
+    summary: "HISTORY: ไอสองวัน",
+    outstanding: ["HISTORY", "MEDICATION"],
+  };
+  const act = vi.fn().mockResolvedValue(undefined);
+  render(
+    <Review draft={{ ...draft, content: coded, versions: [{ draft_revision: 1, content: coded }] }}
+      revision={1} canReview act={act} onDirty={() => {}} />,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "แก้ไขข้อความ" }));
+
+  // The outstanding editor must not show raw enum codes to a clinician.
+  const outstandingBox = screen.getByLabelText(/งานค้าง/) as HTMLTextAreaElement;
+  expect(outstandingBox.value).toBe("ประวัติ\nยาที่ใช้");
+
+  // Edit the summary only; outstanding is untouched and must go back as stored codes.
+  fireEvent.change(screen.getByLabelText("ข้อความสรุป"), { target: { value: "แก้แล้ว" } });
+  fireEvent.change(screen.getByLabelText(/เหตุผล/), { target: { value: "ตรวจแก้ร่าง" } });
+  fireEvent.click(screen.getByText("บันทึกเป็นฉบับใหม่"));
+
+  const sent = act.mock.calls[0][1].content;
+  expect(sent.summary).toBe("แก้แล้ว");
+  expect(sent.outstanding).toEqual(["HISTORY", "MEDICATION"]);
+});
+
+it("says why confirming is unavailable instead of only disabling the button", () => {
+  render(<Review draft={draft} revision={2} canReview act={vi.fn()} onDirty={() => {}} />);
+  expect(screen.getByText(/ต้องสร้างหรือตรวจร่างฉบับล่าสุดก่อน/)).toBeTruthy();
 });

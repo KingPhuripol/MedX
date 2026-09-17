@@ -151,6 +151,8 @@ export function FactEditor({ fact, onChange }: { fact: Fact; onChange: (fact: Fa
   );
 }
 
+const outstandingLabel = (item: string) => factKinds[item] || factStates[item] || item;
+
 export function Review({ draft, revision, canReview, act, onDirty }: {
   draft: Draft;
   revision: number;
@@ -158,18 +160,28 @@ export function Review({ draft, revision, canReview, act, onDirty }: {
   act: (path: string, body: unknown) => Promise<void>;
   onDirty: (dirty: boolean) => void;
 }) {
-  const [summary, setSummary] = useState(humanizeClinicalText(draft.content.summary));
+  // The edit surface shows Thai, but `draft.content` stores the machine values. Keeping
+  // the two apart matters: sending the humanized string back would silently rewrite
+  // stored clinical text that the reviewer never authored. `review()` below sends the
+  // ORIGINAL value whenever a field was not edited, so the codes survive untouched.
+  const incomingOf = (source: Draft) => ({
+    summary: humanizeClinicalText(source.content.summary),
+    outstanding: source.content.outstanding.map(outstandingLabel).join("\n"),
+  });
+  const [summary, setSummary] = useState(() => incomingOf(draft).summary);
   const [reason, setReason] = useState("");
-  const [outstanding, setOutstanding] = useState(draft.content.outstanding.join("\n"));
+  const [outstanding, setOutstanding] = useState(() => incomingOf(draft).outstanding);
   const [editing, setEditing] = useState(false);
   const [evidence, setEvidence] = useState(false);
-  const [baseline, setBaseline] = useState({ summary: humanizeClinicalText(draft.content.summary), outstanding: draft.content.outstanding.join("\n") });
+  const [baseline, setBaseline] = useState(() => incomingOf(draft));
   const [reviewConflict, setReviewConflict] = useState(false);
-  const dirty = summary !== baseline.summary || outstanding !== baseline.outstanding;
+  const summaryEdited = summary !== baseline.summary;
+  const outstandingEdited = outstanding !== baseline.outstanding;
+  const dirty = summaryEdited || outstandingEdited;
   const stale = draft.case_revision !== revision || draft.status === "SUPERSEDED" || draft.status === "STALE";
 
   useEffect(() => {
-    const incoming = { summary: humanizeClinicalText(draft.content.summary), outstanding: draft.content.outstanding.join("\n") };
+    const incoming = incomingOf(draft);
     if (!dirty || (incoming.summary === summary && incoming.outstanding === outstanding)) {
       setSummary(incoming.summary);
       setOutstanding(incoming.outstanding);
@@ -186,11 +198,29 @@ export function Review({ draft, revision, canReview, act, onDirty }: {
     expected_review_sequence: draft.review_sequence,
     action,
     reason: action === "CONFIRM" ? null : reason,
-    content: action === "MODIFY" ? { ...draft.content, summary, outstanding: outstanding.split("\n").map((item) => item.trim()).filter(Boolean) } : null,
+    content: action === "MODIFY" ? {
+      ...draft.content,
+      summary: summaryEdited ? summary : draft.content.summary,
+      outstanding: outstandingEdited
+        ? outstanding.split("\n").map((item) => item.trim()).filter(Boolean)
+        : draft.content.outstanding,
+    } : null,
   });
 
   const tone = stale ? "warning" : draft.effective ? "success" : draft.status === "REJECT" ? "danger" : "info";
   const status = stale ? "ต้องตรวจใหม่" : draft.effective ? "ยืนยันแล้ว" : draft.status === "REJECT" ? "ถูกปฏิเสธ" : "รอตรวจยืนยัน";
+
+  // Why the primary action is unavailable. A disabled control must say so in words.
+  const blocked = stale ? "ข้อมูลเคสเปลี่ยนแล้ว ต้องสร้างหรือตรวจร่างฉบับล่าสุดก่อนจึงจะยืนยันได้"
+    : reviewConflict ? "ร่างเปลี่ยนระหว่างที่คุณแก้ กรุณาเทียบกับฉบับล่าสุดก่อน"
+    : dirty ? "มีการแก้ไขที่ยังไม่บันทึก บันทึกเป็นฉบับใหม่แล้วตรวจอีกครั้งก่อนยืนยัน"
+    : draft.effective ? "ร่างฉบับนี้ยืนยันแล้ว การเพิ่มข้อมูลเคสจะทำให้ต้องตรวจใหม่"
+    : "";
+  const consequence = draft.effective
+    ? "ร่างฉบับนี้เป็นการส่งต่อปัจจุบันของเคส บันทึกไว้พร้อมชื่อผู้ตรวจและเวลาแล้ว"
+    : draft.status === "REJECT"
+    ? "ร่างนี้ถูกปฏิเสธและไม่ถูกใช้เป็นการส่งต่อ เหตุผลที่ระบุอยู่ในประวัติการตรวจ สร้างร่างใหม่ได้เมื่อพร้อม"
+    : "การยืนยันทำให้ร่างนี้เป็นการส่งต่อปัจจุบันของเคส และบันทึกชื่อคุณกับเวลาไว้กับมัน หากมีการเพิ่มข้อมูลเคสหลังจากนี้ ร่างจะกลายเป็นฉบับที่ต้องตรวจใหม่โดยอัตโนมัติ";
 
   return (
     <section className="panel draft-review" aria-labelledby={`draft-${draft.draft_id}`}>
@@ -200,27 +230,37 @@ export function Review({ draft, revision, canReview, act, onDirty }: {
       </div>
       <p className="supporting-text">อ้างอิงข้อมูลเคสรุ่น {draft.case_revision}</p>
       {stale ? <div role="status" className="inline-message inline-message--warning">ข้อมูลเคสเปลี่ยนแล้ว กรุณาตรวจหรือสร้างร่างฉบับล่าสุด</div> : null}
-      <ScreenFindings screen={draft.screen} />
-      {editing ? <div className="edit-surface">
-        <label>ข้อความสรุป<textarea className="summary-editor" value={summary} onChange={(event) => setSummary(event.target.value)} /></label>
-        <label>งานค้าง หนึ่งรายการต่อบรรทัด<textarea value={outstanding} onChange={(event) => setOutstanding(event.target.value)} /></label>
-        <label>เหตุผลที่แก้ไขหรือปฏิเสธ<textarea value={reason} onChange={(event) => setReason(event.target.value)} /></label>
-      </div> : <p className="summary-text">{humanizeClinicalText(draft.content.summary)}</p>}
-      {dirty ? <div className="inline-message inline-message--warning" role="status">มีการแก้ไขที่ยังไม่บันทึก บันทึกแล้วตรวจฉบับใหม่ก่อนยืนยัน</div> : null}
-      {reviewConflict ? <div className="inline-message inline-message--danger" role="alert"><p>ร่างเปลี่ยนระหว่างที่คุณแก้ ข้อความที่พิมพ์ยังอยู่ กรุณาเทียบกับฉบับล่าสุด</p><p className="summary-text">{humanizeClinicalText(draft.content.summary)}</p><button className="button button--secondary" onClick={() => setReviewConflict(false)}>ตรวจฉบับล่าสุดแล้ว</button></div> : null}
-      {draft.content.outstanding.length ? <div className="outstanding"><h3>ข้อมูลหรืองานที่ยังขาด</h3><ul>{draft.content.outstanding.map((item, index) => <li key={index}>{factKinds[item] || factStates[item] || item}</li>)}</ul></div> : null}
-      <button className="button button--text" onClick={() => setEvidence(!evidence)} aria-expanded={evidence}>ดูหลักฐานที่ร่างนี้ใช้ ({draft.snapshot.evidence.length})</button>
-      {evidence ? <div className="evidence-list">{draft.snapshot.evidence.map((fact) => <FactView key={fact.event_id} fact={fact} />)}</div> : null}
-      <details><summary>เทียบฉบับก่อนและประวัติ</summary>{draft.versions.map((version) => <div className="version" key={version.draft_revision}><h3>ฉบับที่ {version.draft_revision}</h3><p className="summary-text">{humanizeClinicalText(version.content.summary)}</p></div>)}</details>
-      {canReview ? <div className="button-group">
-        <button className="button button--primary" disabled={stale || dirty || draft.effective || reviewConflict} onClick={() => review("CONFIRM")}>ยืนยันร่างฉบับนี้</button>
-        <button className="button button--secondary" onClick={() => setEditing(!editing)}>{editing ? "ปิดช่องแก้ไข" : "แก้ไขหรือปฏิเสธ"}</button>
-        {editing ? <>
-          <button className="button button--secondary" disabled={stale || !dirty || !reason.trim() || reviewConflict} onClick={() => review("MODIFY")}>บันทึกเป็นฉบับใหม่</button>
-          <button className="button button--danger" disabled={stale || !reason.trim() || dirty} onClick={() => review("REJECT")}>ปฏิเสธร่าง</button>
-          <button className="button button--danger" disabled={stale || !reason.trim() || dirty} onClick={() => review("ESCALATE")}>ส่งต่อให้ทบทวน</button>
-        </> : null}
-      </div> : <p className="supporting-text">บัญชีแพทย์เป็นผู้ยืนยันร่างส่งต่อ</p>}
+      <div className="draft-review__body">
+        <div className="draft-review__content">
+          <ScreenFindings screen={draft.screen} />
+          {editing ? <div className="edit-surface">
+            <label>ข้อความสรุป<textarea className="summary-editor" value={summary} onChange={(event) => setSummary(event.target.value)} /></label>
+            <label>งานค้าง หนึ่งรายการต่อบรรทัด<textarea value={outstanding} onChange={(event) => setOutstanding(event.target.value)} /></label>
+          </div> : <p className="summary-text">{humanizeClinicalText(draft.content.summary)}</p>}
+          {dirty ? <div className="inline-message inline-message--warning" role="status">มีการแก้ไขที่ยังไม่บันทึก บันทึกแล้วตรวจฉบับใหม่ก่อนยืนยัน</div> : null}
+          {reviewConflict ? <div className="inline-message inline-message--danger" role="alert"><p>ร่างเปลี่ยนระหว่างที่คุณแก้ ข้อความที่พิมพ์ยังอยู่ กรุณาเทียบกับฉบับล่าสุด</p><p className="summary-text">{humanizeClinicalText(draft.content.summary)}</p><button className="button button--secondary" onClick={() => setReviewConflict(false)}>ตรวจฉบับล่าสุดแล้ว</button></div> : null}
+          {draft.content.outstanding.length ? <div className="outstanding"><h3>ข้อมูลหรืองานที่ยังขาด</h3><ul>{draft.content.outstanding.map((item, index) => <li key={index}>{outstandingLabel(item)}</li>)}</ul></div> : null}
+          <button className="button button--text" onClick={() => setEvidence(!evidence)} aria-expanded={evidence}>ดูหลักฐานที่ร่างนี้ใช้ ({draft.snapshot.evidence.length})</button>
+          {evidence ? <div className="evidence-list">{draft.snapshot.evidence.map((fact) => <FactView key={fact.event_id} fact={fact} />)}</div> : null}
+          <details><summary>เทียบฉบับก่อนและประวัติ</summary>{draft.versions.map((version) => <div className="version" key={version.draft_revision}><h3>ฉบับที่ {version.draft_revision}</h3><p className="summary-text">{humanizeClinicalText(version.content.summary)}</p></div>)}</details>
+        </div>
+        <aside className="decision-rail" aria-label="การตัดสินใจของแพทย์">
+          <span className="eyebrow">การตัดสินใจ</span>
+          <p className="decision-rail__consequence">{consequence}</p>
+          {canReview ? <>
+            <label className="decision-rail__reason">เหตุผล<span className="field-hint">ต้องระบุเมื่อแก้ไข ปฏิเสธ หรือส่งต่อ บันทึกลงประวัติการตรวจ</span><textarea value={reason} onChange={(event) => setReason(event.target.value)} /></label>
+            {blocked ? <div className="inline-message inline-message--warning" role="status">{blocked}</div> : null}
+            <div className="button-group button-group--stacked">
+              <button className="button button--primary button--full" disabled={stale || dirty || draft.effective || reviewConflict} onClick={() => review("CONFIRM")}>ยืนยันร่างฉบับนี้</button>
+              <button className="button button--secondary button--full" onClick={() => setEditing(!editing)}>{editing ? "ปิดช่องแก้ไข" : "แก้ไขข้อความ"}</button>
+              <button className="button button--secondary button--full" disabled={stale || !dirty || !reason.trim() || reviewConflict} onClick={() => review("MODIFY")}>บันทึกเป็นฉบับใหม่</button>
+              <button className="button button--danger button--full" disabled={stale || !reason.trim() || dirty} onClick={() => review("REJECT")}>ปฏิเสธร่าง</button>
+              <button className="button button--danger button--full" disabled={stale || !reason.trim() || dirty} onClick={() => review("ESCALATE")}>ส่งต่อให้ทบทวน</button>
+            </div>
+          </> : <p className="supporting-text">บัญชีแพทย์เป็นผู้ยืนยันร่างส่งต่อ</p>}
+          <p className="decision-rail__note"><Icon name="lock" size={15} />ผลคัดกรองไม่ได้มาจากแบบจำลอง แก้หรือลบไม่ได้ และการตัดสินของคุณถูกบันทึกพร้อมชื่อผู้ตรวจ</p>
+        </aside>
+      </div>
     </section>
   );
 }

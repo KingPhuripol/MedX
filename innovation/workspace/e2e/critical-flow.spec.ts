@@ -27,9 +27,9 @@ test("critical synthetic intake flow and accessibility", async ({ page }, testIn
   await expect(page).toHaveURL(/#\/cases\/[^/]+\/draft$/);
   await expect(page.getByRole("heading", { name: /ตรวจร่างฉบับที่/ }).first()).toBeVisible();
   await expect(page.getByText(/CHIEF_COMPLAINT|HISTORY|STALE|CONFIRM/, { exact: false })).toHaveCount(0);
-  await page.getByRole("button", { name: "แก้ไขหรือปฏิเสธ" }).first().click();
+  await page.getByRole("button", { name: "แก้ไขข้อความ" }).first().click();
   await page.getByLabel("ข้อความสรุป").first().fill("ร่างส่งต่อที่ตรวจแก้แล้วสำหรับสถานการณ์จำลอง");
-  await page.getByLabel("เหตุผลที่แก้ไขหรือปฏิเสธ").first().fill("ปรับภาษาให้ชัดเจน");
+  await page.getByLabel(/เหตุผล/).first().fill("ปรับภาษาให้ชัดเจน");
   await expect(page.getByRole("button", { name: "ยืนยันร่างฉบับนี้" }).first()).toBeDisabled();
   await page.getByRole("button", { name: "บันทึกเป็นฉบับใหม่" }).first().click();
   await expect(page.getByRole("heading", { name: "ตรวจร่างฉบับที่ 2" })).toBeVisible();

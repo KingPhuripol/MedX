@@ -196,6 +196,25 @@ textarea { min-height: 108px; resize: vertical; }
 .content-divider h2, .content-divider p { margin-bottom: 0; }
 .content-divider p { color: var(--text-muted); font-size: var(--font-size-sm); }
 .draft-review { border-top: var(--space-1) solid var(--action-primary); }
+/* The decision rail sits beside the draft only when the draft itself has room for it.
+   Measured at 1440x900 with the case queue open, the draft panel is 794px wide: splitting
+   that into two columns left the summary 398px wide, worse to read than before. A
+   container query keys the layout to the panel's real width, not the viewport's. */
+.draft-review { container-type: inline-size; }
+.draft-review__body { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: var(--space-7); margin-top: var(--space-6); }
+.draft-review__content { min-width: 0; }
+.decision-rail { display: grid; gap: var(--space-5); padding: var(--space-6); background: var(--surface-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-control); }
+@container (min-width: 900px) {
+  .draft-review__body { grid-template-columns: minmax(0, 1fr) 340px; }
+  .decision-rail { position: sticky; top: var(--space-6); }
+}
+.decision-rail__consequence { margin: 0; color: var(--text-secondary); font-size: var(--font-size-md); line-height: 21px; }
+.decision-rail__reason { display: grid; gap: var(--space-3); font-size: var(--font-size-md); font-weight: var(--font-weight-medium); }
+.decision-rail__reason textarea { min-height: 72px; }
+.decision-rail__note { display: flex; align-items: flex-start; gap: var(--space-4); margin: 0; padding-top: var(--space-5); border-top: 1px solid var(--border-subtle); color: var(--text-muted); font-size: var(--font-size-xs); line-height: 18px; }
+.decision-rail__note .icon { flex: 0 0 auto; margin-top: var(--space-1); }
+.button-group--stacked { display: grid; gap: var(--space-4); margin-top: 0; }
+.button--full { width: 100%; }
 .older-drafts { margin-top: 0; padding: var(--space-4) var(--space-6); background: var(--surface-panel); border: 1px solid var(--border-subtle); border-radius: var(--radius-control); }
 .older-drafts div article { display: flex; justify-content: space-between; gap: var(--space-5); padding: var(--space-4) 0; border-top: 1px solid var(--border-subtle); }
 .older-drafts article span { color: var(--text-muted); font-size: var(--font-size-sm); }
