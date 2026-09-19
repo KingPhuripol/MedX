@@ -1,77 +1,103 @@
 {
   "v": 3,
-  "createdOnFiles": {
-    "v": 1,
-    "at": "2026-09-19T12:30:00Z"
+  "attachments": {},
+  "boards": {
+    "Before.dc.html": {
+      "h": 720,
+      "title": "ก่อน redesign",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "Main.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Nurse Intake · Desktop",
+      "w": 1440,
+      "x": 0,
+      "y": 1143
+    },
+    "Nurse-Handoff.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Nurse Intake · ส่งต่อแล้ว",
+      "w": 1440,
+      "x": 2838,
+      "y": 1143
+    },
+    "Nurse-Mobile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "title": "Nurse Intake · Mobile",
+      "w": 390,
+      "x": 2368,
+      "y": 1143
+    },
+    "Nurse-Tablet.dc.html": {
+      "h": 1024,
+      "is_interactive": true,
+      "title": "Nurse Intake · Tablet",
+      "w": 768,
+      "x": 1520,
+      "y": 1143
+    },
+    "Platform-Audit.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Platform · Audit และ trace",
+      "w": 1440,
+      "x": 3040,
+      "y": 2590
+    },
+    "Platform-Queue.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Platform · คิวเคส",
+      "w": 1440,
+      "x": 0,
+      "y": 2590
+    },
+    "Platform-Review.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Platform · ตรวจเคส",
+      "w": 1440,
+      "x": 1520,
+      "y": 2590
+    }
   },
-  "title": "Front Door Redesign",
+  "createdOnFiles": {
+    "at": "2026-09-19T12:30:00Z",
+    "v": 1
+  },
+  "designSystems": [],
   "launch": {
     "view": "canvas"
   },
-  "pages": [],
-  "boards": {
-    "Before.dc.html": {
+  "notes": {
+    "before": {
+      "kind": "title1",
+      "maxW": 1440,
+      "text": "ก่อน redesign",
+      "w": 240,
       "x": 0,
-      "y": 0,
-      "w": 1440,
-      "h": 700,
-      "title": "ก่อน redesign"
+      "y": -300
     },
-    "Main.dc.html": {
+    "nurse": {
+      "kind": "title1",
+      "maxW": 4278,
+      "text": "Nurse Intake — /nurse",
+      "w": 240,
       "x": 0,
-      "y": 1123,
-      "w": 1440,
-      "h": 900,
-      "title": "Nurse Intake · Desktop",
-      "is_interactive": true
+      "y": 843
     },
-    "Nurse-Tablet.dc.html": {
-      "x": 1520,
-      "y": 1123,
-      "w": 768,
-      "h": 1024,
-      "title": "Nurse Intake · Tablet",
-      "is_interactive": true
-    },
-    "Nurse-Mobile.dc.html": {
-      "x": 2368,
-      "y": 1123,
-      "w": 390,
-      "h": 844,
-      "title": "Nurse Intake · Mobile",
-      "is_interactive": true
-    },
-    "Nurse-Handoff.dc.html": {
-      "x": 2838,
-      "y": 1123,
-      "w": 1440,
-      "h": 900,
-      "title": "Nurse Intake · ส่งต่อแล้ว",
-      "is_interactive": true
-    },
-    "Platform-Queue.dc.html": {
+    "platform": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Central Platform — /platform",
+      "w": 240,
       "x": 0,
-      "y": 2570,
-      "w": 1440,
-      "h": 900,
-      "title": "Platform · คิวเคส",
-      "is_interactive": true
-    },
-    "Platform-Review.dc.html": {
-      "x": 1520,
-      "y": 2570,
-      "w": 1440,
-      "h": 900,
-      "title": "Platform · ตรวจเคส",
-      "is_interactive": true
-    },
-    "Platform-Audit.dc.html": {
-      "x": 3040,
-      "y": 2570,
-      "w": 1440,
-      "h": 900,
-      "title": "Platform · Audit และ trace",
-      "is_interactive": true
+      "y": 2290
     }
   },
   "order": [
@@ -84,28 +110,6 @@
     "Platform-Review.dc.html",
     "Platform-Audit.dc.html"
   ],
-  "designSystems": [],
-  "notes": {
-    "before": {
-      "x": 0,
-      "y": -300,
-      "text": "ก่อน redesign",
-      "kind": "title1",
-      "maxW": 1440
-    },
-    "nurse": {
-      "x": 0,
-      "y": 823,
-      "text": "Nurse Intake — /nurse",
-      "kind": "title1",
-      "maxW": 4278
-    },
-    "platform": {
-      "x": 0,
-      "y": 2270,
-      "text": "Central Platform — /platform",
-      "kind": "title1",
-      "maxW": 4480
-    }
-  }
+  "pages": [],
+  "title": "Front Door Redesign"
 }

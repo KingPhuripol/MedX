@@ -8,62 +8,60 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&amp;family=IBM+Plex+Sans+Thai:wght@400;500;600&amp;family=Prompt:wght@500;600&amp;display=swap" rel="stylesheet">
 <style>
-body{margin:0;font-family:'Prompt',sans-serif;color:#17212b;background:#f4f3ef}
-a{color:#0f766e}a:hover{color:#094f4a}
-.screen{box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden;background:#f4f3ef;font-size:15px;line-height:24px}
-.row{display:flex;align-items:center}
-.col{display:flex;flex-direction:column}
-.grow{flex-grow:1;min-width:0}
-.bar{min-height:56px;background:#fff;border-bottom:1px solid #dde2e1;gap:16px;padding:0 24px;flex-shrink:0}
-.flag{background:#fceceb;border-bottom:1px solid #dd9995;padding:12px 24px;gap:16px;color:#9f2d2d;font-weight:500;flex-shrink:0}
-.meta{font-size:13px;line-height:20px;color:#52606d}
-.strong{font-weight:500}
-.label{font-size:13px;line-height:20px;color:#52606d;font-weight:500}
-.h-section{font-size:17px;line-height:26px;font-weight:600;margin:0}
-.h-page{font-size:20px;line-height:28px;font-weight:600;margin:0}
-.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:6px;font-size:13px;line-height:20px;font-weight:500;white-space:nowrap}
-.b-neutral{background:#eef0ee;color:#334155}.b-info{background:#eaf3f8;color:#164e63}.b-success{background:#e9f5ef;color:#176b4d}
-.b-warning{background:#fff6df;color:#7c4a03}.b-danger{background:#fceceb;color:#9f2d2d}
-.btn{box-sizing:border-box;height:40px;padding:0 16px;border-radius:6px;font:500 15px/24px 'Prompt',sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;background:none;color:#17212b;cursor:pointer;white-space:nowrap;text-decoration:none}
-.btn-primary{background:#0f766e;color:#fff}.btn-primary:hover{background:#0c625c;color:#fff}
-.btn-secondary{background:#fff;border-color:#c9d0d3}
-.btn-text{color:#0f766e;padding:0 4px}
-.btn-lg{height:44px}
-.rule-b{border-bottom:1px solid #dde2e1}
-.rule-t{border-top:1px solid #dde2e1}
-.panel{background:#fff}
-.input{box-sizing:border-box;border:1px solid #c9d0d3;border-radius:6px;background:#fff;padding:12px;color:#52606d}
-.tr{display:grid;align-items:center;padding:14px 16px;border-bottom:1px solid #dde2e1;gap:12px}
-.th{background:#f7f7f4;padding:10px 16px}
-.sel{background:#e7f3f0}
+body{margin:0;background:#f3f1ec}
+a{color:#0f766e}a:hover{color:#0b5a54}
+.screen{box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden;background:#f3f1ec;color:#111c26;font:400 15px/24px 'IBM Plex Sans Thai',sans-serif}
+.row{display:flex;align-items:center}.col{display:flex;flex-direction:column}.grow{flex-grow:1;min-width:0}
+.display{font-family:'Prompt',sans-serif;font-weight:600;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:0}
+.meta{font-size:13px;line-height:20px;color:#5b6670}
+.strong{font-weight:600}
+.eyebrow{font-size:12px;line-height:16px;letter-spacing:0.06em;text-transform:uppercase;color:#5b6670;font-weight:600}
+.chrome{background:#0b1f2e;color:#e8eef2}
+.chrome .meta{color:#9fb1bf}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:13px;line-height:20px;font-weight:600;white-space:nowrap}
+.p-urgent{background:#b42318;color:#fff}.p-warn{background:#fdf3e1;color:#8a4b05}.p-ok{background:#e6f4ec;color:#146c40}
+.p-info{background:#e5f1f6;color:#155e75}.p-neutral{background:#ecebe6;color:#3b4751}.p-teal{background:#e3f2ef;color:#0b5a54}
+.p-proto{border:1px solid #d9a441;color:#f3c877;background:transparent}
+.p-proto-light{border:1px solid #d9a441;color:#8a4b05;background:#fdf3e1}
+.btn{box-sizing:border-box;height:40px;padding:0 16px;border-radius:8px;font:600 15px/24px 'IBM Plex Sans Thai',sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;background:none;color:#111c26;cursor:pointer;white-space:nowrap;text-decoration:none}
+.btn-primary{background:#0f766e;color:#fff}.btn-primary:hover{background:#0b5a54;color:#fff}
+.btn-ink{background:#0b1f2e;color:#fff}.btn-ink:hover{background:#16324a;color:#fff}
+.btn-secondary{background:#fff;border-color:#d5d1c6}
+.btn-ghost-light{color:#e8eef2;border-color:#2c4a61}.btn-ghost-light:hover{background:#16324a;color:#fff}
+.btn-white{background:#fff;color:#b42318}
+.btn-text{color:#0f766e;padding:0 6px}
+.btn-lg{height:48px;padding:0 20px;font-size:16px}
+.card{background:#fff;border:1px solid #e4e1d8;border-radius:12px}
+.line-b{border-bottom:1px solid #e4e1d8}.line-t{border-top:1px solid #e4e1d8}
+.icon{flex-shrink:0}
+.tr{display:grid;align-items:center;padding:14px 20px;border-bottom:1px solid #eeebe4;gap:16px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:6px;background:#f3f1ec;border:1px solid #e4e1d8;font-size:13px;line-height:20px;color:#3b4751;text-decoration:none}
 </style>
 </helmet>
 <div class="screen" style="width: 390px; height: 844px;">
-<header class="bar row" style="padding: 0 16px; gap: 8px;"><span class="strong">demo-014</span><span class="meta">ชาย 58</span><span class="grow"></span><button class="btn btn-secondary btn-lg" type="button">เปลี่ยนเคส</button></header>
-<div class="flag col" style="padding: 10px 16px; gap: 4px;"><span class="badge b-danger" style="align-self: flex-start; background: #fff; border: 1px solid #dd9995;">ต้องให้แพทย์ดูโดยเร็ว</span><span style="font-size: 14px; line-height: 22px;">ข้อมูลที่จำเป็นยังไม่ครบ: ขาดสัญญาณชีพ</span></div>
-<div class="row panel rule-b" role="tablist" aria-label="มุมมองเคส"><button type="button" role="tab" style="flex-grow: 1; height: 48px; background: none; border: none; font: 500 15px/24px 'Prompt',sans-serif; cursor: pointer; {{chatTab}}" onClick="{{showChat}}">บทสนทนา</button><button type="button" role="tab" style="flex-grow: 1; height: 48px; background: none; border: none; font: 500 15px/24px 'Prompt',sans-serif; cursor: pointer; {{factsTab}}" onClick="{{showFacts}}">ข้อมูล · 2 รอยืนยัน</button></div>
+<header class="chrome row" style="height: 56px; padding: 0 16px; gap: 10px; flex-shrink: 0;"><span class="row" style="width: 28px; height: 28px; border-radius: 8px; background: #0f766e; justify-content: center;"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 20V6.5a6 6 0 0 1 12 0V20"/><path d="M4 20h16"/><circle cx="14.5" cy="13.5" r="0.9" fill="currentColor"/></svg></span>
+<span class="col"><span class="mono" style="color: #fff;">demo-014</span><span class="meta" style="font-size: 12px; line-height: 16px;">ชาย 58 · รอ 12 นาที</span></span><span class="grow"></span><button class="btn btn-ghost-light" type="button" style="height: 44px;">เปลี่ยนเคส</button></header>
+<div class="row" style="background: #b42318; color: #fff; padding: 10px 16px; gap: 14px; flex-shrink: 0;"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4 2.8 19.5h18.4Z"/><path d="M12 10v4.5M12 17.2v.3"/></svg>
+<div class="col grow" style="gap: 2px; "><span class="display" style="font-size: 16px;">ต้องให้แพทย์ดูโดยเร็ว</span><span style="font-size: 14px; line-height: 20px;">ข้อมูลที่จำเป็นยังไม่ครบ: ขาดสัญญาณชีพ</span></div></div>
+<div class="row" role="tablist" aria-label="มุมมองเคส" style="margin: 12px 16px 0; background: #ecebe6; border-radius: 10px; padding: 4px; gap: 4px;"><button type="button" role="tab" style="flex-grow: 1; height: 40px; border: none; border-radius: 8px; font: 600 15px/24px 'IBM Plex Sans Thai',sans-serif; cursor: pointer; {{chatTab}}" onClick="{{showChat}}">บทสนทนา</button><button type="button" role="tab" style="flex-grow: 1; height: 40px; border: none; border-radius: 8px; font: 600 15px/24px 'IBM Plex Sans Thai',sans-serif; cursor: pointer; {{factsTab}}" onClick="{{showFacts}}">ข้อมูล · <span style="color: #a15c07;">2 รอ</span></button></div>
 <sc-if value="{{chat}}" hint-placeholder-val="{{true}}">
-<div class="col grow" style="padding: 0 16px; overflow: hidden;"><div class="row rule-b" style="align-items: flex-start; gap: 24px; padding: 16px 0;">
-<div class="col" style="width: 56px; flex-shrink: 0;"><span class="label" style="color: #17212b;">พยาบาล</span><span class="meta">09:12</span></div>
-<p style="margin: 0; color: #17212b;" class="grow">ผู้ป่วยชาย 58 ปี เจ็บแน่นหน้าอกตั้งแต่เช้า ร้าวไปแขนซ้าย</p></div>
-<div class="row rule-b" style="align-items: flex-start; gap: 24px; padding: 16px 0;">
-<div class="col" style="width: 56px; flex-shrink: 0;"><span class="label" style="color: #0f766e;">ผู้ช่วย</span><span class="meta">09:12</span></div>
-<p style="margin: 0; color: #334155;" class="grow">บันทึกอาการสำคัญเป็นข้อเสนอแล้ว รอคุณยืนยัน · ควรถามต่อ: เริ่มเจ็บกี่โมง มีเหงื่อแตกหรือหายใจลำบากหรือไม่</p></div>
-<div class="row rule-b" style="align-items: flex-start; gap: 24px; padding: 16px 0;">
-<div class="col" style="width: 56px; flex-shrink: 0;"><span class="label" style="color: #17212b;">พยาบาล</span><span class="meta">09:14</span></div>
-<p style="margin: 0; color: #17212b;" class="grow">เริ่มประมาณ 7 โมงเช้า มีเหงื่อออก ไม่มีหายใจลำบาก</p></div>
-<div class="row rule-b" style="align-items: flex-start; gap: 24px; padding: 16px 0;">
-<div class="col" style="width: 56px; flex-shrink: 0;"><span class="label" style="color: #0f766e;">ผู้ช่วย</span><span class="meta">09:14</span></div>
-<p style="margin: 0; color: #334155;" class="grow">เสนอข้อมูล 2 รายการ: เวลาเริ่มอาการ และอาการร่วม · ยังไม่มีสัญญาณชีพ</p></div></div>
-<div class="col panel rule-t" style="padding: 12px 16px; gap: 8px;"><label class="meta" for="m-msg">ข้อความถึงผู้ช่วย</label><textarea id="m-msg" rows="2" placeholder="พิมพ์หรืออัดเสียง…" style="border: 1px solid #c9d0d3; border-radius: 6px; padding: 10px; resize: none; font: 15px/24px 'Prompt',sans-serif;"></textarea>
-<div class="row" style="gap: 8px;"><button class="btn btn-secondary btn-lg grow" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>อัดเสียง</button><button class="btn btn-primary btn-lg grow" type="button">ส่งให้ผู้ช่วย</button></div></div>
+<div class="col grow" style="padding: 16px; gap: 16px; overflow: hidden;"><div class="row" style="align-items: flex-start; gap: 14px;"><span class="row display" style="width: 32px; height: 32px; border-radius: 999px; background: #0b1f2e; color: #fff; justify-content: center; font-size: 12px; flex-shrink: 0;">NA</span>
+<div class="col grow" style="gap: 2px;"><span class="row" style="gap: 8px;"><span class="strong" style="font-size: 14px;">พยาบาล</span><span class="mono" style="color: #5b6670;">09:14</span></span><p style="margin: 0; font-size: 16px; line-height: 26px;">เริ่มประมาณ 7 โมงเช้า มีเหงื่อออก ไม่มีหายใจลำบาก</p></div></div><div class="row" style="align-items: flex-start; gap: 14px;"><span class="row" style="width: 32px; height: 32px; border-radius: 999px; background: #e3f2ef; justify-content: center; flex-shrink: 0;"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg></span>
+<div class="col grow" style="gap: 8px; background: #e3f2ef; border-radius: 4px 12px 12px 12px; padding: 12px 14px;"><span class="row" style="gap: 8px;"><span class="strong" style="font-size: 14px; color: #0b5a54;">ผู้ช่วย · ข้อเสนอรอตรวจ</span><span class="mono" style="color: #5b6670;">09:14</span></span>
+<p style="margin: 0; color: #1f3a36;">เสนอข้อมูล 2 รายการ · ยังไม่มีสัญญาณชีพ ควรวัดก่อนส่งต่อ</p><div class="row" style="gap: 6px; flex-wrap: wrap;"><a class="chip" href="#pending" style="background: #fff; border-color: #b9ddd6; color: #0b5a54;"><svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg>เวลาเริ่มอาการ 07:00</a><a class="chip" href="#pending" style="background: #fff; border-color: #b9ddd6; color: #0b5a54;"><svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg>อาการร่วม: เหงื่อออก</a></div></div></div></div>
+<div class="col" style="background: #fff; border-top: 1px solid #e4e1d8; padding: 12px 16px 20px; gap: 10px;">
+<div class="row" style="gap: 8px;"><span style="width: 8px; height: 8px; border-radius: 999px; background: #b42318;"></span><span class="strong" style="color: #b42318; font-size: 14px;">กำลังฟัง</span><span class="mono" style="color: #5b6670;">00:14</span><span class="grow" style="overflow: hidden;"><svg width="130" height="22" viewBox="0 0 130 22" aria-hidden="true"><rect x="0" y="8.0" width="3" height="6" rx="1.5" fill="#0f766e"/><rect x="5" y="4.0" width="3" height="14" rx="1.5" fill="#0f766e"/><rect x="10" y="1.5" width="3" height="19" rx="1.5" fill="#0f766e"/><rect x="15" y="1.0" width="3" height="20" rx="1.5" fill="#0f766e"/><rect x="20" y="3.0" width="3" height="16" rx="1.5" fill="#0f766e"/><rect x="25" y="6.0" width="3" height="10" rx="1.5" fill="#0f766e"/><rect x="30" y="7.5" width="3" height="7" rx="1.5" fill="#0f766e"/><rect x="35" y="6.5" width="3" height="9" rx="1.5" fill="#0f766e"/><rect x="40" y="6.5" width="3" height="9" rx="1.5" fill="#0f766e"/><rect x="45" y="8.0" width="3" height="6" rx="1.5" fill="#0f766e"/><rect x="50" y="7.5" width="3" height="7" rx="1.5" fill="#0f766e"/><rect x="55" y="7.5" width="3" height="7" rx="1.5" fill="#0f766e"/><rect x="60" y="7.0" width="3" height="8" rx="1.5" fill="#0f766e"/><rect x="65" y="4.5" width="3" height="13" rx="1.5" fill="#0f766e"/><rect x="70" y="2.5" width="3" height="17" rx="1.5" fill="#0f766e"/><rect x="75" y="2.0" width="3" height="18" rx="1.5" fill="#0f766e"/><rect x="80" y="4.0" width="3" height="14" rx="1.5" fill="#0f766e"/><rect x="85" y="7.5" width="3" height="7" rx="1.5" fill="#0f766e"/><rect x="90" y="4.5" width="3" height="13" rx="1.5" fill="#0f766e"/><rect x="95" y="1.0" width="3" height="20" rx="1.5" fill="#0f766e"/><rect x="100" y="0.5" width="3" height="21" rx="1.5" fill="#0f766e"/><rect x="105" y="2.0" width="3" height="18" rx="1.5" fill="#0f766e"/><rect x="110" y="5.0" width="3" height="12" rx="1.5" fill="#0f766e"/><rect x="115" y="8.0" width="3" height="6" rx="1.5" fill="#0f766e"/><rect x="120" y="5.5" width="3" height="11" rx="1.5" fill="#0f766e"/><rect x="125" y="5.0" width="3" height="12" rx="1.5" fill="#0f766e"/></svg></span></div>
+<div class="row" style="gap: 12px; justify-content: center;"><button class="btn btn-secondary" type="button" style="height: 48px;">ข้อความ</button><button type="button" aria-label="หยุดบันทึก" class="row" style="width: 64px; height: 64px; border-radius: 999px; background: #0b1f2e; border: 4px solid #e3f2ef; justify-content: center; cursor: pointer;"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2"/></svg></button><button class="btn btn-primary" type="button" style="height: 48px;">ส่ง</button></div></div>
 </sc-if>
 <sc-if value="{{facts}}" hint-placeholder-val="{{false}}">
-<div class="col grow panel" style="padding: 16px; gap: 24px; overflow: hidden;"><section class="col"><div class="row" style="gap: 8px; padding-bottom: 8px; align-items: baseline;"><h2 class="h-section">รอคุณยืนยัน</h2><span class="meta">2 รายการ</span></div><div class="col rule-t" style="padding: 12px 0; gap: 2px;"><span class="meta">เวลาเริ่มอาการ</span><span class="strong">07:00 น. วันนี้</span><span class="meta">จากข้อความ 09:14</span><div class="row" style="gap: 8px; padding-top: 8px;"><button class="btn btn-secondary" type="button">ยืนยัน</button><button class="btn btn-text" type="button">แก้ไข</button></div></div><div class="col rule-t" style="padding: 12px 0; gap: 2px;"><span class="meta">อาการร่วม</span><span class="strong">เหงื่อออก · ไม่มีหายใจลำบาก</span><span class="meta">จากข้อความ 09:14</span><div class="row" style="gap: 8px; padding-top: 8px;"><button class="btn btn-secondary" type="button">ยืนยัน</button><button class="btn btn-text" type="button">แก้ไข</button></div></div></section><section class="col"><div class="row" style="gap: 8px; padding-bottom: 8px; align-items: baseline;"><h2 class="h-section">ยังขาด</h2><span class="meta">ต้องมีก่อนส่งต่อ</span></div><div class="col rule-t" style="padding: 12px 0; gap: 2px;"><span class="meta">สัญญาณชีพ</span><span class="strong">ความดัน ชีพจร อัตราการหายใจ SpO₂</span></div></section></div>
-<div class="col panel rule-t" style="padding: 12px 16px; gap: 4px;"><span class="meta">ยืนยันข้อมูลที่รออยู่ก่อน จึงจะส่งให้แพทย์ได้</span><button class="btn btn-primary btn-lg" type="button" disabled="disabled" style="opacity: 0.5;">ส่งให้แพทย์ตรวจ</button></div>
+<div class="col grow" style="padding: 16px; gap: 18px; overflow: hidden;"><div class="col" style="gap: 10px;"><div class="row" style="align-items: baseline; gap: 8px;"><span class="display" style="font-size: 32px; line-height: 36px;">3<span style="color: #9aa3ab; font-size: 20px;">/6</span></span><span class="meta">ข้อมูลจำเป็นยืนยันแล้ว</span></div>
+<div class="row" style="gap: 4px;"><span style="flex-grow: 1; height: 8px; border-radius: 4px; background: #0f766e;"></span><span style="flex-grow: 1; height: 8px; border-radius: 4px; background: #0f766e;"></span><span style="flex-grow: 1; height: 8px; border-radius: 4px; background: #0f766e;"></span><span style="flex-grow: 1; height: 8px; border-radius: 4px; background: #e8b04b;"></span><span style="flex-grow: 1; height: 8px; border-radius: 4px; background: #e8b04b;"></span><span style="flex-grow: 1; height: 8px; border-radius: 4px; background: #e4e1d8;"></span></div><div class="row meta" style="gap: 14px;"><span class="row" style="gap: 6px;"><span style="width: 8px; height: 8px; border-radius: 2px; background: #0f766e;"></span>ยืนยัน 3</span><span class="row" style="gap: 6px;"><span style="width: 8px; height: 8px; border-radius: 2px; background: #e8b04b;"></span>รอยืนยัน 2</span><span class="row" style="gap: 6px;"><span style="width: 8px; height: 8px; border-radius: 2px; background: #e4e1d8;"></span>ยังขาด 1</span></div></div><section class="col" style="gap: 10px;"><span class="eyebrow">รอคุณยืนยัน · 2</span><div class="col" style="border: 1px solid #efd6a3; background: #fffaf0; border-radius: 10px; padding: 12px 14px; gap: 8px;"><div class="col" style="gap: 0;"><span class="meta">เวลาเริ่มอาการ · 09:14</span><span class="strong" style="font-size: 16px;">07:00 น. วันนี้</span></div>
+<div class="row" style="gap: 8px;"><button class="btn btn-primary" type="button" style="height: 36px;"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>ยืนยัน</button><button class="btn btn-text" type="button" style="height: 36px;"><svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16Z"/></svg>แก้ไข</button></div></div><div class="col" style="border: 1px solid #efd6a3; background: #fffaf0; border-radius: 10px; padding: 12px 14px; gap: 8px;"><div class="col" style="gap: 0;"><span class="meta">อาการร่วม · 09:14</span><span class="strong" style="font-size: 16px;">เหงื่อออก</span></div>
+<div class="row" style="gap: 8px;"><button class="btn btn-primary" type="button" style="height: 36px;"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>ยืนยัน</button><button class="btn btn-text" type="button" style="height: 36px;"><svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16Z"/></svg>แก้ไข</button></div></div></section></div>
+<div class="col" style="background: #fff; border-top: 1px solid #e4e1d8; padding: 12px 16px 20px; gap: 6px;"><span class="meta" style="text-align: center;">ยืนยันข้อมูลที่รออยู่ก่อน จึงจะส่งให้แพทย์ได้</span><button class="btn btn-primary btn-lg" type="button" disabled="disabled" style="opacity: 0.45;">ส่งให้แพทย์ตรวจ</button></div>
 </sc-if>
 </div>
 </x-dc>
@@ -71,12 +69,13 @@ a{color:#0f766e}a:hover{color:#094f4a}
 class Component extends DCLogic {
   constructor(props) { super(props); this.state = { tab: 'chat' }; }
   renderVals() {
+    const on = 'background: #fff; color: #111c26; box-shadow: 0 1px 2px rgba(0,0,0,0.08);';
+    const off = 'background: transparent; color: #5b6670;';
     const tab = this.state.tab;
     return {
       chat: tab === 'chat', facts: tab === 'facts',
       showChat: () => this.setState({ tab: 'chat' }), showFacts: () => this.setState({ tab: 'facts' }),
-      chatTab: tab === 'chat' ? 'border-bottom: 2px solid #0f766e; color: #17212b;' : 'border-bottom: 2px solid transparent; color: #52606d;',
-      factsTab: tab === 'facts' ? 'border-bottom: 2px solid #0f766e; color: #17212b;' : 'border-bottom: 2px solid transparent; color: #52606d;',
+      chatTab: tab === 'chat' ? on : off, factsTab: tab === 'facts' ? on : off,
     };
   }
 }
