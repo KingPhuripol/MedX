@@ -1,0 +1,111 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-09-19T12:30:00Z"
+  },
+  "title": "Front Door Redesign",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "Before.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 700,
+      "title": "ก่อน redesign"
+    },
+    "Main.dc.html": {
+      "x": 0,
+      "y": 1123,
+      "w": 1440,
+      "h": 900,
+      "title": "Nurse Intake · Desktop",
+      "is_interactive": true
+    },
+    "Nurse-Tablet.dc.html": {
+      "x": 1520,
+      "y": 1123,
+      "w": 768,
+      "h": 1024,
+      "title": "Nurse Intake · Tablet",
+      "is_interactive": true
+    },
+    "Nurse-Mobile.dc.html": {
+      "x": 2368,
+      "y": 1123,
+      "w": 390,
+      "h": 844,
+      "title": "Nurse Intake · Mobile",
+      "is_interactive": true
+    },
+    "Nurse-Handoff.dc.html": {
+      "x": 2838,
+      "y": 1123,
+      "w": 1440,
+      "h": 900,
+      "title": "Nurse Intake · ส่งต่อแล้ว",
+      "is_interactive": true
+    },
+    "Platform-Queue.dc.html": {
+      "x": 0,
+      "y": 2570,
+      "w": 1440,
+      "h": 900,
+      "title": "Platform · คิวเคส",
+      "is_interactive": true
+    },
+    "Platform-Review.dc.html": {
+      "x": 1520,
+      "y": 2570,
+      "w": 1440,
+      "h": 900,
+      "title": "Platform · ตรวจเคส",
+      "is_interactive": true
+    },
+    "Platform-Audit.dc.html": {
+      "x": 3040,
+      "y": 2570,
+      "w": 1440,
+      "h": 900,
+      "title": "Platform · Audit และ trace",
+      "is_interactive": true
+    }
+  },
+  "order": [
+    "Before.dc.html",
+    "Main.dc.html",
+    "Nurse-Tablet.dc.html",
+    "Nurse-Mobile.dc.html",
+    "Nurse-Handoff.dc.html",
+    "Platform-Queue.dc.html",
+    "Platform-Review.dc.html",
+    "Platform-Audit.dc.html"
+  ],
+  "designSystems": [],
+  "notes": {
+    "before": {
+      "x": 0,
+      "y": -300,
+      "text": "ก่อน redesign",
+      "kind": "title1",
+      "maxW": 1440
+    },
+    "nurse": {
+      "x": 0,
+      "y": 823,
+      "text": "Nurse Intake — /nurse",
+      "kind": "title1",
+      "maxW": 4278
+    },
+    "platform": {
+      "x": 0,
+      "y": 2270,
+      "text": "Central Platform — /platform",
+      "kind": "title1",
+      "maxW": 4480
+    }
+  }
+}
