@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-09-16T18:00:00+07:00",
+  "updated_at": "2026-09-19T10:00:00+07:00",
   "tasks": [
     {
       "task_id": "TASK-0001",
@@ -1026,6 +1026,64 @@
       "blocker": "Two criteria remain open on v2 and both need a decision, not more code: A0 (v2 does not route through the Model Gateway) and A3.5 (v2 has no audit record). DEC-0014 is still proposed and APR-0002 is still PENDING.",
       "risk_level": "HIGH",
       "updated_at": "2026-09-16T18:00:00+07:00"
+    },
+    {
+      "workstream": "INNOVATION",
+      "milestone": "M2",
+      "priority": "P1",
+      "status": "READY",
+      "planned_start": "2026-09-27",
+      "evidence": [],
+      "blocker": null,
+      "risk_level": "MEDIUM",
+      "updated_at": "2026-09-19T10:00:00+07:00",
+      "task_id": "TASK-0035",
+      "title": "Split the Front Door frontend into a nurse app and a central platform app (DEC-0017)",
+      "owner": "Supreeya Nuamkhayan",
+      "dependencies": [
+        "TASK-0034"
+      ],
+      "due_date": "2026-10-04",
+      "definition_of_done": [
+        "nurse.html and platform.html build as separate bundles from innovation/workspace; /workspace redirects to /platform",
+        "src/apps/nurse and src/apps/platform never import from each other; a vitest boundary test fails when they do",
+        "AgentTrace and audit leave the clinical case flow and live under platform views",
+        "Queue fields for /v2/encounters are computed in Service, not in the route handler; speech calls go through shared/api.ts",
+        "pytest, vitest, Playwright with Axe and verify_harness pass"
+      ],
+      "evidence_required": [
+        "Passing suites",
+        "Request as role intake to /v2/experiments returns 403"
+      ]
+    },
+    {
+      "workstream": "INNOVATION",
+      "milestone": "M2",
+      "priority": "P1",
+      "status": "READY",
+      "planned_start": "2026-09-20",
+      "evidence": [],
+      "blocker": null,
+      "risk_level": "MEDIUM",
+      "updated_at": "2026-09-19T10:00:00+07:00",
+      "task_id": "TASK-0036",
+      "title": "Redesign the nurse and platform interfaces from approved Figma frames",
+      "owner": "Supreeya Nuamkhayan",
+      "dependencies": [
+        "TASK-0035"
+      ],
+      "due_date": "2026-10-18",
+      "definition_of_done": [
+        "DESIGN_SYSTEM.md gains a Composition section for both apps",
+        "Figma file with tokens as variables, base components and five frames approved by PM and team",
+        "style.css and redesign.css replaced by token-only CSS per app; no undefined tokens, orb, persona, emoji or spark motif",
+        "Red-flag banner, RESEARCH PROTOTYPE label and human confirmation remain the most prominent elements, confirmed by clinical-safety-reviewer",
+        "Playwright with Axe passes on desktop and tablet"
+      ],
+      "evidence_required": [
+        "Before screenshots in docs/innovation/v2/baseline/ and matching after screenshots",
+        "gsd-ui-review score before and after"
+      ]
     }
   ]
 }

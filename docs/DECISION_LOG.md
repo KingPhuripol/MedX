@@ -233,3 +233,18 @@ Machine-readable decisions are in `project_state/decisions.json` and validated a
   - **RISK-0015 raised.** Tracing the deterministic screen shows the evaluation cannot currently discriminate *at all*, and the cause is structural rather than a shortage of cases: SCR-002 raises `COMPLAINT_NOT_EVALUATED_BY_RULE` as `UNKNOWN` for every request carrying a chief complaint, and SR-002 turns any `UNKNOWN` flag into `URGENT_REVIEW` + `ESCALATED` — so **every complaint-bearing case escalates by construction, independently of its content**. The only route to `IMMEDIATE_REVIEW` is a `TRIGGERED` flag, and the only `TRIGGERED` flag produced anywhere is `REQUIRED_INFORMATION_INCOMPLETE`, so **the top urgency level is reachable only through absent information, never through clinical severity**; neither provider ever emits `TRIGGERED`. Adding `ROUTINE_REVIEW` cases therefore cannot make the set discriminate — it makes the failure visible and drives escalation toward 1.0. That is the intended next step (TASK-0032), with the fix designed and deliberately scheduled after the Proposal (TASK-0033).
 - **Approval:** APR-0002 (`SCOPE_CHANGE`, `PENDING`). Sequenced **before or with** APR-0001 — that approval reframes the contribution as "an evaluation contribution in a domain the field has not entered", which is empty until the domain is named.
 - **Evidence:** `docs/academic/PROJECT_IDEA.md` · `docs/innovation/CLINICAL_WORKFLOW.md` · `project_state/dataset_feasibility.json` · `project_state/literature.json` (LIT-0037, LIT-0036, LIT-0025, LIT-0055, LIT-0046, and the sole MIMIC-IV-ED mention) · `docs/research/RELATED_WORK.md` (T5, T6, T8; the triage-taxonomy licence audit; owner decision 6) · `tests/fixtures/cases/` · `docs/innovation/ACCEPTANCE_CRITERIA.md` (EVAL-0001 escalation 0.83).
+
+## DEC-0017 - The Front Door is one central backend and two separate frontends
+
+- **Date:** 2026-09-19
+- **Status:** proposed
+- **Owner:** Phurinat Polasa
+- **Decision:** One backend process and one versioned `/v2` API. Two frontend entry points with separate bundles from the existing Vite project: `nurse.html` (voice intake and handoff, role `intake`) and `platform.html` (queue, physician review, facts, audit, trace, research, readiness, settings). Shared code lives only in `src/shared/`; neither app imports from the other, enforced by a test. Access is enforced by server role checks, never by client-side hiding.
+- **Rationale:** `/platform` and `/nurse` are one bundle today, with the surface picked from `location.pathname` and pages hidden client-side. Research views render inside the clinical flow and queue-only fields are computed in the route handler. Separate bundles make the boundary visible; one backend avoids duplicating auth, audit and the safety screen.
+- **Alternatives considered:**
+  - Two npm packages — rejected: identical dependencies, double maintenance.
+  - One bundle with separate routes — rejected: the current, confusing state.
+  - Split the Python backend now — deferred to TASK-0034 and DEC-0014.
+- **Consequences:** `/workspace` redirects to `/platform`; entry-point tests pin two HTML files; owners of each app are named on acceptance.
+- **Evidence:** `docs/innovation/v2/baseline/` · TASK-0035 · TASK-0036
+- **Approval:** Pending — Phurinat Polasa (PM), Supreeya Nuamkhayan (Innovation). This entry is proposed, not accepted.

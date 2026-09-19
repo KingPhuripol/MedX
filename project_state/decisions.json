@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-09-07T18:15:00+07:00",
+  "updated_at": "2026-09-19T10:00:00+07:00",
   "decisions": [
     {
       "decision_id": "DEC-0001",
@@ -470,6 +470,35 @@
         "Pending: Supreeya Nuamkhayan (clinical workflow)",
         "Pending: Thanrada Tungweerapornpong (safety) — the setting fixes what under-triage means",
         "Recorded under APR-0002. The rationale is written so it does not depend on APR-0001's outcome, so the two may be decided in either order."
+      ]
+    },
+    {
+      "decision_id": "DEC-0017",
+      "date": "2026-09-19",
+      "title": "The Front Door is one central backend and two separate frontends: nurse intake and the central platform",
+      "status": "proposed",
+      "owner": "Phurinat Polasa",
+      "context": "/platform and /nurse are served from one React bundle; the surface is chosen from location.pathname and pages are hidden client-side only (innovation/workspace/src/main.tsx). Research/debug views (AgentTrace, audit history) render inside the clinical case flow, provider readiness shares a page with account settings, and the /v2/encounters route computes queue-only fields in raw SQL inside the API handler. The team cannot tell which code belongs to the nurse product and which to the platform.",
+      "decision": "Keep one backend process and one versioned /v2 API. Build two frontend entry points with separate bundles from the existing Vite project: nurse.html (voice intake and handoff, role intake) and platform.html (queue, physician review, facts, audit, trace, research, readiness, settings). Shared code lives only in src/shared/. Neither app imports from the other, enforced by a test. Access is enforced by the server's role checks, never by client-side hiding.",
+      "rationale": "Separate bundles make the boundary visible in the tree and in the network tab, while one package.json and one backend avoid duplicating dependencies, auth, audit and the safety screen. Server-side role checks already exist, so the split costs no new security surface.",
+      "alternatives": [
+        "Two separate npm packages — rejected: identical dependencies, double maintenance for a five-person team",
+        "Keep one bundle and separate routes — rejected: this is the current state the team finds confusing",
+        "Split the Python backend into packages now — deferred: TASK-0034 and DEC-0014 own the v1/v2 gateway question"
+      ],
+      "consequences": [
+        "/workspace becomes a redirect to /platform",
+        "tests/test_v2.py and the Playwright entry-point test pin two HTML entries",
+        "Owners of the nurse app and the platform app must be named when this is accepted"
+      ],
+      "supersedes": null,
+      "evidence": [
+        "docs/innovation/v2/baseline/ — screenshots of both surfaces before the split",
+        "TASK-0035"
+      ],
+      "approvers": [
+        "Pending: Phurinat Polasa (PM, scope)",
+        "Pending: Supreeya Nuamkhayan (Innovation, clinical workflow)"
       ]
     }
   ]
