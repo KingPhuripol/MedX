@@ -164,11 +164,11 @@ def test_api_workflow_and_access(tmp_path):
 def test_separate_platform_and_nurse_entrypoints():
     """DEC-0017: each path serves its own bundle; /workspace is only a redirect."""
     with TestClient(create_app()) as c:
-        for path, title in (('/platform', 'Central Platform'), ('/nurse', 'Nurse Intake')):
+        for path, title in (('/platform', 'Pratu Console'), ('/nurse', 'Pratu Intake')):
             response = c.get(path)
             assert response.status_code == 200
             assert '<div id="root"></div>' in response.text
-            assert f'<title>Clinical Front Door · {title}</title>' in response.text
+            assert f'<title>{title} · Clinical Front Door</title>' in response.text
         assert c.get('/platform').text != c.get('/nurse').text
         legacy = c.get('/workspace', follow_redirects=False)
         assert legacy.status_code == 308 and legacy.headers['location'] == '/platform'

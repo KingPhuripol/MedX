@@ -248,3 +248,14 @@ Machine-readable decisions are in `project_state/decisions.json` and validated a
 - **Consequences:** `/workspace` redirects to `/platform`; entry-point tests pin two HTML files; owners of each app are named on acceptance.
 - **Evidence:** `docs/innovation/v2/baseline/` · TASK-0035 · TASK-0036
 - **Approval:** Pending — Phurinat Polasa (PM), Supreeya Nuamkhayan (Innovation). This entry is proposed, not accepted.
+
+## DEC-0018 - The Innovation product family is named Pratu
+
+- **Date:** 2026-09-19
+- **Status:** proposed
+- **Owner:** Phurinat Polasa
+- **Decision:** Product family **Pratu** (ประตู, "door"), described as a Clinical Front Door. **Pratu Core** is the central backend (API, Model Gateway, deterministic safety screen, audit); **Pratu Intake** is the nurse app at `/nurse`; **Pratu Console** is the physician and evaluator app at `/platform`. The assistant is "ผู้ช่วยรับข้อมูล" with no persona name. The Research model family's working name is **CaseGraph**, with a size suffix only at the scale actually trained. The official academic project title is unchanged.
+- **Rationale:** The interface carried "Clinical Front Door", "JARVIS workspace" and a "Luna" persona at once. JARVIS is a third-party character name, and a persona contradicts the design system. One Thai name ties the three parts together; keeping "Clinical Front Door" as the descriptor preserves existing references.
+- **Alternatives considered:** keep the generic names (JARVIS/Luna would remain); a triage-role name (implies the system triages, beyond the claim boundary).
+- **Consequences:** UI, tests and mockups use Pratu Intake and Pratu Console. No trademark search has been done for "Pratu" or "CaseGraph"; do one before any public release.
+- **Approval:** Pending — Phurinat Polasa (PM), Supreeya Nuamkhayan (Innovation), team. This entry is proposed, not accepted.

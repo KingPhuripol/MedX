@@ -275,3 +275,5 @@ input, textarea, select { background: var(--surface-elevated); border-color: var
 .agent-trace__meta { margin: var(--space-3) 0 0; }
 .agent-trace__step small { grid-column: 2; }
 .agent-trace__step span { white-space: nowrap; }
+
+.navigation__footer .button--text { white-space: nowrap; }

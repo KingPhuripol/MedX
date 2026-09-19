@@ -8,15 +8,15 @@ test.beforeEach(async ({ page }) => {
 
 test("platform and nurse are distinct entry points", async ({ page }) => {
   const primaryNavigation = page.locator("#primary-navigation");
-  await expect(page.getByText("Central Platform", { exact: true })).toBeVisible();
+  await expect(page.getByText("Pratu Console", { exact: true })).toBeVisible();
   await expect(primaryNavigation.getByRole("button", { name: /รับข้อมูลด้วยเสียง/ })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /เปิดเว็บ Nurse Intake/ })).toHaveAttribute("href", "/nurse#/voice");
+  await expect(page.getByRole("link", { name: /เปิด Pratu Intake/ })).toHaveAttribute("href", "/nurse#/voice");
 
   await page.goto("/nurse#/voice");
-  await expect(page).toHaveTitle("Clinical Front Door · Nurse Intake");
+  await expect(page).toHaveTitle("Pratu Intake · Clinical Front Door");
   await expect(page.getByRole("heading", { name: "แตะเพื่อบันทึกเสียงระหว่างซักประวัติ" })).toBeVisible();
   await expect(primaryNavigation.getByRole("button", { name: /พื้นที่ตรวจเคส/ })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /เปิด Central Platform/ })).toHaveAttribute("href", "/platform#/cases");
+  await expect(page.getByRole("link", { name: /เปิด Pratu Console/ })).toHaveAttribute("href", "/platform#/cases");
 });
 
 test("critical synthetic intake flow and accessibility", async ({ page }, testInfo) => {

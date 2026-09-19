@@ -8,7 +8,7 @@ import { CasesPage } from "./CasesPage";
 import { SettingsPage } from "./SettingsPage";
 import { Research } from "./system";
 
-/** Central Platform: case queue, physician review, audit, research and system readiness. */
+/** Pratu Console: case queue, physician review, audit, research and system readiness. */
 type Page = "cases" | "research" | "settings";
 
 function parseRoute(): { page: Page; encounter?: string; draft?: string; step?: ClinicalWorkspaceStep } {
@@ -103,8 +103,8 @@ function PlatformApp() {
         { id: "settings", label: "สถานะระบบ", description: "ตรวจความพร้อม", icon: "settings" },
       ];
 
-  return <Shell product="platform" identity={{ name: "Central Platform", tagline: "ตรวจเคส ตัดสินใจ และประเมินระบบ" }} nav={nav} page={page} onNavigate={navigate}
-    switchLink={{ href: "/nurse#/voice", label: "เปิดเว็บ Nurse Intake", icon: "mic" }} title={pages[page].title} description={pages[page].description} ws={ws} onSignedIn={initialize}>
+  return <Shell product="platform" identity={{ name: "Pratu Console", tagline: "ตรวจเคส ตัดสินใจ และประเมินระบบ" }} nav={nav} page={page} onNavigate={navigate}
+    switchLink={{ href: "/nurse#/voice", label: "เปิด Pratu Intake", icon: "mic" }} title={pages[page].title} description={pages[page].description} ws={ws} onSignedIn={initialize}>
     {!ws.session ? null
       : page === "settings" ? <SettingsPage session={ws.session} caps={ws.caps} logout={ws.signOut} />
       : page === "research" ? <Research />

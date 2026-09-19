@@ -139,7 +139,7 @@ export function VoicePage({
 
         <div className="voice-agent-badge">
           <span className="voice-pulse-dot" />
-          <span className="voice-agent-name">Luna AI</span>
+          <span className="voice-agent-name">ผู้ช่วยรับข้อมูล</span>
         </div>
       </header>
 
@@ -177,7 +177,7 @@ export function VoicePage({
                 ? "ผู้ช่วยกำลังคิดคำตอบ"
                 : isSpeaking
                 ? "กำลังพูด แตะเพื่อหยุด"
-                : "แตะเพื่อพูดคุยกับ Luna"
+                : "แตะเพื่อเริ่มบันทึกเสียง"
             }
           >
             {voiceState === "recording" ? (
@@ -200,9 +200,9 @@ export function VoicePage({
               : voiceState === "transcribing"
               ? "กำลังแปลงเสียงภาษาไทย (Whisper)..."
               : activeJob
-              ? "ผู้ช่วย Luna กำลังจัดระเบียบข้อมูล..."
+              ? "ผู้ช่วยกำลังจัดระเบียบข้อมูล..."
               : isSpeaking
-              ? "น้อง Luna กำลังพูดตอบกลับ..."
+              ? "ผู้ช่วยกำลังอ่านคำตอบ..."
               : message
               ? "ตรวจ transcript ก่อนส่ง"
               : "แตะเพื่อบันทึกเสียงระหว่างซักประวัติ"}
@@ -281,7 +281,7 @@ export function VoicePage({
       ) : null}
 
       {/* Live Conversation Stream (Mobile Chat Bubbles) */}
-      <section className="voice-chat-stream" aria-label="บทสนทนากับผู้ช่วย Luna">
+      <section className="voice-chat-stream" aria-label="บทสนทนากับผู้ช่วย">
         <h3 className="voice-stream-heading">ประวัติการสนทนาในเคสนี้</h3>
         {!runs.length ? (
           <div className="empty-state empty-state--voice">
@@ -300,10 +300,10 @@ export function VoicePage({
                 <p className="voice-bubble__text">{run.user_text}</p>
               </div>
 
-              {/* Assistant Luna Reply */}
+              {/* Assistant reply */}
               <div className="voice-bubble voice-bubble--assistant">
                 <div className="voice-bubble__meta">
-                  <span className="voice-bubble__sender">Luna · ผู้ช่วยรับข้อมูล</span>
+                  <span className="voice-bubble__sender">ผู้ช่วยรับข้อมูล</span>
                   {run.status === "COMPLETED" ? (
                     <button
                       className="button button--text button--sm voice-bubble__replay"
@@ -335,7 +335,7 @@ export function VoicePage({
               <span />
               <span />
             </span>
-            <span className="voice-typing-text">Luna กำลังจัดระเบียบข้อมูลเพื่อให้บุคลากรตรวจ...</span>
+            <span className="voice-typing-text">ผู้ช่วยกำลังจัดระเบียบข้อมูลเพื่อให้บุคลากรตรวจ...</span>
           </div>
         ) : null}
 

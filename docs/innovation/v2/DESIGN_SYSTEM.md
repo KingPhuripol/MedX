@@ -12,11 +12,15 @@ The implementation source of truth is `innovation/workspace/src/shared/tokens.cs
 
 ### Brand identity
 
-The product mark is a teal rounded square containing a doorway and a small signal star. The doorway represents a calm clinical entry point; the star identifies the JARVIS assistant. The reusable implementation is `innovation/workspace/src/shared/ui/BrandLogo.tsx`, and the browser favicon is `innovation/workspace/public/favicon.svg`. The mark must always be paired with the “Clinical Front Door” wordmark in the full sidebar and login lockup. The compact mark may stand alone in dense contexts. The interface must not use a BDMS logo, name or endorsement language.
+The product family is **Pratu** (ประตู, “door”), with “Clinical Front Door” as its descriptor (DEC-0018, proposed). Pratu Core is the central backend, Pratu Intake the nurse app at `/nurse`, and Pratu Console the physician and evaluator app at `/platform`. The mark is a blue rounded square containing a doorway, the calm clinical entry point. The reusable implementation is `innovation/workspace/src/shared/ui/BrandLogo.tsx`, and the browser favicon is `innovation/workspace/public/favicon.svg`. The mark must always be paired with the “Pratu” wordmark and the “Clinical Front Door” descriptor in the full sidebar and login lockup. The compact mark may stand alone in dense contexts. The assistant has no persona name. The interface must not use a BDMS logo, name or endorsement language, nor any third-party product name, logo or mark (including Google or Gemini).
+
+### Palette (TASK-0036, 19 Sep 2026)
+
+The palette follows the light, neutral look of Google's Gemini web app as extracted into a design brief: warm-neutral surfaces (`#faf9f9` canvas, `#f2f0f0` muted, white panels), near-black text `#1f1f1f`, secondary text `#444746`, and a single blue primary `#0b57d0` with a `#d3e3fd` container. Feedback colours are Material-style: danger `#b3261e`/`#8c1d18` on `#f9dedc`, warning `#6d4c00` on `#ffefc9`, success `#0f5223` on `#c4eed0`, info `#0842a0` on `#d3e3fd`. Only colours are borrowed; no Google or Gemini name, logo, sparkle or gradient is used. Urgency red and the research-prototype label must stay the most prominent elements wherever they appear. Every key text/background pair is checked for WCAG AA in `tests/test_v2_upgrade.py`.
 
 | Token family | Required behavior |
 |---|---|
-| Brand primitives | Semantic navy, teal, warm-neutral and feedback colors are defined only in `tokens.css`; component styles must not introduce local color values. |
+| Brand primitives | Semantic blue, neutral and feedback colors are defined only in `tokens.css`; component styles must not introduce local color values. |
 | Surfaces | Brand areas must use `surface-brand`. Operational content should use `surface-canvas`, `surface-panel`, `surface-subtle` and `surface-selected`. |
 | Text | White text must be limited to a passing dark surface. `primitive-reference-gray` must not be normal text on white. |
 | Feedback | Info, success, warning and danger must combine color with a written label or symbol. |

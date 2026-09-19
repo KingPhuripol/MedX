@@ -1,57 +1,57 @@
 :root {
-  /* Reference primitives: keep exact values here; components use semantic tokens. */
+  /* Gemini-inspired light palette (TASK-0036). Reference primitives: keep exact values here; components use semantic tokens. */
   --primitive-black: #000000;
   --primitive-white: #ffffff;
-  --primitive-link-blue: #0000ee;
-  --primitive-brand-blue: #0f766e;
-  --primitive-reference-gray: #64748b;
+  --primitive-link-blue: #0b57d0;
+  --primitive-brand-blue: #0b57d0;
+  --primitive-reference-gray: #747775;
 
-  --surface-brand: #17324d;
-  --surface-canvas: #f4f3ef;
+  --surface-brand: #0b57d0;
+  --surface-canvas: #faf9f9;
   --surface-panel: var(--primitive-white);
-  --surface-subtle: #f7f7f4;
-  --surface-selected: #e7f3f0;
-  --surface-brand-soft: #edf6f4;
-  --surface-brand-muted: #d8ebe7;
-  --surface-info: #eaf3f8;
-  --surface-success: #e9f5ef;
-  --surface-warning: #fff6df;
-  --surface-danger: #fceceb;
-  --surface-disabled: #e8ebe9;
+  --surface-subtle: #f2f0f0;
+  --surface-selected: #d3e3fd;
+  --surface-brand-soft: #eef3fd;
+  --surface-brand-muted: #d3e3fd;
+  --surface-info: #d3e3fd;
+  --surface-success: #c4eed0;
+  --surface-warning: #ffefc9;
+  --surface-danger: #f9dedc;
+  --surface-disabled: #e3e3e3;
 
   --text-on-brand: var(--primitive-white);
-  --text-primary: #17212b;
-  --text-secondary: #334155;
-  --text-muted: #52606d;
+  --text-primary: #1f1f1f;
+  --text-secondary: #444746;
+  --text-muted: #444746;
   --text-link: var(--primitive-link-blue);
-  --text-info: #164e63;
-  --text-success: #176b4d;
-  --text-warning: #7c4a03;
-  --text-danger: #9f2d2d;
-  --text-disabled: #67737e;
+  --text-info: #0842a0;
+  --text-success: #0f5223;
+  --text-warning: #6d4c00;
+  --text-danger: #8c1d18;
+  --text-disabled: #747775;
 
   --action-primary: var(--primitive-brand-blue);
-  --action-primary-hover: #0c625c;
-  --action-primary-active: #094f4a;
-  --action-danger: #b23a3a;
-  --action-danger-hover: #922e2e;
+  --action-primary-hover: #0842a0;
+  --action-primary-active: #062e6f;
+  --action-danger: #b3261e;
+  --action-danger-hover: #8c1d18;
   --focus-ring: var(--primitive-brand-blue);
 
-  --border-default: #c9d0d3;
-  --border-subtle: #dde2e1;
+  --border-default: #c4c7c5;
+  --border-subtle: #e3e3e3;
   --border-strong: var(--primitive-reference-gray);
-  --border-info: #8cb8c6;
-  --border-success: #88bba4;
-  --border-warning: #d8ad56;
-  --border-danger: #dd9995;
+  --border-info: #a8c7fa;
+  --border-success: #6dd58c;
+  --border-warning: #e6c47a;
+  --border-danger: #f2b8b5;
 
-  --surface-sidebar: #f8faf9;
-  --surface-sidebar-active: #e3efec;
-  --surface-elevated: #fffefb;
-  --surface-inverse: #17324d;
-  --text-inverse-muted: #c5d0d8;
-  --accent-warm: #d99b45;
-  --border-sidebar: #d9dfde;
+  --surface-sidebar: #f2f0f0;
+  --surface-sidebar-active: #d3e3fd;
+  --surface-elevated: #ffffff;
+  --surface-inverse: #1f1f1f;
+  --text-inverse-muted: #c4c7c5;
+  --accent-warm: #e8b04b;
+  --border-sidebar: #e3e3e3;
 
   --font-family-primary: "Prompt", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   --font-size-xs: 12px;
@@ -78,10 +78,21 @@
   --radius-control: 10px;
   --radius-panel: 14px;
   --radius-pill: 50px;
-  --shadow-panel: 0 1px 2px rgba(23, 33, 43, 0.04), 0 8px 24px rgba(23, 33, 43, 0.045);
-  --shadow-hover: 0 10px 28px rgba(23, 33, 43, 0.09);
-  --shadow-overlay: 0 18px 54px rgba(23, 33, 43, 0.18);
+  --shadow-panel: 0 0 20px rgba(0, 0, 0, 0.04);
+  --shadow-hover: 0 4px 24px rgba(0, 0, 0, 0.08);
+  --shadow-overlay: 0 12px 48px rgba(0, 0, 0, 0.16);
   --motion-instant: 150ms;
   --motion-fast: 250ms;
   --motion-normal: 500ms;
+
+  /* Aliases for names style.css used without a definition; they previously fell back to browser defaults. */
+  --color-border: var(--border-default);
+  --color-primary: var(--action-primary);
+  --color-surface: var(--surface-panel);
+  --color-text: var(--text-primary);
+  --color-text-muted: var(--text-muted);
+  --radius-sm: 8px;
+  --radius-md: var(--radius-control);
+  --radius-lg: var(--radius-panel);
+  --radius-xl: 20px;
 }

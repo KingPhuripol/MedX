@@ -3,7 +3,7 @@ import { Shell, mount } from "../../shared/Shell";
 import { useWorkspace } from "../../shared/useWorkspace";
 import { VoicePage } from "./VoicePage";
 
-/** Nurse Intake: one job, voice-assisted history taking. Review, audit and research live on /platform. */
+/** Pratu Intake: one job, voice-assisted history taking. Review, audit and research live on /platform. */
 const encounterFromHash = () => {
   const parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean);
   return ["voice", "cases"].includes(parts[0]) && parts[1] ? decodeURIComponent(parts[1]) : undefined;
@@ -36,13 +36,13 @@ function NurseApp() {
     location.hash = `#/voice/${encodeURIComponent(id)}`;
   };
 
-  return <Shell product="nurse" identity={{ name: "Nurse Intake", tagline: "สำหรับพยาบาลและเจ้าหน้าที่รับข้อมูล" }}
+  return <Shell product="nurse" identity={{ name: "Pratu Intake", tagline: "สำหรับพยาบาลและเจ้าหน้าที่รับข้อมูล" }}
     nav={[{ id: "voice", label: "รับข้อมูลด้วยเสียง", description: "สำหรับบุคลากรระหว่างซักประวัติ", icon: "mic" }]} page="voice" onNavigate={() => undefined}
-    switchLink={{ href: "/platform#/cases", label: "เปิด Central Platform", icon: "cases" }}
+    switchLink={{ href: "/platform#/cases", label: "เปิด Pratu Console", icon: "cases" }}
     title="รับข้อมูลด้วยเสียงสำหรับบุคลากร" description="พยาบาลหรือเจ้าหน้าที่ตรวจ transcript ก่อนส่งให้ผู้ช่วยทุกครั้ง"
     ws={ws} onSignedIn={initialize}>
     {ws.session?.role === "evaluator"
-      ? <section className="panel"><h2>บัญชีผู้ประเมินใช้งานที่ Central Platform</h2><p>หน้านี้สำหรับบุคลากรที่รับข้อมูลผู้ป่วยเท่านั้น</p><a className="button button--primary" href="/platform#/experiments">เปิด Central Platform</a></section>
+      ? <section className="panel"><h2>บัญชีผู้ประเมินใช้งานที่ Pratu Console</h2><p>หน้านี้สำหรับบุคลากรที่รับข้อมูลผู้ป่วยเท่านั้น</p><a className="button button--primary" href="/platform#/experiments">เปิด Pratu Console</a></section>
       : ws.session ? <VoicePage cases={ws.cases} current={ws.current} facts={ws.facts} runs={ws.runs} session={ws.session} caps={ws.caps} voiceState={ws.voiceState} busy={ws.busy} job={ws.job}
           message={ws.message} setMessage={ws.setMessage} record={ws.record} speak={ws.speak} stopAudio={ws.stopAudio} startRun={ws.startRun}
           changeCase={changeCase} newCaseOpen={false} setNewCaseOpen={() => location.assign("/platform#/cases")}

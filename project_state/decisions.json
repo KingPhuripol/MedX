@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-09-19T10:00:00+07:00",
+  "updated_at": "2026-09-19T20:30:00+07:00",
   "decisions": [
     {
       "decision_id": "DEC-0001",
@@ -499,6 +499,35 @@
       "approvers": [
         "Pending: Phurinat Polasa (PM, scope)",
         "Pending: Supreeya Nuamkhayan (Innovation, clinical workflow)"
+      ]
+    },
+    {
+      "decision_id": "DEC-0018",
+      "date": "2026-09-19",
+      "title": "The Innovation product family is named Pratu: Pratu Core, Pratu Intake and Pratu Console",
+      "status": "proposed",
+      "owner": "Phurinat Polasa",
+      "context": "The interface carried three unrelated names: 'Clinical Front Door' as the wordmark, 'JARVIS workspace' as the product line and 'Luna' as an assistant persona, plus the generic 'Nurse Intake' and 'Central Platform' after DEC-0017 split the apps. JARVIS is a third-party fictional character name, and a named persona contradicts the design system's rule against anthropomorphising the assistant.",
+      "decision": "Product family Pratu (ประตู, 'door'), described as a Clinical Front Door. Pratu Core is the central backend (API, Model Gateway, deterministic safety screen, audit). Pratu Intake is the nurse app at /nurse. Pratu Console is the physician and evaluator app at /platform. The assistant is called 'ผู้ช่วยรับข้อมูล' and has no persona name. The Research model family working name is CaseGraph; a size suffix is attached only at the scale actually trained. The official academic project title is unchanged.",
+      "rationale": "One name ties the three parts together and says what the product is (the entry point of care) in Thai. It removes a third-party character name and the persona. Keeping 'Clinical Front Door' as the descriptor preserves every existing document reference.",
+      "alternatives": [
+        "Keep Clinical Front Door / Nurse Intake / Central Platform — rejected: generic, and JARVIS/Luna would remain",
+        "Name after a clinical role (e.g. triage) — rejected: implies the system triages, beyond the claim boundary"
+      ],
+      "consequences": [
+        "UI titles, wordmark and tests use Pratu Intake and Pratu Console",
+        "No trademark search has been done for 'Pratu' or 'CaseGraph'; do one before any public release",
+        "The academic title in PROJECT_IDEA.md and official submissions is unchanged; changing it needs its own approval"
+      ],
+      "supersedes": null,
+      "evidence": [
+        "innovation/workspace/src/shared/ui/BrandLogo.tsx",
+        "docs/innovation/v2/DESIGN_SYSTEM.md — Brand identity"
+      ],
+      "approvers": [
+        "Pending: Phurinat Polasa (PM)",
+        "Pending: Supreeya Nuamkhayan (Innovation)",
+        "Pending: team"
       ]
     }
   ]
