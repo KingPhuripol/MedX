@@ -1,4 +1,4 @@
-"""Builds the Front Door redesign canvas (v2 direction): one .dc.html per screen plus canvas.json."""
+"""Builds the Front Door redesign canvas (v3: Gemini-inspired light theme): one .dc.html per screen plus canvas.json."""
 import json
 from pathlib import Path
 
@@ -8,36 +8,36 @@ ROOT.mkdir(parents=True, exist_ok=True)
 CSS = """
 body{margin:0;background:#f3f1ec}
 a{color:#0f766e}a:hover{color:#0b5a54}
-.screen{box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden;background:#f3f1ec;color:#111c26;font:400 15px/24px 'IBM Plex Sans Thai',sans-serif}
+.screen{box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden;background:#f3f1ec;color:#111c26;font:400 15px/24px 'Noto Sans Thai',sans-serif}
 .row{display:flex;align-items:center}.col{display:flex;flex-direction:column}.grow{flex-grow:1;min-width:0}
-.display{font-family:'Prompt',sans-serif;font-weight:600;letter-spacing:-0.01em}
-.mono{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:0}
+.display{font-family:'Noto Sans Thai',sans-serif;font-weight:500;letter-spacing:-0.01em}
+.mono{font-family:'Roboto Mono',monospace;font-size:13px;letter-spacing:0}
 .meta{font-size:13px;line-height:20px;color:#5b6670}
 .strong{font-weight:600}
 .eyebrow{font-size:12px;line-height:16px;letter-spacing:0.06em;text-transform:uppercase;color:#5b6670;font-weight:600}
-.chrome{background:#0b1f2e;color:#e8eef2}
-.chrome .meta{color:#9fb1bf}
+.chrome{background:#f2f0f0;color:#1f1f1f}
+.chrome .meta{color:#444746}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:13px;line-height:20px;font-weight:600;white-space:nowrap}
 .p-urgent{background:#b42318;color:#fff}.p-warn{background:#fdf3e1;color:#8a4b05}.p-ok{background:#e6f4ec;color:#146c40}
 .p-info{background:#e5f1f6;color:#155e75}.p-neutral{background:#ecebe6;color:#3b4751}.p-teal{background:#e3f2ef;color:#0b5a54}
-.p-proto{border:1px solid #d9a441;color:#f3c877;background:transparent}
+.p-proto{border:1px solid #e6c47a;color:#7a4f00;background:#fff3dc}
 .p-proto-light{border:1px solid #d9a441;color:#8a4b05;background:#fdf3e1}
-.btn{box-sizing:border-box;height:40px;padding:0 16px;border-radius:8px;font:600 15px/24px 'IBM Plex Sans Thai',sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;background:none;color:#111c26;cursor:pointer;white-space:nowrap;text-decoration:none}
+.btn{box-sizing:border-box;height:40px;padding:0 16px;border-radius:9999px;font:500 15px/24px 'Noto Sans Thai',sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;background:none;color:#111c26;cursor:pointer;white-space:nowrap;text-decoration:none}
 .btn-primary{background:#0f766e;color:#fff}.btn-primary:hover{background:#0b5a54;color:#fff}
-.btn-ink{background:#0b1f2e;color:#fff}.btn-ink:hover{background:#16324a;color:#fff}
+.btn-ink{background:#0b1f2e;color:#fff}.btn-ink:hover{background:#3c3c3c;color:#fff}
 .btn-secondary{background:#fff;border-color:#d5d1c6}
-.btn-ghost-light{color:#e8eef2;border-color:#2c4a61}.btn-ghost-light:hover{background:#16324a;color:#fff}
+.btn-ghost-light{color:#0b57d0;background:#fff;border-color:#c4c7c5}.btn-ghost-light:hover{background:#eef3fd;color:#0842a0}
 .btn-white{background:#fff;color:#b42318}
 .btn-text{color:#0f766e;padding:0 6px}
 .btn-lg{height:48px;padding:0 20px;font-size:16px}
-.card{background:#fff;border:1px solid #e4e1d8;border-radius:12px}
+.card{background:#fff;border:1px solid #efefef;border-radius:28px;box-shadow:rgba(0,0,0,0.04) 0 0 20px 0}
 .line-b{border-bottom:1px solid #e4e1d8}.line-t{border-top:1px solid #e4e1d8}
 .icon{flex-shrink:0}
 .tr{display:grid;align-items:center;padding:14px 20px;border-bottom:1px solid #eeebe4;gap:16px}
-.chip{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:6px;background:#f3f1ec;border:1px solid #e4e1d8;font-size:13px;line-height:20px;color:#3b4751;text-decoration:none}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 12px;border-radius:9999px;background:#f3f1ec;border:1px solid #e4e1d8;font-size:13px;line-height:20px;color:#3b4751;text-decoration:none}
 """
 
-FONTS = '<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&amp;family=IBM+Plex+Sans+Thai:wght@400;500;600&amp;family=Prompt:wght@500;600&amp;display=swap" rel="stylesheet">'
+FONTS = '<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600&amp;family=Roboto+Mono:wght@500&amp;display=swap" rel="stylesheet">'
 
 
 def ic(name, size=18, color="currentColor", sw="1.8"):
@@ -73,6 +73,26 @@ def wave(bars=38, h=28, color="#0f766e"):
     return f'<svg width="{bars * 5}" height="{h}" viewBox="0 0 {bars * 5} {h}" aria-hidden="true">{"".join(rects)}</svg>'
 
 
+THEME = [
+    ("#0b1f2e", "#1f1f1f"), ("#16324a", "#ffffff"), ("#2c4a61", "#dcdada"), ("#9fb1bf", "#444746"), ("#e8eef2", "#1f1f1f"),
+    ("#0f766e", "#0b57d0"), ("#0b5a54", "#0842a0"), ("#e3f2ef", "#d3e3fd"), ("#b9ddd6", "#a8c7fa"), ("#1f3a36", "#041e49"), ("#eef7f5", "#eef3fd"),
+    ("#111c26", "#1f1f1f"), ("#5b6670", "#444746"), ("#3b4751", "#444746"), ("#9aa3ab", "#747775"),
+    ("#e4e1d8", "#e3e3e3"), ("#eeebe4", "#efefef"), ("#d5d1c6", "#c4c7c5"), ("#c9c4b8", "#c4c7c5"),
+    ("#f3f1ec", "#faf9f9"), ("#faf9f6", "#f2f0f0"), ("#ecebe6", "#f2f0f0"),
+    ("#b42318", "#b3261e"), ("#fdecea", "#f9dedc"), ("#fff5f4", "#fcefee"), ("#ffd9d4", "#f9dedc"), ("#f1b5ae", "#f2b8b5"),
+    ("#8a4b05", "#7a4f00"), ("#a15c07", "#8c5a00"), ("#fdf3e1", "#fff3dc"), ("#efd6a3", "#f3dca8"), ("#fffaf0", "#fffbf3"), ("#d9a441", "#e6c47a"),
+    ("#146c40", "#146c2e"), ("#e6f4ec", "#e6f4ea"), ("#155e75", "#0842a0"), ("#e5f1f6", "#d3e3fd"),
+    ("rgba(11,31,46,0.06)", "rgba(0,0,0,0.04)"), ("rgba(11,31,46,0.05)", "rgba(0,0,0,0.04)"),
+    ("border-radius: 8px;", "border-radius: 9999px;"), ("border-radius: 10px;", "border-radius: 20px;"), ("border-radius: 12px;", "border-radius: 24px;"), ("border-radius: 14px;", "border-radius: 28px;"),
+]
+
+
+def themed(html):
+    for a, b in THEME:
+        html = html.replace(a, b)
+    return html
+
+
 def page(title, w, h, body, logic=""):
     logic = logic or "class Component extends DCLogic {\n  renderVals() { return {}; }\n}"
     props = json.dumps({"$preview": {"width": w, "height": h}})
@@ -87,27 +107,27 @@ def page(title, w, h, body, logic=""):
 <x-dc>
 <helmet>
 {FONTS}
-<style>{CSS}</style>
+<style>{themed(CSS)}</style>
 </helmet>
 <div class="screen" style="width: {w}px; height: {h}px;">
-{body}
+{themed(body)}
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{props}'>
-{logic}
+{themed(logic)}
 </script>
 </body>
 </html>
 """
 
 
-BRAND = f'<span class="row" style="gap: 10px;"><span class="row" style="width: 30px; height: 30px; border-radius: 8px; background: #0f766e; justify-content: center;">{ic("door", 18, "#fff", "2")}</span><span class="display" style="font-size: 16px; color: #fff;">Front Door</span></span>'
+BRAND = f'<span class="row" style="gap: 10px;"><span class="row" style="width: 30px; height: 30px; border-radius: 8px; background: #0f766e; justify-content: center;">{ic("door", 18, "#fff", "2")}</span><span class="display" style="font-size: 17px; color: #1f1f1f;">Front Door</span></span>'
 
 
 # ---------- Nurse ----------
 def nurse_topbar(compact=False):
-    case = '<span class="mono" style="color: #fff; font-size: 14px;">demo-014</span>'
-    info = "" if compact else '<span class="meta">ชาย 58 ปี</span><span class="meta">·</span><span class="row meta" style="gap: 4px;">' + ic("clock", 15, "#9fb1bf") + 'มาถึง 09:10 · รอ 12 นาที</span>'
+    case = '<span class="mono" style="color: #1f1f1f; font-size: 14px;">demo-014</span>'
+    info = "" if compact else '<span class="meta">ชาย 58 ปี</span><span class="meta">·</span><span class="row meta" style="gap: 4px;">' + ic("clock", 15, "#444746") + 'มาถึง 09:10 · รอ 12 นาที</span>'
     proto = "" if compact else '<span class="pill p-proto">ต้นแบบวิจัย · ข้อมูลสังเคราะห์</span>'
     return f"""<header class="chrome row" style="height: 60px; padding: 0 24px; gap: 16px; flex-shrink: 0;">{BRAND}<span style="width: 1px; height: 24px; background: #2c4a61;"></span>
 <span class="meta" style="color: #9fb1bf;">Nurse Intake</span><span class="row" style="gap: 10px; padding: 6px 12px; border-radius: 8px; background: #16324a;">{case}{info}</span>
@@ -191,8 +211,8 @@ def handoff(sent=False):
         s = []
         for i, (a, b, st) in enumerate(steps):
             dot = {"done": f'<span class="row" style="width: 24px; height: 24px; border-radius: 999px; background: #0f766e; justify-content: center;">{ic("check", 14, "#fff", "2.6")}</span>',
-                   "now": '<span style="width: 24px; height: 24px; box-sizing: border-box; border-radius: 999px; border: 3px solid #e8b04b; background: #0b1f2e;"></span>'}[st]
-            s.append(f'<span class="row" style="gap: 10px;">{dot}<span class="col"><span class="strong" style="color: #fff;">{a}</span><span class="mono" style="color: #9fb1bf;">{b}</span></span></span>')
+                   "now": '<span style="width: 24px; height: 24px; box-sizing: border-box; border-radius: 999px; border: 3px solid #e8b04b; background: #fff;"></span>'}[st]
+            s.append(f'<span class="row" style="gap: 10px;">{dot}<span class="col"><span class="strong" style="color: #1f1f1f;">{a}</span><span class="mono" style="color: #9fb1bf;">{b}</span></span></span>')
             if i < len(steps) - 1:
                 s.append('<span style="width: 48px; height: 2px; background: #2c4a61;"></span>')
         return f"""<footer class="chrome row" style="height: 80px; padding: 0 24px; gap: 18px; flex-shrink: 0;">{''.join(s)}<span class="grow"></span>
@@ -231,10 +251,10 @@ MOBILE_LOGIC = """class Component extends DCLogic {
 
 
 def mobile():
-    tb = "flex-grow: 1; height: 40px; border: none; border-radius: 8px; font: 600 15px/24px 'IBM Plex Sans Thai',sans-serif; cursor: pointer;"
+    tb = "flex-grow: 1; height: 40px; border: none; border-radius: 8px; font: 600 15px/24px 'Noto Sans Thai',sans-serif; cursor: pointer;"
     chat = "".join(CONVO[2:])
     body = f"""<header class="chrome row" style="height: 56px; padding: 0 16px; gap: 10px; flex-shrink: 0;"><span class="row" style="width: 28px; height: 28px; border-radius: 8px; background: #0f766e; justify-content: center;">{ic("door", 16, "#fff", "2")}</span>
-<span class="col"><span class="mono" style="color: #fff;">demo-014</span><span class="meta" style="font-size: 12px; line-height: 16px;">ชาย 58 · รอ 12 นาที</span></span><span class="grow"></span><button class="btn btn-ghost-light" type="button" style="height: 44px;">เปลี่ยนเคส</button></header>
+<span class="col"><span class="mono" style="color: #1f1f1f;">demo-014</span><span class="meta" style="font-size: 12px; line-height: 16px;">ชาย 58 · รอ 12 นาที</span></span><span class="grow"></span><button class="btn btn-ghost-light" type="button" style="height: 44px;">เปลี่ยนเคส</button></header>
 {urgency_band(compact=True)}
 <div class="row" role="tablist" aria-label="มุมมองเคส" style="margin: 12px 16px 0; background: #ecebe6; border-radius: 10px; padding: 4px; gap: 4px;"><button type="button" role="tab" style="{tb} @@chatTab@@" onClick="@@showChat@@">บทสนทนา</button><button type="button" role="tab" style="{tb} @@factsTab@@" onClick="@@showFacts@@">ข้อมูล · <span style="color: #a15c07;">2 รอ</span></button></div>
 <sc-if value="@@chat@@" hint-placeholder-val="@@true@@">
@@ -262,13 +282,13 @@ def platform_shell(active, main):
     for label, icon, href, count in items:
         on = label == active
         badge = f'<span class="pill" style="background: #0f766e; color: #fff; padding: 0 8px;">{count}</span>' if count else ""
-        nav.append(f'<a href="{href}" class="row" style="gap: 12px; padding: 10px 12px; border-radius: 8px; text-decoration: none; {"background: #16324a; color: #fff;" if on else "color: #9fb1bf;"}">{ic(icon, 18, "#fff" if on else "#9fb1bf")}<span class="grow" style="font-weight: 600;">{label}</span>{badge}</a>')
+        nav.append(f'<a href="{href}" class="row" style="gap: 12px; padding: 10px 12px; border-radius: 8px; text-decoration: none; {"background: #d3e3fd; color: #041e49;" if on else "color: #444746;"}">{ic(icon, 18, "#041e49" if on else "#444746")}<span class="grow" style="font-weight: 600;">{label}</span>{badge}</a>')
     return f"""<div class="row grow" style="align-items: stretch; min-height: 0;">
 <nav class="chrome col" aria-label="เมนูหลัก" style="width: 240px; flex-shrink: 0; padding: 20px 14px; gap: 4px;">
 <div style="padding: 0 8px 24px;">{BRAND}<div class="meta" style="padding-top: 4px; padding-left: 40px;">Central Platform</div></div>
 {''.join(nav)}<span class="grow"></span>
-<div class="col" style="margin: 0 4px; padding: 12px; border-radius: 10px; background: #16324a; gap: 10px;"><div class="row" style="gap: 10px;"><span class="row display" style="width: 34px; height: 34px; border-radius: 999px; background: #e3f2ef; color: #0b5a54; justify-content: center; font-size: 13px;">SC</span><span class="col"><span class="strong" style="color: #fff; font-size: 14px;">dr.somchai</span><span class="meta" style="font-size: 12px;">แพทย์ผู้ตรวจ · เวรเช้า</span></span></div>
-<a class="btn btn-ghost-light" href="Main.dc.html" style="height: 36px;">{ic("mic", 16, "#e8eef2")}Nurse Intake</a></div>
+<div class="col" style="margin: 0 4px; padding: 12px; border-radius: 10px; background: #16324a; gap: 10px;"><div class="row" style="gap: 10px;"><span class="row display" style="width: 34px; height: 34px; border-radius: 999px; background: #e3f2ef; color: #0b5a54; justify-content: center; font-size: 13px;">SC</span><span class="col"><span class="strong" style="color: #1f1f1f; font-size: 14px;">dr.somchai</span><span class="meta" style="font-size: 12px;">แพทย์ผู้ตรวจ · เวรเช้า</span></span></div>
+<a class="btn btn-ghost-light" href="Main.dc.html" style="height: 36px;">{ic("mic", 16, "#0b57d0")}Nurse Intake</a></div>
 </nav><div class="col grow" style="min-height: 0;">{main}</div></div>"""
 
 
@@ -346,7 +366,7 @@ def review():
 <div class="col" style="gap: 4px;"><h2 class="display" style="margin: 0; font-size: 20px;">การตัดสินใจของแพทย์</h2><span class="row meta" style="gap: 6px;">{ic("lock", 14, "#5b6670")}ยังไม่มีผลต่อการดูแลจนกว่าคุณจะบันทึก</span></div>
 <div class="col" role="group" aria-label="การตัดสินใจ" style="gap: 8px;">{opts}</div>
 <label class="eyebrow" for="reason" style="padding-top: 4px;">เหตุผล · จำเป็น</label>
-<div class="col" style="background: #fff; border: 1px solid #d5d1c6; border-radius: 10px; padding: 10px 12px; gap: 2px;"><select id="reason" style="border: none; font: 500 15px/24px 'IBM Plex Sans Thai',sans-serif; color: #111c26; background: none; padding: 0;"><option>ข้อมูลที่ขาดทำให้ต้องประเมินทันที</option></select><span class="mono" style="color: #9aa3ab;">MISSING_INFORMATION</span></div>
+<div class="col" style="background: #fff; border: 1px solid #d5d1c6; border-radius: 10px; padding: 10px 12px; gap: 2px;"><select id="reason" style="border: none; font: 500 15px/24px 'Noto Sans Thai',sans-serif; color: #111c26; background: none; padding: 0;"><option>ข้อมูลที่ขาดทำให้ต้องประเมินทันที</option></select><span class="mono" style="color: #9aa3ab;">MISSING_INFORMATION</span></div>
 <span class="grow"></span>
 <button class="btn btn-lg" type="button" style="background: #b42318; color: #fff;">บันทึก ESCALATE{ic("arrow", 18, "#fff", "2")}</button><span class="meta" style="text-align: center;">บันทึกพร้อมชื่อผู้ตรวจ dr.somchai · แก้ย้อนไม่ได้</span>
 </aside></div>"""
@@ -372,9 +392,9 @@ def dag():
     for i, (typ, a, b, c) in enumerate(nodes):
         y = 10 + i * (h + gap)
         parts.append(f'<rect x="{x0}" y="{y}" width="{w}" height="{h}" rx="10" fill="#fff" stroke="#e4e1d8"/><rect x="{x0}" y="{y}" width="6" height="{h}" rx="3" fill="{c}"/>')
-        parts.append(f'<text x="{x0 + 20}" y="{y + 22}" font-family="IBM Plex Mono, monospace" font-size="11" fill="{c}" font-weight="500">{typ}</text>')
-        parts.append(f'<text x="{x0 + 20}" y="{y + 43}" font-family="IBM Plex Sans Thai, sans-serif" font-size="15" font-weight="600" fill="#111c26">{a}</text>')
-        parts.append(f'<text x="{x0 + w - 14}" y="{y + 43}" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="12" fill="#5b6670">{b}</text>')
+        parts.append(f'<text x="{x0 + 20}" y="{y + 22}" font-family="Roboto Mono, monospace" font-size="11" fill="{c}" font-weight="500">{typ}</text>')
+        parts.append(f'<text x="{x0 + 20}" y="{y + 43}" font-family="Noto Sans Thai, sans-serif" font-size="15" font-weight="600" fill="#111c26">{a}</text>')
+        parts.append(f'<text x="{x0 + w - 14}" y="{y + 43}" text-anchor="end" font-family="Roboto Mono, monospace" font-size="12" fill="#5b6670">{b}</text>')
         if i < len(nodes) - 1:
             yy = y + h
             parts.append(f'<path d="M{x0 + 40} {yy + 2} V{yy + gap - 4}" stroke="#9aa3ab" stroke-width="1.6"/><path d="M{x0 + 35} {yy + gap - 9} L{x0 + 40} {yy + gap - 3} L{x0 + 45} {yy + gap - 9}" fill="none" stroke="#9aa3ab" stroke-width="1.6"/>')
