@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-09-19T10:00:00+07:00",
+  "updated_at": "2026-09-19T10:50:00+07:00",
   "tasks": [
     {
       "task_id": "TASK-0001",
@@ -1031,12 +1031,14 @@
       "workstream": "INNOVATION",
       "milestone": "M2",
       "priority": "P1",
-      "status": "READY",
-      "planned_start": "2026-09-27",
-      "evidence": [],
+      "status": "REVIEW",
+      "planned_start": "2026-09-19",
+      "evidence": [
+        "2026-09-19: innovation/workspace builds nurse.html and platform.html as separate bundles (src/apps/nurse, src/apps/platform, src/shared); /workspace returns 308 to /platform. Shared state lives in src/shared/useWorkspace.ts and chrome in src/shared/Shell.tsx. src/boundary.test.ts fails when either app imports the other (mutation-checked). Queue SQL moved from the /v2/encounters handler to Service.queue; speech calls go through shared/api.ts without latching a replay. Verified: pytest 473 passed (run without the local .env), vitest 24 passed, tsc clean, Playwright 10 passed with Axe on desktop and tablet. Token-auth check: role intake gets 403 on /v2/experiments; /v2/readiness stays readable by intake as before the split."
+      ],
       "blocker": null,
       "risk_level": "MEDIUM",
-      "updated_at": "2026-09-19T10:00:00+07:00",
+      "updated_at": "2026-09-19T10:50:00+07:00",
       "task_id": "TASK-0035",
       "title": "Split the Front Door frontend into a nurse app and a central platform app (DEC-0017)",
       "owner": "Supreeya Nuamkhayan",

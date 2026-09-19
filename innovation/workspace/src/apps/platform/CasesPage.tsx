@@ -1,12 +1,13 @@
 import React from "react";
-import type { Capability, Case, Draft, Fact, Job, Run, Session } from "../types";
-import { handoffLabels, humanizeClinicalText } from "../types";
-import type { ClinicalWorkspaceStep } from "../workflow";
-import { clinicalSteps, pendingProposalCount, stepState } from "../workflow";
-import { AgentTrace, FactEditor, FactView, Proposals, Review, StatusBadge } from "../components/clinical";
-import { History } from "../components/system";
-import { Icon } from "../components/Icon";
-import { SideSheet } from "../components/SideSheet";
+import type { Capability, Case, Draft, Fact, Job, Run, Session } from "../../shared/types";
+import { handoffLabels, humanizeClinicalText } from "../../shared/types";
+import type { ClinicalWorkspaceStep } from "../../shared/workflow";
+import { clinicalSteps, pendingProposalCount, stepState } from "../../shared/workflow";
+import { AgentTrace, FactEditor, FactView, Proposals, Review } from "./clinical";
+import { StatusBadge } from "../../shared/ui/StatusBadge";
+import { History } from "./system";
+import { Icon } from "../../shared/ui/Icon";
+import { SideSheet } from "./SideSheet";
 
 export type CasesPageProps = {
   cases: Case[]; current: Case | null; facts: Fact[]; runs: Run[]; drafts: Draft[]; session: Session; caps: Capability | null;

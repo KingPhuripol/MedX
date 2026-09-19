@@ -332,6 +332,52 @@ class Service:
                 record['content'] = {**record['content'], 'differentials': []}
         return result
 
+    def queue(self, actor, q='', status='', offset=0, limit=25):
+        """The case list with the attention fields the queue needs, scoped to the actor's workspace."""
+        import json
+        with self.store.lock:
+            rows = self.store.conn.execute("""WITH
+                counts AS (SELECT resource,count(*) revision FROM v2_records WHERE kind='event' GROUP BY resource),
+                last_draft AS (SELECT json_extract(payload,'$.encounter_id') encounter,max(sequence) seq FROM v2_records WHERE kind='draft' GROUP BY encounter),
+                last_review AS (SELECT resource,max(sequence) seq FROM v2_records WHERE kind='review' GROUP BY resource),
+                cases AS (SELECT e.resource,e.payload,e.sequence,COALESCE(c.revision,0) revision,
+                    CASE WHEN d.sequence IS NULL THEN 'NO_DRAFT'
+                    WHEN json_extract(d.payload,'$.case_revision')!=COALESCE(c.revision,0) THEN 'STALE'
+                    WHEN json_extract(r.payload,'$.action')='CONFIRM' AND json_extract(r.payload,'$.draft_revision')=json_extract(d.payload,'$.draft_revision') THEN 'CONFIRMED'
+                    WHEN json_extract(r.payload,'$.action')='REJECT' THEN 'REJECTED' ELSE 'PENDING' END handoff_status
+                    FROM v2_records e LEFT JOIN counts c ON c.resource=e.resource
+                    LEFT JOIN last_draft ld ON ld.encounter=e.resource LEFT JOIN v2_records d ON d.sequence=ld.seq
+                    LEFT JOIN last_review lr ON lr.resource=d.resource LEFT JOIN v2_records r ON r.sequence=lr.seq
+                    WHERE e.kind='encounter' AND COALESCE(json_extract(e.payload,'$.workspace'),'default')=?
+                    AND instr(lower(e.resource),lower(?))>0)
+                SELECT * FROM cases WHERE (?='' OR handoff_status=?) ORDER BY sequence DESC LIMIT ? OFFSET ?""",
+                (actor.workspace,q,status,status,limit+1,offset)).fetchall()
+        items=[]
+        for row in rows[:limit]:
+            encounter_id=row['resource']
+            revision=row['revision']
+            pending=0
+            for run in self.store.all('run', encounter_id):
+                if run.get('status')!='COMPLETED' or run.get('case_revision')!=revision:
+                    continue
+                for proposal in run.get('proposals',[]):
+                    proposal_id=proposal.get('proposal_id')
+                    if proposal_id and not self.store.all('accepted', f"accept:{run['run_id']}:{proposal_id}"):
+                        pending+=1
+            with self.store.lock:
+                active=self.store.conn.execute("""SELECT status FROM v2_jobs
+                    WHERE encounter=? AND status IN ('queued','running')
+                    ORDER BY created_at DESC LIMIT 1""",(encounter_id,)).fetchone()
+            handoff=row['handoff_status']
+            attention={'pending_proposal_count':pending,
+                'active_job_status':active['status'] if active else None,
+                'stale_draft':handoff=='STALE',
+                'needs_attention':bool(pending or active or handoff in {'PENDING','STALE','REJECTED'})}
+            items.append({**json.loads(row['payload']),'case_revision':revision,
+                'handoff_status':handoff,'attention':attention})
+        return {'items':items,
+                'next_offset':offset+limit if len(rows)>limit else None}
+
     def drafts(self, encounter_id, actor):
         self.case(encounter_id)
         with self.store.lock:

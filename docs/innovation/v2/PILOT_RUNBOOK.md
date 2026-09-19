@@ -11,7 +11,7 @@ Stop the session if a participant enters real identifying information, another w
 1. Build the React workspace and start one FastAPI process with a persistent pilot SQLite database.
 2. Use `FRONT_DOOR_AUTH_MODE=token` and an untracked principals file with a distinct account for every participant.
 3. Keep the default mock provider unless a live adapter has separately passed connectivity, contract and smoke checks.
-4. Open `/workspace` on the target desktop and tablet. Confirm Prompt loads with network access disabled.
+4. Open `/nurse` and `/platform` on the target desktop and tablet. Confirm Prompt loads with network access disabled.
 5. Create a timestamped backup and verify `/ready`, `/v2/readiness` and `/v2/capabilities`.
 6. Prepare scenario cards containing only invented case IDs, adult ages and synthetic histories.
 

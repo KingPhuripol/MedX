@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Icon } from "../components/Icon";
-import { StatusBadge } from "../components/clinical";
-import { type Capability, type Case, type Fact, type Job, type Run, type Session, humanizeClinicalText } from "../types";
+import { Icon } from "../../shared/ui/Icon";
+import { StatusBadge } from "../../shared/ui/StatusBadge";
+import { type Capability, type Case, type Fact, type Job, type Run, type Session, humanizeClinicalText } from "../../shared/types";
 
 export type VoicePageProps = {
   cases: Case[];

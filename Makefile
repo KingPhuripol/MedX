@@ -1,4 +1,4 @@
-.PHONY: bootstrap verify smoke test demo api eval leakage-fixture status idea-docx citations citations-online
+.PHONY: bootstrap verify smoke test demo api eval leakage-fixture status idea-docx citations citations-online web
 
 bootstrap:
 	bash scripts/bootstrap.sh
@@ -46,3 +46,7 @@ api:
 # Frozen synthetic evaluation of the Front Door (reports rates; decides no pass/fail)
 eval:
 	python3 -m innovation.evaluation
+
+# Build both frontends (nurse.html, platform.html) that the API serves at /nurse and /platform.
+web:
+	cd innovation/workspace && npm run build

@@ -8,11 +8,11 @@ The system must use semantic tokens for all components. Teams should extend an e
 
 ## Design tokens and foundations
 
-The implementation source of truth is `innovation/workspace/src/tokens.css`.
+The implementation source of truth is `innovation/workspace/src/shared/tokens.css`.
 
 ### Brand identity
 
-The product mark is a teal rounded square containing a doorway and a small signal star. The doorway represents a calm clinical entry point; the star identifies the JARVIS assistant. The reusable implementation is `innovation/workspace/src/components/BrandLogo.tsx`, and the browser favicon is `innovation/workspace/public/favicon.svg`. The mark must always be paired with the “Clinical Front Door” wordmark in the full sidebar and login lockup. The compact mark may stand alone in dense contexts. The interface must not use a BDMS logo, name or endorsement language.
+The product mark is a teal rounded square containing a doorway and a small signal star. The doorway represents a calm clinical entry point; the star identifies the JARVIS assistant. The reusable implementation is `innovation/workspace/src/shared/ui/BrandLogo.tsx`, and the browser favicon is `innovation/workspace/public/favicon.svg`. The mark must always be paired with the “Clinical Front Door” wordmark in the full sidebar and login lockup. The compact mark may stand alone in dense contexts. The interface must not use a BDMS logo, name or endorsement language.
 
 | Token family | Required behavior |
 |---|---|

@@ -2,7 +2,7 @@
 import React from "react";
 import { afterEach, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { Review, Proposals } from "./main";
+import { Review, Proposals } from "./clinical";
 afterEach(cleanup);
 const fact = {
   event_id: "a",

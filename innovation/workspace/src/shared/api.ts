@@ -86,3 +86,17 @@ export async function retryPendingRequest<T>(): Promise<T> {
 export function jobError(code?: string | null): string {
   return errorMessages[code || ""] || "งานไม่สำเร็จ ข้อความที่กรอกยังอยู่";
 }
+
+// Speech is not a clinical write, so it never latches a pending request for replay.
+export async function transcribeAudio(audio: Blob): Promise<string> {
+  const body = new FormData(); body.append("file", audio, "recording.webm");
+  const response = await fetch("/v2/speech/transcriptions", { method: "POST", credentials: "same-origin", headers: { "X-CSRF-Token": csrfToken }, body });
+  if (!response.ok) throw Error("ถอดเสียงไม่สำเร็จ ข้อความเดิมยังอยู่และพิมพ์ต่อได้");
+  return (await response.json()).text;
+}
+
+export async function synthesizeSpeech(runId: string): Promise<Blob> {
+  const response = await fetch(`/v2/runs/${runId}/speech`, { method: "POST", credentials: "same-origin", headers: { "X-CSRF-Token": csrfToken } });
+  if (!response.ok) throw Error("อ่านเสียงไม่สำเร็จ ใช้ข้อความต่อได้");
+  return response.blob();
+}

@@ -14,7 +14,7 @@ python3 -m uvicorn innovation.api.app:app --host 127.0.0.1 --port 8000
 
 For a reproducible command-line vertical slice run `python3 -m innovation.v2.demo`.
 
-Open http://127.0.0.1:8000/workspace (OpenAPI: `/docs`). `/ui/v2` remains a recovery fallback. The default is in-memory, offline, synthetic-only, fixed local-demo physician identity. Keep this mode on loopback. No paid provider is invoked.
+Open http://127.0.0.1:8000/platform or http://127.0.0.1:8000/nurse (OpenAPI: `/docs`). `/ui/v2` remains a recovery fallback. The default is in-memory, offline, synthetic-only, fixed local-demo physician identity. Keep this mode on loopback. No paid provider is invoked.
 
 1. Create an adult synthetic encounter.
 2. Enter a fact and click the reviewed-data save button. Unknown, refused and unavailable are distinct states; absent fields remain absent.

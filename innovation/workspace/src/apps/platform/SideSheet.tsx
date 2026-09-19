@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { Icon } from "./Icon";
+import { Icon } from "../../shared/ui/Icon";
 
 export function SideSheet({ title, description, onClose, children }: {
   title: string;

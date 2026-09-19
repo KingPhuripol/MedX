@@ -2,8 +2,8 @@
 import React from "react";
 import { afterEach, expect, it } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
-import { AgentTrace } from "./components/clinical";
-import type { Run } from "./types";
+import { AgentTrace } from "./clinical";
+import type { Run } from "../../shared/types";
 afterEach(cleanup);
 
 const run = (trace: Run["trace"]): Run => ({ run_id: "r", case_revision: 1, status: "FAILED_SAFE", response: "", user_text: "", proposals: [], trace, provenance: { model: "m-1", design: { design_id: "fixed" } } });

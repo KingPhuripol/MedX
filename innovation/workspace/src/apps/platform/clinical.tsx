@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { createIdempotencyKey } from "../api";
-import { Icon, type IconName } from "./Icon";
+import { createIdempotencyKey } from "../../shared/api";
+import { Icon, type IconName } from "../../shared/ui/Icon";
+import { StatusBadge } from "../../shared/ui/StatusBadge";
 import {
   type Draft,
   type Fact,
@@ -14,15 +15,8 @@ import {
   redFlagLabels,
   redFlagStates,
   urgencyLabels,
-} from "../types";
+} from "../../shared/types";
 
-export function StatusBadge({ tone = "neutral", children }: {
-  tone?: "neutral" | "success" | "warning" | "danger" | "info";
-  children: React.ReactNode;
-}) {
-  const icon: IconName = tone === "success" ? "check" : tone === "warning" || tone === "danger" ? "alert" : "spark";
-  return <span className={`status-badge status-${tone}`}><Icon name={icon} size={14} />{children}</span>;
-}
 
 /** The deterministic screen, rendered above the model's summary.
  *

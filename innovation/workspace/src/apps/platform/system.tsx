@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { apiCall, createIdempotencyKey } from "../api";
-import type { AuditEvent, Fact, ReadinessReport } from "../types";
-import { FactView, StatusBadge } from "./clinical";
-import { Icon, type IconName } from "./Icon";
+import { apiCall, createIdempotencyKey } from "../../shared/api";
+import type { AuditEvent, Fact, ReadinessReport } from "../../shared/types";
+import { FactView } from "./clinical";
+import { StatusBadge } from "../../shared/ui/StatusBadge";
+import { Icon, type IconName } from "../../shared/ui/Icon";
 
 export function History({ encounter }: { encounter: string }) {
   const [items, setItems] = useState<{ fact: Fact }[]>([]);

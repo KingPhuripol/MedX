@@ -260,7 +260,7 @@ def test_encounter_list_includes_attention_summary():
 def test_workspace_colors_are_tokenized_and_key_pairs_pass_aa():
     import re
     from pathlib import Path
-    root=Path(__file__).parents[1]/'innovation'/'workspace'/'src'
+    root=Path(__file__).parents[1]/'innovation'/'workspace'/'src'/'shared'
     assert not re.search(r'#[0-9a-fA-F]{3,8}\b',(root/'style.css').read_text())
     tokens=(root/'tokens.css').read_text()
     values=dict(re.findall(r'--([\w-]+):\s*(#[0-9a-fA-F]{6})',tokens))
