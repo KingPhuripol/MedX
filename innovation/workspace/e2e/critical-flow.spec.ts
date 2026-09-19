@@ -2,8 +2,21 @@ import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
 test.beforeEach(async ({ page }) => {
-  await page.goto("/workspace#/cases");
+  await page.goto("/platform#/cases");
   await expect(page.getByRole("heading", { name: "รับข้อมูลให้ครบ ส่งต่ออย่างชัดเจน" })).toBeVisible();
+});
+
+test("platform and nurse are distinct entry points", async ({ page }) => {
+  const primaryNavigation = page.locator("#primary-navigation");
+  await expect(page.getByText("Central Platform", { exact: true })).toBeVisible();
+  await expect(primaryNavigation.getByRole("button", { name: /รับข้อมูลด้วยเสียง/ })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /เปิดเว็บ Nurse Intake/ })).toHaveAttribute("href", "/nurse#/voice");
+
+  await page.goto("/nurse#/voice");
+  await expect(page).toHaveTitle("Clinical Front Door · Nurse Intake");
+  await expect(page.getByRole("heading", { name: "แตะเพื่อบันทึกเสียงระหว่างซักประวัติ" })).toBeVisible();
+  await expect(primaryNavigation.getByRole("button", { name: /พื้นที่ตรวจเคส/ })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /เปิด Central Platform/ })).toHaveAttribute("href", "/platform#/cases");
 });
 
 test("critical synthetic intake flow and accessibility", async ({ page }, testInfo) => {
@@ -29,7 +42,7 @@ test("critical synthetic intake flow and accessibility", async ({ page }, testIn
   await expect(page.getByText(/CHIEF_COMPLAINT|HISTORY|STALE|CONFIRM/, { exact: false })).toHaveCount(0);
   await page.getByRole("button", { name: "แก้ไขข้อความ" }).first().click();
   await page.getByLabel("ข้อความสรุป").first().fill("ร่างส่งต่อที่ตรวจแก้แล้วสำหรับสถานการณ์จำลอง");
-  await page.getByLabel(/เหตุผล/).first().fill("ปรับภาษาให้ชัดเจน");
+  await page.getByLabel(/รายละเอียดเหตุผล/).first().fill("ปรับภาษาให้ชัดเจน");
   await expect(page.getByRole("button", { name: "ยืนยันร่างฉบับนี้" }).first()).toBeDisabled();
   await page.getByRole("button", { name: "บันทึกเป็นฉบับใหม่" }).first().click();
   await expect(page.getByRole("heading", { name: "ตรวจร่างฉบับที่ 2" })).toBeVisible();

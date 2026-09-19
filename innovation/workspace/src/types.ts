@@ -33,6 +33,32 @@ export type DraftContent = {
   evidence_ids: string[];
   outstanding: string[];
   differentials: unknown[];
+  urgency?: {
+    level: string;
+    confidence: number | null;
+    evidence_ids: string[];
+  };
+  care_pathways?: {
+    code: string;
+    rank: number;
+    confidence: number | null;
+    evidence_ids: string[];
+    rationale?: string | null;
+  }[];
+  next_information?: {
+    information_type: string;
+    rank: number;
+    reason_code: string;
+    waiting_is_unsafe: boolean;
+  }[];
+  uncertainty?: {
+    confidence: number | null;
+    calibrated: boolean;
+    abstained: boolean;
+    escalation_required: boolean;
+    reasons: string[];
+  };
+  limitations?: string[];
 };
 
 export type RedFlag = {
@@ -60,8 +86,18 @@ export type Draft = {
   effective: boolean;
   content: DraftContent;
   screen: SafetyScreen | null;
-  snapshot: { evidence: Fact[] };
+  snapshot: { evidence: Fact[]; decision_time?: string; timepoint?: "T0" | "T1" };
+  provenance?: Record<string, unknown>;
   versions: { draft_revision: number; content: DraftContent }[];
+};
+
+export type AuditEvent = {
+  event: string;
+  encounter_id: string;
+  actor: string;
+  role: string;
+  recorded_at: string;
+  [key: string]: unknown;
 };
 
 export type Run = {
@@ -73,6 +109,8 @@ export type Run = {
   user_text: string;
   proposals: { proposal_id?: string; fact: Fact }[];
   error_code?: string;
+  trace?: { sequence: number; tool: string; status: "COMPLETED" | "FAILED" | "BLOCKED"; elapsed_ms: number; evidence_ids: string[] }[];
+  provenance?: { model?: string; design?: { design_id?: string } };
 };
 
 export type Job = {
@@ -144,6 +182,15 @@ export const urgencyLabels: Record<string, string> = {
 export const redFlagLabels: Record<string, string> = {
   REQUIRED_INFORMATION_INCOMPLETE: "ข้อมูลที่จำเป็นยังไม่ครบ",
   COMPLAINT_NOT_EVALUATED_BY_RULE: "ยังไม่มีกฎอ่านอาการสำคัญนี้",
+  OUT_OF_SCOPE_PRESENTATION: "เคสอยู่นอกขอบเขตที่ประเมินไว้",
+};
+
+export const pathwayLabels: Record<string, string> = {
+  CLINICIAN_ASSESSMENT: "ประเมินโดยแพทย์",
+  EMERGENCY_ASSESSMENT: "ประเมินฉุกเฉิน",
+  SAME_DAY_URGENT_SERVICE: "บริการเร่งด่วนภายในวัน",
+  SCHEDULED_OUTPATIENT_REVIEW: "นัดตรวจผู้ป่วยนอก",
+  REQUEST_MORE_INFORMATION: "ขอข้อมูลเพิ่มเติม",
 };
 
 export const redFlagStates: Record<string, string> = {

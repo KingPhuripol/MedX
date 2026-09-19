@@ -23,6 +23,22 @@ class Service:
         if principal.role not in roles:
             raise DomainError(403, "ROLE_FORBIDDEN")
 
+    def audit(self, encounter_id, event, actor, **details):
+        """Append a payload-minimised, immutable audit event.
+
+        Clinical text remains in its source record. The audit stream contains stable
+        references, versions and actor identity so a reviewer can reconstruct what
+        happened without duplicating sensitive payloads.
+        """
+        self.store.append("audit", encounter_id, {
+            "event": event,
+            "encounter_id": encounter_id,
+            "actor": actor.subject,
+            "role": actor.role,
+            "recorded_at": now().isoformat(),
+            **details,
+        })
+
     def command(self, actor, scope, key, body, fn):
         with self.store.transaction():
             cached = self.store.replay(actor.subject, scope, key, body)
@@ -38,6 +54,9 @@ class Service:
             if self.store.all("encounter", body.encounter_id):
                 raise DomainError(409, "ENCOUNTER_EXISTS")
             self.store.append("encounter", body.encounter_id, {**body.model_dump(), "workspace": actor.workspace})
+            self.audit(body.encounter_id, "ENCOUNTER_CREATED", actor,
+                       profile=body.profile, classification=body.classification,
+                       care_context=body.care_context)
             return self.case(body.encounter_id)
         return self.command(actor, "create", key, body.model_dump(), perform)
 
@@ -94,6 +113,10 @@ class Service:
                     raise DomainError(422, "BACKDATED_CORRECTION")
             self.store.append("event", encounter_id, {"fact": fact.model_dump(mode="json"),
                 "actor": actor.subject, "recorded_at": now().isoformat()})
+            self.audit(encounter_id, "EVIDENCE_APPENDED", actor,
+                       event_id=fact.event_id, fact_kind=fact.kind,
+                       case_revision=body.expected_revision + 1,
+                       supersedes_event_id=fact.supersedes_event_id)
             return self.case(encounter_id)
         return self.command(actor, f"event:{encounter_id}", body.idempotency_key, body.model_dump(mode="json"), perform)
 
@@ -103,8 +126,11 @@ class Service:
         eligible = [f for f in facts if f.available_at_time <= decision_time and f.kind != "LABEL"]
         superseded = {f.supersedes_event_id for f in eligible if f.supersedes_event_id}
         evidence = [f for f in eligible if f.event_id not in superseded]
+        timepoint = "T1" if any(f.kind in {"LAB", "REPORT"} for f in evidence) else "T0"
         payload = {"encounter_id": encounter_id, "case_revision": case["case_revision"],
-            "decision_time": decision_time.isoformat(), "evidence": [f.model_dump(mode="json") for f in evidence]}
+            "decision_time": decision_time.isoformat(), "timepoint": timepoint,
+            "care_context": case.get("care_context", "ED_FIRST_CONTACT_ADULT_NON_TRAUMA_NON_OBSTETRIC"),
+            "evidence": [f.model_dump(mode="json") for f in evidence]}
         return CaseRevision(**payload, checksum=digest(payload))
 
     def resolve(self, encounter_id, evidence_id, decision_time):
@@ -139,6 +165,10 @@ class Service:
             interrupted = len(self.store.all("interrupted", encounter_id))
             self.store.append("ticket", encounter_id, {"ticket_id": ticket_id, "checksum": digest(payload),
                 "encounter_id": encounter_id, "created_at": now().isoformat()})
+            self.audit(encounter_id, "MODEL_RUN_STARTED", actor,
+                       ticket_id=ticket_id, case_revision=snapshot.case_revision,
+                       decision_time=snapshot.decision_time.isoformat(),
+                       timepoint=snapshot.timepoint, intent=body.intent)
         run, content = self.runtime.execute(snapshot, body.text, design or DESIGNS[body.design_id],
             prior_calls=sum(len(r['trace']) for r in previous)+8*interrupted, prior_turns=len(previous)+interrupted,
             intent=body.intent, role=actor.role, cancel_check=cancel_check,
@@ -158,14 +188,39 @@ class Service:
             if content is not None:
                 if content.differentials and actor.role != "physician":
                     content = content.model_copy(update={"differentials": []})
+                screen = screen_case(snapshot)
+                safety_escalation = bool(screen.missing_required) or any(
+                    flag.state in {"TRIGGERED", "UNKNOWN"} for flag in screen.red_flags
+                )
+                if safety_escalation:
+                    content = content.model_copy(update={
+                        "uncertainty": content.uncertainty.model_copy(update={
+                            "abstained": True,
+                            "escalation_required": True,
+                            "reasons": list(dict.fromkeys([
+                                *content.uncertainty.reasons,
+                                "Deterministic safety policy requires human escalation",
+                            ])),
+                        })
+                    })
                 draft = ClinicalDraft(draft_id=uuid4().hex, encounter_id=encounter_id,
                     case_revision=snapshot.case_revision, snapshot=snapshot, content=content,
-                    screen=screen_case(snapshot), created_by=actor.subject)
+                    screen=screen, provenance={**run.provenance},
+                    created_by=actor.subject)
                 self.store.append("draft", draft.draft_id, draft.model_dump(mode="json"))
                 run.draft_id = draft.draft_id
             data = run.model_dump(mode="json")
             data.update(user_text=body.text, created_at=now().isoformat(), actor=actor.subject, intent=body.intent)
             self.store.append("run", encounter_id, data)
+            self.audit(encounter_id, "MODEL_RUN_COMPLETED", actor,
+                       run_id=run.run_id, draft_id=run.draft_id, status=run.status,
+                       error_code=run.error_code, case_revision=snapshot.case_revision,
+                       decision_time=snapshot.decision_time.isoformat(),
+                       timepoint=snapshot.timepoint,
+                       provider=run.provenance.get("provider"),
+                       provider_version=run.provenance.get("provider_version"),
+                       model=run.provenance.get("model"),
+                       policy=run.provenance.get("policy"))
             self.store.append("ticket_done", encounter_id, {"ticket_id": ticket_id})
             self.store.remember(actor.subject, scope, body.idempotency_key, payload, data)
             return data
@@ -304,7 +359,16 @@ class Service:
                 self.store.append('draft', draft_id, version.model_dump(mode='json'))
             self.store.append('review', draft_id, {'action': body.action, 'actor': actor.subject,
                 'role': actor.role, 'draft_revision': body.draft_revision,
-                'reason': body.reason, 'reviewed_at': now().isoformat()})
+                'reason_code': body.reason_code, 'reason': body.reason,
+                'reviewed_at': now().isoformat()})
+            self.audit(current['encounter_id'], "HUMAN_REVIEW_RECORDED", actor,
+                       draft_id=draft_id, draft_revision=body.draft_revision,
+                       action=body.action, reason_code=body.reason_code,
+                       reason=body.reason,
+                       case_revision=body.expected_revision,
+                       model=current.get('provenance', {}).get('model'),
+                       provider=current.get('provenance', {}).get('provider'),
+                       policy=(current.get('screen') or {}).get('policy_version'))
             return self.draft(draft_id, actor)
         self.command(actor, f'review:{draft_id}', body.idempotency_key, body.model_dump(mode='json'), perform)
         return self.draft(draft_id, actor)

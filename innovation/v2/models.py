@@ -50,6 +50,10 @@ class EncounterCreate(Model):
     age: int = Field(ge=18, le=120)
     profile: Literal["synthetic_intake_v1"] = "synthetic_intake_v1"
     classification: Literal["SYNTHETIC"] = "SYNTHETIC"
+    care_context: Literal[
+        "ED_FIRST_CONTACT_ADULT_NON_TRAUMA_NON_OBSTETRIC",
+        "PAEDIATRIC", "TRAUMA", "OBSTETRIC", "PREHOSPITAL",
+    ] = "ED_FIRST_CONTACT_ADULT_NON_TRAUMA_NON_OBSTETRIC"
 
 
 class Mutation(Model):
@@ -65,6 +69,8 @@ class CaseRevision(Model):
     encounter_id: str
     case_revision: int
     decision_time: AwareDatetime
+    timepoint: Literal["T0", "T1"] = "T0"
+    care_context: str = "ED_FIRST_CONTACT_ADULT_NON_TRAUMA_NON_OBSTETRIC"
     evidence: list[ClinicalFact]
     checksum: str
 
@@ -77,11 +83,46 @@ class Differential(Model):
     missing_information: list[str]
 
 
+class UrgencyRecommendation(Model):
+    level: Literal[
+        "IMMEDIATE_REVIEW", "URGENT_REVIEW", "ROUTINE_REVIEW", "INSUFFICIENT_INFORMATION"
+    ] = "INSUFFICIENT_INFORMATION"
+    confidence: float | None = Field(default=None, ge=0, le=1)
+    evidence_ids: list[str] = Field(default_factory=list)
+
+
+class CarePathwayCandidate(Model):
+    code: str = Field(min_length=1, max_length=128)
+    rank: int = Field(ge=1)
+    confidence: float | None = Field(default=None, ge=0, le=1)
+    evidence_ids: list[str] = Field(default_factory=list)
+    rationale: str | None = Field(default=None, max_length=2000)
+
+
+class NextInformationCandidate(Model):
+    information_type: str = Field(min_length=1, max_length=128)
+    rank: int = Field(ge=1)
+    reason_code: str = Field(min_length=1, max_length=128)
+    waiting_is_unsafe: bool = False
+
+
+class UncertaintyState(Model):
+    confidence: float | None = Field(default=None, ge=0, le=1)
+    calibrated: bool = False
+    abstained: bool = True
+    escalation_required: bool = False
+    reasons: list[str] = Field(default_factory=list)
+
+
 class DraftContent(Model):
     summary: str = Field(min_length=1, max_length=20000)
     evidence_ids: list[str]
     outstanding: list[str] = Field(default_factory=list)
     differentials: list[Differential] = Field(default_factory=list)
+    urgency: UrgencyRecommendation = Field(default_factory=UrgencyRecommendation)
+    care_pathways: list[CarePathwayCandidate] = Field(default_factory=list)
+    next_information: list[NextInformationCandidate] = Field(default_factory=list)
+    uncertainty: UncertaintyState = Field(default_factory=UncertaintyState)
     limitations: list[str] = Field(default_factory=lambda: ["Synthetic research prototype; clinical validation pending"])
 
 
@@ -112,6 +153,7 @@ class ClinicalDraft(Model):
     snapshot: CaseRevision
     content: DraftContent
     screen: SafetyScreen | None = None
+    provenance: dict = Field(default_factory=dict)
     created_by: str
     created_at: AwareDatetime = Field(default_factory=now)
 
@@ -120,6 +162,9 @@ class ReviewDecision(Mutation):
     draft_revision: int = Field(ge=1)
     expected_review_sequence: int = Field(ge=0)
     action: Literal["CONFIRM", "MODIFY", "REJECT", "REQUEST_INFORMATION", "ESCALATE"]
+    reason_code: Literal[
+        "CLINICAL_CORRECTION", "MISSING_INFORMATION", "UNSAFE_TO_CONFIRM", "OUT_OF_SCOPE", "OTHER"
+    ] | None = None
     reason: str | None = Field(default=None, max_length=2000)
     content: DraftContent | None = None
 
@@ -129,8 +174,14 @@ class ReviewDecision(Mutation):
             raise ValueError("MODIFY requires revised content and reason")
         if self.action != "MODIFY" and self.content is not None:
             raise ValueError("content is only accepted for MODIFY")
-        if self.action == "REJECT" and not self.reason:
-            raise ValueError("REJECT requires reason")
+        if self.action in {"MODIFY", "REJECT", "REQUEST_INFORMATION", "ESCALATE"} and not self.reason:
+            raise ValueError(f"{self.action} requires reason")
+        if self.action == "CONFIRM" and (self.reason_code is not None or self.reason is not None):
+            raise ValueError("CONFIRM does not accept a reason")
+        # Older clients supplied a required note before reason codes existed. Preserve
+        # them as an explicit OTHER category instead of dropping their audit meaning.
+        if self.action != "CONFIRM" and self.reason_code is None:
+            self.reason_code = "OTHER"
         return self
 
 

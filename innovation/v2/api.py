@@ -163,6 +163,13 @@ def mount(app, service, speech):
     def history(encounter_id: str, after: int = Query(default=0,ge=0), limit: int = Query(default=25,ge=1,le=100)):
         return service.store.page('event',encounter_id,after,limit)
 
+    @router.get('/encounters/{encounter_id}/audit')
+    def audit(encounter_id: str, after: int = Query(default=0, ge=0),
+              limit: int = Query(default=25, ge=1, le=100), actor=Depends(identity)):
+        service.require(actor, {'intake', 'physician', 'evaluator'})
+        service.authorize_case(encounter_id, actor)
+        return service.store.page('audit', encounter_id, after, limit)
+
     @router.get('/encounters/{encounter_id}/snapshot')
     def snapshot(encounter_id: str):
         from innovation.v2.models import now
@@ -248,11 +255,22 @@ def mount(app, service, speech):
     if workspace_dist.is_dir():
         app.mount('/workspace-assets', StaticFiles(directory=workspace_dist), name='workspace-assets')
 
-        @app.get('/workspace', response_class=HTMLResponse, include_in_schema=False)
-        def modern_workspace():
+        def workspace_response():
             return HTMLResponse((workspace_dist / 'index.html').read_text(), headers={
                 'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; media-src 'self' blob:; frame-ancestors 'none'",
                 'Cache-Control': 'no-store'})
+
+        @app.get('/platform', response_class=HTMLResponse, include_in_schema=False)
+        def central_platform():
+            return workspace_response()
+
+        @app.get('/nurse', response_class=HTMLResponse, include_in_schema=False)
+        def nurse_intake():
+            return workspace_response()
+
+        @app.get('/workspace', response_class=HTMLResponse, include_in_schema=False)
+        def modern_workspace():
+            return workspace_response()
 
     @app.get('/ui/v2', response_class=HTMLResponse, include_in_schema=False)
     def workspace():

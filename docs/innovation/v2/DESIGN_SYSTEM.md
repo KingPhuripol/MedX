@@ -1,8 +1,8 @@
-# Clinical Front Door design system 1.0
+# Clinical Front Door design system 2.0
 
 ## Context and goals
 
-The interface must help staff complete a synthetic intake workflow without learning internal event, revision or agent terminology. It uses the supplied BDMS-inspired black, white and blue primitives while retaining the Clinical Front Door identity. It must not display a BDMS logo or imply BDMS endorsement.
+The interface must help staff complete a synthetic intake workflow without learning internal event, revision or agent terminology. Its visual language is a calm clinical-operations workspace: warm neutral canvas, white working surfaces, deep navy structure and restrained teal actions. It must not display a BDMS logo or imply BDMS endorsement.
 
 The system must use semantic tokens for all components. Teams should extend an existing component or token before adding a local visual exception.
 
@@ -12,17 +12,17 @@ The implementation source of truth is `innovation/workspace/src/tokens.css`.
 
 ### Brand identity
 
-The product mark is a blue rounded square containing a doorway and a small signal star. The doorway represents a calm clinical entry point; the star identifies the JARVIS assistant. The reusable implementation is `innovation/workspace/src/components/BrandLogo.tsx`, and the browser favicon is `innovation/workspace/public/favicon.svg`. The mark must always be paired with the “Clinical Front Door” wordmark in the full sidebar and login lockup. The compact mark may stand alone in dense contexts. The interface must not use a BDMS logo, name or endorsement language.
+The product mark is a teal rounded square containing a doorway and a small signal star. The doorway represents a calm clinical entry point; the star identifies the JARVIS assistant. The reusable implementation is `innovation/workspace/src/components/BrandLogo.tsx`, and the browser favicon is `innovation/workspace/public/favicon.svg`. The mark must always be paired with the “Clinical Front Door” wordmark in the full sidebar and login lockup. The compact mark may stand alone in dense contexts. The interface must not use a BDMS logo, name or endorsement language.
 
 | Token family | Required behavior |
 |---|---|
-| Brand primitives | Black `#000000`, white `#ffffff`, link blue `#0000ee`, brand blue `#005cb9` and reference gray `#919eab` must retain their supplied values. |
+| Brand primitives | Semantic navy, teal, warm-neutral and feedback colors are defined only in `tokens.css`; component styles must not introduce local color values. |
 | Surfaces | Brand areas must use `surface-brand`. Operational content should use `surface-canvas`, `surface-panel`, `surface-subtle` and `surface-selected`. |
 | Text | White text must be limited to a passing dark surface. `primitive-reference-gray` must not be normal text on white. |
 | Feedback | Info, success, warning and danger must combine color with a written label or symbol. |
 | Typography | Prompt must be bundled locally. Body must use 16px/24px. The scale must remain 12, 13, 14, 15, 16, 18, 24 and 48px. |
 | Spacing | Components must use 3, 5, 6, 8, 12, 16 or 24px tokens. |
-| Shape | Controls and panels must use 8px. A 50px radius must be limited to pills and circular marks. |
+| Shape | Controls use 8–10px and primary panels use 14px. A pill radius is limited to status badges and circular controls. |
 | Motion | Motion must use 150, 250 or 500ms and must honor `prefers-reduced-motion`. |
 
 Component CSS must not contain raw hex values. Raw colors belong only in the token source.
@@ -59,7 +59,7 @@ Every input must have a persistent programmatic label. Required state must use n
 
 ### Navigation and app shell
 
-The desktop navigation must remain visible in a black rail. Tablet navigation must become a drawer with a labeled backdrop; closing it must restore focus to the menu button. The active destination must use `aria-current="page"`. Staff must see only destinations allowed by their backend role.
+The Central Platform uses a light, persistent operations rail with a written active state and teal edge marker. Tablet navigation becomes a drawer with a labeled backdrop; closing it must restore focus to the menu button. The Nurse Intake surface uses a compact horizontal product bar and does not expose the platform navigation. The active destination must use `aria-current="page"`. Staff must see only destinations allowed by their backend role.
 
 ### Case list and workspace
 
@@ -79,7 +79,7 @@ Draft review must show the version, source case revision, status, evidence and e
 
 ### Voice and asynchronous work
 
-Voice controls must expose idle, recording, transcribing, ready and error states in text. A transcript must remain editable and must never submit automatically. Failure must immediately leave typed input available.
+Voice controls must expose idle, recording, transcribing, ready and error states in text. The primary record control may be circular for recognition, but must not use decorative AI orbs, gradients or ambient animation. A transcript must remain editable and must never submit automatically. Failure must immediately leave typed input available.
 
 Queued and running jobs must use an `aria-live` status. Cancellation must retain the conversation text. A reconnect must recover durable job status.
 
@@ -115,7 +115,7 @@ Clinical limitations must remain direct: “ยังไม่ผ่าน clini
 - Staff screens must not expose enums, event IDs, tokens or JSON in the primary flow.
 - Transcripts and agent proposals must not become confirmed facts without review.
 - Hero imagery, decorative animation and dense technical dashboards must not displace operational information.
-- `/workspace` is the primary UI. `/ui/v2` remains a temporary recovery fallback and should be removed only in a later compatibility release.
+- `/platform` is the central case-review and evaluator UI; `/nurse` is the staff-assisted intake UI. They share the same API and audit history but must not mix their primary navigation. `/workspace` remains a compatibility entry point, and `/ui/v2` remains a temporary recovery fallback.
 
 ## QA checklist
 

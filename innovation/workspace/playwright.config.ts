@@ -18,7 +18,7 @@ export default defineConfig({
     { name: "tablet", use: { ...devices["Desktop Chrome"], channel: "chrome", viewport: { width: 768, height: 1024 }, hasTouch: true } },
   ],
   webServer: {
-    command: "cd ../.. && FRONT_DOOR_DB=/tmp/frontdoor-playwright.sqlite3 ${PYTHON:-python3} -m uvicorn innovation.api.app:app --host 127.0.0.1 --port 8771",
+    command: "cd ../.. && FRONT_DOOR_DB=/tmp/frontdoor-playwright.sqlite3 FRONT_DOOR_AUTH_MODE=none FRONT_DOOR_ALLOW_EXTERNAL=false FRONT_DOOR_PROVIDER=mock FRONT_DOOR_V2_TRANSPORT=gateway FRONT_DOOR_V2_PROVIDER_URL='' FRONT_DOOR_V2_SPEECH_URL='' FRONT_DOOR_V2_SYNTHESIS_URL='' ${PYTHON:-python3} -m uvicorn innovation.api.app:app --host 127.0.0.1 --port 8771",
     url: "http://127.0.0.1:8771/ready",
     reuseExistingServer: false,
     timeout: 30_000,

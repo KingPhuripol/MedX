@@ -162,3 +162,23 @@ def test_invalid_designer_stops_at_budget_and_keeps_baseline():
     result=search([next(c for c in families() if c.split==split) for split in ['development','validation']],workers=0,designer=designer)
     assert designer.calls==12 and len(result['rejected_proposals'])==12
     assert result['selection_status']=='NO_VALID_CANDIDATE_KEEP_BASELINE'
+
+
+def test_compatible_draft_asks_model_for_content_only(monkeypatch):
+    # Regression: requesting the whole ProviderResult let a live model nest model_version
+    # inside content, which voided every otherwise valid draft as INVALID_PROVIDER_OUTPUT.
+    real=httpx.Client; schemas=[]
+    draft={'summary':'ร่างสังเคราะห์','evidence_ids':[],'outstanding':[],'differentials':[],
+        'urgency':{'level':'INSUFFICIENT_INFORMATION','confidence':None,'evidence_ids':[]},
+        'care_pathways':[],'next_information':[],
+        'uncertainty':{'confidence':None,'calibrated':False,'abstained':True,'escalation_required':False,'reasons':['synthetic']}}
+    def handle(request):
+        schemas.append(json.loads(request.content)['response_format']['json_schema']['name'])
+        return httpx.Response(200,json={'choices':[{'finish_reason':'stop','message':{'content':json.dumps(draft)}}]})
+    monkeypatch.setattr(httpx,'Client',lambda **kw:real(transport=httpx.MockTransport(handle),**kw))
+    store=Store();provider=CompatibleProvider(ExternalConfig('http://localhost:9000/v1','','configured-model',0,0),store,['summary'],local_free=True)
+    s=setup(provider)
+    run=s.turn('case',TurnRequest(expected_revision=0,idempotency_key='d',text='draft',decision_time=T,design_id='fixed'),P)
+    assert schemas==['DraftContent'] and run['status']=='COMPLETED' and run['draft_id']
+    assert s.draft(run['draft_id'],P)['provenance']['model']=='configured-model'
+    s.store.close();store.close()

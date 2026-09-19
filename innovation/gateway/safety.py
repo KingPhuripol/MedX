@@ -95,6 +95,7 @@ def screen_evidence(
     present_kinds: Collection[str],
     complaint_evidence_ids: Collection[str] = (),
     front_door: bool = True,
+    flag_unread_complaint: bool = True,
 ) -> ScreenResult:
     """The deterministic pre-inference screen, over evidence *types* alone.
 
@@ -141,7 +142,7 @@ def screen_evidence(
     # A complaint exists but no deterministic rule can read it, so the question of
     # whether it is a red flag is open, not answered. SR-002 then escalates it.
     complaint = sorted(set(complaint_evidence_ids))
-    if complaint:
+    if complaint and flag_unread_complaint:
         flags.append(
             RedFlag(
                 code="COMPLAINT_NOT_EVALUATED_BY_RULE",

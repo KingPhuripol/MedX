@@ -60,6 +60,33 @@ class MockProvider:
                 summary="\n".join(line(f) for f in facts) or "ยังไม่มีข้อมูลที่ยืนยัน",
                 evidence_ids=[f.event_id for f in facts],
                 outstanding=[f"{f.kind}: {f.state}" for f in facts if f.state != "KNOWN"],
+                urgency={
+                    "level": "INSUFFICIENT_INFORMATION",
+                    "confidence": None,
+                    "evidence_ids": [f.event_id for f in facts],
+                },
+                care_pathways=[{
+                    "code": "CLINICIAN_ASSESSMENT",
+                    "rank": 1,
+                    "confidence": None,
+                    "evidence_ids": [f.event_id for f in facts],
+                    "rationale": "Offline mock demonstrates the handoff contract only",
+                }],
+                next_information=[{
+                    "information_type": item.split(":", 1)[0],
+                    "rank": index,
+                    "reason_code": "DECLARED_INFORMATION_GAP",
+                    "waiting_is_unsafe": False,
+                } for index, item in enumerate(
+                    [f"{f.kind}: {f.state}" for f in facts if f.state != "KNOWN"], start=1
+                )],
+                uncertainty={
+                    "confidence": None,
+                    "calibrated": False,
+                    "abstained": True,
+                    "escalation_required": False,
+                    "reasons": ["Mock provider is not a clinically validated model"],
+                },
             ), model_version=self.model_version, provider_version=self.name)
 
 

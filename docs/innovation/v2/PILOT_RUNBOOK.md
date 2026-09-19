@@ -31,6 +31,11 @@ The facilitator gives the scenario and observes without explaining button locati
 8. Refresh while an unsent message exists and recover the message.
 9. Open system readiness and explain which capabilities remain unverified.
 
+For the hospital-pilot concept study, use the full two-round interview and usability
+protocol in `docs/innovation/USER_RESEARCH_PLAN.md`. In the Voice intake task, the
+participant must edit and explicitly send the transcript; transcription must never
+submit clinical text automatically.
+
 ## Observation form
 
 Record participant role, device, task completion, assistance required, time per task, observed misunderstanding, accessibility barrier and any data/review integrity issue. Do not record names or patient information in the application database.

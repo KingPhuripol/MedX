@@ -18,20 +18,20 @@ calls primary was mapped to no acceptance criterion at all.
 | A1.1 four intake states | yes | yes — `ClinicalFact.state` carries the same four |
 | A1.2 red-flag screen before inference | yes | **yes as of 16 Sep** — `innovation/v2/safety.py` calls the same `screen_evidence` |
 | A1.3 append-only history | yes | yes — SQLite `RAISE(ABORT,'append-only')` triggers |
-| A1.4 dashboard separates urgency, gaps, uncertainty | yes | **partial** — urgency floor, red flags and outstanding items render; uncertainty and care pathways do not exist in `DraftContent` |
+| A1.4 dashboard separates urgency, gaps, uncertainty | yes | **yes as of 18 Sep** — `DraftContent` and the review surface separately render model urgency, deterministic floor/red flags, care pathways, next information, uncertainty/abstention and limitations. Mock values remain explicitly non-clinical. |
 | A1.6 no completion without human review | yes | yes — physician-only `CONFIRM` |
 | A2 provider independence | yes | **not assessed** — v2 has its own provider protocol; the shared adapter fixtures do not run against it |
 | A3.1 prototype and human-review labels | yes | **yes as of 16 Sep** — previously the v2 banner said only "synthetic data" |
 | A3.2 model cannot downgrade a screen finding | yes | yes — the screen is on `ClinicalDraft`, outside the content a provider or a `MODIFY` can replace |
-| A3.5 immutable audit events | yes — `innovation/gateway/audit.py` | **no** — `grep -rn audit innovation/v2/` returns nothing. The append-only store is an implicit trail, but no record ties model version, provider version, reviewer identity and overrides together. **RISK-0016.** |
+| A3.5 immutable audit events | yes — `innovation/gateway/audit.py` | **yes as of 18 Sep** — v2 writes an explicit append-only, payload-minimised audit stream for encounter creation, evidence revisions, model runs and human review, including provider/model/policy provenance and structured review reasons. |
 | A3.7 accessibility | manual measurement | yes, and better — Axe runs in CI at two viewports |
 | A4 / A4.1 evaluation | yes | not applicable — the frozen case set runs against v1 |
 | A5 research-model integration | groundwork on v1 | not applicable — no model exists |
 
-**This table is the honest state, not a plan.** Two rows say **no**. Closing A0 and A3.5 on v2
-means either routing v2 through the Model Gateway or giving it its own audit sink, and that is a
-decision under DEC-0003, not a defect fix. Until it is made, no claim that "the Clinical Front
-Door satisfies A0–A4" may be made about `/workspace` without naming these two rows.
+**This table is the honest state, not a plan.** A0 still says **no**.
+The explicit v2 audit sink closes the previously recorded A3.5 implementation gap, but does not
+resolve the separate DEC-0003 gateway decision. No claim that `/workspace` satisfies A0–A4 may
+omit the remaining A0 and A1.4 limitations or the need for independent review.
 
 ## A0 - Contract prototype — CLOSED
 

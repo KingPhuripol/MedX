@@ -139,6 +139,8 @@ def test_api_workflow_and_access(tmp_path):
         {'token':'eval-secret','subject':'eval','role':'evaluator'}]}))
     app=create_app(settings=Settings(auth_mode='token',principals_file=principals))
     with TestClient(app) as c:
+        for path in ('/platform', '/nurse', '/workspace'):
+            assert c.get(path).status_code == 200
         assert c.get('/v2/encounters/a').status_code==401
         assert c.get('/v1/journeys/a/history').status_code==401
         h={'Authorization':'Bearer doctor-secret','Idempotency-Key':'a'}
@@ -153,7 +155,18 @@ def test_api_workflow_and_access(tmp_path):
         body.pop('reviewer_id')
         d=c.post(f"/v2/drafts/{r['draft_id']}/reviews",headers=h,json=body).json()
         assert d['reviews'][0]['actor']=='doctor'
+        audit=c.get('/v2/encounters/a/audit',headers=h).json()['items']
+        assert [item['event'] for item in audit][-1]=='HUMAN_REVIEW_RECORDED'
+        assert audit[-1]['actor']=='doctor'
         assert c.get('/ui/v2').status_code==200
+
+
+def test_separate_platform_and_nurse_entrypoints():
+    with TestClient(create_app()) as c:
+        for path in ('/platform', '/nurse', '/workspace'):
+            response = c.get(path)
+            assert response.status_code == 200
+            assert '<div id="root"></div>' in response.text
 
 
 def test_speech_failure_is_not_text_failure():
@@ -200,7 +213,7 @@ def test_deterministic_screen_reaches_the_v2_draft(service):
     draft = service.draft(turn(service)['draft_id'], ACTOR)
 
     screen = draft['screen']
-    assert screen['policy_version'] == 'safety-policy-v1'
+    assert screen['policy_version'] == 'safety-policy-v2-pilot'
     # Only a HISTORY fact exists, so both required Front Door types are absent.
     assert sorted(screen['missing_required']) == ['CHIEF_COMPLAINT', 'VITAL']
     assert screen['urgency_floor'] == 'URGENT_REVIEW'
@@ -208,16 +221,18 @@ def test_deterministic_screen_reaches_the_v2_draft(service):
     assert screen['applied_rules'] == ['SCR-001-REQUIRED_INFORMATION_INCOMPLETE']
 
 
-def test_screen_flags_an_unread_complaint_and_survives_physician_modification(service):
+def test_screen_reports_unread_complaint_as_limitation_without_structural_escalation(service):
     create(service)
     add(service, id='c', kind='CHIEF_COMPLAINT', value='ไอสองวัน เป็นข้อมูลสังเคราะห์')
     draft = service.draft(turn(service, revision=1)['draft_id'], ACTOR)
 
-    complaint = next(f for f in draft['screen']['red_flags']
-                     if f['code'] == 'COMPLAINT_NOT_EVALUATED_BY_RULE')
-    # No deterministic rule reads free text, so the question is open, never answered.
-    assert complaint['state'] == 'UNKNOWN'
-    assert complaint['evidence_ids'] == ['c']
+    # The previous structural rule escalated every complaint-bearing case regardless of
+    # content. The pilot policy states the limitation without manufacturing a red flag.
+    assert 'COMPLAINT_NOT_EVALUATED_BY_RULE' not in {
+        item['code'] for item in draft['screen']['red_flags']
+    }
+    assert any('does not evaluate free-text complaint severity' in item
+               for item in draft['screen']['limitations'])
 
     # A physician MODIFY replaces `content`. It must not be able to drop the screen:
     # a finding a reviewer can overwrite is not a safety control.
@@ -225,6 +240,59 @@ def test_screen_flags_an_unread_complaint_and_survives_physician_modification(se
     after = review(service, draft['draft_id'], 'MODIFY', content=edited, reason='ตรวจแก้ร่าง')
     assert after['draft_revision'] == 2
     assert after['screen'] == draft['screen']
+
+
+def test_t0_t1_drafts_keep_separate_snapshots_and_extended_output(service):
+    create(service)
+    add(service, id='c', kind='CHIEF_COMPLAINT', value='อาการจำลอง')
+    add(service, id='v', revision=1, kind='VITAL',
+        value={'name': 'temperature', 'value': 37.0, 'unit': 'C'})
+    t0 = service.draft(turn(service, revision=2, key='t0')['draft_id'], ACTOR)
+    assert t0['snapshot']['timepoint'] == 'T0'
+    assert t0['content']['urgency']['level'] == 'INSUFFICIENT_INFORMATION'
+    assert t0['content']['uncertainty']['abstained'] is True
+    assert t0['content']['care_pathways'][0]['code'] == 'CLINICIAN_ASSESSMENT'
+
+    add(service, id='lab', revision=2, kind='LAB',
+        value={'name': 'synthetic result', 'value': 1.0, 'unit': 'unit'})
+    t1 = service.draft(turn(service, revision=3, key='t1', time=T+timedelta(hours=1))['draft_id'], ACTOR)
+    assert t1['snapshot']['timepoint'] == 'T1'
+    assert t0['snapshot']['timepoint'] == 'T0'
+    assert {item['event_id'] for item in t1['snapshot']['evidence']} == {'c', 'v', 'lab'}
+
+
+def test_explicit_audit_trail_records_versions_provider_and_human_action(service):
+    create(service)
+    add(service)
+    result = turn(service)
+    review(service, result['draft_id'], action='REQUEST_INFORMATION',
+           reason='ต้องมีข้อมูลเพิ่ม', key='request-info')
+    events = service.store.all('audit', 'case-1')
+    assert [event['event'] for event in events] == [
+        'ENCOUNTER_CREATED', 'EVIDENCE_APPENDED', 'MODEL_RUN_STARTED',
+        'MODEL_RUN_COMPLETED', 'HUMAN_REVIEW_RECORDED'
+    ]
+    completed = next(event for event in events if event['event'] == 'MODEL_RUN_COMPLETED')
+    assert completed['model'] == 'deterministic-extractive-v1'
+    assert completed['provider'] == 'mock-v2'
+    reviewed = events[-1]
+    assert reviewed['action'] == 'REQUEST_INFORMATION'
+    assert reviewed['reason_code'] == 'OTHER'
+
+
+def test_out_of_scope_context_abstains_and_escalates_before_provider_claim(service):
+    service.create(EncounterCreate(encounter_id='trauma-case', age=40,
+        care_context='TRAUMA'), 'trauma-case', ACTOR)
+    add(service, case='trauma-case', id='c', kind='CHIEF_COMPLAINT', value='อาการจำลอง')
+    add(service, case='trauma-case', id='v', revision=1, kind='VITAL',
+        value={'name': 'pulse', 'value': 80, 'unit': 'bpm'})
+    result = service.turn('trauma-case', TurnRequest(expected_revision=2,
+        idempotency_key='draft', text='ช่วยสรุป', decision_time=T, design_id='fixed'), ACTOR)
+    draft = service.draft(result['draft_id'], ACTOR)
+    assert draft['screen']['urgency_floor'] == 'URGENT_REVIEW'
+    assert draft['screen']['red_flags'][0]['code'] == 'OUT_OF_SCOPE_PRESENTATION'
+    assert draft['content']['uncertainty']['abstained'] is True
+    assert draft['content']['uncertainty']['escalation_required'] is True
 
 
 def test_a_review_body_cannot_carry_its_own_screen(service):

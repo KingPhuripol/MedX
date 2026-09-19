@@ -19,6 +19,11 @@ const content = {
   evidence_ids: ["a"],
   outstanding: [],
   differentials: [],
+  urgency: { level: "INSUFFICIENT_INFORMATION", confidence: null, evidence_ids: ["a"] },
+  care_pathways: [{ code: "CLINICIAN_ASSESSMENT", rank: 1, confidence: null, evidence_ids: ["a"] }],
+  next_information: [{ information_type: "VITAL", rank: 1, reason_code: "DECLARED_INFORMATION_GAP", waiting_is_unsafe: false }],
+  uncertainty: { confidence: null, calibrated: false, abstained: true, escalation_required: false, reasons: ["Mock only"] },
+  limitations: ["Synthetic only"],
 };
 const screening = {
   policy_version: "safety-policy-v1",
@@ -39,7 +44,8 @@ const draft = {
   effective: false,
   content,
   screen: screening,
-  snapshot: { evidence: [fact] },
+  snapshot: { evidence: [fact], decision_time: "2026-09-12T00:00:00Z", timepoint: "T0" as const },
+  provenance: { provider: "mock-v2", model: "deterministic-extractive-v1" },
   versions: [{ draft_revision: 1, content }],
 };
 it("blocks approval while edits are unsaved, then sends actual modified content", () => {
@@ -119,10 +125,23 @@ it("shows the deterministic screen above the model summary and can escalate", ()
   // The finding must be readable without color: text carries urgency and flag state.
   expect(screen.getByText(/ต้องให้แพทย์ดูโดยเร็ว/)).toBeTruthy();
   expect(screen.getByText("ข้อมูลที่จำเป็นยังไม่ครบ")).toBeTruthy();
+  expect(screen.getByText("งดสรุปผลอัตโนมัติ")).toBeTruthy();
+  expect(screen.getByText(/ประเมินโดยแพทย์/)).toBeTruthy();
+  expect(screen.getAllByText(/สัญญาณชีพ/).length).toBeGreaterThan(0);
 
   fireEvent.change(screen.getByLabelText(/เหตุผล/), { target: { value: "ต้องให้แพทย์อีกท่านดู" } });
   fireEvent.click(screen.getByText("ส่งต่อให้ทบทวน"));
   expect(act.mock.calls[0][1].action).toBe("ESCALATE");
+});
+
+it("records a structured reason when requesting more information", () => {
+  const act = vi.fn().mockResolvedValue(undefined);
+  render(<Review draft={draft} revision={1} canReview act={act} onDirty={() => {}} />);
+  fireEvent.change(screen.getByLabelText("หมวดการตัดสินใจ"), { target: { value: "MISSING_INFORMATION" } });
+  fireEvent.change(screen.getByLabelText(/รายละเอียดเหตุผล/), { target: { value: "ต้องวัดสัญญาณชีพ" } });
+  fireEvent.click(screen.getByText("ขอข้อมูลเพิ่มเติม"));
+  expect(act.mock.calls[0][1].action).toBe("REQUEST_INFORMATION");
+  expect(act.mock.calls[0][1].reason_code).toBe("MISSING_INFORMATION");
 });
 
 it("says so when a draft predates the screen instead of implying it passed", () => {

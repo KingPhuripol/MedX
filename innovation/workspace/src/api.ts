@@ -21,6 +21,10 @@ const errorMessages: Record<string, string> = {
   PAID_BUDGET_EXCEEDED: "ยังไม่ได้เปิดวงเงินสำหรับบริการภายนอก",
   JOB_FAILED: "งานไม่สำเร็จ ข้อความที่กรอกยังอยู่ กรุณาลองอีกครั้ง",
   PROCESS_INTERRUPTED: "งานหยุดเมื่อระบบเริ่มใหม่ กรุณาส่งคำขออีกครั้ง",
+  INVALID_PROVIDER_OUTPUT: "ผู้ช่วยตอบกลับในรูปแบบที่ตรวจไม่ผ่าน ระบบจึงไม่สร้างร่าง กรุณากดอีกครั้ง",
+  INCOMPLETE_PROVIDER_OUTPUT: "ผู้ช่วยตอบไม่ครบ ระบบจึงไม่สร้างร่าง กรุณากดอีกครั้ง",
+  PROVIDER_TIMEOUT: "ผู้ช่วยตอบช้าเกินกำหนด กรุณากดอีกครั้ง",
+  PROVIDER_FAILURE: "เชื่อมต่อผู้ช่วยไม่สำเร็จ กรุณากดอีกครั้ง",
 };
 
 let csrfToken = "";
@@ -32,7 +36,9 @@ export const hasPendingRequest = () => pendingRequest !== null;
 export const clearPendingRequest = () => { pendingRequest = null; };
 
 export async function apiCall<T>(path: string, method = "GET", body?: unknown): Promise<T> {
-  if (pendingRequest && method !== "GET") {
+  // Sign-in and sign-out stay open while a request is unresolved: they write no clinical data,
+  // and blocking them would leave an expired session unable to authenticate to retry anything.
+  if (pendingRequest && method !== "GET" && !path.startsWith("/session")) {
     throw Error("มีคำขอที่ยังไม่ทราบผล กรุณาตรวจคำขอเดิมก่อน");
   }
   const options: RequestInit = {

@@ -26,6 +26,11 @@ def validate_content(content: DraftContent, snapshot, allow_differential=False):
     for item in content.differentials:
         if not set(item.evidence_ids) <= ids:
             raise DomainError(502, "INVALID_EVIDENCE_REFERENCE")
+    if not set(content.urgency.evidence_ids) <= ids:
+        raise DomainError(502, "INVALID_EVIDENCE_REFERENCE")
+    for pathway in content.care_pathways:
+        if not set(pathway.evidence_ids) <= ids:
+            raise DomainError(502, "INVALID_EVIDENCE_REFERENCE")
     return content
 
 

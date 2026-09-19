@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { apiCall, createIdempotencyKey } from "../api";
-import type { Fact, ReadinessReport } from "../types";
+import type { AuditEvent, Fact, ReadinessReport } from "../types";
 import { FactView, StatusBadge } from "./clinical";
 import { Icon, type IconName } from "./Icon";
 
 export function History({ encounter }: { encounter: string }) {
   const [items, setItems] = useState<{ fact: Fact }[]>([]);
+  const [audit, setAudit] = useState<AuditEvent[]>([]);
   const [cursor, setCursor] = useState<number | null>(0);
+  const [auditCursor, setAuditCursor] = useState<number | null>(0);
   const [error, setError] = useState("");
   const more = async () => {
     try {
@@ -15,7 +17,21 @@ export function History({ encounter }: { encounter: string }) {
       setCursor(page.next_cursor);
     } catch { setError("อ่านประวัติไม่ได้ กรุณาลองอีกครั้ง"); }
   };
-  return <details className="panel history"><summary>ประวัติข้อมูลทั้งหมด</summary>{items.map((event) => <FactView key={event.fact.event_id} fact={event.fact} />)}{cursor !== null ? <button className="button button--text" onClick={more}>โหลดประวัติเพิ่ม</button> : null}{error ? <p className="field-error" role="alert">{error}</p> : null}</details>;
+  const moreAudit = async () => {
+    try {
+      const page = await apiCall<{ items: AuditEvent[]; next_cursor: number | null }>(`/encounters/${encounter}/audit?after=${auditCursor ?? 0}`);
+      setAudit((old) => [...old, ...page.items]);
+      setAuditCursor(page.next_cursor);
+    } catch { setError("อ่าน audit trail ไม่ได้ กรุณาลองอีกครั้ง"); }
+  };
+  const auditLabels: Record<string, string> = {
+    ENCOUNTER_CREATED: "สร้างเคส",
+    EVIDENCE_APPENDED: "บันทึกข้อมูลที่ยืนยันแล้ว",
+    MODEL_RUN_STARTED: "เริ่มประมวลผล",
+    MODEL_RUN_COMPLETED: "ประมวลผลเสร็จ",
+    HUMAN_REVIEW_RECORDED: "บันทึกการตัดสินใจของแพทย์",
+  };
+  return <details className="panel history"><summary>ประวัติข้อมูลและ Audit trail</summary><div className="history-columns"><section><h3>ข้อมูลทุก revision</h3>{items.map((event) => <FactView key={event.fact.event_id} fact={event.fact} />)}{cursor !== null ? <button className="button button--text" onClick={more}>โหลดประวัติข้อมูล</button> : null}</section><section><h3>เหตุการณ์ตรวจสอบย้อนหลัง</h3>{audit.map((event, index) => <article className="audit-event" key={`${event.recorded_at}-${index}`}><strong>{auditLabels[event.event] || event.event}</strong><span>{new Date(event.recorded_at).toLocaleString("th-TH")}</span><p>{event.actor} · {event.role}{event.action ? ` · ${String(event.action)}` : ""}{event.timepoint ? ` · ${String(event.timepoint)}` : ""}</p></article>)}{auditCursor !== null ? <button className="button button--text" onClick={moreAudit}>โหลด Audit trail</button> : null}</section></div>{error ? <p className="field-error" role="alert">{error}</p> : null}</details>;
 }
 
 export function Readiness() {

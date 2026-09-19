@@ -80,7 +80,7 @@ def install_auth(app):
     if settings.auth_mode=='token':
         @app.middleware('http')
         async def protect(request,call_next):
-            public=request.url.path in {'/health','/ready','/docs','/docs/oauth2-redirect','/openapi.json','/redoc','/ui/v2'} or request.url.path.startswith(('/v2-assets/', '/workspace-assets/')) or request.url.path == '/workspace' or (request.url.path == '/v2/session' and request.method == 'POST')
+            public=request.url.path in {'/health','/ready','/docs','/docs/oauth2-redirect','/openapi.json','/redoc','/ui/v2','/workspace','/platform','/nurse'} or request.url.path.startswith(('/v2-assets/', '/workspace-assets/')) or (request.url.path == '/v2/session' and request.method == 'POST')
             if not public:
                 try:
                     actor=identity(request, request.headers.get('authorization'))

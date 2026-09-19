@@ -13,7 +13,7 @@ python3 -m venv .venv
 .venv/bin/python -m uvicorn innovation.api.app:app --host 127.0.0.1 --port 8000
 ```
 
-Open http://127.0.0.1:8000/workspace. `/ui/v2` remains a recovery fallback. Use one API process; do not run multiple uvicorn workers against the same demo database. Default: offline mock, in-memory data, local demonstration physician identity. For persistence set `FRONT_DOOR_DB=artifacts/v2/demo.sqlite3` before starting. The primary case routes are `#/cases`, `#/cases/{id}/intake`, `#/cases/{id}/facts` and `#/cases/{id}/draft`; the application also preserves `#/drafts/{id}` deep links. Restart recovers interrupted case reservations without automatically replaying uncertain provider calls; retrying that old command returns `INTERRUPTED_RUN_USE_NEW_KEY`. Reload the case and submit a new reviewed command. Interrupted runs conservatively consume one turn and eight calls from the case budget.
+Open the two role-specific entry points: http://127.0.0.1:8000/platform for the central review and evaluation platform, and http://127.0.0.1:8000/nurse for staff-assisted nurse intake. They are distinct websites in the interface but deliberately share the same API, case store and append-only audit history. `/workspace` is retained as a compatibility entry point and `/ui/v2` remains a recovery fallback. Use one API process; do not run multiple uvicorn workers against the same demo database. Default: offline mock, in-memory data, local demonstration physician identity. For persistence set `FRONT_DOOR_DB=artifacts/v2/demo.sqlite3` before starting. The primary case routes are `#/cases`, `#/cases/{id}/intake`, `#/cases/{id}/facts` and `#/cases/{id}/draft`; the nurse entry uses `#/voice` and can preserve an encounter ID. Restart recovers interrupted case reservations without automatically replaying uncertain provider calls; retrying that old command returns `INTERRUPTED_RUN_USE_NEW_KEY`. Reload the case and submit a new reviewed command. Interrupted runs conservatively consume one turn and eight calls from the case budget.
 
 The CLI demo is the offline backup and checks conversation → edited proposal → accepted fact → correction → draft → modified draft → confirmation. It raises on an integrity failure rather than reporting false success.
 
@@ -27,11 +27,12 @@ The CLI demo is the offline backup and checks conversation → edited proposal �
 6. Expand the draft edit form, change the summary and enter a reason. Save; the new draft revision still requires confirmation. Confirm it explicitly.
 7. Add a fact or correction. Existing drafts become stale. Current facts and full event history are separate views.
 
-The left navigation opens **รายการเคส**, **Agent Design** and **ตั้งค่า** according to the signed-in role. In Agent Design, run the four visible stages in order: ค้นหา, ตรวจ validation, ตรึงแบบ and ประเมิน held-out. Raw design IDs and JSON are available only under the evaluator disclosure panel.
+The nurse website exposes staff-assisted voice intake and system readiness. The central platform exposes case review, Agent Design and system readiness according to the signed-in role. Each website links to the other, but does not mix the other's primary workflow into its navigation. Voice transcription only fills an editable draft; staff must explicitly press **ตรวจแล้ว ส่งให้ผู้ช่วย**. In Agent Design, run the four visible stages in order: ค้นหา, ตรวจ validation, ตรึงแบบ and ประเมิน held-out. Raw design IDs and JSON are available only under the evaluator disclosure panel.
 
 A failed network mutation exposes **ตรวจคำขอเดิม** and retains its exact body/key in page memory. Resolve it before making another mutation. Unsent conversation text is stored in session storage per encounter and survives a page refresh; credentials and uncertain mutation bodies are never persisted there. Speech transcripts append to existing editable text and are never submitted or confirmed automatically.
 
 Before a supervised pilot, follow `PILOT_RUNBOOK.md`. The participant must confirm that each new case contains no identifying patient information. The interface repeats the synthetic-only restriction in the navigation, page banner and create-case form.
+Use `../USER_RESEARCH_PLAN.md` for the contextual-interview guide, moderated task script, observation fields and synthesis method.
 
 ## Configurable model and speech services
 

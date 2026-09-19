@@ -41,6 +41,15 @@ it("does not latch a failed sign-in, which would lock the user out of recovering
   expect(hasPendingRequest()).toBe(false);
 });
 
+it("lets the user sign in again while a request is still unresolved", async () => {
+  vi.stubGlobal("fetch", offline());
+  await expect(apiCall("/encounters/c1/events", "POST", {})).rejects.toThrow();
+  expect(hasPendingRequest()).toBe(true);
+
+  vi.stubGlobal("fetch", ok({ csrf: "c" }));
+  await expect(apiCall("/session", "POST", { token: "t" })).resolves.toEqual({ csrf: "c" });
+});
+
 it("latches on 5xx but clears on a rejection the server actually decided", async () => {
   vi.stubGlobal("fetch", status(503, {}));
   await expect(sendApi("/drafts/d/reviews", { method: "POST" })).rejects.toBeInstanceOf(ApiError);
