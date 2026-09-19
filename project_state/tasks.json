@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-09-19T10:50:00+07:00",
+  "updated_at": "2026-09-19T11:40:00+07:00",
   "tasks": [
     {
       "task_id": "TASK-0001",
@@ -1062,12 +1062,14 @@
       "workstream": "INNOVATION",
       "milestone": "M2",
       "priority": "P1",
-      "status": "READY",
-      "planned_start": "2026-09-20",
-      "evidence": [],
-      "blocker": null,
+      "status": "IN_PROGRESS",
+      "planned_start": "2026-09-19",
+      "evidence": [
+        "2026-09-19: DESIGN_SYSTEM.md gains a Composition section (structure over containers, 6/8px radius, type 13/15/17/20/24/32, nurse and platform layouts). Figma file https://www.figma.com/design/iXEb2Sk453j6l6ceLObx4V holds 34 token variables from tokens.css, 8 Prompt text styles, Button and Badge component sets, and five frames: Nurse Intake desktop, tablet and handoff-sent; Platform queue table and physician case review with decision rail. The nurse banner text was checked against screen_evidence() on a complaint-only case (URGENT_REVIEW, REQUIRED_INFORMATION_INCOMPLETE TRIGGERED, complaint content a limitation, not a flag). Not yet approved by PM or team."
+      ],
+      "blocker": "Platform audit/trace frame not built: the Figma Starter plan's MCP tool-call limit was reached. Build it by hand or after the limit resets, then take the frames to PM and team review before Phase 3.",
       "risk_level": "MEDIUM",
-      "updated_at": "2026-09-19T10:00:00+07:00",
+      "updated_at": "2026-09-19T11:40:00+07:00",
       "task_id": "TASK-0036",
       "title": "Redesign the nurse and platform interfaces from approved Figma frames",
       "owner": "Supreeya Nuamkhayan",

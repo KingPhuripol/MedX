@@ -27,6 +27,42 @@ The product mark is a teal rounded square containing a doorway and a small signa
 
 Component CSS must not contain raw hex values. Raw colors belong only in the token source.
 
+## Composition (DEC-0017, TASK-0036)
+
+The two apps are designed separately. Nothing below overrides the safety content rules: the research-prototype label, the red-flag banner and the human-confirmation step stay the most prominent things on any screen that shows them.
+
+**Why this section exists.** The 18 Sep build wrapped every region in the same bordered, shadowed card, used a 520px voice orb as the nurse screen's centrepiece, a persona name, an emoji label and a sparkle glyph as decoration. The baseline is in `docs/innovation/v2/baseline/`. The rules below replace that composition.
+
+### Structure over containers
+
+- Group with space and a single 1px `--border-subtle` rule, not with cards. A card (surface plus border) is used only for something the user can pick up or dismiss: a side sheet, a dialog, a toast.
+- Shadows only on overlays (side sheet, dialog, menu). Page regions have none.
+- Radius: 6px on controls and badges, 8px on overlays. Nothing else is rounded.
+- One primary action per region. Secondary actions are text buttons.
+- No decorative glyphs: no sparkle, orb, persona name, emoji or gradient. An icon appears only where it names an action or a state.
+
+### Type and space
+
+- Type scale: 13 (meta, table), 15 (body), 17 (section title), 20 (page title in a dense app), 24 and 32 (reserved for empty and sign-in states). Section titles are 17 semibold; body is 15 regular. Eyebrow labels are removed except to name the research-prototype status.
+- Spacing steps 4, 8, 12, 16, 24, 32, 48. Related items 8–12 apart, sections 32–48 apart. Density is the platform's default; the nurse app uses the same scale with larger touch targets (min 44px).
+
+### Nurse Intake (`/nurse`)
+
+One job: take a history by voice or text, confirm what the assistant heard, hand off. Top to bottom:
+
+1. **Case bar**, 56px: case ID and synthetic age, revision, the research-prototype tag, the case switcher and a text link to the Central Platform.
+2. **Red-flag banner**, only when a flag is TRIGGERED or UNKNOWN. It sits above everything else and names the flag in text.
+3. **Two columns.** Left, flexible: the transcript as plain rows (speaker, time, text), newest at the bottom, with the composer pinned under it. The microphone is a 44px control inside the composer, not a hero. Right, 360px: *Confirmed* facts as label–value rows, *Waiting for you* proposals with confirm/edit, and *Still missing* required information.
+4. **Handoff bar**, pinned to the bottom: what will be sent, and one primary button, "ส่งให้แพทย์ตรวจ".
+
+### Central Platform (`/platform`)
+
+Review, decide, audit, evaluate. A 220px navigation rail (label only, no subtitles), then:
+
+- **Queue** is a table, not a list of cards: case, age, urgency floor, red flags, facts, draft status, updated. Rows needing attention carry a text status, not only a colour.
+- **Case review** is a split view: the deterministic screen (urgency floor and every red flag with its state) first, the draft below it with evidence references, and a decision rail on the right with CONFIRM, MODIFY, REJECT and ESCALATE and the required reason.
+- **Audit and trace** is a timeline: time, actor, event, references. Agent trace lives here, not in the clinical flow.
+
 ## Component-level rules
 
 ### Focused clinical workspace
