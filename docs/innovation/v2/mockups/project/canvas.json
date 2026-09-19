@@ -12,7 +12,7 @@
     "Main.dc.html": {
       "h": 900,
       "is_interactive": true,
-      "title": "Nurse Intake · Desktop",
+      "title": "Pratu Intake · Desktop",
       "w": 1440,
       "x": 0,
       "y": 1143
@@ -20,7 +20,7 @@
     "Nurse-Handoff.dc.html": {
       "h": 900,
       "is_interactive": true,
-      "title": "Nurse Intake · ส่งต่อแล้ว",
+      "title": "Pratu Intake · ส่งต่อแล้ว",
       "w": 1440,
       "x": 2838,
       "y": 1143
@@ -28,7 +28,7 @@
     "Nurse-Mobile.dc.html": {
       "h": 844,
       "is_interactive": true,
-      "title": "Nurse Intake · Mobile",
+      "title": "Pratu Intake · Mobile",
       "w": 390,
       "x": 2368,
       "y": 1143
@@ -36,7 +36,7 @@
     "Nurse-Tablet.dc.html": {
       "h": 1024,
       "is_interactive": true,
-      "title": "Nurse Intake · Tablet",
+      "title": "Pratu Intake · Tablet",
       "w": 768,
       "x": 1520,
       "y": 1143
@@ -44,7 +44,7 @@
     "Platform-Audit.dc.html": {
       "h": 900,
       "is_interactive": true,
-      "title": "Platform · Audit และ trace",
+      "title": "Pratu Console · Audit และ trace",
       "w": 1440,
       "x": 3040,
       "y": 2590
@@ -52,7 +52,7 @@
     "Platform-Queue.dc.html": {
       "h": 900,
       "is_interactive": true,
-      "title": "Platform · คิวเคส",
+      "title": "Pratu Console · คิวเคส",
       "w": 1440,
       "x": 0,
       "y": 2590
@@ -60,7 +60,7 @@
     "Platform-Review.dc.html": {
       "h": 900,
       "is_interactive": true,
-      "title": "Platform · ตรวจเคส",
+      "title": "Pratu Console · ตรวจเคส",
       "w": 1440,
       "x": 1520,
       "y": 2590
@@ -86,7 +86,7 @@
     "nurse": {
       "kind": "title1",
       "maxW": 4278,
-      "text": "Nurse Intake — /nurse",
+      "text": "Pratu Intake — แอปพยาบาล /nurse",
       "w": 240,
       "x": 0,
       "y": 843
@@ -94,7 +94,7 @@
     "platform": {
       "kind": "title1",
       "maxW": 4480,
-      "text": "Central Platform — /platform",
+      "text": "Pratu Console — แพทย์และผู้ประเมิน /platform",
       "w": 240,
       "x": 0,
       "y": 2290
@@ -111,5 +111,5 @@
     "Platform-Audit.dc.html"
   ],
   "pages": [],
-  "title": "Front Door Redesign"
+  "title": "Pratu — Redesign"
 }

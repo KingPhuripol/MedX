@@ -121,7 +121,7 @@ def page(title, w, h, body, logic=""):
 """
 
 
-BRAND = f'<span class="row" style="gap: 10px;"><span class="row" style="width: 30px; height: 30px; border-radius: 8px; background: #0f766e; justify-content: center;">{ic("door", 18, "#fff", "2")}</span><span class="display" style="font-size: 17px; color: #1f1f1f;">Front Door</span></span>'
+BRAND = f'<span class="row" style="gap: 10px;"><span class="row" style="width: 30px; height: 30px; border-radius: 8px; background: #0f766e; justify-content: center;">{ic("door", 18, "#fff", "2")}</span><span class="col" style="gap: 0;"><span class="display" style="font-size: 17px; line-height: 20px; color: #1f1f1f;">Pratu</span><span style="font-size: 11px; line-height: 14px; color: #444746;">Clinical Front Door</span></span></span>'
 
 
 # ---------- Nurse ----------
@@ -130,8 +130,8 @@ def nurse_topbar(compact=False):
     info = "" if compact else '<span class="meta">ชาย 58 ปี</span><span class="meta">·</span><span class="row meta" style="gap: 4px;">' + ic("clock", 15, "#444746") + 'มาถึง 09:10 · รอ 12 นาที</span>'
     proto = "" if compact else '<span class="pill p-proto">ต้นแบบวิจัย · ข้อมูลสังเคราะห์</span>'
     return f"""<header class="chrome row" style="height: 60px; padding: 0 24px; gap: 16px; flex-shrink: 0;">{BRAND}<span style="width: 1px; height: 24px; background: #2c4a61;"></span>
-<span class="meta" style="color: #9fb1bf;">Nurse Intake</span><span class="row" style="gap: 10px; padding: 6px 12px; border-radius: 8px; background: #16324a;">{case}{info}</span>
-<span class="grow"></span>{proto}<a class="btn btn-ghost-light" href="Platform-Queue.dc.html">Central Platform</a>
+<span class="meta" style="color: #9fb1bf;">Pratu Intake</span><span class="row" style="gap: 10px; padding: 6px 12px; border-radius: 8px; background: #16324a;">{case}{info}</span>
+<span class="grow"></span>{proto}<a class="btn btn-ghost-light" href="Platform-Queue.dc.html">Pratu Console</a>
 <span class="row display" style="width: 34px; height: 34px; border-radius: 999px; background: #e3f2ef; color: #0b5a54; justify-content: center; font-size: 14px;">NA</span></header>"""
 
 
@@ -285,10 +285,10 @@ def platform_shell(active, main):
         nav.append(f'<a href="{href}" class="row" style="gap: 12px; padding: 10px 12px; border-radius: 8px; text-decoration: none; {"background: #d3e3fd; color: #041e49;" if on else "color: #444746;"}">{ic(icon, 18, "#041e49" if on else "#444746")}<span class="grow" style="font-weight: 600;">{label}</span>{badge}</a>')
     return f"""<div class="row grow" style="align-items: stretch; min-height: 0;">
 <nav class="chrome col" aria-label="เมนูหลัก" style="width: 240px; flex-shrink: 0; padding: 20px 14px; gap: 4px;">
-<div style="padding: 0 8px 24px;">{BRAND}<div class="meta" style="padding-top: 4px; padding-left: 40px;">Central Platform</div></div>
+<div style="padding: 0 8px 24px;">{BRAND}<div class="meta" style="padding-top: 6px; padding-left: 40px;">Pratu Console</div></div>
 {''.join(nav)}<span class="grow"></span>
 <div class="col" style="margin: 0 4px; padding: 12px; border-radius: 10px; background: #16324a; gap: 10px;"><div class="row" style="gap: 10px;"><span class="row display" style="width: 34px; height: 34px; border-radius: 999px; background: #e3f2ef; color: #0b5a54; justify-content: center; font-size: 13px;">SC</span><span class="col"><span class="strong" style="color: #1f1f1f; font-size: 14px;">dr.somchai</span><span class="meta" style="font-size: 12px;">แพทย์ผู้ตรวจ · เวรเช้า</span></span></div>
-<a class="btn btn-ghost-light" href="Main.dc.html" style="height: 36px;">{ic("mic", 16, "#0b57d0")}Nurse Intake</a></div>
+<a class="btn btn-ghost-light" href="Main.dc.html" style="height: 36px;">{ic("mic", 16, "#0b57d0")}Pratu Intake</a></div>
 </nav><div class="col grow" style="min-height: 0;">{main}</div></div>"""
 
 
@@ -428,15 +428,15 @@ def before():
     return f"""<div class="col" style="padding: 36px 40px; gap: 16px;">
 <span class="eyebrow">19 ก.ย. 2569 · ก่อน redesign</span><h1 class="display" style="margin: 0; font-size: 30px;">หน้าจอเดิม</h1>
 <p class="meta" style="margin: 0; font-size: 15px;">ทุกส่วนเป็นการ์ดแบบเดียวกัน · orb เป็นจุดเด่นของหน้าพยาบาล · ความเร่งด่วนไม่เด่นกว่าส่วนอื่น</p>
-<div class="row" style="gap: 40px; align-items: flex-start;">{fig("/_blob/7b0431ce443da6ff23a8176a984323eb", "Nurse Intake เดิม")}{fig("/_blob/d85e847031b0ce010471e0da75d2b023", "Central Platform เดิม")}</div></div>"""
+<div class="row" style="gap: 40px; align-items: flex-start;">{fig("/_blob/7b0431ce443da6ff23a8176a984323eb", "Pratu Intake เดิม")}{fig("/_blob/d85e847031b0ce010471e0da75d2b023", "Pratu Console เดิม")}</div></div>"""
 
 
 boards = {
     "Before.dc.html": ("ก่อน redesign", 1440, 720, before(), "", 0, 0, False),
-    "Main.dc.html": ("Nurse Intake · Desktop", 1440, 900, nurse(), "", 0, 1143, True),
-    "Nurse-Tablet.dc.html": ("Nurse Intake · Tablet", 768, 1024, nurse(stacked=True), "", 1520, 1143, True),
-    "Nurse-Mobile.dc.html": ("Nurse Intake · Mobile", 390, 844, fix_holes(mobile()), MOBILE_LOGIC, 2368, 1143, True),
-    "Nurse-Handoff.dc.html": ("Nurse Intake · ส่งต่อแล้ว", 1440, 900, nurse(sent=True), "", 2838, 1143, True),
+    "Main.dc.html": ("Pratu Intake · Desktop", 1440, 900, nurse(), "", 0, 1143, True),
+    "Nurse-Tablet.dc.html": ("Pratu Intake · Tablet", 768, 1024, nurse(stacked=True), "", 1520, 1143, True),
+    "Nurse-Mobile.dc.html": ("Pratu Intake · Mobile", 390, 844, fix_holes(mobile()), MOBILE_LOGIC, 2368, 1143, True),
+    "Nurse-Handoff.dc.html": ("Pratu Intake · ส่งต่อแล้ว", 1440, 900, nurse(sent=True), "", 2838, 1143, True),
     "Platform-Queue.dc.html": ("Platform · คิวเคส", 1440, 900, queue(), "", 0, 2590, True),
     "Platform-Review.dc.html": ("Platform · ตรวจเคส", 1440, 900, review(), "", 1520, 2590, True),
     "Platform-Audit.dc.html": ("Platform · Audit และ trace", 1440, 900, audit(), "", 3040, 2590, True),
@@ -444,12 +444,12 @@ boards = {
 
 if __name__ == "__main__":
     existing = json.loads((ROOT / "canvas.json").read_text()) if (ROOT / "canvas.json").exists() else {}
-    index = {"v": 3, "createdOnFiles": existing.get("createdOnFiles", {"v": 1, "at": "2026-09-19T12:30:00Z"}), "title": "Front Door Redesign",
+    index = {"v": 3, "createdOnFiles": existing.get("createdOnFiles", {"v": 1, "at": "2026-09-19T12:30:00Z"}), "title": "Pratu — Redesign",
              "launch": {"view": "canvas"}, "pages": [], "boards": {}, "order": [], "designSystems": [],
              "notes": {
                  "before": {"x": 0, "y": -300, "text": "ก่อน redesign", "kind": "title1", "maxW": 1440},
-                 "nurse": {"x": 0, "y": 843, "text": "Nurse Intake — /nurse", "kind": "title1", "maxW": 4278},
-                 "platform": {"x": 0, "y": 2290, "text": "Central Platform — /platform", "kind": "title1", "maxW": 4480},
+                 "nurse": {"x": 0, "y": 843, "text": "Pratu Intake — /nurse", "kind": "title1", "maxW": 4278},
+                 "platform": {"x": 0, "y": 2290, "text": "Pratu Console — /platform", "kind": "title1", "maxW": 4480},
              }}
     for name, (title, w, h, body, logic, x, y, interactive) in boards.items():
         (ROOT / name).write_text(page(title, w, h, body, logic))
