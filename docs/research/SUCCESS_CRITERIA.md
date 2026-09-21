@@ -26,11 +26,13 @@ Status as of 30 Aug 2026: **all five closed. G0 is closed, with two residuals tr
       Evidence: `scripts/validate_manifest.py` accepts `experiments/manifests/exp_0000_harness_smoke.json`;
       `bash scripts/run_smoke_test.sh` passes end to end.
 - [x] Official academic plan and owners accepted.
-      Evidence: `project_state/official_deadlines.json` verified by the harness against DEC-0007;
-      `docs/project_management/MASTER_PLAN.md`, `MILESTONES.md` and `TEAM_OWNERSHIP.md`.
-      Residual: the Group Application receipt was never archived and is unrecoverable (TASK-0001 closed
-      2026-08-30 without documentary evidence; RISK-0012). That is an M0 evidence gap, not a defect in
-      the plan itself.
+      Evidence: accepted 2026-08-30 against DEC-0007, verified by the harness at the time.
+      The plan, milestone and ownership documents and the deadline registry that held this
+      evidence were removed from the repository on 2026-09-21 at the owner's instruction;
+      schedule tracking now lives outside this repository. See git history at `4d6bbbe` for
+      the last state of those files.
+      Residual: the Group Application receipt was never archived and is unrecoverable. That is
+      an evidence gap in the original submission, not a defect in the plan itself.
 
 **Residuals — G0 is closed, these are not:**
 

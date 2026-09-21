@@ -4,7 +4,9 @@
 
 Operate this repository as a disciplined research-and-engineering organization for one five-member Senior Project: **Case-Adaptive Medical Multimodal Foundation Model for Clinical Reasoning and Care-Pathway Decision Support**.
 
-Advance one verified milestone at a time. Optimize for research validity, product usefulness, clinical safety, reproducibility, academic deadlines, and sustainable team workload. Never trade away data integrity or safety to make progress appear faster.
+Optimize for research validity, product usefulness, clinical safety, and reproducibility. Never trade away data integrity or safety to make progress appear faster.
+
+Project-management tracking was removed from this repository on 21 Sep 2026 at the owner's instruction: no task board, risk register, milestone list, weekly status, deadline registry or approval registry. Schedule and deadlines are tracked by the team outside this repository. Everything below governs the engineering and research work that remains.
 
 ## Two tracks, one project
 
@@ -26,12 +28,6 @@ General:
 
 - `docs/PROJECT_CHARTER.md`
 - `docs/DECISION_LOG.md`
-- `docs/project_management/MASTER_PLAN.md`
-- `docs/project_management/MILESTONES.md`
-- `docs/project_management/TASK_BOARD.md`
-- `docs/project_management/RISK_REGISTER.md`
-- `docs/project_management/TEAM_OWNERSHIP.md`
-- `docs/project_management/WEEKLY_STATUS.md`
 
 Research:
 
@@ -56,21 +52,7 @@ Shared contracts:
 - `docs/shared/EVALUATION_CONTRACT.md`
 - `docs/shared/HUMAN_APPROVAL_POLICY.md`
 
-When documents conflict, contracts and accepted Decision Log entries override plans; plans override status summaries. Stop and request a human decision for unresolved material conflicts.
-
-## Official deadlines are immutable
-
-Canonical dates live in `project_state/official_deadlines.json` and are verified by `scripts/verify_harness.py`:
-
-- Group Application: 14 Aug 2026, 23:55 Asia/Bangkok, if not submitted
-- Project Idea: 28 Aug 2026, 2-4 pages plus references
-- CITI: 25 Sep 2026
-- Proposal Report: 2 Oct 2026
-- Proposal Presentation: 8-9 Oct 2026
-- Progress Report: 4 Dec 2026
-- Progress Presentation: 14-15 Dec 2026
-
-Never move these dates. A correction requires a new official faculty source, explicit human approval, a Decision Log entry, and synchronized updates to the registry and schedule.
+When documents conflict, contracts and accepted Decision Log entries override everything else. Stop and request a human decision for unresolved material conflicts.
 
 ## Non-negotiable data rules
 
@@ -129,7 +111,7 @@ Stop and request explicit approval before:
 
 - Tier 3 or Tier 4 training; more than one GPU; jobs expected to exceed 60 minutes;
 - destructive or irreversible dataset transformations;
-- moving official deadlines or materially changing scope, claims, splits, labels, success criteria, architecture contracts, or public benchmark rules;
+- materially changing scope, claims, splits, labels, success criteria, architecture contracts, or public benchmark rules;
 - uploading data, code, model weights, reports, or releases to any external service;
 - publishing to Hugging Face, package registries, deployment targets, or public repositories;
 - deleting checkpoints, datasets, experiment evidence, audit logs, or branches;
@@ -148,10 +130,9 @@ Never treat agent memory or chat history as source of truth. Commit durable fact
 
 Before work:
 
-1. Identify the current milestone, owner, dependencies, affected contracts, risk, and definition of done.
+1. Identify the affected contracts, dependencies, and definition of done.
 2. Read relevant source-of-truth documents and inspect existing changes.
-3. Create or update a task before substantial work.
-4. For experiments, create and validate the manifest before execution.
+3. For experiments, create and validate the manifest before execution.
 
 During work:
 
@@ -164,16 +145,16 @@ Before declaring completion:
 
 1. Run the narrowest relevant tests and `python3 scripts/verify_harness.py` when Harness/contracts changed.
 2. Verify acceptance criteria and required evidence, not merely command success.
-3. Update task, risk, decision, experiment, and status records affected by the work.
+3. Update the decision, experiment, and evaluation records affected by the work.
 4. Report files changed, tests run, results, assumptions, risks, decisions required, and next action.
 
 ## Definition of done
 
-`DONE` requires implemented scope, passing relevant verification, recorded evidence, synchronized contracts/docs, no unacknowledged blocker, and owner/reviewer acceptance when specified. A generated file, plausible result, or agent assertion alone is not done.
+Done requires implemented scope, passing relevant verification, recorded evidence, synchronized contracts/docs, and no unacknowledged blocker. A generated file, plausible result, or agent assertion alone is not done.
 
 ## Standard delegated result
 
-Return: `TASK STATUS`, `SUMMARY`, `FILES READ`, `FILES MODIFIED`, `TESTS RUN`, `RESULTS/EVIDENCE`, `ASSUMPTIONS`, `RISKS`, `DECISIONS REQUIRED`, and `RECOMMENDED NEXT ACTION`.
+Return: `STATUS`, `SUMMARY`, `FILES READ`, `FILES MODIFIED`, `TESTS RUN`, `RESULTS/EVIDENCE`, `ASSUMPTIONS`, `RISKS`, `DECISIONS REQUIRED`, and `RECOMMENDED NEXT ACTION`.
 
 ## Common commands
 
@@ -181,7 +162,6 @@ Return: `TASK STATUS`, `SUMMARY`, `FILES READ`, `FILES MODIFIED`, `TESTS RUN`, `
 bash scripts/bootstrap.sh
 python3 scripts/verify_harness.py
 bash scripts/run_smoke_test.sh
-python3 scripts/project_status.py
 python3 scripts/validate_manifest.py <manifest.json>
 python3 scripts/temporal_leakage_audit.py <journey.json> --as-of <ISO-8601>
 ```

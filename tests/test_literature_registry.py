@@ -106,12 +106,6 @@ def test_supporting_an_unknown_claim_fails(sandbox):
     assert any("supports unknown claim C-99" in error for error in run(sandbox, mutate))
 
 
-def test_referencing_an_unknown_risk_fails(sandbox):
-    def mutate(payload):
-        first(payload)["blocking_risks"] = ["RISK-9999"]
-    assert any("unknown risk RISK-9999" in error for error in run(sandbox, mutate))
-
-
 def test_a_conflict_may_not_be_accepted(sandbox):
     def mutate(payload):
         record = first(payload)

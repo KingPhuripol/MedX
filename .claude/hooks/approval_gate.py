@@ -15,12 +15,10 @@ PROTECTED_EXACT = {
     ".claude/hooks/approval_gate.py",
     "docs/PROJECT_CHARTER.md",
     "docs/DECISION_LOG.md",
-    "docs/project_management/OFFICIAL_DEADLINES.md",
     "docs/innovation/SAFETY_SPEC.md",
     "docs/research/BENCHMARK_CONTRACT.md",
     "docs/research/SUCCESS_CRITERIA.md",
     "docs/shared/HUMAN_APPROVAL_POLICY.md",
-    "project_state/official_deadlines.json",
 }
 PROTECTED_PREFIXES = ("docs/shared/", "schemas/")
 

@@ -21,24 +21,13 @@ claude doctor
 claude
 ```
 
-Inside Claude Code:
-
-```text
-/project-status
-```
-
 The bootstrap is idempotent. It initializes Git when needed, makes local scripts executable, and validates the complete Harness. It does not install packages, download data, run training, publish artifacts, or create a commit.
-
-## Immediate human action
-
-As of 11 August 2026, the Group Application submission state is not recorded. Confirm it immediately. If it is not submitted, the official deadline is **14 August 2026 at 23:55 Asia/Bangkok**. See [OFFICIAL_DEADLINES.md](docs/project_management/OFFICIAL_DEADLINES.md) and [TASK_BOARD.md](docs/project_management/TASK_BOARD.md).
 
 ## Everyday commands
 
 ```bash
 make verify             # validate the Harness and machine-readable state
 make smoke              # run lightweight, non-training checks
-make status             # print schedule and project-state summary
 make leakage-fixture    # prove the temporal audit works on a valid fixture
 python3 scripts/new_experiment.py --help
 python3 scripts/validate_manifest.py experiments/manifests/exp_0000_harness_smoke.json
@@ -47,7 +36,6 @@ python3 scripts/validate_manifest.py experiments/manifests/exp_0000_harness_smok
 Useful Claude Code skills:
 
 ```text
-/project-status
 /new-experiment <short-slug>
 /run-smoke-test
 /run-benchmark <manifest-path>

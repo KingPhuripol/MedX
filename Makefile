@@ -1,4 +1,4 @@
-.PHONY: bootstrap verify smoke test demo api eval leakage-fixture status idea-docx citations citations-online web
+.PHONY: bootstrap verify smoke test demo api eval leakage-fixture idea-docx citations citations-online web
 
 bootstrap:
 	bash scripts/bootstrap.sh
@@ -11,9 +11,6 @@ smoke:
 
 leakage-fixture:
 	python3 scripts/temporal_leakage_audit.py tests/fixtures/patient_journey/valid.json --as-of 2026-01-01T09:15:00Z
-
-status:
-	python3 scripts/project_status.py
 
 # Offline consistency pass over the literature registry: the APA string, the structured
 # fields and the identifiers must agree.

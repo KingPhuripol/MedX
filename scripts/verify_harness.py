@@ -19,13 +19,6 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE_DOCS = [
     "docs/PROJECT_CHARTER.md",
     "docs/DECISION_LOG.md",
-    "docs/project_management/OFFICIAL_DEADLINES.md",
-    "docs/project_management/MASTER_PLAN.md",
-    "docs/project_management/MILESTONES.md",
-    "docs/project_management/TASK_BOARD.md",
-    "docs/project_management/RISK_REGISTER.md",
-    "docs/project_management/TEAM_OWNERSHIP.md",
-    "docs/project_management/WEEKLY_STATUS.md",
     "docs/research/RESEARCH_SPEC.md",
     "docs/research/ARCHITECTURE_SPEC.md",
     "docs/research/TRAINING_SPEC.md",
@@ -44,7 +37,6 @@ SOURCE_DOCS = [
 ]
 
 AGENT_NAMES = {
-    "project-manager",
     "research-lead",
     "innovation-lead",
     "model-architect",
@@ -59,7 +51,6 @@ AGENT_NAMES = {
 }
 
 SKILL_NAMES = {
-    "project-status",
     "new-experiment",
     "run-smoke-test",
     "run-benchmark",
@@ -67,8 +58,6 @@ SKILL_NAMES = {
     "data-audit",
     "temporal-leakage-audit",
     "integration-check",
-    "proposal-readiness",
-    "progress-readiness",
     "hf-release-check",
 }
 
@@ -83,11 +72,6 @@ CODE_AGENTS = {
 READ_ONLY_REVIEWERS = {"clinical-safety-reviewer", "integration-auditor"}
 
 SCHEMA_BINDINGS = {
-    "project_state/official_deadlines.json": "schemas/official-deadlines.schema.json",
-    "project_state/tasks.json": "schemas/task.schema.json",
-    "project_state/risks.json": "schemas/risk.schema.json",
-    "project_state/decisions.json": "schemas/decision.schema.json",
-    "project_state/approvals.json": "schemas/human-approval.schema.json",
     "project_state/evaluations.json": "schemas/evaluation-record.schema.json",
     "project_state/contract_versions.json": "schemas/contract-versions.schema.json",
     "project_state/dataset_feasibility.json": "schemas/dataset-feasibility.schema.json",
@@ -105,23 +89,10 @@ SCRIPT_FILES = [
     "scripts/validate_manifest.py",
     "scripts/new_experiment.py",
     "scripts/temporal_leakage_audit.py",
-    "scripts/project_status.py",
     "scripts/verify_citations.py",
     ".claude/hooks/approval_gate.py",
     ".claude/hooks/post_edit_checks.py",
-    ".claude/hooks/session_context.py",
 ]
-
-CANONICAL_DEADLINES = [
-    ("Group Application", "2026-08-14", "2026-08-14", "23:55"),
-    ("Project Idea", "2026-08-28", "2026-08-28", None),
-    ("CITI", "2026-09-25", "2026-09-25", None),
-    ("Proposal Report", "2026-10-02", "2026-10-02", None),
-    ("Proposal Presentation", "2026-10-08", "2026-10-09", None),
-    ("Progress Report", "2026-12-04", "2026-12-04", None),
-    ("Progress Presentation", "2026-12-14", "2026-12-15", None),
-]
-
 
 class Checks:
     def __init__(self) -> None:
@@ -158,24 +129,6 @@ def check_json_and_state(checks: Checks) -> None:
     for manifest in manifests:
         checks.extend(validate_file(manifest, manifest_schema))
 
-    tasks_payload = load_json(ROOT / "project_state/tasks.json")
-    risks_payload = load_json(ROOT / "project_state/risks.json")
-    decisions_payload = load_json(ROOT / "project_state/decisions.json")
-    task_ids = [item["task_id"] for item in tasks_payload["tasks"]]
-    risk_ids = [item["risk_id"] for item in risks_payload["risks"]]
-    decision_ids = [item["decision_id"] for item in decisions_payload["decisions"]]
-    checks.require(len(task_ids) == len(set(task_ids)), "task IDs are not unique")
-    checks.require(len(risk_ids) == len(set(risk_ids)), "risk IDs are not unique")
-    checks.require(len(decision_ids) == len(set(decision_ids)), "decision IDs are not unique")
-    for item in tasks_payload["tasks"]:
-        for dependency in item["dependencies"]:
-            checks.require(dependency in task_ids, f"{item['task_id']} references unknown dependency {dependency}")
-        if item["status"] == "DONE":
-            checks.require(bool(item["evidence"]), f"{item['task_id']} is DONE without evidence")
-    for item in risks_payload["risks"]:
-        for task_id in item["linked_tasks"]:
-            checks.require(task_id in task_ids, f"{item['risk_id']} references unknown task {task_id}")
-
     # A dataset dimension may only claim VERIFIED if it cites where it was verified.
     # This is the rule the whole feasibility survey rests on: without it, an assumption
     # written confidently is indistinguishable from a checked fact.
@@ -204,14 +157,8 @@ def check_json_and_state(checks: Checks) -> None:
                     care_setting["status"] == "VERIFIED",
                     f"{ds_id}.care_setting claims it covers the evaluated setting but its status is {care_setting['status']}",
                 )
-            for risk_id in entry.get("blocking_risks", []):
-                checks.require(risk_id in risk_ids, f"{ds_id} references unknown risk {risk_id}")
-
     for manifest_path in manifests:
         manifest = load_json(manifest_path)
-        checks.require(manifest["task_id"] in task_ids, f"{manifest['experiment_id']} references unknown task")
-        for risk_id in manifest["risks"]:
-            checks.require(risk_id in risk_ids, f"{manifest['experiment_id']} references unknown risk {risk_id}")
         tier_requires = manifest["run_tier"] >= 3
         checks.require(manifest["approvals"]["required"] == tier_requires, f"{manifest['experiment_id']} approval requirement does not match tier")
         if manifest["status"] in {"approved", "running", "completed"} and tier_requires:
@@ -262,12 +209,8 @@ def check_literature(checks: Checks) -> None:
     known_searches = set(search_ids)
     known_references = set(reference_ids)
 
-    known_tasks: set[str] = set()
-    known_risks: set[str] = set()
     known_datasets: set[str] = set()
     for filename, collection, field, sink in (
-        ("tasks.json", "tasks", "task_id", known_tasks),
-        ("risks.json", "risks", "risk_id", known_risks),
         ("dataset_feasibility.json", "datasets", "dataset_id", known_datasets),
     ):
         source = ROOT / "project_state" / filename
@@ -333,10 +276,6 @@ def check_literature(checks: Checks) -> None:
 
         for claim in item.get("supports_claims", []):
             checks.require(claim in known_claims, f"{lid} supports unknown claim {claim}")
-        for risk_id in item.get("blocking_risks", []):
-            checks.require(risk_id in known_risks, f"{lid} references unknown risk {risk_id}")
-        for task_id in item.get("linked_tasks", []):
-            checks.require(task_id in known_tasks, f"{lid} references unknown task {task_id}")
         for dataset_id in item.get("related_datasets", []):
             checks.require(dataset_id in known_datasets, f"{lid} references unknown dataset {dataset_id}; survey it in dataset_feasibility.json first")
 
@@ -358,8 +297,6 @@ def check_literature(checks: Checks) -> None:
             checks.require(bool(item["considered"]), f"baseline family {family} reports no valid candidate without listing what was considered")
         for reference_id in item["considered"]:
             checks.require(reference_id in known_references, f"baseline family {family} considered unknown reference {reference_id}")
-        for risk_id in item.get("blocking_risks", []):
-            checks.require(risk_id in known_risks, f"baseline family {family} references unknown risk {risk_id}")
 
     # LIT ids earn the same referential integrity TASK/RISK/DEC already have: an id
     # written into a document must resolve, and an accepted reference nobody reads
@@ -379,18 +316,6 @@ def check_literature(checks: Checks) -> None:
         survey_text = related_work.read_text(encoding="utf-8")
         unlisted = sorted(item["reference_id"] for item in references if item["verdict"] == "ACCEPTED" and item["reference_id"] not in survey_text)
         checks.require(not unlisted, f"ACCEPTED references absent from RELATED_WORK.md: {', '.join(unlisted)}")
-
-
-def check_deadlines(checks: Checks) -> None:
-    payload = load_json(ROOT / "project_state/official_deadlines.json")
-    checks.require(payload.get("immutable") is True, "official deadline registry is not immutable")
-    checks.require(payload.get("timezone") == "Asia/Bangkok", "official deadline timezone changed")
-    observed = [
-        (item["name"], item["official_date_start"], item["official_date_end"], item["official_time"])
-        for item in payload["deadlines"]
-    ]
-    checks.require(observed == CANONICAL_DEADLINES, f"official deadlines differ from canonical registry: {observed!r}")
-    checks.require(payload["deadlines"][0]["status"] in {"NEEDS_CONFIRMATION", "SUBMITTED", "COMPLETE"}, "Group Application status must be explicitly confirmed")
 
 
 def check_agents_and_skills(checks: Checks) -> None:
@@ -436,7 +361,7 @@ def check_agents_and_skills(checks: Checks) -> None:
 def check_settings_and_scripts(checks: Checks) -> None:
     settings = load_json(ROOT / ".claude/settings.json")
     hooks = settings.get("hooks", {})
-    checks.require("PreToolUse" in hooks and "PostToolUse" in hooks and "SessionStart" in hooks, "settings lacks required hooks")
+    checks.require("PreToolUse" in hooks and "PostToolUse" in hooks, "settings lacks required hooks")
     deny = settings.get("permissions", {}).get("deny", [])
     checks.require("Write(./sources/**)" in deny and "Edit(./sources/**)" in deny, "settings does not protect synced sources")
     checks.require(settings.get("worktree", {}).get("baseRef") == "head", "worktree baseRef must be head")
@@ -469,78 +394,6 @@ def check_fixtures(checks: Checks) -> None:
     checks.require(response["request_id"] == request["request_id"], "API request/response IDs differ")
 
 
-def check_planning_boundary(checks: Checks) -> None:
-    """Enforce DEC-0008: `.planning/` is a subordinate execution layer.
-
-    Skips silently when `.planning/` is absent, so the harness still passes on a
-    checkout without the GSD toolchain installed.
-    """
-    planning = ROOT / ".planning"
-    if not planning.is_dir():
-        return
-
-    checks.require((planning / "README.md").is_file(), "missing .planning/README.md; DEC-0008 requires the ownership boundary stated at the point of use")
-
-    roadmap = planning / "ROADMAP.md"
-    declared_phases: set[str] = set()
-    if roadmap.is_file():
-        roadmap_text = roadmap.read_text(encoding="utf-8")
-        declared_phases = set(re.findall(r"^### Phase (\d+):", roadmap_text, re.MULTILINE))
-        checks.require(bool(declared_phases), ".planning/ROADMAP.md declares no phases")
-        for clause in re.findall(r"^\*\*Depends on\*\*:\s*(.+)$", roadmap_text, re.MULTILINE):
-            for referenced in re.findall(r"Phase\s+(\d+)", clause):
-                checks.require(referenced in declared_phases, f"ROADMAP.md depends on Phase {referenced}, which is not declared")
-            # Digits outside an explicit "Phase N" reference are prose that the
-            # roadmap parser reads as a dependency. "M0" once became Phase 0 and
-            # silently blocked every phase in the roadmap.
-            prose = re.sub(r"Phase\s+\d+", "", clause)
-            checks.require(not re.search(r"\d", prose), f"'Depends on' carries digits outside a Phase reference and will be misparsed: {clause.strip()}")
-
-    if roadmap.is_file():
-        # Every phase names implementer agents and independent reviewers, and every
-        # named agent exists. CLAUDE.md keeps the read-only reviewers separate: they
-        # must not repair the work they judge, so they may never appear as owners.
-        installed_agents = {path.stem for path in (ROOT / ".claude/agents").glob("*.md")}
-        read_only_reviewers = {"clinical-safety-reviewer", "integration-auditor"}
-        owners_by_phase = re.findall(r"^\*\*Owners\*\*:\s*(.+)$", roadmap_text, re.MULTILINE)
-        reviewers_by_phase = re.findall(r"^\*\*Required reviewers\*\*:\s*(.+)$", roadmap_text, re.MULTILINE)
-        checks.require(len(owners_by_phase) == len(declared_phases), f"{len(declared_phases)} phases declared but {len(owners_by_phase)} carry an Owners line")
-        checks.require(len(reviewers_by_phase) == len(declared_phases), f"{len(declared_phases)} phases declared but {len(reviewers_by_phase)} carry a Required reviewers line")
-        named = {agent.strip() for clause in owners_by_phase + reviewers_by_phase for agent in clause.split(",")}
-        missing_agents = sorted(named - installed_agents)
-        checks.require(not missing_agents, f"ROADMAP.md names agents that are not installed in .claude/agents/: {', '.join(missing_agents)}")
-        for clause in owners_by_phase:
-            owners = {agent.strip() for agent in clause.split(",")}
-            conflict = sorted(owners & read_only_reviewers)
-            checks.require(not conflict, f"read-only reviewers listed as phase owners: {', '.join(conflict)}")
-        for clause in reviewers_by_phase:
-            reviewers = {agent.strip() for agent in clause.split(",")}
-            checks.require(bool(reviewers & read_only_reviewers), f"phase reviewers include no independent read-only reviewer: {clause.strip()}")
-
-    requirements = planning / "REQUIREMENTS.md"
-    if requirements.is_file():
-        requirements_text = requirements.read_text(encoding="utf-8")
-        traced = dict(re.findall(r"^\|\s*([A-Z]{2,4}-[0-9A-Za-z]+)\s*\|\s*Phase\s*(\d+)\s*\|", requirements_text, re.MULTILINE))
-        declared = set(re.findall(r"^- \[[ x]\] \*\*([A-Z]{2,4}-[0-9A-Za-z]+)\*\*", requirements_text, re.MULTILINE))
-        checks.require(bool(traced), ".planning/REQUIREMENTS.md has no traceability rows mapping requirements to phases")
-        untraced = sorted(declared - set(traced))
-        checks.require(not untraced, f"requirements declared but absent from the traceability table: {', '.join(untraced)}")
-        if declared_phases:
-            dangling = sorted({f"{req} -> Phase {phase}" for req, phase in traced.items() if phase not in declared_phases})
-            checks.require(not dangling, f"traceability maps requirements to phases that do not exist: {', '.join(dangling)}")
-
-    known_ids: set[str] = set()
-    for filename, collection, field in (("tasks.json", "tasks", "task_id"), ("risks.json", "risks", "risk_id"), ("decisions.json", "decisions", "decision_id")):
-        source = ROOT / "project_state" / filename
-        if source.exists():
-            known_ids.update(str(item[field]) for item in load_json(source)[collection])
-    referenced_ids: set[str] = set()
-    for document in sorted(planning.rglob("*.md")):
-        referenced_ids.update(re.findall(r"\b(?:TASK|RISK|DEC)-\d{4}\b", document.read_text(encoding="utf-8")))
-    unknown = sorted(referenced_ids - known_ids)
-    checks.require(not unknown, f".planning/ references identifiers that do not exist in project_state/: {', '.join(unknown)}")
-
-
 def check_changed(path_text: str, checks: Checks) -> None:
     path = Path(path_text)
     if not path.is_absolute():
@@ -568,11 +421,9 @@ def main() -> int:
         check_files(checks)
         check_json_and_state(checks)
         check_literature(checks)
-        check_deadlines(checks)
         check_agents_and_skills(checks)
         check_settings_and_scripts(checks)
         check_fixtures(checks)
-        check_planning_boundary(checks)
     except (ValidationError, KeyError, TypeError, OSError) as exc:
         checks.errors.append(f"verification could not complete: {exc}")
 
