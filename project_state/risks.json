@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-09-16T18:00:00+07:00",
+  "updated_at": "2026-09-21T23:30:00+07:00",
   "risks": [
     {
       "risk_id": "RISK-0001",
@@ -26,15 +26,16 @@
       "impact": "HIGH",
       "owner": "Jakkapat Bunjongruxsa",
       "trigger": "CONFIRMED on 2026-08-30: patient-level cross-modality linkage exists only within the MIMIC family (subject_id shared by MIMIC-IV and MIMIC-CXR). CheXpert, BraTS, CT-RATE, VQA-RAD and SLAKE are separate populations and cannot be joined to it",
-      "mitigation": "Adopt the confirmed architecture: a patient-linked MIMIC core carrying clinical text, structured data, longitudinal history and 2D imaging, plus explicitly unlinked capability subsets for 3D and VQA. Label every result as linked-cohort or unlinked-capability evidence; never merge them into one headline score",
+      "mitigation": "Adopt the confirmed architecture: a patient-linked MIMIC core carrying clinical text, structured data, longitudinal history and 2D imaging, plus explicitly unlinked capability subsets for 3D and VQA. Label every result as linked-cohort or unlinked-capability evidence; never merge them into one headline score | 2026-09-21: the MIMIC core this mitigation depends on is gated by a CITI course the team has not taken. The evidence on file is Responsible Conduct of Research; PhysioNet requires 'Data or Specimens Only Research' with the Massachusetts Institute of Technology Affiliates affiliation (https://physionet.org/about/citi-course/, read 2026-09-21). Tracked as TASK-0038",
       "fallback": "Narrow the evaluated modality combinations and state the limitation plainly in the Proposal and the model card, rather than implying a single-patient five-modality journey the data cannot support",
       "review_date": "2026-10-02",
       "status": "OPEN",
       "linked_tasks": [
         "TASK-0005",
-        "TASK-0014"
+        "TASK-0014",
+        "TASK-0038"
       ],
-      "updated_at": "2026-08-30T19:45:00+07:00"
+      "updated_at": "2026-09-21T23:30:00+07:00"
     },
     {
       "risk_id": "RISK-0003",

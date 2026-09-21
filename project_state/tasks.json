@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-09-19T19:30:00+07:00",
+  "updated_at": "2026-09-21T23:30:00+07:00",
   "tasks": [
     {
       "task_id": "TASK-0001",
@@ -322,10 +322,16 @@
       "evidence_required": [
         "Completion evidence for all five members, recorded with filename and SHA-256 in docs/academic/CITI_EVIDENCE.md"
       ],
-      "evidence": [],
-      "blocker": "On the critical path twice over: DL-0003 is immutable on 2026-09-25, and CITI completion is a precondition for PhysioNet credentialed access, which TASK-0005 needs to accept any MIMIC dataset and TASK-0031 needs to survey MIMIC-IV-ED as DS-0008 against RISK-0014. As of 2026-09-16, with the internal deadline two days away, no member has submitted evidence and this record has been IN_PROGRESS with an empty evidence list since 2026-08-30. The required-module list is not recorded anywhere in this repository either; it comes from the programme announcement and from PhysioNet, and nobody has written it down.",
+      "evidence": [
+        "ภูริณัฐ พลอาสา (66070501042) — CITI Completion Report, Record ID 78873121, learner ID 15858375, King Mongkut's University of Technology Thonburi (CITI institution ID 4431), completion date 2026-08-15, score 100/100. หลักสูตร: Responsible Conduct of Research (RCR), Stage 1, Undergraduate Students. หกโมดูล: Research Ethics and Society (15198), Reproducibility of Research Results (17756), Introduction to RCR (17009), Data Management (20896), Plagiarism (15156), Research Misconduct (16604).",
+        "ไฟล์ Report: 2026-09-21_citi_66070501042_report.pdf — SHA-256 a08f783f3e9aa7e248b637f3556af794fcaad3dcbe46843b4f141d781eb4b845",
+        "ไฟล์ Certificate: 2026-09-21_citi_66070501042_certificate.pdf — SHA-256 417d2bbfcd244036b777ed8eecaa00c50e2528c3ae36327b08ad983e6880f3b2",
+        "checksum คำนวณจากไฟล์ที่ ~/Downloads เมื่อ 2026-09-21; ไฟล์ยังไม่ถูกย้ายเข้า sources/ จึงบันทึกแถวนั้นเป็น COMPLETED ไม่ใช่ ARCHIVED ใน docs/academic/CITI_EVIDENCE.md",
+        "ข้อกำหนดของ PhysioNet ตรวจจาก https://physionet.org/about/citi-course/ เมื่อ 2026-09-21: ต้องใช้คอร์ส Data or Specimens Only Research และ affiliation Massachusetts Institute of Technology Affiliates; RCR ไม่ถูกระบุว่าใช้แทนกันได้"
+      ],
+      "blocker": "หนึ่งในห้าเก็บหลักฐานแล้ว (ภูริณัฐ, จบตั้งแต่ 2026-08-15 โดยเรคอร์ดนี้เขียนว่า NOT_STARTED มาห้าสัปดาห์ — ความล้มเหลวคือการบันทึก ไม่ใช่การเรียน) เหลืออีกสี่คนที่ยังไม่มีหลักฐาน และ DoD เขียนว่า every member งานนี้จึงยังไม่ปิด. แก้ความกำกวมเดิมของเรคอร์ดนี้: CITI ที่นี่คือสองข้อกำหนดคนละตัว ไม่ใช่ตัวเดียว. (1) DL-0003 เปลี่ยนแปลงไม่ได้ 2026-09-25 — รายการโมดูลที่หลักสูตรกำหนดยังไม่มีใครบันทึกเป็นลายลักษณ์อักษร ที่ไหนในรีโปนี้ RCR Stage 1 อาจพอแล้วแต่ยืนยันแทนไม่ได้. (2) PhysioNet credentialed access ต้องใช้คอร์ส Data or Specimens Only Research ซึ่งไม่มีใครเริ่ม — ใบ RCR ที่มีอยู่ใช้ไม่ได้ ย้ายไปติดตามที่ TASK-0038 ซึ่งเป็นตัวที่คุม TASK-0005 และ TASK-0031 จริง",
       "risk_level": "CRITICAL",
-      "updated_at": "2026-09-16T18:00:00+07:00"
+      "updated_at": "2026-09-21T23:30:00+07:00"
     },
     {
       "task_id": "TASK-0012",
@@ -1066,11 +1072,12 @@
       "planned_start": "2026-09-19",
       "evidence": [
         "2026-09-19: DESIGN_SYSTEM.md gains a Composition section (structure over containers, 6/8px radius, type 13/15/17/20/24/32, nurse and platform layouts). Figma file https://www.figma.com/design/iXEb2Sk453j6l6ceLObx4V holds 34 token variables from tokens.css, 8 Prompt text styles, Button and Badge component sets, and five frames: Nurse Intake desktop, tablet and handoff-sent; Platform queue table and physician case review with decision rail. The nurse banner text was checked against screen_evidence() on a complaint-only case (URGENT_REVIEW, REQUIRED_INFORMATION_INCOMPLETE TRIGGERED, complaint content a limitation, not a flag). Not yet approved by PM or team.",
-        "2026-09-19: Presentation canvas https://claude.ai/artifact/5Ktc2FAnqEy39thdyKEWBp (private) adds the two screens the Figma quota blocked: Nurse Intake mobile 390x844 (tabs for conversation and facts, 44px controls, red-flag banner first, handoff disabled until proposals are confirmed) and Platform Audit and trace (append-only timeline plus agent trace of executed steps). It also holds the before screenshots and HTML versions of the five Figma frames. Source: docs/innovation/v2/mockups/ (build.py generates project/*.dc.html)."
+        "2026-09-19: Presentation canvas https://claude.ai/artifact/5Ktc2FAnqEy39thdyKEWBp (private) adds the two screens the Figma quota blocked: Nurse Intake mobile 390x844 (tabs for conversation and facts, 44px controls, red-flag banner first, handoff disabled until proposals are confirmed) and Platform Audit and trace (append-only timeline plus agent trace of executed steps). It also holds the before screenshots and HTML versions of the five Figma frames. Source: docs/innovation/v2/mockups/ (build.py generates project/*.dc.html).",
+        "2026-09-21: The eight canvas screens were recomposed into one self-contained page and published at https://claude.ai/artifact/36Xkw5XcLSTvy6Jdv1udbm (DEC-0019, APR-0003). This replaces the private canvas as the shareable prototype: the .dc.html files cannot be opened standalone because ./support.js does not exist in the repository. The published page adds a persistent research-prototype banner, since Before, Nurse-Mobile and Nurse-Tablet carry no in-screen badge. Source: scratchpad build_artifact.py over docs/innovation/v2/mockups/project/. PM and team approval of the mockup designs is still open."
       ],
       "blocker": "Audit/trace and mobile exist on the presentation canvas but not yet in Figma (Starter-plan MCP limit). PM and team approval of the mockups is still required before Phase 3.",
       "risk_level": "MEDIUM",
-      "updated_at": "2026-09-19T19:30:00+07:00",
+      "updated_at": "2026-09-21T21:30:00+07:00",
       "task_id": "TASK-0036",
       "title": "Redesign the nurse and platform interfaces from approved Figma frames",
       "owner": "Supreeya Nuamkhayan",
@@ -1089,6 +1096,61 @@
         "Before screenshots in docs/innovation/v2/baseline/ and matching after screenshots",
         "gsd-ui-review score before and after"
       ]
+    },
+    {
+      "task_id": "TASK-0037",
+      "workstream": "INNOVATION",
+      "milestone": "M2",
+      "priority": "P1",
+      "status": "READY",
+      "title": "Run the three-concept test with OPD/ER physicians and triage nurses",
+      "owner": "Supreeya Nuamkhayan",
+      "dependencies": [
+        "TASK-0036"
+      ],
+      "planned_start": "2026-09-22",
+      "due_date": "2026-10-18",
+      "definition_of_done": [
+        "TC-01 to TC-05 run with six participants (four OPD/ER physicians, two triage nurses) on the published prototype",
+        "TC-06 contextual interviews run with at least two triage nurses or referral coordinators - a role the project has never interviewed",
+        "One observation record per participant, outside the product database, with no patient-identifying data",
+        "Results recorded against the pre-frozen thresholds, including results that fail them",
+        "Evidence Board solution rows E24 to E28 updated from Untested with the actual outcome"
+      ],
+      "evidence_required": [
+        "Observation records per docs/innovation/USER_RESEARCH_PLAN.md",
+        "Updated Evidence Board and Decision Gate 2 in the CPE494 portfolio"
+      ],
+      "blocker": "Participant recruitment has not started. TC-03 and TC-05 are safety comprehension tests: any single participant failing them is a blocking finding that must be fixed and retested.",
+      "risk_level": "MEDIUM",
+      "updated_at": "2026-09-21T21:30:00+07:00",
+      "evidence": []
+    },
+    {
+      "task_id": "TASK-0038",
+      "title": "Complete CITI Data or Specimens Only Research for PhysioNet credentialed access",
+      "owner": "Jakkapat Bunjongruxsa",
+      "workstream": "DATA",
+      "milestone": "M2",
+      "priority": "P0",
+      "status": "READY",
+      "dependencies": [],
+      "planned_start": "2026-09-22",
+      "due_date": "2026-10-17",
+      "definition_of_done": [
+        "ทุกคนที่ต้องแตะชุดข้อมูลตระกูล MIMIC เรียนจบคอร์ส CITI 'Data or Specimens Only Research'",
+        "ตอนสมัคร CITI เลือก affiliation เป็น Massachusetts Institute of Technology Affiliates ตามที่ PhysioNet กำหนด",
+        "ชื่อในใบรับรองสะกดตรงกับเอกสารที่ใช้สมัคร PhysioNet",
+        "บัญชี PhysioNet ยื่นขอ credentialed access พร้อมแนบ completion report"
+      ],
+      "evidence_required": [
+        "Completion report ต่อคน พร้อมชื่อไฟล์และ SHA-256 ใน docs/academic/CITI_EVIDENCE.md",
+        "สถานะคำขอ credentialing ของ PhysioNet"
+      ],
+      "evidence": [],
+      "blocker": "แยกออกมาจาก TASK-0011 เมื่อ 2026-09-21 หลังพบว่าใบ CITI ใบเดียวไม่ได้ปลดล็อกทั้งสองเส้น. หลักฐานที่ทีมมีอยู่คือ Responsible Conduct of Research; PhysioNet ระบุคอร์ส Data or Specimens Only Research ที่ https://physionet.org/about/citi-course/ (อ่าน 2026-09-21) และไม่ได้ระบุว่า RCR ใช้แทนได้ ยังไม่มีใครเริ่มคอร์สนี้. นี่คือเงื่อนไขจริงของ TASK-0005 (REVIEW, รอ DUA ที่คนต้องเซ็น) และ TASK-0031 (MIMIC-IV-ED เป็น DS-0008 ซึ่ง RISK-0014 รออยู่) ไม่มีเส้นตายทางการ แต่ช้าแล้วเสียเส้นทางข้อมูล. การลงทะเบียน การยอมรับ DUA และการยื่นคำขอต้องทำโดยคน ไม่ใช่เอเจนต์",
+      "risk_level": "CRITICAL",
+      "updated_at": "2026-09-21T23:30:00+07:00"
     }
   ]
 }

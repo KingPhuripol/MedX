@@ -495,3 +495,74 @@ need their owner.
 `risk_level: CRITICAL`, `evidence: []`, owned by all five members, internal completion 18 Sep,
 immutable 25 Sep — and it gates PhysioNet credentialed access that TASK-0005 needs, so a late CITI
 costs the data path, not only a certificate.
+
+## 21 September 2026 - the prototype became shareable and the portfolio became traceable
+
+**Where the two records disagreed.** The repository holds a running product (FastAPI plus two React
+apps, 473 pytest / 24 vitest / 10 Playwright passing, EVAL-0001 frozen) while the CPE494 Product
+Discovery portfolio still recorded the solution as confidence 1, "Untested", with no prototype link
+and no numeric threshold anywhere in the file. Both were accurate: the build is far ahead, and the
+user evidence for the solution is genuinely zero. This entry records closing the reporting gap, not
+the evidence gap.
+
+**The mockups could not be opened.** TASK-0036 recorded eight redesigned screens, but nobody outside
+the authoring session could see them: each `.dc.html` loads `./support.js`, which does not exist in
+this repository, and the canvas recorded on the task is private. All eight share one identical
+stylesheet, so they were recomposed into a single self-contained page and published as Prototype V1
+(DEC-0019, approved as APR-0003). The published page carries a persistent research-prototype banner,
+because Before, Nurse-Mobile and Nurse-Tablet never carried the in-screen badge that the other five
+do. The artifact is private on publication and must be shared deliberately with test participants.
+
+**What the portfolio was missing.** No test plan and no numeric threshold anywhere; no prototype
+link; the five concept rows had claim text only, with confidence, evidence, status and next test all
+blank; the Evidence Board had no ID column although three other sheets cite E03–E13, so no citation
+resolved; five concepts and three sketches coexisted with nothing connecting them; Gate 2 was an
+empty skeleton; Opportunity Screening still held the course template's sample row about course
+planning confusion; and the AI Use Log had one entry predating all current work. All are now closed
+in a v2 workbook built from the original, with the original kept as a comparison copy.
+
+**Evidence added.** Four verified citations now back claims that had no source: ED undertriage at
+36.7% with measurable order delays (PMID 40314952); hospital-to-SNF transfers complete, timely and
+usable on all three dimensions in only 13.5% of pairs, with information arriving after the patient
+often in 16.4% (PMID 33443582); each additional hour of documentation reducing outside-record review
+by 7.1% (PMID 39496090); and system transparency as the first-ranked driver of clinician trust in
+AI-CDSS (PMID 40772775). Each is recorded as indirect evidence for the pain, not for our solution.
+
+**One finding worth carrying into the data contract.** A live read of a public FHIR R4 sandbox
+confirms that `Observation` separates `effectiveDateTime` (when the value was true of the patient)
+from `issued` (when it entered the system). The project's rule that no feature may depend on
+information with `available_at_time > T` must bind to `issued`. Binding it to `effectiveDateTime`
+would silently admit data that did not yet exist at decision time — the exact leakage RISK-0003
+describes. No hospital system was contacted and no real patient data was involved.
+
+**Also recorded.** DEC-0017 and DEC-0018 were made and implemented but never appeared in this log;
+they are noted here. `docs/innovation/AI_USE_LOG.md` is new and closes the provenance gap RISK-0011
+records. TASK-0037 opens the concept test itself, including the first interviews with triage nurses
+and referral coordinators — a role this project has never interviewed, despite the portfolio rating
+their influence on adoption as medium-to-high.
+
+**Still open.** No user has seen the solution. The Evidence Board solution rows stay `Untested` at
+confidence 1, and the published prototype does not change that. DEC-0019 inherits the DEC-0018
+caveat that no trademark search has been done for "Pratu" or "CaseGraph".
+
+**Late the same day: CITI was done five weeks ago, and it is the wrong CITI.** The owner said CITI
+was finished. It is — for one member. `citiCompletionReport_15858375_78873121.pdf` records Phurinat
+Polasa, KMUTT, Record ID 78873121, **completion date 15 Aug 2026**, score 100 over six modules,
+while `CITI_EVIDENCE.md` read `NOT_STARTED` on all five rows and `TASK-0011.evidence` was `[]`. That
+is the 16 September failure again — a machine record that stopped being written to — and this time
+it ran for five weeks on a P0 item with an immutable deadline.
+
+**The finding that costs something.** The course completed is **Responsible Conduct of Research**.
+PhysioNet requires **"Data or Specimens Only Research"** with the *Massachusetts Institute of
+Technology Affiliates* affiliation (https://physionet.org/about/citi-course/, read 21 Sep) and names
+no RCR equivalence. So DL-0003 on 25 Sep is very likely already satisfied for this member — the
+programme's own required-module list is still unrecorded anywhere in this repository, which is the
+one thing that cannot be answered from here — while **the MIMIC data path has not moved at all.**
+`TASK-0038` opens that second course; it, not TASK-0011, is what actually gates TASK-0005 and
+TASK-0031, and RISK-0002's mitigation now says so.
+
+Evidence was recorded by SHA-256 computed on the files in `~/Downloads`
+(`a08f783f…` report, `417d2bbf…` certificate). The copy into `sources/` was refused by the sandbox,
+so the CITI row is `COMPLETED`, not `ARCHIVED`, and says exactly why. A hash does not change when a
+file is moved, so the record is valid either way — but under RISK-0012 the row is not `ARCHIVED`
+until the file is where the convention says it lives.

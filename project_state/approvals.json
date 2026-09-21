@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-09-07T17:30:00+07:00",
+  "updated_at": "2026-09-21T21:30:00+07:00",
   "approvals": [
     {
       "approval_id": "APR-0001",
@@ -77,6 +77,42 @@
         "APR-0001"
       ],
       "result": null
+    },
+    {
+      "approval_id": "APR-0003",
+      "type": "PUBLICATION",
+      "requester": "Claude Code (session)",
+      "approver": "Phurinat Polasa",
+      "requested_at": "2026-09-21T21:30:00+07:00",
+      "decided_at": "2026-09-21T21:30:00+07:00",
+      "expires_at": null,
+      "scope": "Publish a recomposition of the eight redesign mockup screens in docs/innovation/v2/mockups/project/ as a single shareable web artifact, for use as concept-test stimulus with OPD/ER physicians and triage nurses. Published at https://claude.ai/artifact/36Xkw5XcLSTvy6Jdv1udbm.",
+      "rationale": "CLAUDE.md puts uploading code or reports to an external service, and publishing to public targets, behind explicit human approval. The approver chose this option directly when asked what the Prototype V1 link should point to.",
+      "risks": [
+        "A public URL carries the DEC-0018 product names, for which no trademark search has been done",
+        "A polished prototype can read as a working clinical product to someone who lands on it without context",
+        "A published prototype can be mistaken for evidence that the solution is validated, which it is not"
+      ],
+      "safeguards": [
+        "Every screen uses synthetic cases only; no real, identifiable or linkable patient data is present, satisfying DEC-0006",
+        "A persistent page-level banner states research prototype, synthetic data, no diagnosis, no treatment, human confirmation required - covering the three screens that lacked the in-screen badge",
+        "The artifact is private on publication; sharing is a deliberate act by the owner",
+        "The Evidence Board records the solution rows as Untested at confidence 1 regardless of the prototype existing"
+      ],
+      "limits": {
+        "applies_to": "The eight mockup screens and the page that presents them",
+        "does_not_authorize": "publishing model weights, datasets, evaluation results or the running v2 system; any use with real patient data; any claim of clinical validation"
+      },
+      "rollback": "Delete the artifact, which stops the link working for everyone. The source screens remain in the repository and are unaffected.",
+      "decision": "APPROVED",
+      "result": "Published at https://claude.ai/artifact/36Xkw5XcLSTvy6Jdv1udbm as a private artifact. Eight screens render with a persistent research-prototype banner and the Intake to Console click-through intact. Sharing with test participants remains a separate, deliberate act by the owner.",
+      "linked_records": [
+        "DEC-0019",
+        "DEC-0018",
+        "DEC-0006",
+        "TASK-0036",
+        "TASK-0037"
+      ]
     }
   ]
 }

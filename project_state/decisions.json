@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-09-19T20:30:00+07:00",
+  "updated_at": "2026-09-21T21:30:00+07:00",
   "decisions": [
     {
       "decision_id": "DEC-0001",
@@ -528,6 +528,37 @@
         "Pending: Phurinat Polasa (PM)",
         "Pending: Supreeya Nuamkhayan (Innovation)",
         "Pending: team"
+      ]
+    },
+    {
+      "decision_id": "DEC-0019",
+      "date": "2026-09-21",
+      "title": "Publish the redesign mockups as a public prototype for concept testing",
+      "status": "proposed",
+      "owner": "Phurinat Polasa",
+      "context": "Concept testing of the three solution sketches requires participants to click real screens. None of the eight redesign mockups could be opened by anyone outside the authoring session: each .dc.html loads ./support.js, which does not exist in the repository, and the presentation canvas recorded on TASK-0036 is private. The Figma file is not approved by PM or team.",
+      "decision": "Recompose the eight screens in docs/innovation/v2/mockups/project/ into one self-contained page and publish it as a shareable artifact for use as concept-test stimulus. The published page adds a persistent page-level research-prototype banner, because Before, Nurse-Mobile and Nurse-Tablet never carried the in-screen badge.",
+      "rationale": "Without a shareable stimulus there is no concept test, and the solution claim stays untestable. Recomposition is a strip-and-recompose of existing markup, not new design work: all eight screens share one identical stylesheet.",
+      "alternatives": [
+        "Ship the Figma link - rejected: unapproved, and missing the audit/trace and mobile screens",
+        "Add a support.js runtime to the repository - rejected: reimplements a canvas runtime to serve one review",
+        "Screenshots only - rejected: cannot test the click-through TC-01 to TC-05 depend on"
+      ],
+      "consequences": [
+        "The DEC-0018 product names go out on a public URL, and no trademark search has been done for 'Pratu' or 'CaseGraph'",
+        "The artifact is private on publication and must be shared deliberately with test participants",
+        "A published prototype is not validation: Evidence Board solution rows stay Untested at confidence 1 until concept-test results exist",
+        "All screens use synthetic cases only, satisfying DEC-0006"
+      ],
+      "supersedes": null,
+      "evidence": [
+        "docs/innovation/v2/mockups/project/",
+        "https://claude.ai/artifact/36Xkw5XcLSTvy6Jdv1udbm",
+        "APR-0003"
+      ],
+      "approvers": [
+        "Granted: Phurinat Polasa (APR-0003)",
+        "Pending: team review of the mockups under TASK-0036"
       ]
     }
   ]

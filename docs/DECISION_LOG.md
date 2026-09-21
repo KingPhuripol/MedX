@@ -259,3 +259,15 @@ Machine-readable decisions are in `project_state/decisions.json` and validated a
 - **Alternatives considered:** keep the generic names (JARVIS/Luna would remain); a triage-role name (implies the system triages, beyond the claim boundary).
 - **Consequences:** UI, tests and mockups use Pratu Intake and Pratu Console. No trademark search has been done for "Pratu" or "CaseGraph"; do one before any public release.
 - **Approval:** Pending — Phurinat Polasa (PM), Supreeya Nuamkhayan (Innovation), team. This entry is proposed, not accepted.
+
+## DEC-0019 - Publish the redesign mockups as a public prototype for concept testing
+
+- **Date:** 2026-09-21
+- **Status:** proposed
+- **Owner:** Phurinat Polasa
+- **Decision:** Recompose the eight `.dc.html` screens in `docs/innovation/v2/mockups/project/` into one self-contained page and publish it as a shareable artifact, to be used as the stimulus for concept testing with OPD/ER physicians and triage nurses. Every screen carries the `ต้นแบบวิจัย · ข้อมูลสังเคราะห์` label, and the published page adds a persistent page-level banner because three of the eight screens (Before, Nurse-Mobile, Nurse-Tablet) never carried the in-screen badge.
+- **Rationale:** Concept testing needs the participant to click real screens. The mockups could not be opened by anyone: each `.dc.html` loads `./support.js`, which does not exist in the repository, and the canvas recorded on TASK-0036 is private. The Figma file is not approved. Without a shareable artifact there is no stimulus, and the solution row of the portfolio stays untestable.
+- **Alternatives considered:** ship the Figma link (rejected: unapproved by PM and team, and missing the audit/trace and mobile screens); add the missing `support.js` runtime to the repository (rejected: reimplements a canvas runtime to serve one review); screenshots only (rejected: cannot test the click-through that TC-01 to TC-05 depend on).
+- **Consequences:** The product names from DEC-0018 go out on a public URL, and that decision records that no trademark search has been done for "Pratu" or "CaseGraph". The artifact is private on publication and must be shared deliberately with test participants, not broadcast. A published prototype is not evidence of validation: the Evidence Board solution rows stay `Untested` at confidence 1 until concept-test results exist.
+- **Evidence:** `docs/innovation/v2/mockups/project/` (8 screens + canvas.json); published artifact https://claude.ai/artifact/36Xkw5XcLSTvy6Jdv1udbm; APR-0003.
+- **Approval:** Granted for publication by Phurinat Polasa (APR-0003). Team review of the mockups themselves is still pending under TASK-0036.
