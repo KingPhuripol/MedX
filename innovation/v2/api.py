@@ -67,10 +67,8 @@ def mount(app, service, speech):
     @app.exception_handler(DomainError)
     async def error(request, exc):
         from fastapi.responses import JSONResponse
-        content = {'error': exc.code}
-        if exc.details is not None:
-            content['details'] = exc.details
-        return JSONResponse(status_code=exc.status, content=content)
+        from innovation.api.errors import envelope
+        return JSONResponse(status_code=exc.status, content=envelope(exc.code, str(exc), details=exc.details))
 
     @router.get('/readiness')
     def readiness():

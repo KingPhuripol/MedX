@@ -372,3 +372,19 @@ def test_health_and_ready_are_distinct(client):
 def test_the_correlation_id_is_echoed(client):
     response = client.get("/health", headers={"X-Request-Id": "trace-abc-123"})
     assert response.headers["X-Request-Id"] == "trace-abc-123"
+
+
+def test_a_timestamp_with_no_offset_is_refused_not_crashed(client):
+    """A naive timestamp used to reach `take_snapshot` and fail the first comparison, so a
+    bad request surfaced as a 500 on the temporal rule. The contract requires the UTC or
+    offset form, and the boundary is where that belongs."""
+    naive = json.loads(json.dumps(JOURNEY).replace("Z", ""))
+    naive["journey_id"] = "journey-syn-naive"
+    assert client.put("/journeys/journey-syn-naive", json=naive).status_code == 422
+
+    response = client.post(
+        f"/journeys/{JOURNEY_ID}/assessments",
+        json={"decision_time": "2026-01-01T09:15:00", "missing_information": []},
+    )
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "SCHEMA_INVALID"

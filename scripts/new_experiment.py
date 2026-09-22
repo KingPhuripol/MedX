@@ -12,7 +12,7 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from harness_lib import load_json, validate_file
+from harness_lib import validate_file
 
 
 ROOT = Path(__file__).resolve().parents[1]

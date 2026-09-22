@@ -36,3 +36,5 @@ playwright-report/
 .secrets/
 
 .codex_work/
+.vscode/
+tmp/

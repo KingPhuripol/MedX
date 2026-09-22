@@ -18,7 +18,7 @@ from innovation.v2.models import DesignSpec, ScenarioSpec
 from innovation.v2.runtime import DESIGNS, POLICY
 from innovation.v2.simulation import regression, factorial, execute_scenario
 from innovation.v2.store import digest, DomainError
-from innovation.v2.families import families, execute_family, DATA
+from innovation.v2.families import families, execute_family
 
 
 def provider_from_environment():

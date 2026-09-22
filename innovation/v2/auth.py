@@ -88,6 +88,10 @@ def install_auth(app):
                     if request.method not in {'GET','HEAD','OPTIONS'}:
                         if (actor.role=='evaluator' and request.url.path not in {'/v2/session', '/v2/experiments'}) or (request.url.path.endswith('/review') and actor.role!='physician'):
                             raise DomainError(403,'ROLE_FORBIDDEN')
+
                 except DomainError as exc:
-                    return JSONResponse(status_code=exc.status,content={'error':exc.code})
+                    from innovation.api.errors import envelope
+                    return JSONResponse(status_code=exc.status, content=envelope(exc.code, str(exc), details=exc.details))
+
             return await call_next(request)
+

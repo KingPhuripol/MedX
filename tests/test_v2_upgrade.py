@@ -253,8 +253,11 @@ def test_encounter_list_includes_attention_summary():
         assert client.post('/v2/encounters/attention/events',json=payload).status_code==201
         stale=client.post('/v2/encounters/attention/events',json={**payload,'idempotency_key':'stale'})
         assert stale.status_code==409
-        assert stale.json()=={'error':'STALE_CASE_REVISION','details':{
-            'expected_revision':0,'current_revision':1,'changed_fact_types':['HISTORY']}}
+        body=stale.json()
+        assert body['error']['code']=='STALE_CASE_REVISION'
+        assert body['details']=={
+            'expected_revision':0,'current_revision':1,'changed_fact_types':['HISTORY']}
+
 
 
 def test_workspace_colors_are_tokenized_and_key_pairs_pass_aa():

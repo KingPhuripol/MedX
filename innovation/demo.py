@@ -16,7 +16,7 @@ the prototype exists to demonstrate:
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 from innovation.frontdoor import FrontDoorService, HumanReviewRequired, IntakeItem
 from innovation.gateway import ModelGateway

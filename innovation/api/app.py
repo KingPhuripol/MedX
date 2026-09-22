@@ -17,6 +17,7 @@ from datetime import datetime
 from typing import Literal
 
 from contextlib import asynccontextmanager
+from functools import cache
 
 from fastapi import APIRouter, Body, FastAPI, HTTPException, Path, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -34,18 +35,18 @@ from innovation.frontdoor import (
     IntakeItem,
     UnknownJourney,
 )
-from innovation.frontdoor.service import ACTIONS_REQUIRING_REASON, Recommendation
+from innovation.frontdoor.service import Recommendation
 from innovation.gateway import ModelGateway
 from innovation.gateway.audit import AuditLog
 from innovation.gateway.registry import build_provider
 from innovation.store import SqliteStore
-from shared.contracts.journey import PatientJourney
+from shared.contracts.journey import PatientJourney, Timestamp
 from shared.contracts.model_api import GatewayResponse
 
 class AssessmentRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    decision_time: datetime
+    decision_time: Timestamp
     missing_information: list[str] = Field(default_factory=list)
 
 
@@ -79,8 +80,8 @@ class IntakeItemRequest(BaseModel):
     #: event on the timeline, never an omission.
     state: Literal["KNOWN", "UNKNOWN", "REFUSED", "NOT_AVAILABLE"]
     value: object | None = None
-    observed_at: datetime | None = None
-    available_at_time: datetime | None = None
+    observed_at: Timestamp | None = None
+    available_at_time: Timestamp | None = None
     note: str | None = None
 
     def to_item(self) -> IntakeItem:
@@ -100,7 +101,7 @@ class EncounterRequest(BaseModel):
     journey_id: str = Field(min_length=1)
     patient_id: str = Field(min_length=1)
     encounter_id: str = Field(min_length=1)
-    encounter_start: datetime
+    encounter_start: Timestamp
     items: list[IntakeItemRequest] = Field(min_length=1)
     split: str = "expert_test"
 
@@ -287,7 +288,7 @@ def build_router(service: FrontDoorService) -> APIRouter:
         }
 
     @router.get("/journeys/{journey_id}/next-information")
-    def next_information(journey_id: str, decision_time: datetime) -> InterviewView:
+    def next_information(journey_id: str, decision_time: Timestamp) -> InterviewView:
         """Workflow step 4: ranked information to seek, as of `decision_time`."""
         get_journey(journey_id)
         plan = service.next_information(journey_id, decision_time)
@@ -551,4 +552,15 @@ def create_app(
     return mount_ui(app)
 
 
-app = create_app()
+# Importing this module must not open the database or take the single-owner lock: the
+# subprocess wiring test imports it, and `uvicorn innovation.api.app:app` only ever asks
+# for the attribute. Built once, on first access.
+@cache
+def _app() -> FastAPI:
+    return create_app()
+
+
+def __getattr__(name: str):
+    if name == "app":
+        return _app()
+    raise AttributeError(name)

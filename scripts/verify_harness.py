@@ -8,7 +8,6 @@ import json
 import os
 import py_compile
 import re
-import sys
 from pathlib import Path
 
 from harness_lib import ValidationError, iso_datetime, load_json, parse_frontmatter, validate_file

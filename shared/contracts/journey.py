@@ -13,9 +13,26 @@ artifact instead.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, field_validator
+
+
+def _require_offset(value: datetime) -> datetime:
+    """Refuse a timestamp with no UTC offset.
+
+    The schema's `format: date-time` and PATIENT_JOURNEY_SCHEMA.md both require the UTC
+    or offset form. A naive timestamp parsed anyway does not fail here, it fails at the
+    first comparison inside the snapshot — which turns a caller's bad request into a 500
+    on the temporal rule, the one place that must never look broken.
+    """
+    if value.tzinfo is None:
+        raise ValueError("timestamp must carry a UTC offset, e.g. 2026-01-01T09:00:00Z")
+    return value
+
+
+#: Every contract timestamp. Comparability is the point: the temporal rule is an ordering.
+Timestamp = Annotated[datetime, AfterValidator(_require_offset)]
 
 EventType = Literal[
     "CHIEF_COMPLAINT", "TRIAGE_NOTE", "DEMOGRAPHICS", "HISTORY", "MEDICATION",
@@ -84,9 +101,9 @@ class JourneyEvent(BaseModel):
     event_id: str = Field(min_length=1)
     event_type: EventType
     modality: Modality
-    observed_at: datetime
-    available_at_time: datetime
-    recorded_at: datetime | None = None
+    observed_at: Timestamp
+    available_at_time: Timestamp
+    recorded_at: Timestamp | None = None
     status: EventStatus
     data_classification: DataClassification
     source_ref: EventSourceRef
@@ -154,7 +171,7 @@ class PatientJourney(BaseModel):
     split: Split
     data_classification: DataClassification
     source: JourneySource
-    encounter_start: datetime
+    encounter_start: Timestamp
     events: list[JourneyEvent] = Field(min_length=1)
 
     @field_validator("events")

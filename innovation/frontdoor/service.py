@@ -30,7 +30,6 @@ from innovation.gateway.gateway import ModelGateway
 from shared.contracts.journey import PatientJourney
 from shared.contracts.model_api import (
     Authorization,
-    GatewayResponse,
     EvidenceRef,
     GatewayRequest,
     GatewayResponse,

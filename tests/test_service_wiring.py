@@ -209,3 +209,12 @@ def test_a_review_is_durable_with_its_reviewer(tmp_path, journey):
     trail = AuditLog(store=reopened).find(request_id)
     assert "clinician-42" in {r.reviewer_id for r in trail}
     reopened.close()
+
+
+def test_a_stray_env_file_does_not_configure_the_suite(tmp_path, monkeypatch):
+    from innovation.config import Settings
+
+    (tmp_path / ".env").write_text("FRONT_DOOR_DB=leaked.sqlite3\n")
+    monkeypatch.chdir(tmp_path)
+    assert Settings().db is None
+

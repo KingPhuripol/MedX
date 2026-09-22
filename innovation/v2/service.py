@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from uuid import uuid4
-from innovation.v2.models import (ClinicalFact, CaseRevision, ClinicalDraft, now, DraftContent)
+from innovation.v2.models import (ClinicalFact, CaseRevision, ClinicalDraft, now)
 from innovation.v2.safety import screen_case
 from innovation.v2.store import DomainError, digest
 from innovation.v2.runtime import DESIGNS, validate_content

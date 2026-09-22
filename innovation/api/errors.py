@@ -42,16 +42,20 @@ STATUS_TO_CODE = {
 }
 
 
-def envelope(code: str, message: str, *, details: list | None = None) -> dict:
-    return {
+def envelope(code: str, message: str, *, details: list | dict | None = None) -> dict:
+    det = details if details is not None else []
+    body = {
         "error": {
             "code": code,
             "message": message,
             "request_id": current_request_id(),
-            "details": details or [],
+            "details": det,
         },
         "banner": BANNER,
     }
+    if isinstance(details, dict):
+        body["details"] = details
+    return body
 
 
 def install_error_handlers(app: FastAPI) -> None:

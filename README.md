@@ -6,7 +6,7 @@ Production repository for one five-member Senior Project:
 
 The project has two coordinated tracks:
 
-- **Research:** an open-weight, multi-disease medical multimodal model with a case-adaptive, discrete, typed, inspectable computation DAG. The flagship target is approximately 4B parameters. A 27B model is a stretch goal only after every 4B gate passes.
+- **Research:** an open-weight, multi-disease medical multimodal model with a case-adaptive, discrete, typed, inspectable computation DAG. The flagship target is approximately 27B parameters (DEC-0009, superseding DEC-0002).
 - **Innovation:** an API-first AI Clinical Front Door for intake, urgency assessment, care-pathway support, next-information selection, uncertainty handling, escalation, and clinician confirmation.
 
 This repository is a research and decision-support prototype. It must never claim autonomous diagnosis or treatment.

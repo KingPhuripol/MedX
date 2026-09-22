@@ -8,7 +8,7 @@ from threading import Event
 from uuid import uuid4
 import json
 
-from innovation.v2.models import TurnRequest, now
+from innovation.v2.models import now
 from innovation.v2.store import DomainError, encoded
 
 

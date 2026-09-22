@@ -10,7 +10,6 @@ issues one (`SAFETY_SPEC.md` §Verdict rubric).
 from __future__ import annotations
 
 import subprocess
-from datetime import datetime, timezone
 from pathlib import Path
 
 from innovation.evaluation.cases import EvaluationCase, load_cases

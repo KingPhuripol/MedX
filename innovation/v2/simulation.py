@@ -10,7 +10,7 @@ from innovation.v2.models import (ScenarioSpec, ClinicalFact, EncounterCreate, E
     TurnRequest, ReviewDecision, DraftContent, EvaluationRun)
 from innovation.v2.service import Service, Principal
 from innovation.v2.store import Store, DomainError, digest
-from innovation.v2.runtime import Runtime, DESIGNS, POLICY
+from innovation.v2.runtime import Runtime, POLICY
 from innovation.v2.providers import MockProvider, ProviderResult
 from time import monotonic
 

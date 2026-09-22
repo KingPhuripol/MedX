@@ -7,10 +7,11 @@ structural rather than a convention (contract test 10).
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from shared.contracts.journey import Timestamp
 
 CONTRACT_VERSION = "1.0.0"
 
@@ -63,7 +64,7 @@ class EvidenceRef(BaseModel):
     evidence_id: str = Field(min_length=3)
     event_type: str = Field(min_length=2)
     modality: RequestModality
-    available_at_time: datetime
+    available_at_time: Timestamp
     data_classification: DataClassification
     payload_ref: str = Field(min_length=3)
 
@@ -91,7 +92,7 @@ class GatewayRequest(BaseModel):
     contract_version: Literal["1.0.0"]
     request_id: str = Field(min_length=6)
     journey_id: str = Field(min_length=4)
-    decision_time: datetime
+    decision_time: Timestamp
     task: Task
     evidence: list[EvidenceRef]
     missing_information: list[str]
@@ -193,8 +194,8 @@ class Provenance(BaseModel):
     provider_version: str = Field(min_length=1)
     config_version: str = Field(min_length=1)
     policy_version: str = Field(min_length=1)
-    started_at: datetime
-    completed_at: datetime
+    started_at: Timestamp
+    completed_at: Timestamp
 
 
 class ResponseError(BaseModel):
