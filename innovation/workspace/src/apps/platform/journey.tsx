@@ -6,7 +6,7 @@ import { journeyLabels } from "../../shared/types";
 import { StatusBadge } from "../../shared/ui/StatusBadge";
 
 type Finding = { code: string; severity: "major" | "moderate" | "info"; message: string; order_event_id: string | null; evidence_ids: string[]; source: "rule" | "agent" };
-type Check = { status: string; formulary_version: string; orders: Fact[]; dispenses: Fact[]; findings: Finding[]; limitations: string[];
+type Check = { status: string; formulary_version: string; orders: Fact[]; dispenses: Fact[]; findings: Finding[]; limitations: string[]; allergies: Fact[]; medications: Fact[];
   agent?: { status: string; summary: string | null; model: string; provider: string; error_code?: string; trace: { tool: string; status: string; elapsed_ms: number }[] } };
 type CaseDetail = { encounter_id: string; case_revision: number; events: { fact: Fact }[] };
 
@@ -93,12 +93,14 @@ export function PharmacyPage({ ws, selected }: { ws: Workspace; selected?: strin
     <section className="medx-review-queue"><h2>คิวห้องยา</h2><div className="table-scroll"><table><caption>เคสที่แพทย์ยืนยันแล้วและมีคำสั่งยา · ข้อมูลสังเคราะห์</caption>
       <thead><tr><th scope="col">เคส</th><th scope="col">อายุ</th><th scope="col">ขั้นตอน</th><th scope="col">เปิด</th></tr></thead>
       <tbody>{queue.map(c => <tr key={c.encounter_id} aria-selected={c.encounter_id === selected}><th scope="row">{c.encounter_id}</th><td>{c.age}</td>
-        <td><StatusBadge tone={c.journey_stage === "PHARMACY_HOLD" ? "warning" : "info"}>{journeyLabels[c.journey_stage!]}</StatusBadge></td>
+        <td>{c.escalation?.length ? <StatusBadge tone="danger">ต้องยกระดับ</StatusBadge> : null} <StatusBadge tone={c.journey_stage === "PHARMACY_HOLD" ? "warning" : "info"}>{journeyLabels[c.journey_stage!]}</StatusBadge></td>
         <td><a href={`#/pharmacy/${encodeURIComponent(c.encounter_id)}`}>ตรวจยา {c.encounter_id}</a></td></tr>)}</tbody></table></div>
       {!queue.length ? <p>ยังไม่มีเคสรอจ่ายยา</p> : null}</section>
     {selected && check ? <section className="panel">
       <h2>{selected} · <StatusBadge tone={tone}>{label}</StatusBadge></h2>
       <p className="supporting-text">{check.limitations[0]}</p>
+      <dl className="raw-history"><dt>ประวัติแพ้ยา (ตามที่บันทึก)</dt><dd>{check.allergies.map(f => f.state === "KNOWN" ? String(f.value) : `(${f.state})`).join(" · ") || "ยังไม่มีข้อมูล"}</dd>
+        <dt>ยาที่ใช้อยู่ (ตามที่บันทึก)</dt><dd>{check.medications.map(f => f.state === "KNOWN" ? String(f.value) : `(${f.state})`).join(" · ") || "ยังไม่มีข้อมูล"}</dd></dl>
       <h3>ประเด็นจากกฎตรวจ ({check.findings.filter(f => f.source === "rule").length})</h3>
       <ul className="findings">{check.findings.map((f, i) => <li key={i}><StatusBadge tone={f.severity === "major" ? "danger" : f.severity === "moderate" ? "warning" : "info"}>{f.severity}</StatusBadge> {f.message} {f.source === "agent" ? <em>(agent)</em> : null}</li>)}</ul>
       <button className="button" onClick={() => ws.work(async () => { setCheck(await apiCall<Check>(`/encounters/${encodeURIComponent(selected)}/pharmacy-review`, "POST")); })}>ให้ Pharma Agent ช่วยตรวจเพิ่ม</button>
@@ -123,7 +125,7 @@ export function PharmacyPage({ ws, selected }: { ws: Workspace; selected?: strin
 }
 
 type Passport = { encounter_id: string; age: number; care_context: string; as_of: string; intake: Fact[];
-  physician: { summary: string; reviewed_by: string; reviewed_at: string; still_current: boolean } | null;
+  physician: { summary: string; reviewed_at: string; still_current: boolean } | null;
   orders: (Fact & { dispense: Fact | null; replaced?: boolean })[]; pharmacy: { status: string; findings: Finding[] };
   escalation: string[]; disposition: Fact | null;
   return_precautions: Fact[]; recorded_by: string[]; limitations: string[] };
@@ -151,7 +153,7 @@ export function PassportPage({ ws, encounterId }: { ws: Workspace; encounterId?:
         <a className="button button--secondary" href={`/v2/encounters/${id}/passport/fhir`} download={`medx-passport-${passport.encounter_id}.json`}>ดาวน์โหลด FHIR</a></div></header>
     <section><h3>1 · ข้อมูลแรกรับ</h3><ul>{passport.intake.map(f => <li key={f.event_id}><strong>{kindLabels[f.kind] || f.kind}:</strong> {factText(f)}</li>)}</ul></section>
     <section><h3>2 · สรุปที่แพทย์ยืนยัน</h3>{passport.physician ? <><p className="summary-text">{passport.physician.summary}</p>
-      <p className="supporting-text">ยืนยันโดย {passport.physician.reviewed_by} · {new Date(passport.physician.reviewed_at).toLocaleString("th-TH")}{passport.physician.still_current ? "" : " · มีข้อมูลใหม่หลังยืนยัน ต้องทบทวน"}</p></> : <p>ยังไม่มีสรุปที่แพทย์ยืนยัน</p>}</section>
+      <p className="supporting-text">แพทย์ยืนยันเมื่อ {new Date(passport.physician.reviewed_at).toLocaleString("th-TH")}{passport.physician.still_current ? "" : " · มีข้อมูลใหม่หลังยืนยัน ต้องทบทวน"}</p></> : <p>ยังไม่มีสรุปที่แพทย์ยืนยัน</p>}</section>
     <section><h3>3 · ยา</h3>{passport.orders.length ? <ul>{passport.orders.map(o => <li key={o.event_id}>💊 {orderText(o)} — {o.dispense ? outcomeLabels[(o.dispense.value as { outcome: string }).outcome] : "รอห้องยา"}{o.replaced ? " (แพทย์เปลี่ยนคำสั่งหลังจ่ายยาแล้ว)" : ""}</li>)}</ul> : <p>ไม่มีคำสั่งยา</p>}
       <p className="supporting-text">ผลตรวจห้องยา: {statusLabels[passport.pharmacy.status]?.[0]} ({passport.pharmacy.findings.length} ประเด็น) · ไม่ใช่การยืนยันความปลอดภัยของยา</p></section>
     <section><h3>4 · การตัดสินใจของแพทย์</h3><p>{passport.disposition ? dispositionLabels[(passport.disposition.value as { decision: string }).decision] : "แพทย์ยังไม่ได้บันทึกการตัดสินใจ"}</p></section>

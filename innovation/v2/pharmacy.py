@@ -40,6 +40,8 @@ class PharmacyCheck(Model):
     formulary_version: str
     orders: list[dict]
     dispenses: list[dict]
+    allergies: list[dict] = Field(default_factory=list)  # raw text, shown beside the verdict
+    medications: list[dict] = Field(default_factory=list)
     findings: list[Finding]
     limitations: list[str]
 
@@ -53,6 +55,14 @@ SEPARATORS = re.compile(r"[,/;+|&\n、]|\s-\s|และ|กับ|หรือ|\
 # Latin words left after removing matched names must be accounted for: an unknown brand or
 # drug name beside a known one ("amoxicillin Brufen") is reported, never silently dropped.
 LEFTOVER = re.compile(r"[a-z][a-z0-9-]{3,}")
+# Thai words staff write around a drug name (reaction, timing, units). Any other Thai text left
+# beside a matched drug may be an unknown brand in Thai script, so it is reported.
+THAI_CONTEXT = ['ไม่ทราบชื่อ', 'ไม่แน่ใจ', 'ผื่นลมพิษ', 'ลมพิษ', 'ผื่น', 'คัน', 'บวม', 'หายใจลำบาก', 'แน่นหน้าอก', 'ชื่อยา',
+                'แพ้ยา', 'แพ้', 'ยา', 'เม็ด', 'วันละ', 'ครั้ง', 'ก่อนอาหาร', 'หลังอาหาร', 'เช้า', 'กลางวัน', 'เย็น', 'ก่อนนอน',
+                'เมื่อ', 'ปวด', 'มีไข้', 'ทุก', 'ชม.', 'ชั่วโมง', 'ประจำ', 'ใช้อยู่', 'รุนแรง', 'เล็กน้อย', 'ขึ้น', 'มี', 'ตัว']
+THAI_WORD = re.compile(r"[\u0e00-\u0e7f]{3,}")
+ABBREVIATION = re.compile(r"\b[A-Z]{2,4}\b")
+DOSING_ABBREVIATIONS = {'PO', 'OD', 'BID', 'TID', 'QID', 'PRN', 'MG', 'IV', 'IM', 'SC', 'HS', 'TAB', 'CAP', 'NKDA'}
 NOT_DRUG = {'allergy', 'allergic', 'rash', 'hives', 'itch', 'itching', 'swelling', 'tabs', 'tablet', 'tablets',
             'unknown', 'none', 'nkda', 'drug', 'drugs', 'known', 'daily', 'once', 'twice', 'dose', 'mg', 'with'}
 NO_MEDICATION = NO_ALLERGY | {'ไม่ได้ใช้ยา', 'ไม่มียาประจำ', 'no regular medication'}
@@ -72,6 +82,7 @@ def identify_all(text):
 def parse(text):
     """(keys, unresolved parts): a list entry the formulary cannot name is reported, never ignored."""
     keys, unresolved = [], []
+    abbreviations = [a.lower() for a in ABBREVIATION.findall(str(text)) if a not in DOSING_ABBREVIATIONS]
     for part in (p.strip() for p in SEPARATORS.split(str(text).lower())):
         if not part:
             continue
@@ -84,7 +95,10 @@ def parse(text):
         for aliases in formulary()['class_aliases'].values():
             for alias in aliases:
                 rest = rest.replace(alias, ' ')
-        leftover = [w for w in LEFTOVER.findall(rest) if w not in NOT_DRUG]
+        for word in THAI_CONTEXT:
+            rest = rest.replace(word, ' ')
+        leftover = [w for w in LEFTOVER.findall(rest) if w not in NOT_DRUG] + THAI_WORD.findall(rest) \
+            + [a for a in abbreviations if re.search(rf"\b{a}\b", rest)]
         if not named or leftover:
             unresolved.append(' '.join(leftover) if named else part)
     return keys, unresolved
@@ -192,7 +206,7 @@ def check(events) -> PharmacyCheck:
     else:
         status = 'NO_RULE_FINDINGS'
     return PharmacyCheck(status=status, formulary_version=table['version'],
-        orders=orders, dispenses=dispenses, findings=findings,
+        orders=orders, dispenses=dispenses, findings=findings, allergies=allergies, medications=medications,
         limitations=[f"ตรวจเฉพาะยา {len(table['drugs'])} รายการ และคู่ยาตีกัน {len(table['interactions'])} คู่ในตำรับทดลอง "
                      "ที่ยังไม่ผ่านการทบทวนทางคลินิก ไม่พบประเด็นไม่ได้แปลว่าปลอดภัย",
                      'ผลตรวจนี้ช่วยเภสัชกรเท่านั้น การจ่ายยาเป็นการตัดสินใจของเภสัชกร'])

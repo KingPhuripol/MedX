@@ -168,3 +168,15 @@ def test_every_list_joiner_and_unknown_brand_is_accounted_for():  # re-review MA
                  order('o', 'paracetamol')]).status == 'NEEDS_PHARMACIST_REVIEW'  # conflict with "ไม่มี", not a leftover
     assert 'ALLERGY_UNRESOLVED' not in {f.code for f in check([ev('a', 'ALLERGY', 'แพ้ penicillin ผื่นลมพิษ rash'),
         ev('m', 'MEDICATION', 'ไม่มี'), order('o', 'paracetamol')]).findings}
+
+
+def test_thai_script_brands_and_abbreviations_beside_a_drug_are_reported():  # re-review MINOR-A
+    for allergy, drug in [('แพ้ amoxicillin บรูเฟน', 'ibuprofen'), ('แพ้อะม็อกซีซิลลิน บรูเฟน', 'ibuprofen'),
+                          ('amoxicillin ASA', 'aspirin')]:
+        result = check([ev('a', 'ALLERGY', allergy), ev('m', 'MEDICATION', 'ไม่มี'), order('o', drug)])
+        assert 'ALLERGY_UNRESOLVED' in {f.code for f in result.findings}, allergy
+    meds = check([ev('a', 'ALLERGY', 'ไม่มี'), ev('m', 'MEDICATION', 'warfarin ซอลอฟท์'), order('o', 'tramadol')])
+    assert 'MEDICATION_UNRESOLVED' in {f.code for f in meds.findings}
+    for allergy in ['แพ้ penicillin ผื่นลมพิษ', 'แพ้แอสไพรินและเพนิซิลลิน']:  # ordinary context words stay quiet
+        found = check([ev('a', 'ALLERGY', allergy), ev('m', 'MEDICATION', 'warfarin 3 mg วันละครั้ง'), order('o', 'paracetamol')])
+        assert not {'ALLERGY_UNRESOLVED', 'MEDICATION_UNRESOLVED'} & {f.code for f in found.findings}, allergy
