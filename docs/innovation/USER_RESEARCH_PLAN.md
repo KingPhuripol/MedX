@@ -1,6 +1,6 @@
 # Clinical Front Door — User Research and Usability Plan
 
-**Status:** ready to recruit; no participant results recorded yet  
+**Status:** ready to recruit; no participant results recorded yet. Round 2 instrument for Prototype V2: `USABILITY_TEST_V2.md`  
 **Product stage:** hospital-pilot concept using synthetic cases only  
 **Participants:** 5–8 supervised emergency-department staff across triage/intake nursing and physician review roles
 
