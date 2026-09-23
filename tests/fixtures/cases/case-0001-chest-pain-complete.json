@@ -24,5 +24,8 @@
   "appended": [],
   "expected_minimum_urgency": "URGENT_REVIEW",
   "provider_behaviour": "normal",
-  "notes": "Complete-evidence case; the screen cannot read the complaint so the flag stays UNKNOWN."
+  "notes": "Complete-evidence case; the screen cannot read the complaint so the flag stays UNKNOWN.",
+  "care_setting": "ED_FIRST_CONTACT_TRIAGE",
+  "presentation_type": "WALK_IN",
+  "expected_maximum_urgency": "IMMEDIATE_REVIEW"
 }

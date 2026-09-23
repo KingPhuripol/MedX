@@ -24,5 +24,8 @@
   "appended": [],
   "expected_minimum_urgency": "INSUFFICIENT_INFORMATION",
   "provider_behaviour": "failure",
-  "notes": null
+  "notes": null,
+  "care_setting": "ED_FIRST_CONTACT_TRIAGE",
+  "presentation_type": "WALK_IN",
+  "expected_maximum_urgency": "INSUFFICIENT_INFORMATION"
 }

@@ -166,6 +166,9 @@ class SafetyPolicy:
 
     version = SAFETY_POLICY_VERSION
 
+    def __init__(self, *, flag_unread_complaint: bool = True) -> None:
+        self.flag_unread_complaint = flag_unread_complaint
+
     def missing_required_evidence(self, request: GatewayRequest) -> frozenset[str]:
         """Required evidence types absent from the request, for front-door tasks."""
         if request.task != "CLINICAL_FRONT_DOOR":
@@ -186,6 +189,7 @@ class SafetyPolicy:
             complaint_evidence_ids=[
                 e.evidence_id for e in request.evidence if e.event_type == "CHIEF_COMPLAINT"
             ],
+            flag_unread_complaint=self.flag_unread_complaint,
         )
 
     @staticmethod

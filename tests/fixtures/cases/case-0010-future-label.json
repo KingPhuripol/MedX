@@ -34,5 +34,8 @@
   ],
   "expected_minimum_urgency": "URGENT_REVIEW",
   "provider_behaviour": "normal",
-  "notes": "The label must be withheld from a 09:30 decision."
+  "notes": "The label must be withheld from a 09:30 decision.",
+  "care_setting": "ED_FIRST_CONTACT_TRIAGE",
+  "presentation_type": "WALK_IN",
+  "expected_maximum_urgency": "IMMEDIATE_REVIEW"
 }

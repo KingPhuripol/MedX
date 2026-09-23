@@ -29,5 +29,8 @@
   "appended": [],
   "expected_minimum_urgency": "URGENT_REVIEW",
   "provider_behaviour": "normal",
-  "notes": "A declined item must not be re-queued as a question."
+  "notes": "A declined item must not be re-queued as a question.",
+  "care_setting": "ED_FIRST_CONTACT_TRIAGE",
+  "presentation_type": "WALK_IN",
+  "expected_maximum_urgency": "IMMEDIATE_REVIEW"
 }

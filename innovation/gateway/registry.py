@@ -16,6 +16,7 @@ import os
 
 from innovation.gateway.providers.base import Provider
 from innovation.gateway.providers.baseline import BaselineProvider
+from innovation.gateway.providers.external import ExternalPrototypeProvider
 from innovation.gateway.providers.mock import MockProvider
 
 #: Providers that run entirely locally with no network access.
@@ -24,9 +25,10 @@ LOCAL_PROVIDERS: dict[str, type] = {
     "baseline": BaselineProvider,
 }
 
-#: Providers that would reach outside the process. None is implemented yet; the mapping
-#: exists so that adding one is a registry entry plus an approval, not an edit to a client.
-EXTERNAL_PROVIDERS: dict[str, type] = {}
+#: Providers that reach outside the process.
+EXTERNAL_PROVIDERS: dict[str, type] = {
+    "external_prototype": ExternalPrototypeProvider,
+}
 
 #: Every provider name that reaches outside the process, whether or not an adapter for it
 #: is implemented here. `ProviderName` in the Model API Contract declares

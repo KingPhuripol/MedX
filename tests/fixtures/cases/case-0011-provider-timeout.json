@@ -24,5 +24,8 @@
   "appended": [],
   "expected_minimum_urgency": "INSUFFICIENT_INFORMATION",
   "provider_behaviour": "timeout",
-  "notes": "A safe unavailable response; the human workflow must remain usable."
+  "notes": "A safe unavailable response; the human workflow must remain usable.",
+  "care_setting": "ED_FIRST_CONTACT_TRIAGE",
+  "presentation_type": "WALK_IN",
+  "expected_maximum_urgency": "INSUFFICIENT_INFORMATION"
 }

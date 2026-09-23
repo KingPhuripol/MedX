@@ -36,5 +36,8 @@
   ],
   "expected_minimum_urgency": "URGENT_REVIEW",
   "provider_behaviour": "normal",
-  "notes": "Conflict is preserved, not resolved for the clinician."
+  "notes": "Conflict is preserved, not resolved for the clinician.",
+  "care_setting": "ED_FIRST_CONTACT_TRIAGE",
+  "presentation_type": "WALK_IN",
+  "expected_maximum_urgency": "IMMEDIATE_REVIEW"
 }

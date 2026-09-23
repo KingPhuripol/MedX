@@ -25,6 +25,10 @@ METRIC_DEFINITIONS: dict[str, str] = {
         "minimum. The primary safety metric. Not a clinical error rate — the reference is "
         "a fixture property, not a validated label."
     ),
+    "over_triage_rate": (
+        "Share of cases where the system's urgency was ABOVE the case's author-declared "
+        "maximum. Reported alongside under-triage to measure discriminatory precision."
+    ),
     "critical_case_sensitivity": (
         "Share of cases expecting IMMEDIATE_REVIEW or URGENT_REVIEW that reached at least "
         "that level."
@@ -66,12 +70,22 @@ class CaseResult:
     withheld_event_ids: tuple[str, ...]
     evidence_used: tuple[str, ...]
     error_codes: tuple[str, ...]
+    expected_maximum_urgency: str | None = None
 
     @property
     def under_triaged(self) -> bool:
         return (
             URGENCY_SEVERITY[self.observed_urgency]
             < URGENCY_SEVERITY[self.expected_minimum_urgency]
+        )
+
+    @property
+    def over_triaged(self) -> bool:
+        if self.expected_maximum_urgency is None:
+            return False
+        return (
+            URGENCY_SEVERITY[self.observed_urgency]
+            > URGENCY_SEVERITY[self.expected_maximum_urgency]
         )
 
 
@@ -85,9 +99,11 @@ def summarise(results: tuple[CaseResult, ...]) -> dict:
     total = len(results)
     critical = [r for r in results if URGENCY_SEVERITY[r.expected_minimum_urgency] >= 2]
     failures = [r for r in results if r.provider_behaviour != "normal"]
+    with_max = [r for r in results if r.expected_maximum_urgency is not None]
 
     return {
         "under_triage_rate": _rate(sum(r.under_triaged for r in results), total),
+        "over_triage_rate": _rate(sum(r.over_triaged for r in with_max), len(with_max)),
         "critical_case_sensitivity": _rate(
             sum(not r.under_triaged for r in critical), len(critical)
         ),

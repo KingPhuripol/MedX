@@ -56,9 +56,13 @@ def _provider_for(case: EvaluationCase, provider_name: str | None):
     return build_provider(provider_name)
 
 
-def run_case(case: EvaluationCase, provider_name: str | None = None) -> CaseResult:
+def run_case(
+    case: EvaluationCase,
+    provider_name: str | None = None,
+    safety_policy: SafetyPolicy | None = None,
+) -> CaseResult:
     """Run one case end to end through the Front Door."""
-    gateway = ModelGateway(_provider_for(case, provider_name))
+    gateway = ModelGateway(_provider_for(case, provider_name), safety_policy=safety_policy)
     service = FrontDoorService(gateway)
     try:
         service.create_encounter(
@@ -71,7 +75,12 @@ def run_case(case: EvaluationCase, provider_name: str | None = None) -> CaseResu
         for item in case.appended:
             service.append_evidence(case.journey_id, item, default_time=case.encounter_start)
 
-        recommendation = service.assess(service.journey(case.journey_id), case.decision_time)
+        out_of_scope = case.care_setting != "ED_FIRST_CONTACT_TRIAGE"
+        recommendation = service.assess(
+            service.journey(case.journey_id),
+            case.decision_time,
+            out_of_distribution=out_of_scope,
+        )
         response = recommendation.response
         return CaseResult(
             case_id=case.case_id,
@@ -84,6 +93,7 @@ def run_case(case: EvaluationCase, provider_name: str | None = None) -> CaseResu
             withheld_event_ids=tuple(e for e, _ in recommendation.withheld),
             evidence_used=tuple(response.urgency.evidence_ids),
             error_codes=tuple(e.code for e in response.errors),
+            expected_maximum_urgency=case.expected_maximum_urgency,
         )
     finally:
         gateway.close()
@@ -95,10 +105,11 @@ def run_evaluation(
     provider_name: str | None = None,
     cases: tuple[EvaluationCase, ...] | None = None,
     manifest_ids: tuple[str, ...] = ("exp_0001",),
+    safety_policy: SafetyPolicy | None = None,
 ) -> tuple[dict, tuple[CaseResult, ...]]:
     """Run every case and build a contract-valid evaluation record."""
     cases = cases if cases is not None else load_cases()
-    results = tuple(run_case(c, provider_name) for c in cases)
+    results = tuple(run_case(c, provider_name, safety_policy=safety_policy) for c in cases)
     metrics = summarise(results)
 
     provider = build_provider(provider_name)

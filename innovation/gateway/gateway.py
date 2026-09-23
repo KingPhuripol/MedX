@@ -78,13 +78,21 @@ class ModelGateway:
             max_workers=max_workers, thread_name_prefix="gateway-provider"
         )
 
+    @staticmethod
+    def for_workflow(provider):
+        """Select the versioned synthetic workflow contract without changing v1."""
+        from innovation.gateway.workflow import WorkflowGateway
+        return provider if isinstance(provider, WorkflowGateway) else WorkflowGateway(provider)
+
     def close(self) -> None:
         """Release the provider worker. Safe to call more than once."""
         self._executor.shutdown(wait=False, cancel_futures=True)
 
     # ------------------------------------------------------------------ public API
 
-    def infer(self, payload: dict | GatewayRequest) -> GatewayResponse:
+    def infer(
+        self, payload: dict | GatewayRequest, *, out_of_distribution: bool | None = None
+    ) -> GatewayResponse:
         """Run one request end to end. Always returns a contract-valid response.
 
         Failures become `FAILED_SAFE` responses carrying a structured error, rather than
@@ -111,7 +119,9 @@ class ModelGateway:
             # Its findings are established independently of whatever the model then says.
             screen_result = self.safety.screen(request)
             output = self._call_provider(request)
-            response = self._build_response(request, output, started_at, screen_result)
+            response = self._build_response(
+                request, output, started_at, screen_result, out_of_distribution=out_of_distribution
+            )
         except ContractViolation as violation:
             response = self._safe_failure(request, violation, started_at)
 
@@ -265,13 +275,19 @@ class ModelGateway:
         output: ProviderOutput,
         started_at: datetime,
         screen_result: "ScreenResult | None" = None,
+        out_of_distribution: bool | None = None,
     ) -> GatewayResponse:
+        effective_ood = (
+            out_of_distribution
+            if out_of_distribution is not None
+            else output.uncertainty.out_of_distribution
+        )
         decision = self.safety.apply(
             request,
             output.urgency,
             output.red_flags,
             screen_result,
-            out_of_distribution=output.uncertainty.out_of_distribution,
+            out_of_distribution=effective_ood,
         )
 
         errors: list[ResponseError] = []

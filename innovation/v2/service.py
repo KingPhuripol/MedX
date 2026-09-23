@@ -203,12 +203,16 @@ class Service:
                             ])),
                         })
                     })
+                from innovation.v2.graph import finish_artifact
+                finish_artifact(run, content)
                 draft = ClinicalDraft(draft_id=uuid4().hex, encounter_id=encounter_id,
                     case_revision=snapshot.case_revision, snapshot=snapshot, content=content,
                     screen=screen, provenance={**run.provenance},
                     created_by=actor.subject)
                 self.store.append("draft", draft.draft_id, draft.model_dump(mode="json"))
                 run.draft_id = draft.draft_id
+            from innovation.v2.graph import finish_artifact
+            finish_artifact(run, content)
             data = run.model_dump(mode="json")
             data.update(user_text=body.text, created_at=now().isoformat(), actor=actor.subject, intent=body.intent)
             self.store.append("run", encounter_id, data)

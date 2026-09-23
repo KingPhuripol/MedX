@@ -78,6 +78,9 @@ def mount(app, service, speech):
     @router.get('/capabilities')
     def capabilities(actor=Depends(identity)):
         return {'profile': 'synthetic_intake_v1', 'role': actor.role,
+            'gateway_contract': service.runtime.provider.contract_version,
+            'modalities': service.runtime.provider.modalities,
+            'raw_image_analysis': False,
             'provider': service.runtime.provider.name, 'model': service.runtime.provider.model_version,
             'differential': service.runtime.allow_differential and 'differential' in service.runtime.provider.capabilities and actor.role=='physician',
             'speech': speech.__class__.__name__ != 'UnavailableSpeech',
@@ -131,6 +134,11 @@ def mount(app, service, speech):
         from innovation.v2.models import now
         return service.snapshot(encounter_id, now()).model_dump(mode='json')
 
+    @router.get('/encounters/{encounter_id}/screen')
+    def screen(encounter_id: str):
+        from innovation.v2.models import now
+        return service.runtime.provider.prepare(service.snapshot(encounter_id, now())).model_dump(mode='json')
+
     @router.post('/encounters/{encounter_id}/events', status_code=201)
     def event(encounter_id: str, body: EventRequest, actor=Depends(identity)):
         return service.append_event(encounter_id, body, actor)
@@ -157,6 +165,20 @@ def mount(app, service, speech):
     @router.get('/drafts/{draft_id}/evidence/{evidence_id}')
     def draft_evidence(draft_id: str, evidence_id: str, actor=Depends(identity)):
         return service.draft_evidence(draft_id, evidence_id, actor)
+
+    @router.get('/runs/{run_id}/graph')
+    def graph(run_id: str, actor=Depends(identity)):
+        service.require(actor, {'physician', 'evaluator'})
+        artifact = service.run(run_id)['provenance'].get('execution')
+        if artifact is None:
+            raise DomainError(404, 'GRAPH_NOT_RECORDED')
+        return artifact
+
+    @router.get('/runs/{run_id}/replay')
+    def replay_run(run_id: str, actor=Depends(identity)):
+        service.require(actor, {'physician', 'evaluator'})
+        from innovation.v2.graph import replay
+        return replay(service.run(run_id)['provenance'].get('execution'))
 
     @router.get('/runs/{run_id}')
     def run(run_id: str):

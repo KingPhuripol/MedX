@@ -189,6 +189,8 @@ class DesignSpec(Model):
     design_id: str = Field(pattern=r"^[a-z0-9_-]{1,64}$")
     nodes: list[Literal["intake", "check", "draft", "verify"]] = Field(min_length=1, max_length=4)
     prompt_version: Literal["grounded-v1", "concise-v1"] = "grounded-v1"
+    routing: Literal["static", "adaptive", "random"] = "static"
+    routing_seed: int = 0
 
     @model_validator(mode="after")
     def structure(self):
@@ -204,7 +206,7 @@ class DesignSpec(Model):
 class TurnRequest(Mutation):
     text: str = Field(min_length=1, max_length=10000)
     decision_time: AwareDatetime
-    design_id: Literal["form", "single", "fixed"] = "single"
+    design_id: Literal["form", "single", "fixed", "adaptive", "random", "static_dag"] = "single"
     intent: Literal["conversation", "draft"] = "draft"  # Preserve existing v2 clients.
 
 

@@ -249,6 +249,7 @@ class FrontDoorService:
         external_provider_allowed: bool = False,
         approval_id: str | None = None,
         timeout_ms: int = 10_000,
+        out_of_distribution: bool | None = None,
     ) -> Recommendation:
         """Snapshot the journey at `decision_time`, ask the gateway, hold for review.
 
@@ -274,7 +275,7 @@ class FrontDoorService:
         if already is not None:
             return already
 
-        response = self.gateway.infer(request)
+        response = self.gateway.infer(request, out_of_distribution=out_of_distribution)
 
         recommendation = Recommendation(
             recommendation_id=existing_id,

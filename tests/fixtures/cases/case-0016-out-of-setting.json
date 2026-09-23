@@ -1,0 +1,31 @@
+{
+  "case_id": "case-0016-out-of-setting",
+  "scenario": "out_of_setting_presentation",
+  "description": "Pediatric trauma case presenting to adult ED triage; triggers out-of-scope escalation.",
+  "journey_id": "journey-case-0016-out-of-setting",
+  "encounter_start": "2026-01-01T13:00:00Z",
+  "decision_time": "2026-01-01T13:10:00Z",
+  "intake": [
+    {
+      "information_type": "CHIEF_COMPLAINT",
+      "state": "KNOWN",
+      "value": "5-year-old child pedestrian struck by motor vehicle with head laceration."
+    },
+    {
+      "information_type": "VITAL",
+      "state": "KNOWN",
+      "value": {
+        "code": "heart_rate",
+        "value": 135,
+        "unit": "beats/min"
+      }
+    }
+  ],
+  "appended": [],
+  "expected_minimum_urgency": "URGENT_REVIEW",
+  "expected_maximum_urgency": "IMMEDIATE_REVIEW",
+  "care_setting": "PEDIATRIC_MAJOR_TRAUMA",
+  "presentation_type": "AMBULANCE",
+  "provider_behaviour": "normal",
+  "notes": "Presentation outside evaluated adult non-trauma setting; requires out-of-scope escalation or abstention."
+}

@@ -1,0 +1,31 @@
+{
+  "case_id": "case-0014-mild-rash-routine",
+  "scenario": "routine_presentation",
+  "description": "Minor localized rash with normal vitals and no systemic features.",
+  "journey_id": "journey-case-0014-mild-rash-routine",
+  "encounter_start": "2026-01-01T12:00:00Z",
+  "decision_time": "2026-01-01T12:15:00Z",
+  "intake": [
+    {
+      "information_type": "CHIEF_COMPLAINT",
+      "state": "KNOWN",
+      "value": "Localized mild itchy rash on right forearm for 3 days."
+    },
+    {
+      "information_type": "VITAL",
+      "state": "KNOWN",
+      "value": {
+        "code": "heart_rate",
+        "value": 72,
+        "unit": "beats/min"
+      }
+    }
+  ],
+  "appended": [],
+  "expected_minimum_urgency": "ROUTINE_REVIEW",
+  "expected_maximum_urgency": "ROUTINE_REVIEW",
+  "care_setting": "ED_FIRST_CONTACT_TRIAGE",
+  "presentation_type": "WALK_IN",
+  "provider_behaviour": "normal",
+  "notes": "Low-acuity routine presentation; tests discriminatory over-triage rate under complaint screening."
+}

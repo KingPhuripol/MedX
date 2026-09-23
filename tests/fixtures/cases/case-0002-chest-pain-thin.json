@@ -20,5 +20,8 @@
   "appended": [],
   "expected_minimum_urgency": "URGENT_REVIEW",
   "provider_behaviour": "normal",
-  "notes": "Missing required evidence must escalate, never conclude."
+  "notes": "Missing required evidence must escalate, never conclude.",
+  "care_setting": "ED_FIRST_CONTACT_TRIAGE",
+  "presentation_type": "WALK_IN",
+  "expected_maximum_urgency": "IMMEDIATE_REVIEW"
 }

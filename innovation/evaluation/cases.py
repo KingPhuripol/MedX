@@ -29,6 +29,9 @@ class EvaluationCase:
     appended: tuple[IntakeItem, ...]
     expected_minimum_urgency: str
     provider_behaviour: str
+    expected_maximum_urgency: str | None = None
+    care_setting: str = "ED_FIRST_CONTACT_TRIAGE"
+    presentation_type: str = "WALK_IN"
     notes: str | None = None
 
 
@@ -62,6 +65,9 @@ def load_cases(directory: Path | None = None) -> tuple[EvaluationCase, ...]:
                 appended=tuple(_item(i) for i in raw["appended"]),
                 expected_minimum_urgency=raw["expected_minimum_urgency"],
                 provider_behaviour=raw["provider_behaviour"],
+                expected_maximum_urgency=raw.get("expected_maximum_urgency"),
+                care_setting=raw.get("care_setting", "ED_FIRST_CONTACT_TRIAGE"),
+                presentation_type=raw.get("presentation_type", "WALK_IN"),
                 notes=raw.get("notes"),
             )
         )

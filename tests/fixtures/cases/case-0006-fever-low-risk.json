@@ -24,5 +24,8 @@
   "appended": [],
   "expected_minimum_urgency": "URGENT_REVIEW",
   "provider_behaviour": "normal",
-  "notes": "Even a low-risk presentation escalates while no rule can read the complaint. That conservatism is a property of the current mock, and is reported, not hidden."
+  "notes": "Even a low-risk presentation escalates while no rule can read the complaint. That conservatism is a property of the current mock, and is reported, not hidden.",
+  "care_setting": "ED_FIRST_CONTACT_TRIAGE",
+  "presentation_type": "WALK_IN",
+  "expected_maximum_urgency": "URGENT_REVIEW"
 }

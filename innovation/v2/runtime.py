@@ -5,8 +5,13 @@ from innovation.v2.tools import invoke
 from innovation.v2.providers import CALL_RESERVATION
 from innovation.v2.models import AgentRun, DesignSpec, DraftContent, ToolEvent
 from innovation.v2.store import DomainError, digest
+from innovation.v2.graph import compile_graph, finish_artifact
+from pydantic_core import to_jsonable_python
 
 DESIGNS = {
+    "adaptive": DesignSpec(design_id="adaptive", nodes=["intake", "check", "draft", "verify"], routing="adaptive"),
+    "random": DesignSpec(design_id="random", nodes=["draft"], routing="random"),
+    "static_dag": DesignSpec(design_id="static_dag", nodes=["intake", "check", "draft", "verify"]),
     "form": DesignSpec(design_id="form", nodes=["draft"]),
     "single": DesignSpec(design_id="single", nodes=["intake", "draft"]),
     "fixed": DesignSpec(design_id="fixed", nodes=["intake", "check", "draft", "verify"]),
@@ -36,9 +41,19 @@ def validate_content(content: DraftContent, snapshot, allow_differential=False):
 
 class Runtime:
     def __init__(self, provider, allow_differential=False, timeout_seconds=30):
-        self.provider = provider
+        from innovation.gateway.gateway import ModelGateway
+        self.provider = ModelGateway.for_workflow(provider)
         self.allow_differential = allow_differential
         self.timeout_seconds = timeout_seconds
+
+    @property
+    def provider(self):
+        return self._provider
+
+    @provider.setter
+    def provider(self, value):
+        from innovation.gateway.gateway import ModelGateway
+        self._provider = ModelGateway.for_workflow(value)
 
     def execute(self, snapshot, text, design, prior_calls=0, prior_turns=0, intent="draft", role="physician", cancel_check=None, history=None):
         design = DesignSpec.model_validate(design.model_dump())
@@ -50,7 +65,13 @@ class Runtime:
                 "config_hash": digest({"timeout": self.timeout_seconds, "differential": self.allow_differential})})
         if prior_turns >= 20 or prior_calls >= 30:
             run.status, run.error_code = "BUDGET_EXCEEDED", "CASE_BUDGET_EXCEEDED"
+            finish_artifact(run, None)
             return run, None
+        graph = compile_graph(snapshot, design, self.timeout_seconds)
+        if intent == "draft":
+            run.provenance["execution"] = {"graph": graph.model_dump(mode="json"),
+                "input": {"snapshot": snapshot.model_dump(mode="json"), "text": text}, "steps": []}
+        run.provenance["gateway_contract"] = self.provider.contract_version
         start = monotonic()
         content = None
         missing = []
@@ -72,6 +93,8 @@ class Runtime:
                     raise DomainError(409, 'JOB_CANCELLED')
                 if monotonic() - start > self.timeout_seconds:
                     raise DomainError(504, "RUN_TIMEOUT")
+                if "execution" in run.provenance:
+                    run.provenance["execution"]["steps"].append({"tool": name, "output": to_jsonable_python(result)})
                 return result
             except Exception:
                 event.status = "FAILED"
@@ -82,6 +105,9 @@ class Runtime:
                 run.provenance['reserved_cost_usd'] = run.provenance.get('reserved_cost_usd',0.0) + CALL_RESERVATION.get()
 
         try:
+            # Pre-inference screen is independent of selected nodes and provider output.
+            screen = self.provider.prepare(snapshot)
+            run.provenance["safety_screen"] = screen.model_dump(mode="json")
             tool("read_snapshot", lambda: snapshot)
             if intent == "conversation":
                 if 'conversation' not in self.provider.capabilities or not hasattr(self.provider, 'converse'):
@@ -97,8 +123,10 @@ class Runtime:
                         raise DomainError(502, 'INVALID_PROPOSAL')
                     run.proposals.append(FactProposal(proposal_id=uuid4().hex, fact=fact).model_dump(mode='json'))
                 run.status, run.response = 'COMPLETED', result.response
+                finish_artifact(run, None)
                 return run, None
-            for node in design.nodes:
+            executed_design = design.model_copy(update={"nodes": [n.operator for n in graph.nodes], "routing": "static"})
+            for node in executed_design.nodes:
                 if node == "intake":
                     def propose():
                         if text:
@@ -123,7 +151,7 @@ class Runtime:
                 elif node == "draft":
                     if 'summary' not in self.provider.capabilities:
                         raise DomainError(422, "UNSUPPORTED_CAPABILITY")
-                    result = tool("create_draft", lambda: self.provider.infer(snapshot, text, design))
+                    result = tool("create_draft", lambda: self.provider.infer(snapshot, text, executed_design))
                     # Every design must pass this gate, even without a verify reasoning node.
                     content = validate_content(result.content, snapshot,
                         self.allow_differential and 'differential' in self.provider.capabilities)
@@ -136,6 +164,7 @@ class Runtime:
             questions = [p["text"] for p in run.proposals if p["kind"] == "QUESTION"]
             if questions:
                 run.response += " · " + questions[0]
+            finish_artifact(run, content)
             return run, content
         except Exception as exc:
             code = exc.code if isinstance(exc, DomainError) else "INVALID_PROVIDER_OUTPUT"
@@ -144,4 +173,5 @@ class Runtime:
             if run.trace:
                 run.trace[-1].status = "FAILED"
                 run.trace[-1].error_code = code
+            finish_artifact(run, None)
             return run, None

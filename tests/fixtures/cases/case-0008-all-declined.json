@@ -25,5 +25,8 @@
   "appended": [],
   "expected_minimum_urgency": "URGENT_REVIEW",
   "provider_behaviour": "normal",
-  "notes": "Refusal is not absence, and must not be re-asked."
+  "notes": "Refusal is not absence, and must not be re-asked.",
+  "care_setting": "ED_FIRST_CONTACT_TRIAGE",
+  "presentation_type": "WALK_IN",
+  "expected_maximum_urgency": "IMMEDIATE_REVIEW"
 }
