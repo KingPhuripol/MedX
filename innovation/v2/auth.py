@@ -15,7 +15,7 @@ def install_auth(app):
     principals=[]
     if settings.auth_mode=='token':
         principals=json.loads(settings.principals_file.read_text())['principals']
-        if not principals or any(not {'token','subject','role'} <= set(p) or set(p)-{'token','subject','role','workspace'} or p['role'] not in {'intake','physician','evaluator'} or not isinstance(p['token'],str) or not p['token'] or not p['subject'] for p in principals):
+        if not principals or any(not {'token','subject','role'} <= set(p) or set(p)-{'token','subject','role','workspace'} or p['role'] not in {'intake','physician','pharmacist','evaluator'} or not isinstance(p['token'],str) or not p['token'] or not p['subject'] for p in principals):
             raise ValueError('Invalid principals[{token,subject,role}]')
         if len({p['token'] for p in principals})!=len(principals):
             raise ValueError('Duplicate principal token')

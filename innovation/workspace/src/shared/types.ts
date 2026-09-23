@@ -24,6 +24,7 @@ export type Case = {
   age: number;
   case_revision: number;
   handoff_status?: string;
+  journey_stage?: string;
   attention?: AttentionSummary;
   events?: { fact: Fact }[];
 };
@@ -123,7 +124,7 @@ export type Job = {
 
 export type Session = {
   subject: string;
-  role: "intake" | "physician" | "evaluator";
+  role: "intake" | "physician" | "pharmacist" | "evaluator";
   workspace: string;
   csrf: string;
 };
@@ -205,6 +206,14 @@ export const handoffLabels: Record<string, string> = {
   CONFIRMED: "ยืนยันแล้ว",
   STALE: "ต้องตรวจใหม่",
   REJECTED: "ถูกปฏิเสธ",
+};
+
+export const journeyLabels: Record<string, string> = {
+  INTAKE: "รับข้อมูล",
+  DOCTOR_REVIEW: "รอแพทย์",
+  PHARMACY: "ห้องยา",
+  PHARMACY_HOLD: "ห้องยา-พัก",
+  READY_HOME: "กลับบ้านได้",
 };
 
 export function humanizeClinicalText(value: string): string {

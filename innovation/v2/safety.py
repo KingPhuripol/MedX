@@ -23,6 +23,7 @@ from innovation.v2.models import CaseRevision, SafetyScreen
 
 
 SAFETY_POLICY_VERSION = "safety-policy-v2-pilot"
+IN_SCOPE_CONTEXTS = frozenset({"ED_FIRST_CONTACT_ADULT_NON_TRAUMA_NON_OBSTETRIC", "OPD_ADULT_GENERAL"})
 
 
 def screen_case(snapshot: CaseRevision) -> SafetyScreen:
@@ -49,7 +50,7 @@ def screen_case(snapshot: CaseRevision) -> SafetyScreen:
     red_flags = list(result.red_flags)
     applied_rules = list(result.applied_rules)
     urgency_floor = result.urgency_floor
-    if snapshot.care_context != "ED_FIRST_CONTACT_ADULT_NON_TRAUMA_NON_OBSTETRIC":
+    if snapshot.care_context not in IN_SCOPE_CONTEXTS:
         red_flags.append(RedFlag(
             code="OUT_OF_SCOPE_PRESENTATION", state="TRIGGERED", evidence_ids=[]
         ))
