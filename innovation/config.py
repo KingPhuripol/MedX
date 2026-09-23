@@ -85,6 +85,8 @@ class Settings(BaseSettings):
     # ----------------------------------------------------------------------- auth
     auth_mode: AuthMode = "none"
     principals_file: Path | None = None
+    #: Role of the single local user when auth_mode=none (loopback only); lets one laptop demo each station.
+    demo_role: Literal["intake", "physician", "pharmacist", "evaluator"] = "physician"
 
     # -------------------------------------------------------------------- logging
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"

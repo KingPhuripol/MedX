@@ -21,6 +21,7 @@ from functools import cache
 
 from fastapi import APIRouter, Body, FastAPI, HTTPException, Path, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from innovation.api.errors import install_error_handlers
@@ -461,6 +462,22 @@ def create_app(
 
     # Probes are infrastructure, not API: they stay unversioned so a deployment does not
     # have to learn the contract version to know whether the process is alive.
+    @app.get("/", response_class=HTMLResponse, include_in_schema=False)
+    def hub() -> str:
+        """One page that links every MedX station (DEC-0021)."""
+        links = [("① Voice Agent · รับข้อมูล/ซักประวัติ", "/nurse#/voice"),
+                 ("หมอทบทวนร่าง · สั่งยา · Red flag กลับบ้าน", "/platform#/cases"),
+                 ("② ห้องยา · Pharma Agent", "/platform#/pharmacy"),
+                 ("③ Dashboard Monitoring", "/platform#/dashboard"),
+                 ("④ Universal Med Passport (เปิดจากเคส)", "/platform#/passport"),
+                 ("API docs", "/docs")]
+        items = "".join(f'<li><a href="{href}">{label}</a></li>' for label, href in links)
+        return ('<!doctype html><html lang="th"><meta charset="utf-8"><meta name="viewport" content="width=device-width">'
+                '<title>MedX</title><style>body{font-family:system-ui,sans-serif;max-width:640px;margin:40px auto;padding:0 16px;'
+                'line-height:1.6}li{margin:8px 0}a{font-size:1.1em}</style><h1>MedX · OPD journey</h1>'
+                '<p>ต้นแบบงานวิจัย ข้อมูลสังเคราะห์เท่านั้น · ระบบช่วยเสนอ คนเป็นผู้ตัดสินใจ</p>'
+                f'<ol>{items}</ol></html>')
+
     @app.get("/health")
     def health() -> dict:
         """Liveness. Touches nothing, so it answers even when a dependency is down."""
@@ -527,8 +544,12 @@ def create_app(
                     settings.v2_paid_budget_usd, settings.v2_call_reservation_usd)
                 if settings.v2_transport == 'openai_compatible':
                     from innovation.v2.compatible import CompatibleProvider
+                    # Free mode is per endpoint: a loopback speech server can stay free while a
+                    # remote model (e.g. gpt-6-luna) still reserves from the paid budget.
+                    from urllib.parse import urlparse
+                    loopback = urlparse(url).hostname in {'localhost', '127.0.0.1', '::1'}
                     return CompatibleProvider(config, budget, settings.v2_capabilities,
-                        local_free=settings.v2_local_free, json_mode=settings.v2_json_mode,
+                        local_free=settings.v2_local_free and loopback, json_mode=settings.v2_json_mode,
                         max_tokens=settings.v2_max_tokens)
                 return HttpProvider(config, budget, settings.v2_capabilities)
             if settings.v2_provider_url:

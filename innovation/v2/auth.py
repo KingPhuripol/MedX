@@ -24,7 +24,7 @@ def install_auth(app):
     session_lock = RLock()
 
     def identity(request: Request, authorization: str | None = Header(default=None)):
-        if settings.auth_mode=='none':return Principal('local-demo','physician')
+        if settings.auth_mode=='none':return Principal('local-demo',settings.demo_role)
         if not isinstance(authorization, str):
             authorization = request.headers.get('authorization')
         if not authorization:
@@ -80,7 +80,7 @@ def install_auth(app):
     if settings.auth_mode=='token':
         @app.middleware('http')
         async def protect(request,call_next):
-            public=request.url.path in {'/health','/ready','/docs','/docs/oauth2-redirect','/openapi.json','/redoc','/ui/v2','/workspace','/platform','/nurse'} or request.url.path.startswith(('/v2-assets/', '/workspace-assets/')) or (request.url.path == '/v2/session' and request.method == 'POST')
+            public=request.url.path in {'/','/health','/ready','/docs','/docs/oauth2-redirect','/openapi.json','/redoc','/ui/v2','/workspace','/platform','/nurse'} or request.url.path.startswith(('/v2-assets/', '/workspace-assets/')) or (request.url.path == '/v2/session' and request.method == 'POST')
             if not public:
                 try:
                     actor=identity(request, request.headers.get('authorization'))
