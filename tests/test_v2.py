@@ -164,7 +164,7 @@ def test_api_workflow_and_access(tmp_path):
 def test_separate_platform_and_nurse_entrypoints():
     """DEC-0017: each path serves its own bundle; /workspace is only a redirect."""
     with TestClient(create_app()) as c:
-        for path, title in (('/platform', 'Pratu Console'), ('/nurse', 'Pratu Intake')):
+        for path, title in (('/platform', 'MedX Clinical Review'), ('/nurse', 'MedX Intake')):
             response = c.get(path)
             assert response.status_code == 200
             assert '<div id="root"></div>' in response.text
@@ -305,3 +305,10 @@ def test_a_review_body_cannot_carry_its_own_screen(service):
         ReviewDecision(expected_revision=1, idempotency_key='k', draft_revision=1,
                        expected_review_sequence=0, action='CONFIRM',
                        screen={'policy_version': 'forged', 'urgency_floor': 'ROUTINE_REVIEW'})
+
+
+def test_mock_summary_renders_measurements_readably():
+    from types import SimpleNamespace
+    from innovation.v2.providers import line
+    vital = SimpleNamespace(kind="VITAL", state="KNOWN", value={"name": "ชีพจร", "value": 112, "unit": "bpm"})
+    assert line(vital) == "VITAL: ชีพจร 112 bpm"

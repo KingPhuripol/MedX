@@ -101,7 +101,7 @@ export function useWorkspace() {
     if (!current) return;
     await work(async () => {
       const textToRun = customText !== undefined ? customText : (message || "เตรียมร่างส่งต่อ");
-      const created = await apiCall<Job>(`/encounters/${current.encounter_id}/jobs`, "POST", { expected_revision: current.case_revision, idempotency_key: createIdempotencyKey(), text: textToRun, decision_time: new Date().toISOString(), intent, design_id: intent === "draft" ? "fixed" : "single" });
+      const created = await apiCall<Job>(`/encounters/${current.encounter_id}/jobs`, "POST", { expected_revision: current.case_revision, idempotency_key: createIdempotencyKey(), text: textToRun, decision_time: new Date().toISOString(), intent, design_id: intent === "draft" ? "adaptive" : "single" });
       setJob(created);
       if (["queued", "running"].includes(created.status)) sessionStorage.setItem("frontdoor-job", created.job_id);
       else { await load(current.encounter_id); if (created.status === "completed" && intent === "conversation" && created.result?.user_text === messageRef.current) setMessage(""); if (created.status === "failed") throw Error(jobError(created.error_code)); }

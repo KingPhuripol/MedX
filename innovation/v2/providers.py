@@ -27,7 +27,11 @@ class Transcript(Model):
 
 def line(fact):
     from innovation.v2.store import encoded
-    value = fact.value if isinstance(fact.value, str) else encoded(fact.value)
+    value = fact.value
+    if isinstance(value, dict) and {"name", "value", "unit"} <= value.keys():
+        value = f"{value['name']} {value['value']} {value['unit']}"
+    elif not isinstance(value, str):
+        value = encoded(value)
     return f"{fact.kind}: {value if fact.state == 'KNOWN' else fact.state}"
 
 

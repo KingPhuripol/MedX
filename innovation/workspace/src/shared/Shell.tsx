@@ -7,6 +7,7 @@ import "@fontsource/prompt/700.css";
 import "./tokens.css";
 import "./style.css";
 import "./redesign.css";
+import "./medx.css";
 import { ApiError, apiCall, hasPendingRequest, retryPendingRequest } from "./api";
 import type { Session } from "./types";
 import type { Workspace } from "./useWorkspace";
@@ -58,7 +59,7 @@ export function Shell<P extends string>({ product, identity, nav, page, onNaviga
       <div className="navigation__footer">{session ? <><span className="avatar" aria-hidden="true">{session.subject.slice(0, 1).toUpperCase()}</span><div><strong>{session.subject}</strong><span>{roleLabels[session.role]}</span></div><button className="button button--text" onClick={ws.signOut}>ออกจากระบบ</button></> : <span>ระบบต้นแบบ</span>}</div>
     </aside>
     <div className="app-body">
-      <header className="topbar"><div><span className="eyebrow">Clinical workspace · synthetic_intake_v1</span><h1>{title}</h1><p className="topbar__subtitle">{description}</p></div><StatusBadge tone={caps?.provider === "mock-v2" ? "warning" : "info"}>{caps?.provider === "mock-v2" ? "Offline · Mock provider" : "รอผลประเมินโมเดลจริง"}</StatusBadge></header>
+      <header className="topbar"><div><span className="eyebrow">RESEARCH PROTOTYPE · HUMAN REVIEW REQUIRED</span><h1>{title}</h1><p className="topbar__subtitle">{description}</p></div><StatusBadge tone={caps?.provider === "mock-v2" ? "warning" : "info"}>{caps?.provider === "mock-v2" ? "Offline · Mock provider" : "รอผลประเมินโมเดลจริง"}</StatusBadge></header>
       <div className="synthetic-banner" role="note"><span aria-hidden="true">i</span><div><strong>พื้นที่ทดลองสำหรับข้อมูลสังเคราะห์</strong><p>ต้องมีบุคลากรตรวจทุกครั้ง · ระบบไม่วินิจฉัย สั่งยา สั่งตรวจ หรือส่งต่อผู้ป่วย</p></div></div>
       <main id="main" tabIndex={-1}>
         <div className="global-status" aria-live="polite">

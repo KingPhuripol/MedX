@@ -271,3 +271,14 @@ Machine-readable decisions are in `project_state/decisions.json` and validated a
 - **Consequences:** The product names from DEC-0018 go out on a public URL, and that decision records that no trademark search has been done for "Pratu" or "CaseGraph". The artifact is private on publication and must be shared deliberately with test participants, not broadcast. A published prototype is not evidence of validation: the Evidence Board solution rows stay `Untested` at confidence 1 until concept-test results exist.
 - **Evidence:** `docs/innovation/v2/mockups/project/` (8 screens + canvas.json); published artifact https://claude.ai/artifact/36Xkw5XcLSTvy6Jdv1udbm; APR-0003.
 - **Approval:** Granted for publication by Phurinat Polasa (APR-0003). Team review of the mockups themselves is still pending under TASK-0036.
+
+## DEC-0020 - The Innovation product is named MedX (supersedes DEC-0018 if accepted)
+
+- **Date:** 2026-09-23
+- **Status:** proposed
+- **Owner:** Phurinat Polasa
+- **Decision:** The product is **MedX**, still described as a Clinical Front Door. The nurse app at `/nurse` and the physician and evaluator app at `/platform` carry the MedX name; the backend keeps its current module names. The assistant keeps no persona name. The Research model working name (CaseGraph) and the academic project title are unchanged.
+- **Rationale:** The working build, the e2e tests and the Prototype V2 usability sessions already use MedX; one name across build, tests and user testing avoids participants seeing two brands.
+- **Alternatives considered:** revert to Pratu (rejected by the owner on 2026-09-23 for the V2 test round).
+- **Consequences:** DEC-0018 is superseded once this entry is accepted. The public showcase in `prototype/` and the DEC-0019 artifact still say Pratu and are not used as the V2 test stimulus. No trademark search has been done for "MedX"; do one before any public release.
+- **Approval:** Pending — Phurinat Polasa (PM), Supreeya Nuamkhayan (Innovation), team. This entry is proposed, not accepted.

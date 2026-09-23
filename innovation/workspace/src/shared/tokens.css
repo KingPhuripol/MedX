@@ -1,38 +1,39 @@
 :root {
-  /* Gemini-inspired light palette (TASK-0036). Reference primitives: keep exact values here; components use semantic tokens. */
+  /* MedX neutral and purple palette. Reference primitives: keep exact values here; components use semantic tokens. */
+  --accent-purple: #8F47BF;
   --primitive-black: #000000;
   --primitive-white: #ffffff;
-  --primitive-link-blue: #0b57d0;
-  --primitive-brand-blue: #0b57d0;
+  --primitive-link-blue: #6C2993;
+  --primitive-brand-blue: #6C2993;
   --primitive-reference-gray: #747775;
 
-  --surface-brand: #0b57d0;
-  --surface-canvas: #faf9f9;
+  --surface-brand: #6C2993;
+  --surface-canvas: #E6E8E8;
   --surface-panel: var(--primitive-white);
-  --surface-subtle: #f2f0f0;
-  --surface-selected: #d3e3fd;
-  --surface-brand-soft: #eef3fd;
-  --surface-brand-muted: #d3e3fd;
-  --surface-info: #d3e3fd;
+  --surface-subtle: #F2F0F4;
+  --surface-selected: #EDE2F5;
+  --surface-brand-soft: #F6F0FA;
+  --surface-brand-muted: #EDE2F5;
+  --surface-info: #EDE2F5;
   --surface-success: #c4eed0;
   --surface-warning: #ffefc9;
   --surface-danger: #f9dedc;
   --surface-disabled: #e3e3e3;
 
   --text-on-brand: var(--primitive-white);
-  --text-primary: #1f1f1f;
+  --text-primary: #15191A;
   --text-secondary: #444746;
   --text-muted: #444746;
   --text-link: var(--primitive-link-blue);
-  --text-info: #0842a0;
+  --text-info: #6C2993;
   --text-success: #0f5223;
   --text-warning: #6d4c00;
   --text-danger: #8c1d18;
   --text-disabled: #747775;
 
   --action-primary: var(--primitive-brand-blue);
-  --action-primary-hover: #0842a0;
-  --action-primary-active: #062e6f;
+  --action-primary-hover: #6C2993;
+  --action-primary-active: #3C1D5D;
   --action-danger: #b3261e;
   --action-danger-hover: #8c1d18;
   --focus-ring: var(--primitive-brand-blue);
@@ -45,10 +46,10 @@
   --border-warning: #e6c47a;
   --border-danger: #f2b8b5;
 
-  --surface-sidebar: #f2f0f0;
-  --surface-sidebar-active: #d3e3fd;
+  --surface-sidebar: #15191A;
+  --surface-sidebar-active: #EDE2F5;
   --surface-elevated: #ffffff;
-  --surface-inverse: #1f1f1f;
+  --surface-inverse: #15191A;
   --text-inverse-muted: #c4c7c5;
   --accent-warm: #e8b04b;
   --border-sidebar: #e3e3e3;

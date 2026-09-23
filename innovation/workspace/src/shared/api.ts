@@ -35,7 +35,7 @@ export const setCsrfToken = (value: string) => { csrfToken = value; };
 export const hasPendingRequest = () => pendingRequest !== null;
 export const clearPendingRequest = () => { pendingRequest = null; };
 
-export async function apiCall<T>(path: string, method = "GET", body?: unknown): Promise<T> {
+export async function apiCall<T>(path: string, method = "GET", body?: unknown, headers: Record<string, string> = {}): Promise<T> {
   // Sign-in and sign-out stay open while a request is unresolved: they write no clinical data,
   // and blocking them would leave an expired session unable to authenticate to retry anything.
   if (pendingRequest && method !== "GET" && !path.startsWith("/session")) {
@@ -44,7 +44,7 @@ export async function apiCall<T>(path: string, method = "GET", body?: unknown): 
   const options: RequestInit = {
     method,
     credentials: "same-origin",
-    headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
+    headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken, ...headers },
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
   };
   return sendApi<T>(path, options);
