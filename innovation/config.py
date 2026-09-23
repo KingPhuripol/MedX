@@ -49,6 +49,10 @@ class Settings(BaseSettings):
     # ------------------------------------------------------------------ providers
     provider: str = "mock"
     allow_external: bool = False
+    external_provider_url: str = "https://api.openai.com/v1"
+    external_provider_api_key: str = Field(default="", repr=False)
+    external_model: str = "gpt-4o-mini"
+    external_timeout_seconds: float = Field(default=15.0, ge=1.0, le=120.0)
     #: Threads available for provider calls. It was fixed at one, which serialised the
     #: entire API behind a single provider thread.
     provider_concurrency: int = Field(default=4, ge=1, le=32)
