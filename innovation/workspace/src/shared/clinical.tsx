@@ -194,7 +194,8 @@ export function Review({ draft, revision, canReview, act, onDirty, onAddMissing 
   const summaryEdited = summary !== baseline.summary;
   const outstandingEdited = outstanding !== baseline.outstanding;
   const dirty = summaryEdited || outstandingEdited;
-  const stale = draft.case_revision !== revision || draft.status === "SUPERSEDED" || draft.status === "STALE";
+  // The server decides staleness: journey facts (orders, dispenses) advance the revision without staling a draft.
+  const stale = draft.status === "SUPERSEDED" || draft.status === "STALE";
   // The gateway already copies screen limitations into content.limitations; show each once.
   const limitations = [...new Set([...(draft.screen?.limitations || []), ...(draft.content.limitations || []), ...(draft.content.uncertainty?.reasons || [])])];
 

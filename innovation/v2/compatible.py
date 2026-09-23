@@ -41,6 +41,36 @@ class CompatibleProvider(HttpProvider):
         except (httpx.HTTPError, ValueError):
             raise DomainError(502, 'PROVIDER_FAILURE') from None
 
+    def limits(self, payload):
+        if 'luna' in self.config.model.lower() or self.config.model.startswith(('o1', 'o3', 'gpt-5', 'gpt-6')):
+            payload['max_completion_tokens'] = self.max_tokens
+        else:
+            payload['max_tokens'] = self.max_tokens
+            payload['temperature'] = 0
+        return payload
+
+    def tool_step(self, messages, tools, output):
+        """One chat-completions turn with function calling; the harness executes the calls."""
+        if 'tools' not in self.capabilities:
+            raise DomainError(422, 'UNSUPPORTED_CAPABILITY')
+        response = self.transport('/chat/completions', json=self.limits({
+            'model': self.config.model, 'messages': messages, 'tools': tools, 'tool_choice': 'auto',
+            'response_format': {'type': 'json_schema', 'json_schema': {
+                'name': output.__name__, 'schema': output.model_json_schema()}}}))
+        try:
+            choice = response['choices'][0]
+            message = choice['message']
+            calls = message.get('tool_calls') or []
+            if calls:
+                return {'message': {'role': 'assistant', 'content': message.get('content'), 'tool_calls': calls},
+                        'tool_calls': [{'id': c['id'], 'name': c['function']['name'],
+                                        'arguments': c['function'].get('arguments')} for c in calls]}
+            if choice.get('finish_reason') != 'stop':
+                raise DomainError(502, 'INCOMPLETE_PROVIDER_OUTPUT')
+            return {'final': json.loads(message['content'])}
+        except (KeyError, IndexError, TypeError, ValueError):
+            raise DomainError(502, 'INVALID_PROVIDER_OUTPUT') from None
+
     def structured(self, model, data, purpose):
         output_format = {'type': 'json_object'} if self.json_mode == 'json_object' else {
             'type': 'json_schema', 'json_schema': {'name': model.__name__, 'schema': model.model_json_schema()}}
@@ -54,12 +84,7 @@ class CompatibleProvider(HttpProvider):
                     ' Reply with JSON matching this schema: ' + json.dumps(model.model_json_schema())},
                 {'role': 'user', 'content': json.dumps(data, ensure_ascii=False)}],
         }
-        if 'luna' in self.config.model.lower() or self.config.model.startswith(('o1', 'o3', 'gpt-5')):
-            payload['max_completion_tokens'] = self.max_tokens
-        else:
-            payload['max_tokens'] = self.max_tokens
-            payload['temperature'] = 0
-        response = self.transport('/chat/completions', json=payload)
+        response = self.transport('/chat/completions', json=self.limits(payload))
         try:
             choice = response['choices'][0]
             if choice.get('finish_reason') != 'stop':

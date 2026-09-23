@@ -346,6 +346,33 @@ class Service:
                 record['content'] = {**record['content'], 'differentials': []}
         return result
 
+    def pharmacy_check(self, encounter_id, actor):
+        from innovation.v2.pharmacy import check
+        self.require(actor, {"pharmacist", "physician"})
+        self.authorize_case(encounter_id, actor)
+        return check(self.case(encounter_id)["events"]).model_dump(mode="json")
+
+    def pharmacy_review(self, encounter_id, actor):
+        """Pharma Agent run: rule floor plus a model note. It records a run, never a dispense."""
+        from innovation.v2.pharmacy import check, review
+        self.require(actor, {"pharmacist"})
+        self.authorize_case(encounter_id, actor)
+        case = self.case(encounter_id)
+        provider = self.runtime.provider
+        agent = {"run_id": uuid4().hex, "provider": provider.name, "model": provider.model_version,
+                 "case_revision": case["case_revision"], "created_at": now().isoformat()}
+        try:
+            result, summary, trace = review(provider, case["events"])
+            agent.update(status="COMPLETED", summary=summary, trace=[t.model_dump(mode="json") for t in trace])
+        except DomainError as exc:
+            result = check(case["events"])
+            agent.update(status="FAILED_SAFE", error_code=exc.code, summary=None, trace=[])
+        self.store.append("pharmacy_review", encounter_id, {**agent, "status_verdict": result.status})
+        self.audit(encounter_id, "PHARMACY_AGENT_RUN", actor, run_id=agent["run_id"], agent_status=agent["status"],
+                   verdict=result.status, model=agent["model"], provider=agent["provider"],
+                   case_revision=case["case_revision"])
+        return {**result.model_dump(mode="json"), "agent": agent}
+
     def journey_stage(self, encounter_id, handoff):
         """OPD journey stage derived from handoff status and journey facts; no extra state."""
         if handoff == 'NO_DRAFT':

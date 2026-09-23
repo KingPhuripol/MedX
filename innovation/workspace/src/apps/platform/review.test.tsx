@@ -75,7 +75,7 @@ it("blocks approval while edits are unsaved, then sends actual modified content"
 it("blocks stale review and keeps snapshot evidence visible", () => {
   render(
     <Review
-      draft={draft}
+      draft={{ ...draft, status: "STALE" }}
       revision={2}
       canReview
       act={vi.fn()}
@@ -180,6 +180,6 @@ it("does not rewrite stored clinical text that the reviewer never edited", () =>
 });
 
 it("says why confirming is unavailable instead of only disabling the button", () => {
-  render(<Review draft={draft} revision={2} canReview act={vi.fn()} onDirty={() => {}} />);
+  render(<Review draft={{ ...draft, status: "STALE" }} revision={2} canReview act={vi.fn()} onDirty={() => {}} />);
   expect(screen.getByText(/ต้องสร้างหรือตรวจร่างฉบับล่าสุดก่อน/)).toBeTruthy();
 });

@@ -1,0 +1,243 @@
+{
+  "version": "formulary-v1-synthetic",
+  "clinical_reviewed": false,
+  "notice": "Demo formulary for synthetic cases only. Not a clinical reference. Interaction list is deliberately small and incomplete; absence of a pair does not mean the combination is safe.",
+  "drugs": {
+    "amoxicillin": {
+      "atc": "J01CA04",
+      "class": "penicillin",
+      "chembl": "CHEMBL1082",
+      "th": "อะม็อกซีซิลลิน"
+    },
+    "penicillin v": {
+      "atc": "J01CE02",
+      "class": "penicillin",
+      "chembl": null,
+      "th": "เพนิซิลลินวี"
+    },
+    "cefalexin": {
+      "atc": "J01DB01",
+      "class": "cephalosporin",
+      "chembl": "CHEMBL1727",
+      "th": "เซฟาเลกซิน"
+    },
+    "azithromycin": {
+      "atc": "J01FA10",
+      "class": "macrolide",
+      "chembl": null,
+      "th": "อะซิโทรมัยซิน"
+    },
+    "clarithromycin": {
+      "atc": "J01FA09",
+      "class": "macrolide",
+      "chembl": "CHEMBL1741",
+      "th": "คลาริโทรมัยซิน"
+    },
+    "paracetamol": {
+      "atc": "N02BE01",
+      "class": "analgesic",
+      "chembl": null,
+      "th": "พาราเซตามอล"
+    },
+    "ibuprofen": {
+      "atc": "M01AE01",
+      "class": "nsaid",
+      "chembl": "CHEMBL521",
+      "th": "ไอบูโพรเฟน"
+    },
+    "naproxen": {
+      "atc": "M01AE02",
+      "class": "nsaid",
+      "chembl": null,
+      "th": "นาพรอกเซน"
+    },
+    "aspirin": {
+      "atc": "B01AC06",
+      "class": "nsaid",
+      "chembl": null,
+      "th": "แอสไพริน"
+    },
+    "warfarin": {
+      "atc": "B01AA03",
+      "class": "anticoagulant",
+      "chembl": "CHEMBL1464",
+      "th": "วาร์ฟาริน"
+    },
+    "simvastatin": {
+      "atc": "C10AA01",
+      "class": "statin",
+      "chembl": null,
+      "th": "ซิมวาสแตติน"
+    },
+    "metformin": {
+      "atc": "A10BA02",
+      "class": "biguanide",
+      "chembl": null,
+      "th": "เมทฟอร์มิน"
+    },
+    "amlodipine": {
+      "atc": "C08CA01",
+      "class": "ccb",
+      "chembl": null,
+      "th": "แอมโลดิพีน"
+    },
+    "enalapril": {
+      "atc": "C09AA02",
+      "class": "ace_inhibitor",
+      "chembl": null,
+      "th": "อีนาลาพริล"
+    },
+    "losartan": {
+      "atc": "C09CA01",
+      "class": "arb",
+      "chembl": null,
+      "th": "โลซาร์แทน"
+    },
+    "spironolactone": {
+      "atc": "C03DA01",
+      "class": "k_sparing_diuretic",
+      "chembl": "CHEMBL1393",
+      "th": "สไปโรโนแลกโทน"
+    },
+    "omeprazole": {
+      "atc": "A02BC01",
+      "class": "ppi",
+      "chembl": null,
+      "th": "โอเมพราโซล"
+    },
+    "loratadine": {
+      "atc": "R06AX13",
+      "class": "antihistamine",
+      "chembl": null,
+      "th": "ลอราทาดีน"
+    },
+    "tramadol": {
+      "atc": "N02AX02",
+      "class": "opioid",
+      "chembl": null,
+      "th": "ทรามาดอล"
+    },
+    "sertraline": {
+      "atc": "N06AB06",
+      "class": "ssri",
+      "chembl": null,
+      "th": "เซอร์ทราลีน"
+    }
+  },
+  "cross_reactive_classes": [
+    [
+      "penicillin",
+      "cephalosporin"
+    ]
+  ],
+  "interactions": [
+    {
+      "a": "warfarin",
+      "b": "class:nsaid",
+      "severity": "major",
+      "effect": "เพิ่มความเสี่ยงเลือดออก",
+      "pubmed_query": "warfarin NSAID bleeding risk interaction"
+    },
+    {
+      "a": "warfarin",
+      "b": "clarithromycin",
+      "severity": "major",
+      "effect": "INR สูงขึ้น เสี่ยงเลือดออก",
+      "pubmed_query": null
+    },
+    {
+      "a": "simvastatin",
+      "b": "clarithromycin",
+      "severity": "major",
+      "effect": "เพิ่มระดับ statin เสี่ยงกล้ามเนื้อสลาย",
+      "pubmed_query": "clarithromycin simvastatin rhabdomyolysis interaction"
+    },
+    {
+      "a": "spironolactone",
+      "b": "class:ace_inhibitor",
+      "severity": "major",
+      "effect": "เสี่ยงโพแทสเซียมในเลือดสูง",
+      "pubmed_query": "spironolactone ACE inhibitor hyperkalemia"
+    },
+    {
+      "a": "spironolactone",
+      "b": "class:arb",
+      "severity": "major",
+      "effect": "เสี่ยงโพแทสเซียมในเลือดสูง",
+      "pubmed_query": null
+    },
+    {
+      "a": "tramadol",
+      "b": "class:ssri",
+      "severity": "major",
+      "effect": "เสี่ยง serotonin syndrome",
+      "pubmed_query": null
+    },
+    {
+      "a": "class:nsaid",
+      "b": "class:ace_inhibitor",
+      "severity": "moderate",
+      "effect": "ลดผลลดความดัน และเสี่ยงไตเสื่อม",
+      "pubmed_query": null
+    },
+    {
+      "a": "class:nsaid",
+      "b": "class:arb",
+      "severity": "moderate",
+      "effect": "ลดผลลดความดัน และเสี่ยงไตเสื่อม",
+      "pubmed_query": null
+    },
+    {
+      "a": "class:nsaid",
+      "b": "class:ssri",
+      "severity": "moderate",
+      "effect": "เพิ่มความเสี่ยงเลือดออกในทางเดินอาหาร",
+      "pubmed_query": null
+    },
+    {
+      "a": "amlodipine",
+      "b": "clarithromycin",
+      "severity": "moderate",
+      "effect": "ระดับยาลดความดันสูงขึ้น ความดันต่ำ",
+      "pubmed_query": null
+    },
+    {
+      "a": "simvastatin",
+      "b": "amlodipine",
+      "severity": "moderate",
+      "effect": "เพิ่มระดับ simvastatin (จำกัดขนาดยา)",
+      "pubmed_query": null
+    }
+  ],
+  "class_aliases": {
+    "penicillin": [
+      "penicillin",
+      "เพนิซิลลิน",
+      "เพนนิซิลลิน"
+    ],
+    "cephalosporin": [
+      "cephalosporin",
+      "เซฟาโลสปอริน"
+    ],
+    "nsaid": [
+      "nsaid",
+      "nsaids",
+      "เอ็นเสด"
+    ],
+    "macrolide": [
+      "macrolide",
+      "แมคโครไลด์"
+    ],
+    "statin": [
+      "statin",
+      "สแตติน"
+    ],
+    "ace_inhibitor": [
+      "ace inhibitor",
+      "acei"
+    ],
+    "ssri": [
+      "ssri"
+    ]
+  }
+}

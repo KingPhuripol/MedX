@@ -140,6 +140,14 @@ def mount(app, service, speech):
         from innovation.v2.models import now
         return service.runtime.provider.prepare(service.snapshot(encounter_id, now())).model_dump(mode='json')
 
+    @router.get('/encounters/{encounter_id}/pharmacy-check')
+    def pharmacy_check(encounter_id: str, actor=Depends(identity)):
+        return service.pharmacy_check(encounter_id, actor)
+
+    @router.post('/encounters/{encounter_id}/pharmacy-review')
+    def pharmacy_review(encounter_id: str, actor=Depends(identity)):
+        return service.pharmacy_review(encounter_id, actor)
+
     @router.post('/encounters/{encounter_id}/events', status_code=201)
     def event(encounter_id: str, body: EventRequest, actor=Depends(identity)):
         return service.append_event(encounter_id, body, actor)

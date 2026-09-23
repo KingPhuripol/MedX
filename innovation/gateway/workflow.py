@@ -76,3 +76,9 @@ class WorkflowGateway:
 
     def converse(self, snapshot, text, design):
         return self.converse_with_history(snapshot, text, design, [])
+
+    def tool_step(self, messages, tools, output):
+        # Function calling crosses the same gateway boundary; tools themselves stay local.
+        if "tools" not in self.capabilities or not hasattr(self.adapter, "tool_step"):
+            raise DomainError(422, "UNSUPPORTED_CAPABILITY")
+        return self.adapter.tool_step(messages, tools, output)

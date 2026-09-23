@@ -4,6 +4,7 @@ import { FactView, Review, AgentTrace } from "../../shared/clinical";
 import { handoffLabels, journeyLabels } from "../../shared/types";
 import { StatusBadge } from "../../shared/ui/StatusBadge";
 import { History } from "./system";
+import { OrdersPanel } from "./journey";
 export function CasesPage({ ws, changeCase }: { ws: Workspace; changeCase: (id: string) => void }) {
   const latest = ws.drafts.at(-1);
   const queue = ws.cases.filter(c => c.handoff_status && c.handoff_status !== "NO_DRAFT");
@@ -13,6 +14,7 @@ export function CasesPage({ ws, changeCase }: { ws: Workspace; changeCase: (id: 
     {ws.current ? <>
       <section className="medx-casebar"><div><h2>{ws.current.encounter_id}</h2><p>ข้อมูลรุ่น {ws.current.case_revision} · ผู้ป่วยสมมติ {ws.current.age} ปี</p></div><button className="button button--secondary" onClick={() => ws.work(async () => { await ws.load(ws.current!.encounter_id); await ws.loadList(); })}>โหลดข้อมูลล่าสุด</button><a href={`/nurse#/voice/${encodeURIComponent(ws.current.encounter_id)}/facts`}>แก้ข้อมูลต้นทางใน Intake</a></section>
       {latest ? <Review key={latest.draft_id} draft={latest} revision={ws.current.case_revision} canReview={ws.session?.role === "physician"} act={ws.act} onDirty={value => ws.trackDirty(latest.draft_id, value)} /> : <p>เคสนี้ยังไม่มีร่าง กรุณาเตรียมร่างใน MedX Intake</p>}
+      {ws.session?.role === "physician" ? <OrdersPanel ws={ws} encounterId={ws.current.encounter_id} /> : null}
       <details className="panel"><summary>ข้อเท็จจริงต้นทางปัจจุบัน ({ws.facts.length})</summary>{ws.facts.map(f => <FactView key={f.event_id} fact={f} />)}</details>
       <History key={`${ws.current.encounter_id}:${ws.current.case_revision}:${latest?.review_sequence}`} encounter={ws.current.encounter_id} />
       <details className="panel"><summary>กราฟและ trace สำหรับตรวจสอบ</summary>{ws.runs.map(run => <section key={run.run_id}><AgentTrace run={run} /><a href={`/v2/runs/${run.run_id}/graph`} target="_blank" rel="noreferrer">เปิดกราฟที่บันทึก</a></section>)}</details>

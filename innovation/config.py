@@ -74,7 +74,7 @@ class Settings(BaseSettings):
     v2_paid_budget_usd: float = Field(default=0, ge=0, allow_inf_nan=False)
     v2_call_reservation_usd: float = Field(default=0, ge=0, allow_inf_nan=False)
     v2_budget_db: Path | None = None
-    v2_capabilities: tuple[str, ...] = ("summary", "conversation")
+    v2_capabilities: tuple[str, ...] = ("summary", "conversation", "tools")
     v2_differential: bool = False
     v2_speech_url: str | None = None
     v2_synthesis_url: str | None = None
