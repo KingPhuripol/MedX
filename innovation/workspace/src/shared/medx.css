@@ -59,3 +59,14 @@
   .no-print, nav, .topbar, .navigation__footer, .mobile-menu, .skip-link, .surface-switch { display: none !important; }
   .passport { max-width: none; }
 }
+.dashboard { display: grid; gap: 16px; }
+.stat-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.stat-tile { background: var(--surface-panel); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 12px 16px; display: grid; gap: 4px; color: var(--text-secondary); }
+.stat-tile strong { font-size: var(--font-size-3xl); color: var(--text-primary); }
+.stage-bars { display: grid; gap: 2px; }
+.stage-bar { display: grid; grid-template-columns: minmax(96px, 140px) 1fr 40px; align-items: center; gap: 12px; padding: 6px 0; }
+.stage-bar__label, .stage-bar__value { color: var(--text-primary); }
+.stage-bar__value { text-align: right; font-variant-numeric: tabular-nums; }
+.stage-bar__track { height: 12px; }
+.stage-bar__fill { display: block; height: 100%; min-width: 2px; background: var(--accent-purple); border-radius: 0 4px 4px 0; }
+.stage-bar:hover .stage-bar__fill { background: var(--action-primary-active); }

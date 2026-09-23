@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from uuid import uuid4
 from innovation.v2.models import (ClinicalFact, CaseRevision, ClinicalDraft, JOURNEY_KINDS, now)
@@ -397,6 +398,47 @@ class Service:
         self.audit(encounter_id, "PASSPORT_AGENT_RUN", actor, run_id=run["run_id"], agent_status=run["status"],
                    model=run["model"], provider=run["provider"], case_revision=run["case_revision"])
         return run
+
+    def dashboard(self, actor):
+        """Operational view of the OPD journey for this workspace: where cases wait and for how long."""
+        from collections import Counter
+        from datetime import datetime
+        from statistics import median
+        self.require(actor, {"physician", "pharmacist", "evaluator"})
+        # ponytail: recomputes per request over the whole workspace; fine at pilot scale, add a rollup table if it grows.
+        items = self.queue(actor, limit=10_000)["items"]
+        at = lambda value: datetime.fromisoformat(value)
+        waits = {"intake_to_draft": [], "draft_to_review": [], "review_to_dispense": []}
+        urgency, red_flags, agents = Counter(), 0, Counter()
+        for item in items:
+            eid = item["encounter_id"]
+            audit = self.store.all("audit", eid)
+            created = next((at(a["recorded_at"]) for a in audit if a["event"] == "ENCOUNTER_CREATED"), None)
+            confirmed = next((at(a["recorded_at"]) for a in audit if a["event"] == "HUMAN_REVIEW_RECORDED" and a["action"] == "CONFIRM"), None)
+            agents.update(a["event"] + ":" + a["agent_status"] for a in audit if a["event"].endswith("_AGENT_RUN"))
+            with self.store.lock:
+                rows = self.store.conn.execute("SELECT payload FROM v2_records WHERE kind='draft' AND json_extract(payload,'$.encounter_id')=? ORDER BY sequence", (eid,)).fetchall()
+            drafts = [json.loads(r[0]) for r in rows]
+            dispensed = [at(e["recorded_at"]) for e in self.store.all("event", eid)
+                         if e["fact"]["kind"] == "DISPENSE" and (e["fact"]["value"] or {}).get("outcome") == "DISPENSED"]
+            if drafts:
+                screen = drafts[-1].get("screen") or {}
+                urgency[screen.get("urgency_floor", "UNSCREENED")] += 1
+                red_flags += any(f.get("state") in {"TRIGGERED", "UNKNOWN"} for f in screen.get("red_flags", []))
+                if created:
+                    waits["intake_to_draft"].append(at(drafts[0]["created_at"]) - created)
+                if confirmed:
+                    waits["draft_to_review"].append(confirmed - at(drafts[0]["created_at"]))
+            if confirmed and dispensed and item["journey_stage"] == "READY_HOME":
+                waits["review_to_dispense"].append(max(dispensed) - confirmed)
+        minutes = lambda values: {"n": len(values), "median_minutes": round(median(v.total_seconds() for v in values) / 60, 1) if values else None}
+        stages = Counter(item["journey_stage"] for item in items)
+        return {"generated_at": now().isoformat(), "total": len(items),
+                "stages": {s: stages[s] for s in ("INTAKE", "DOCTOR_REVIEW", "PHARMACY", "PHARMACY_HOLD", "READY_HOME")},
+                "waits": {k: minutes(v) for k, v in waits.items()},
+                "urgency_floor": dict(urgency), "red_flag_cases": red_flags,
+                "needs_attention": sum(item["attention"]["needs_attention"] for item in items),
+                "agent_runs": dict(agents)}
 
     def journey_stage(self, encounter_id, handoff):
         """OPD journey stage derived from handoff status and journey facts; no extra state."""

@@ -140,6 +140,10 @@ def mount(app, service, speech):
         from innovation.v2.models import now
         return service.runtime.provider.prepare(service.snapshot(encounter_id, now())).model_dump(mode='json')
 
+    @router.get('/dashboard')
+    def dashboard(actor=Depends(identity)):
+        return service.dashboard(actor)
+
     @router.get('/encounters/{encounter_id}/pharmacy-check')
     def pharmacy_check(encounter_id: str, actor=Depends(identity)):
         return service.pharmacy_check(encounter_id, actor)

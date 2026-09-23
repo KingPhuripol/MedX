@@ -143,3 +143,42 @@ export function PassportPage({ ws, encounterId }: { ws: Workspace; encounterId?:
     <footer><ul className="limitations">{passport.limitations.map(l => <li key={l}>{l}</li>)}</ul><p className="supporting-text">บันทึกโดย: {passport.recorded_by.join(", ")}</p></footer>
   </article>;
 }
+
+type Dashboard = { generated_at: string; total: number; stages: Record<string, number>; red_flag_cases: number; needs_attention: number;
+  waits: Record<string, { n: number; median_minutes: number | null }>; urgency_floor: Record<string, number>; agent_runs: Record<string, number> };
+const waitLabels: Record<string, string> = { intake_to_draft: "รับข้อมูล → ร่างพร้อม", draft_to_review: "ร่าง → แพทย์ยืนยัน", review_to_dispense: "แพทย์ยืนยัน → จ่ายยา" };
+const urgencyLabels: Record<string, [string, "danger" | "warning" | "info" | "neutral"]> = {
+  IMMEDIATE_REVIEW: ["ต้องดูทันที", "danger"], URGENT_REVIEW: ["เร่งด่วน", "warning"], ROUTINE_REVIEW: ["ตามลำดับ", "info"], INSUFFICIENT_INFORMATION: ["ข้อมูลไม่พอ", "neutral"] };
+
+/** Journey monitoring: where cases wait (single-hue bars, labelled) and how long each hand-off takes. */
+export function DashboardPage({ ws }: { ws: Workspace }) {
+  const [data, setData] = useState<Dashboard | null>(null);
+  useEffect(() => {
+    const load = () => apiCall<Dashboard>("/dashboard").then(setData).catch(() => undefined);
+    ws.work(async () => setData(await apiCall<Dashboard>("/dashboard")));
+    const timer = window.setInterval(load, 15000); return () => window.clearInterval(timer);
+  }, []);
+  if (!data) return null;
+  const max = Math.max(1, ...Object.values(data.stages));
+  const bottleneck = Object.entries(data.stages).filter(([s]) => s !== "READY_HOME").sort((a, b) => b[1] - a[1])[0];
+  return <div className="dashboard">
+    <section className="stat-tiles">
+      <div className="stat-tile"><span>เคสทั้งหมด</span><strong>{data.total}</strong></div>
+      <div className="stat-tile"><span>ต้องดำเนินการ</span><strong>{data.needs_attention}</strong></div>
+      <div className="stat-tile"><span>มี red flag</span><strong>{data.red_flag_cases}</strong></div>
+      <div className="stat-tile"><span>ห้องยาพักไว้</span><strong>{data.stages.PHARMACY_HOLD}</strong></div>
+    </section>
+    <section className="panel"><h2>ผู้ป่วยอยู่ขั้นไหน</h2>{bottleneck && bottleneck[1] ? <p className="supporting-text">คอขวดตอนนี้: <strong>{journeyLabels[bottleneck[0]]}</strong> ({bottleneck[1]} เคส)</p> : null}
+      <div className="stage-bars" role="list">{Object.entries(data.stages).map(([stage, count]) =>
+        <div className="stage-bar" role="listitem" key={stage} title={`${journeyLabels[stage]}: ${count} เคส`}>
+          <span className="stage-bar__label">{journeyLabels[stage]}</span>
+          <span className="stage-bar__track"><span className="stage-bar__fill" style={{ width: `${(count / max) * 100}%` }} /></span>
+          <span className="stage-bar__value">{count}</span></div>)}</div></section>
+    <section className="stat-tiles">{Object.entries(data.waits).map(([key, wait]) =>
+      <div className="stat-tile" key={key}><span>{waitLabels[key]} (มัธยฐาน)</span><strong>{wait.median_minutes ?? "–"}<small> นาที</small></strong><small>จาก {wait.n} เคส</small></div>)}</section>
+    <section className="panel"><h2>ระดับเร่งด่วนขั้นต่ำจากกฎคัดกรอง</h2><ul className="findings">{Object.entries(data.urgency_floor).map(([level, count]) =>
+      <li key={level}><StatusBadge tone={urgencyLabels[level]?.[1] || "neutral"}>{urgencyLabels[level]?.[0] || level}</StatusBadge> {count} เคส</li>)}</ul>
+      <h3>การทำงานของ Agent</h3><ul>{Object.entries(data.agent_runs).map(([key, count]) => <li key={key}>{key.replace("_AGENT_RUN", " Agent").replace(":", " · ")} — {count} ครั้ง</li>)}</ul>
+      <p className="supporting-text">อัปเดตทุก 15 วินาที · ล่าสุด {new Date(data.generated_at).toLocaleTimeString("th-TH")} · ข้อมูลสังเคราะห์</p></section>
+  </div>;
+}
