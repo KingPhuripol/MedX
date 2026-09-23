@@ -466,7 +466,7 @@ def create_app(
     def hub() -> str:
         """One page that links every MedX station (DEC-0021)."""
         links = [("① Voice Agent · รับข้อมูล/ซักประวัติ", "/nurse#/voice"),
-                 ("หมอทบทวนร่าง · สั่งยา · Red flag กลับบ้าน", "/platform#/cases"),
+                 ("แพทย์ทบทวนร่าง · สั่งยา · คำแนะนำอาการที่ต้องกลับมา · บันทึกการตัดสินใจ", "/platform#/cases"),
                  ("② ห้องยา · Pharma Agent", "/platform#/pharmacy"),
                  ("③ Dashboard Monitoring", "/platform#/dashboard"),
                  ("④ Universal Med Passport (เปิดจากเคส)", "/platform#/passport"),

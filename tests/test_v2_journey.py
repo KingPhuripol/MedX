@@ -111,7 +111,7 @@ def test_roles_per_kind_order_reference_and_stage_progression(client):
         'acknowledged_findings': ['ALLERGY_STATUS_UNKNOWN', 'MEDICATION_HISTORY_UNKNOWN']}, 4).status_code == 201
     assert stage(c, 'pharm') == 'AWAITING_DISPOSITION'  # the system never decides the patient can go home
     [item] = c.get('/v2/encounters?stage=AWAITING_DISPOSITION', headers=h('pharm')).json()['items']
-    assert item['escalation'] and item['attention']['needs_attention']  # OPD screen is out of scope → escalated
+    assert item['escalation']  # OPD screen is out of scope → escalated, shown beside the stage  # OPD screen is out of scope → escalated
     assert post_fact(c, 'pharm', 'x2', 'DISPOSITION', {'decision': 'HOME'}, 5).status_code == 403
     unreasoned = post_fact(c, 'doctor', 'dp0', 'DISPOSITION', {'decision': 'HOME'}, 5)
     assert (unreasoned.status_code, unreasoned.json()['error']['code']) == (422, 'DISPOSITION_REASON_REQUIRED')

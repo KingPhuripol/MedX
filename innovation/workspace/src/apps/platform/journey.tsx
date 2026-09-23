@@ -73,7 +73,7 @@ export function PharmacyPage({ ws, selected }: { ws: Workspace; selected?: strin
   const [reasons, setReasons] = useState<Record<string, string>>({});
   const [acknowledged, setAcknowledged] = useState<Record<string, boolean>>({});
   const queue = ws.cases.filter(c => c.journey_stage === "PHARMACY" || c.journey_stage === "PHARMACY_HOLD");
-  const relevant = (orderId: string) => [...new Set(check?.findings.filter(f => f.source === "rule" && (f.order_event_id === orderId || f.order_event_id === null)).map(f => f.code) || [])];
+  const relevant = (orderId: string) => [...new Set(check?.findings.filter(f => f.source === "rule" && (f.order_event_id === null || f.evidence_ids.includes(orderId))).map(f => f.code) || [])];
   const refresh = async (id: string) => {
     const [result, detail] = await Promise.all([apiCall<Check>(`/encounters/${encodeURIComponent(id)}/pharmacy-check`), loadCase(id)]);
     setCheck(result); setRevision(detail.case_revision);

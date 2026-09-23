@@ -157,3 +157,14 @@ def test_chat_completions_tool_step_round_trip_through_the_gateway():
     assert sent[0]['max_completion_tokens'] and sent[0]['tools'][0]['type'] == 'function'
     assert sent[1]['messages'][-1] == {'role': 'tool', 'tool_call_id': 'c1', 'content': json.dumps(
         {'atc': 'J01CA04', 'class': 'penicillin', 'chembl': 'CHEMBL1082', 'th': 'อะม็อกซีซิลลิน'}, ensure_ascii=False)}
+
+
+def test_every_list_joiner_and_unknown_brand_is_accounted_for():  # re-review MAJOR-1
+    for text in ['แพ้ amoxicillin กับ Brufen', 'amoxicillin & Brufen', 'แพ้ยา amoxicillin หรือ Brufen ไม่แน่ใจ',
+                 'amoxicillin - sulfa', 'amoxicillin | codeine', 'amoxicillin Brufen']:
+        result = check([ev('a', 'ALLERGY', text), ev('m', 'MEDICATION', 'ไม่มี'), order('o', 'ibuprofen')])
+        assert result.status == 'NEEDS_PHARMACIST_REVIEW' and 'ALLERGY_UNRESOLVED' in {f.code for f in result.findings}, text
+    assert check(NONE[:1] + [ev('m', 'MEDICATION', 'ไม่มี'), ev('b', 'ALLERGY', 'แพ้ penicillin ผื่นลมพิษ rash'),
+                 order('o', 'paracetamol')]).status == 'NEEDS_PHARMACIST_REVIEW'  # conflict with "ไม่มี", not a leftover
+    assert 'ALLERGY_UNRESOLVED' not in {f.code for f in check([ev('a', 'ALLERGY', 'แพ้ penicillin ผื่นลมพิษ rash'),
+        ev('m', 'MEDICATION', 'ไม่มี'), order('o', 'paracetamol')]).findings}

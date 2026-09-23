@@ -48,6 +48,8 @@ def principals():
 
 
 def seed(who):
+    # Seeded decisions are attributed to a script identity, never to a login people use.
+    who = {role: Principal(f'seed-script-{role}', role, p.workspace) for role, p in who.items()}
     DB.parent.mkdir(parents=True, exist_ok=True)
     store = Store(DB)
     service = Service(store, Runtime(MockProvider()))

@@ -13,7 +13,7 @@ def test_dashboard_counts_stages_waits_and_roles(client):
     assert d['total'] == 2
     assert d['stages'] == {'INTAKE': 1, 'DOCTOR_REVIEW': 0, 'PHARMACY': 0, 'PHARMACY_HOLD': 0, 'AWAITING_DISPOSITION': 0,
                            'DISPOSITION_HOME': 1, 'DISPOSITION_REFER': 0, 'DISPOSITION_OBSERVE': 0}
-    assert d['escalated'] == 1  # the OPD case is escalated by the out-of-scope screen
+    assert d['escalated'] == 2  # both OPD cases, including the one with no draft yet (screen runs on evidence)
     assert {k: v['n'] for k, v in d['waits'].items()} == {'intake_to_draft': 1, 'draft_to_review': 1, 'review_to_dispense': 1}
     assert all(v['median_minutes'] >= 0 for v in d['waits'].values())
     assert sum(d['urgency_floor'].values()) == 1

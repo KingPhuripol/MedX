@@ -61,6 +61,10 @@ ifneq ($(VOICE)$(LLM),)
 OPD_ENV += FRONT_DOOR_ALLOW_EXTERNAL=true FRONT_DOOR_V2_TRANSPORT=openai_compatible FRONT_DOOR_V2_LOCAL_FREE=true \
 	FRONT_DOOR_V2_BUDGET_DB=artifacts/opd-demo-budget.sqlite3
 endif
+ifndef LLM
+# VOICE alone must not let a provider URL from .env send cases to an external model.
+OPD_ENV += FRONT_DOOR_V2_PROVIDER_URL=
+endif
 ifdef VOICE
 OPD_ENV += FRONT_DOOR_V2_SPEECH_URL=http://127.0.0.1:9100/v1 FRONT_DOOR_V2_SPEECH_MODEL=small
 endif

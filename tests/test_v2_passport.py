@@ -123,3 +123,24 @@ def test_review_fixes_dispense_gate_replaced_orders_and_exports(client):  # clin
     c.get('/v2/encounters/opd/passport/fhir', headers=h('pharm'))
     audit = c.get('/v2/encounters/opd/audit?limit=100', headers=h('doctor')).json()['items']
     assert any(a['event'] == 'PASSPORT_EXPORTED' for a in audit)
+
+
+def test_second_order_of_a_pair_and_draftless_escalation_are_gated(client):  # re-review MAJOR-2, MAJOR-3
+    c = client
+    c.post('/v2/encounters', headers=h('nurse'), json={'encounter_id': 'opd', 'age': 60})  # ED context
+    post_fact(c, 'nurse', 'c', 'CHIEF_COMPLAINT', 'เจ็บหน้าอก', 0)
+    # No draft yet: the deterministic screen still escalates (vitals missing), so HOME needs a reason.
+    early = post_fact(c, 'doctor', 'dp0', 'DISPOSITION', {'decision': 'HOME'}, 1)
+    assert (early.status_code, early.json()['error']['code']) == (422, 'DISPOSITION_REASON_REQUIRED')
+    assert c.get('/v2/encounters/opd/passport', headers=h('doctor')).json()['escalation']
+    post_fact(c, 'nurse', 'a', 'ALLERGY', 'ไม่มี', 1)
+    post_fact(c, 'nurse', 'm', 'MEDICATION', 'ไม่มี', 2)
+    turn = c.post('/v2/encounters/opd/turns', headers=h('doctor'), json={
+        'expected_revision': 3, 'idempotency_key': 't', 'text': 'สรุป', 'decision_time': T.isoformat()}).json()
+    c.post(f"/v2/drafts/{turn['draft_id']}/reviews", headers=h('doctor'), json={
+        'expected_revision': 3, 'idempotency_key': 'r', 'draft_revision': 1, 'expected_review_sequence': 0, 'action': 'CONFIRM'})
+    post_fact(c, 'doctor', 'w', 'MEDICATION_ORDER', {'drug': 'warfarin', 'dose': '3 mg', 'frequency': 'od'}, 3)
+    post_fact(c, 'doctor', 'i', 'MEDICATION_ORDER', {'drug': 'ibuprofen', 'dose': '400 mg', 'frequency': 'prn'}, 4)
+    second = post_fact(c, 'pharm', 'd', 'DISPENSE', {'order_event_id': 'i', 'outcome': 'DISPENSED'}, 5)
+    assert (second.status_code, second.json()['error']['code']) == (422, 'OVERRIDE_REASON_REQUIRED')
+    assert 'INTERACTION' in second.json()['details']['findings']

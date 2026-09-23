@@ -49,7 +49,12 @@ def formulary():
     return json.loads(FORMULARY_PATH.read_text(encoding='utf-8'))
 
 
-SEPARATORS = re.compile(r"[,/;+\n、]|และ|\band\b|\bwith\b")
+SEPARATORS = re.compile(r"[,/;+|&\n、]|\s-\s|และ|กับ|หรือ|\band\b|\bwith\b|\bor\b")
+# Latin words left after removing matched names must be accounted for: an unknown brand or
+# drug name beside a known one ("amoxicillin Brufen") is reported, never silently dropped.
+LEFTOVER = re.compile(r"[a-z][a-z0-9-]{3,}")
+NOT_DRUG = {'allergy', 'allergic', 'rash', 'hives', 'itch', 'itching', 'swelling', 'tabs', 'tablet', 'tablets',
+            'unknown', 'none', 'nkda', 'drug', 'drugs', 'known', 'daily', 'once', 'twice', 'dose', 'mg', 'with'}
 NO_MEDICATION = NO_ALLERGY | {'ไม่ได้ใช้ยา', 'ไม่มียาประจำ', 'no regular medication'}
 
 
@@ -72,8 +77,16 @@ def parse(text):
             continue
         named = identify_all(part)
         keys += [k for k in named if k not in keys]
-        if not named:
-            unresolved.append(part)
+        rest = part
+        for key in named:
+            if not key.startswith('class:'):
+                rest = rest.replace(key, ' ').replace(formulary()['drugs'][key]['th'], ' ')
+        for aliases in formulary()['class_aliases'].values():
+            for alias in aliases:
+                rest = rest.replace(alias, ' ')
+        leftover = [w for w in LEFTOVER.findall(rest) if w not in NOT_DRUG]
+        if not named or leftover:
+            unresolved.append(' '.join(leftover) if named else part)
     return keys, unresolved
 
 

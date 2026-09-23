@@ -52,7 +52,7 @@ def build(service, encounter_id, actor, as_of=None):
     replaced = [{**every[oid], 'replaced': True} for oid, d in outcome.items()
                 if oid not in live and oid in every and d['value']['outcome'] == 'DISPENSED']
     dispositions = [f for f in known if f['kind'] == 'DISPOSITION']
-    escalation = service.escalation(encounter_id)
+    escalation = service.escalation(encounter_id, as_of)
     return {
         'passport_version': 'medx-passport-1', 'classification': 'SYNTHETIC',
         'encounter_id': encounter_id, 'age': case['age'], 'care_context': case.get('care_context'),
@@ -110,7 +110,7 @@ def to_fhir(passport):
         v = order['value']
         dosage = [{'text': ' '.join(str(v[k]) for k in ('dose', 'route', 'frequency') if v.get(k))}] \
             if any(v.get(k) for k in ('dose', 'route', 'frequency')) else []
-        request = add('medications', {'resourceType': 'MedicationRequest', 'status': 'active', 'intent': 'order',
+        request = add('medications', {'resourceType': 'MedicationRequest', 'status': 'stopped' if order.get('replaced') else 'active', 'intent': 'order',
             'medicationCodeableConcept': {'text': v['drug']}, 'subject': {'reference': patient},
             'encounter': {'reference': encounter}, 'authoredOn': order['available_at_time'],
             **({'dosageInstruction': dosage} if dosage else {}),

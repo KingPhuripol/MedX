@@ -363,7 +363,8 @@ class Service:
         from innovation.v2.pharmacy import check
         result = check(events)
         oid = fact.value["order_event_id"]
-        relevant = sorted({f.code for f in result.findings if f.order_event_id in {oid, None}})
+        # A pair finding names both orders in its evidence; either dispense must acknowledge it.
+        relevant = sorted({f.code for f in result.findings if f.order_event_id is None or oid in f.evidence_ids})
         if fact.value["outcome"] == "DISPENSED":
             drafts = self.drafts(encounter_id, actor)
             if not drafts or not drafts[-1]["effective"] or drafts[-1]["status"] != "CONFIRM":
@@ -487,14 +488,16 @@ class Service:
         dispositions = [f for f in facts if f['kind'] == 'DISPOSITION']
         return 'DISPOSITION_' + dispositions[-1]['value']['decision'] if dispositions else 'AWAITING_DISPOSITION'
 
-    def escalation(self, encounter_id):
-        """Red flags and urgency floor from the latest draft's deterministic screen; they outrank the stage."""
-        with self.store.lock:
-            row = self.store.conn.execute("SELECT payload FROM v2_records WHERE kind='draft' AND json_extract(payload,'$.encounter_id')=? ORDER BY sequence DESC LIMIT 1", (encounter_id,)).fetchone()
-        screen = (json.loads(row[0]).get('screen') or {}) if row else {}
-        reasons = [f"{flag['code']}:{flag['state']}" for flag in screen.get('red_flags', []) if flag.get('state') in {'TRIGGERED', 'UNKNOWN'}]
-        if screen.get('urgency_floor') in {'URGENT_REVIEW', 'IMMEDIATE_REVIEW'}:
-            reasons.append(screen['urgency_floor'])
+    def escalation(self, encounter_id, at=None):
+        """Red flags and urgency floor from the deterministic screen over the current evidence.
+
+        Computed from the snapshot, never from a model draft, so it exists before any draft
+        and follows new evidence (SAFETY_SPEC: red-flag rules run independently of the model).
+        """
+        screen = screen_case(self.snapshot(encounter_id, at or now()))
+        reasons = [f"{flag.code}:{flag.state}" for flag in screen.red_flags if flag.state in {'TRIGGERED', 'UNKNOWN'}]
+        if screen.urgency_floor in {'URGENT_REVIEW', 'IMMEDIATE_REVIEW'}:
+            reasons.append(screen.urgency_floor)
         return reasons
 
     def queue(self, actor, q='', status='', offset=0, limit=25, stage=''):
@@ -546,7 +549,6 @@ class Service:
                 'stale_draft':handoff=='STALE',
                 'needs_attention':bool(pending or active or handoff in {'PENDING','STALE','REJECTED'})}
             escalation=self.escalation(encounter_id)
-            attention['needs_attention']=attention['needs_attention'] or (bool(escalation) and not stages[encounter_id].startswith('DISPOSITION_'))
             items.append({**json.loads(row['payload']),'case_revision':revision,
                 'handoff_status':handoff,'journey_stage':stages[encounter_id],'escalation':escalation,'attention':attention})
         return {'items':items,
