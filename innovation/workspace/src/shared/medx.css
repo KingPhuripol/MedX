@@ -76,3 +76,5 @@
 .raw-history { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 8px 0; }
 .raw-history dt { color: var(--text-secondary); }
 .raw-history dd { margin: 0; color: var(--text-primary); }
+.demo-role { display: grid; gap: 4px; margin: 8px 16px; font-size: var(--font-size-sm); color: var(--text-inverse-muted); }
+.demo-role select { font: inherit; padding: 6px 8px; border-radius: 8px; }

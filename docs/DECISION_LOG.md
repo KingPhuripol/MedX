@@ -293,3 +293,12 @@ Machine-readable decisions are in `project_state/decisions.json` and validated a
 - **Pharmacy check:** deterministic rules over a 20-drug / 11-pair synthetic formulary (`clinical_reviewed: false`). `NO_RULE_FINDINGS` means only that these rules found nothing within that coverage; it is never a safety verdict. Missing allergy or medication history, and any list entry the formulary cannot name, block that status.
 - **Open items:** pharmacist review of the formulary; clinical review of the OPD screen; whether role-level read access (evaluator can read case history) should narrow.
 - **Approval:** Pending — Phurinat Polasa (PM), Supreeya Nuamkhayan (Innovation), team. This entry is proposed, not accepted.
+
+## DEC-0022 - Public synthetic demo of MedX on Vercel
+
+- **Date:** 2026-09-23
+- **Status:** accepted (owner instruction in session, 2026-09-23)
+- **Owner:** Phurinat Polasa
+- **Decision:** Publish MedX as an open, no-login public demo on Vercel (`auth_mode=public_demo`). Each visitor gets a private sandbox workspace seeded with the four synthetic OPD cases and chooses a role (nurse, physician, pharmacist); experiments, the v1 API, legacy screens and API docs are closed. Sandboxes live in the serverless instance's `/tmp` SQLite and reset when the instance is recycled. Agent jobs run inside the request. Model calls go to gpt-6-luna through the OpenAI-compatible gateway adapter only when the owner sets the provider URL and key in the Vercel dashboard; model-backed requests are capped per sandbox per hour and by a per-instance budget, and the owner sets a hard spending limit at the provider.
+- **Guards:** synthetic data only (DEC-0006): free text that looks like a Thai national ID, phone number, e-mail or HN is refused before storage or any model call; every screen states research prototype, synthetic data, not clinically evaluated. The landing page makes no clinical-performance or safety-validation claim and shows no pricing (DEC-0011 non-commercial ceiling unchanged; the call to action is a supervised hospital pilot). SCBX template layout grammar is used; SCBX logos and the SCBXBeta2 font are not published.
+- **Approval:** Deployment to a public target approved by the owner in session on 2026-09-23 (Human Approval Policy: publication). Real-patient use, a hospital pilot and any commercial offer remain out of scope and need their own approvals (ethics review, DEC-0021 acceptance, clinical review listed there).

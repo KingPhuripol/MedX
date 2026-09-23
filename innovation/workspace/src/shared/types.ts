@@ -140,6 +140,7 @@ export type Capability = {
   synthesis: boolean;
   conversation: boolean;
   validation: string;
+  public_demo?: boolean;
 };
 
 export type ReadinessCapability = {

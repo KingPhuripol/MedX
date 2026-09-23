@@ -9,7 +9,7 @@ def mount(app, service, speech):
     settings = app.state.settings
     identity = app.state.resolve_identity
     from innovation.v2.jobs import Jobs
-    jobs = Jobs(service, settings.provider_concurrency)
+    jobs = Jobs(service, settings.provider_concurrency, inline=settings.v2_inline_jobs)
     app.state.v2_jobs = jobs
     from innovation.v2.experiments import Experiments, ExperimentRequest
     experiment_root = settings.v2_experiment_dir
@@ -86,7 +86,8 @@ def mount(app, service, speech):
             'speech': speech.__class__.__name__ != 'UnavailableSpeech',
             'synthesis': hasattr(app.state, 'v2_synthesis'),
             'conversation': hasattr(service.runtime.provider, 'converse') and 'conversation' in service.runtime.provider.capabilities,
-            'validation': 'MOCK_ONLY' if service.runtime.provider.name == 'mock-v2' else 'LIVE_VALIDATION_PENDING'}
+            'validation': 'MOCK_ONLY' if service.runtime.provider.name == 'mock-v2' else 'LIVE_VALIDATION_PENDING',
+            'public_demo': settings.auth_mode == 'public_demo'}
 
     @router.post('/runs/{run_id}/speech')
     def synthesize(run_id: str, actor=Depends(identity)):

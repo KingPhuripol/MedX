@@ -27,7 +27,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 #: boundary in `CLAUDE.md` is not a documentation exercise: it travels with the payload.
 BANNER = "RESEARCH PROTOTYPE - HUMAN REVIEW REQUIRED"
 
-AuthMode = Literal["none", "token"]
+AuthMode = Literal["none", "token", "public_demo"]
 
 
 class Settings(BaseSettings):
@@ -87,6 +87,12 @@ class Settings(BaseSettings):
     principals_file: Path | None = None
     #: Role of the single local user when auth_mode=none (loopback only); lets one laptop demo each station.
     demo_role: Literal["intake", "physician", "pharmacist", "evaluator"] = "physician"
+    #: auth_mode=public_demo (DEC-0022): anonymous visitors each get a private sandbox
+    #: workspace seeded with synthetic cases; model-backed calls are capped per sandbox.
+    public_calls_per_hour: int = Field(default=30, ge=1, le=1000)
+    contact_email: str = ""
+    #: Run agent jobs inside the request (serverless hosts may freeze background threads).
+    v2_inline_jobs: bool = False
 
     # -------------------------------------------------------------------- logging
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
@@ -137,6 +143,8 @@ class Settings(BaseSettings):
                 "refusing to enable an external provider with auth_mode=none: an "
                 "unauthenticated caller could cause content to leave the process."
             )
+        if self.auth_mode == "public_demo" and self.v2_provider_url and self.v2_paid_budget_usd <= 0:
+            raise ValueError("public_demo with a model provider requires FRONT_DOOR_V2_PAID_BUDGET_USD > 0")
         if self.auth_mode == "token" and self.principals_file is None:
             raise ValueError("auth_mode=token requires FRONT_DOOR_PRINCIPALS_FILE")
         if self.v2_provider_url or self.v2_speech_url or self.v2_synthesis_url:

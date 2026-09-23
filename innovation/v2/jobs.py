@@ -13,8 +13,8 @@ from innovation.v2.store import DomainError, encoded
 
 
 class Jobs:
-    def __init__(self, service, workers=4):
-        self.service = service
+    def __init__(self, service, workers=4, inline=False):
+        self.service, self.inline = service, inline
         self.store = service.store
         self.owner = uuid4().hex
         self.pool = ThreadPoolExecutor(max_workers=workers, thread_name_prefix='frontdoor-job')
@@ -47,7 +47,10 @@ class Jobs:
             return {'job_id': id}
         result = self.service.command(actor, 'job:' + encounter, body.idempotency_key,
                                       body.model_dump(mode='json'), perform)
-        self.pool.submit(self.execute, result['job_id'], body, actor)
+        if self.inline:
+            self.execute(result['job_id'], body, actor)
+        else:
+            self.pool.submit(self.execute, result['job_id'], body, actor)
         return self.get(result['job_id'])
 
     def execute(self, id, body, actor):

@@ -100,6 +100,8 @@ class Service:
     def append_event(self, encounter_id, body, actor):
         self.authorize_case(encounter_id, actor)
         fact = body.fact
+        from innovation.v2.identifiers import guard
+        guard(fact.value)
         # DEC-0005/DEC-0021: physicians prescribe, pharmacists dispense; intake records evidence.
         self.require(actor, {"DISPENSE": {"pharmacist"}, "MEDICATION_ORDER": {"physician"}, "DISPOSITION": {"physician"},
                              "RETURN_PRECAUTION": {"physician"}}.get(fact.kind, {"intake", "physician"}))
@@ -163,6 +165,8 @@ class Service:
     def turn(self, encounter_id, body, actor, design=None, cancel_check=None):
         self.authorize_case(encounter_id, actor)
         self.require(actor, {"intake", "physician"})
+        from innovation.v2.identifiers import guard
+        guard(body.text)
         scope = f"turn:{encounter_id}"
         payload = {**body.model_dump(mode="json"), "design_override": design.model_dump() if design else None}
         ticket_id = digest([actor.subject, scope, body.idempotency_key])

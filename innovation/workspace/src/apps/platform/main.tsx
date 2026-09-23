@@ -42,7 +42,7 @@ function PlatformApp() {
     ...(ws.session?.role === "physician" || ws.session?.role === "pharmacist" ? [{ id: "cases" as Page, label: "คิวตรวจทบทวน", description: "หลักฐานและร่างรอตัดสินใจ", icon: "cases" as const }] : []),
     ...(ws.session && ws.session.role !== "intake" ? [{ id: "dashboard" as Page, label: "ภาพรวม", description: "ผู้ป่วยอยู่ขั้นไหน รอนานเท่าไร", icon: "research" as const }] : []),
     ...(ws.session?.role === "pharmacist" ? [{ id: "pharmacy" as Page, label: "ห้องยา", description: "ตรวจคำสั่งยาก่อนจ่าย", icon: "cases" as const }] : []),
-    ...(ws.session?.role === "physician" || ws.session?.role === "evaluator" ? [{ id: "research" as Page, label: "การทดลอง workflow", description: "เปรียบเทียบและตรวจผล", icon: "research" as const }] : []),
+    ...((ws.session?.role === "physician" || ws.session?.role === "evaluator") && !ws.caps?.public_demo ? [{ id: "research" as Page, label: "การทดลอง workflow", description: "เปรียบเทียบและตรวจผล", icon: "research" as const }] : []),
     { id: "settings", label: "ความพร้อมระบบ", description: "ความสามารถและหลักฐาน", icon: "settings" },
   ];
   return <Shell product="platform" identity={{ name: "MedX Clinical Review", tagline: "ทบทวนข้อมูลทางคลินิก" }} nav={nav} page={page} onNavigate={navigate}

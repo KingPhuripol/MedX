@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MedX · ผู้ช่วย AI ตลอดเส้นทางผู้ป่วยนอก</title>
+<meta name="description" content="MedX ช่วยพยาบาล แพทย์ และเภสัชกร ตั้งแต่ซักประวัติด้วยเสียง ตรวจยาก่อนจ่าย จนถึง Med Passport ที่ผู้ป่วยถือกลับบ้าน ทุกการตัดสินใจยังเป็นของบุคลากร">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --grey-1:#E6E8E8; --grey-2:#D6DADB; --grey-3:#AEB3B4; --grey-4:#606769; --grey-5:#363F42; --grey-6:#212628; --grey-7:#15191A;
+  --purple-1:#8F47BF; --purple-2:#6C2993; --purple-3:#3C1D5D; --white:#fff; --red:#b3261e;
+  --type:"IBM Plex Sans Thai","Helvetica Neue",Arial,sans-serif;
+}
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { margin:0; font-family:var(--type); color:var(--grey-7); background:var(--grey-1); line-height:1.6; -webkit-font-smoothing:antialiased; }
+a { color:inherit; }
+.wrap { max-width:1180px; margin:0 auto; padding:0 24px; }
+.eyebrow { display:inline-flex; align-items:center; gap:10px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:var(--grey-4); font-weight:500; }
+.eyebrow .dot { width:8px; height:8px; border-radius:50%; background:var(--purple-1); }
+h1,h2,h3 { margin:0; line-height:1.25; font-weight:600; }
+h2 { font-size:clamp(26px,3.4vw,40px); max-width:22ch; margin-top:14px; }
+.nb { white-space:nowrap; }
+.lede { font-size:18px; color:var(--grey-5); max-width:62ch; }
+.imp { margin-top:28px; border-top:1px solid var(--grey-2); padding-top:16px; color:var(--grey-5); font-size:16px; }
+.imp b { color:var(--purple-2); margin-right:8px; }
+
+/* nav */
+nav.top { position:sticky; top:0; z-index:10; background:rgba(21,25,26,.92); backdrop-filter:blur(8px); color:var(--white); }
+nav.top .wrap { display:flex; align-items:center; gap:24px; height:64px; }
+.mark { display:inline-flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.02em; text-decoration:none; }
+.mark i { width:34px; height:34px; border-radius:10px; background:linear-gradient(135deg,var(--purple-1),var(--purple-3)); display:grid; place-items:center; font-style:normal; font-size:15px; }
+nav.top .links { display:flex; gap:20px; margin-left:auto; font-size:15px; }
+nav.top .links a { text-decoration:none; color:var(--grey-3); }
+nav.top .links a:hover { color:var(--white); }
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; border-radius:999px; padding:12px 22px; font:600 15px var(--type); text-decoration:none; cursor:pointer; border:1px solid transparent; transition:transform .15s, background .15s; }
+.btn:hover { transform:translateY(-1px); }
+.btn-primary { background:var(--purple-1); color:var(--white); }
+.btn-primary:hover { background:var(--purple-2); }
+.btn-ghost { border-color:var(--grey-4); color:inherit; background:transparent; }
+.btn:focus-visible, a:focus-visible, button:focus-visible { outline:3px solid var(--purple-1); outline-offset:3px; }
+
+/* hero */
+.hero { background:var(--grey-7); color:var(--white); position:relative; overflow:hidden; }
+.hero::after { content:""; position:absolute; right:-160px; top:-120px; width:620px; height:620px;
+  background:linear-gradient(45deg,transparent 44%,var(--purple-1) 44%,var(--purple-3) 56%,transparent 56%),
+             linear-gradient(-45deg,transparent 44%,var(--purple-2) 44%,var(--purple-3) 56%,transparent 56%);
+  opacity:.55; pointer-events:none; }
+.hero .wrap { position:relative; z-index:1; padding-top:96px; padding-bottom:88px; }
+.hero .eyebrow { color:var(--grey-3); }
+.hero h1 { font-size:clamp(34px,5.2vw,64px); max-width:16ch; margin-top:18px; letter-spacing:-.01em; }
+.hero .lede { color:var(--grey-3); margin-top:20px; }
+.hero .cta { display:flex; flex-wrap:wrap; gap:12px; margin-top:32px; }
+.hero .imp { border-color:var(--grey-5); color:var(--grey-3); max-width:760px; }
+.hero .imp b { color:#c79be6; }
+
+section.block { padding:88px 0; }
+section.block.alt { background:var(--white); }
+.grid { display:grid; gap:16px; margin-top:36px; }
+.g4 { grid-template-columns:repeat(4,1fr); }
+.g3 { grid-template-columns:repeat(3,1fr); }
+.g2 { grid-template-columns:repeat(2,1fr); }
+.card { background:var(--white); border:1px solid var(--grey-2); border-radius:16px; padding:22px; }
+.alt .card { background:var(--grey-1); border-color:transparent; }
+.card h3 { font-size:19px; margin-bottom:8px; }
+.card p { margin:0; color:var(--grey-5); font-size:15px; }
+.num { font-size:13px; font-weight:600; color:var(--purple-2); letter-spacing:.06em; }
+
+/* journey */
+.journey { display:grid; grid-template-columns:repeat(5,1fr); gap:0; margin-top:40px; counter-reset:step; }
+.step { position:relative; padding:0 14px 0 0; }
+.step::before { counter-increment:step; content:counter(step); display:grid; place-items:center; width:40px; height:40px; border-radius:50%; background:var(--grey-7); color:var(--white); font-weight:600; position:relative; z-index:1; }
+.step::after { content:""; position:absolute; top:19px; left:40px; right:0; height:2px; background:var(--grey-2); }
+.step:last-child::after { display:none; }
+.step h3 { font-size:17px; margin:14px 0 6px; }
+.step p { font-size:14px; color:var(--grey-5); margin:0; }
+.tag { display:inline-block; margin-top:10px; font-size:12px; font-weight:600; padding:3px 10px; border-radius:999px; background:#EDE2F5; color:var(--purple-3); }
+
+/* modules */
+.module { display:flex; flex-direction:column; gap:10px; }
+.module .no { font-size:13px; color:var(--grey-4); border-top:1px dashed var(--grey-2); padding-top:10px; margin-top:auto; }
+.module .no b { color:var(--red); font-weight:600; }
+.star { color:var(--purple-1); }
+
+/* safety */
+.safety { background:var(--grey-7); color:var(--white); }
+.safety .eyebrow { color:var(--grey-3); }
+.safety .card { background:var(--grey-6); border-color:var(--grey-5); }
+.safety .card p { color:var(--grey-3); }
+.safety .imp { border-color:var(--grey-5); color:var(--grey-3); }
+
+/* try */
+.roles { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:36px; }
+.role { text-align:left; background:var(--white); border:1px solid var(--grey-2); border-radius:18px; padding:26px; font:inherit; color:inherit; cursor:pointer; display:flex; flex-direction:column; gap:10px; transition:border-color .15s, transform .15s; }
+.role:hover { border-color:var(--purple-1); transform:translateY(-2px); }
+.role strong { font-size:20px; }
+.role span { color:var(--grey-5); font-size:15px; }
+.role em { font-style:normal; color:var(--purple-2); font-weight:600; margin-top:auto; }
+.notice { margin-top:20px; font-size:14px; color:var(--grey-4); }
+
+.pilot { display:grid; grid-template-columns:1.3fr 1fr; gap:32px; align-items:center; }
+.pilot ul { margin:16px 0 0; padding-left:20px; color:var(--grey-5); }
+footer { background:var(--grey-7); color:var(--grey-3); font-size:14px; padding:40px 0; }
+footer .stations { width:100%; }
+footer .stations a { color:#fff; }
+footer .wrap { display:flex; flex-wrap:wrap; gap:16px; justify-content:space-between; }
+
+@media (max-width:960px) {
+  .g4 { grid-template-columns:repeat(2,1fr); }
+  .g3, .roles, .pilot { grid-template-columns:1fr; }
+  .journey { grid-template-columns:1fr; gap:22px; }
+  .step::after { display:none; }
+  nav.top .links { display:none; }
+}
+@media (max-width:560px) {
+  .wrap { padding:0 16px; }
+  .g4, .g2 { grid-template-columns:1fr; }
+  section.block { padding:64px 0; }
+  .hero .wrap { padding-top:64px; padding-bottom:64px; }
+}
+</style>
+</head>
+<body>
+<nav class="top" aria-label="เมนูหลัก"><div class="wrap">
+  <a class="mark" href="#top"><i>Mx</i>MedX</a>
+  <div class="links"><a href="#problem">ปัญหา</a><a href="#journey">เส้นทางผู้ป่วย</a><a href="#modules">ระบบ</a><a href="#safety">ความปลอดภัย</a><a href="#pilot">โรงพยาบาลนำร่อง</a></div>
+  <a class="btn btn-primary" href="#try">ลองระบบจริง</a>
+</div></nav>
+
+<header class="hero" id="top"><div class="wrap">
+  <div class="eyebrow"><span class="dot"></span>MedX · OPD Journey Copilot</div>
+  <h1>ผู้ช่วย AI ที่เดินไปกับ<span class="nb">ผู้ป่วยนอก</span> ตั้งแต่<span class="nb">หน้าเคาน์เตอร์</span>จน<span class="nb">กลับบ้าน.</span></h1>
+  <p class="lede">ซักประวัติด้วยเสียง ส่งสรุปให้แพทย์ยืนยัน ตรวจยาก่อนจ่าย และรวมทุกอย่างไว้ใน Med Passport ใบเดียวที่ส่งต่อเป็นมาตรฐาน FHIR ได้ ออกแบบมาเพื่อลดงานซ้ำซ้อนของบุคลากร โดยทุกการตัดสินใจทางคลินิกยังเป็นของคน</p>
+  <div class="cta"><a class="btn btn-primary" href="#try">ลองใช้ระบบจริงตอนนี้</a><a class="btn btn-ghost" href="#pilot">ขอทดลองในโรงพยาบาล</a></div>
+  <p class="imp"><b>→</b>ต้นแบบงานวิจัยที่ใช้งานได้จริงทั้งระบบ รันบนเคสสังเคราะห์ ระบบไม่วินิจฉัย ไม่สั่งยา และไม่ตัดสินให้ผู้ป่วยกลับบ้านเอง</p>
+</div></header>
+
+<section class="block" id="problem"><div class="wrap">
+  <div class="eyebrow"><span class="dot"></span>ปัญหาที่หน้างาน OPD</div>
+  <h2>ข้อมูลผู้ป่วยหลุดหายระหว่างทาง และทุกจุดต้องถามซ้ำ.</h2>
+  <div class="grid g4">
+    <div class="card"><h3>ซักประวัติซ้ำหลายจุด</h3><p>พยาบาลคัดกรอง แพทย์ถามอีกรอบ ห้องยาถามเรื่องแพ้ยาอีกครั้ง เพราะข้อมูลไม่ได้ไปพร้อมผู้ป่วย</p></div>
+    <div class="card"><h3>ยาต้องตรวจด้วยมือ</h3><p>ประวัติแพ้ยาและยาที่ใช้อยู่มักเป็นข้อความอิสระ เภสัชกรต้องไล่เทียบเองทีละรายการ</p></div>
+    <div class="card"><h3>กลับบ้านแล้วไม่รู้ว่าต้องกลับมาเมื่อไร</h3><p>คำแนะนำอาการอันตรายมักเป็นคำพูด ผู้ป่วยจำไม่ได้ และไม่มีเอกสารให้ถือกลับ</p></div>
+    <div class="card"><h3>ผู้บริหารไม่เห็นคอขวด</h3><p>ไม่รู้ว่าผู้ป่วยค้างอยู่ขั้นไหน รอแพทย์หรือรอยา นานเท่าไร จนกว่าคิวจะล้น</p></div>
+  </div>
+</div></section>
+
+<section class="block alt" id="journey"><div class="wrap">
+  <div class="eyebrow"><span class="dot"></span>เส้นทางผู้ป่วยใน MedX</div>
+  <h2>ข้อมูลชุดเดียว เดินตามผู้ป่วยทุกสถานี.</h2>
+  <div class="journey">
+    <div class="step"><h3>หน้างาน / พยาบาล</h3><p>พูดหรือพิมพ์ AI เสนอข้อมูลให้พยาบาลตรวจและยืนยันก่อนบันทึก</p><span class="tag">① Voice Agent</span></div>
+    <div class="step"><h3>แพทย์</h3><p>เห็นสรุปพร้อมหลักฐาน red flag ขึ้นก่อน ยืนยัน แก้ หรือปฏิเสธร่าง แล้วสั่งยาเอง</p><span class="tag">ทบทวนโดยแพทย์</span></div>
+    <div class="step"><h3>ห้องยา</h3><p>ระบบตรวจแพ้ยา ยาซ้ำ ยาตีกัน เภสัชกรตัดสินใจจ่าย พัก หรือติดต่อแพทย์</p><span class="tag">② Pharma Agent</span></div>
+    <div class="step"><h3>Med Passport</h3><p>สรุปทั้งเส้นทาง ยาที่ได้รับ และอาการที่ต้องกลับมา พิมพ์ได้และส่งออก FHIR</p><span class="tag">④ Universal Med Passport</span></div>
+    <div class="step"><h3>กลับบ้าน</h3><p>แพทย์บันทึกการตัดสินใจ กลับบ้าน ส่งต่อ หรือสังเกตอาการ ระบบไม่ตัดสินแทน</p><span class="tag">③ Dashboard ติดตามทุกขั้น</span></div>
+  </div>
+</div></section>
+
+<section class="block" id="modules"><div class="wrap">
+  <div class="eyebrow"><span class="dot"></span>4 โมดูลที่ใช้งานได้วันนี้</div>
+  <h2>ทุกโมดูลทำงานได้จริงในเดโม และกำหนดชัดว่าไม่ทำอะไร.</h2>
+  <div class="grid g4">
+    <div class="card module"><span class="num">① VOICE AGENT</span><h3>ซักประวัติด้วยเสียง</h3><p>ถอดเสียงภาษาไทย แปลงเป็นข้อเท็จจริงที่มีโครงสร้าง แยก "ไม่ทราบ" "ปฏิเสธ" "ไม่มีข้อมูล" ออกจากกัน</p><p class="no"><b>ไม่ทำ:</b> บันทึกเองโดยไม่ผ่านพยาบาล</p></div>
+    <div class="card module"><span class="num">② PHARMA AGENT</span><h3>ตรวจยาก่อนจ่าย</h3><p>กฎตายตัวตรวจแพ้ยา แพ้ข้ามกลุ่ม ยาซ้ำ ยาตีกัน แล้ว AI ช่วยสรุปให้เภสัชกร ข้อมูลที่ขาดจะไม่ถูกถือว่าปลอดภัย</p><p class="no"><b>ไม่ทำ:</b> สั่งยา เปลี่ยนยา หรือจ่ายยาเอง</p></div>
+    <div class="card module"><span class="num">③ DASHBOARD</span><h3>เห็นคอขวดแบบสด</h3><p>ผู้ป่วยอยู่ขั้นไหน รอนานเท่าไรในแต่ละช่วง เคสไหนถูกยกระดับจาก red flag</p><p class="no"><b>ไม่ทำ:</b> จัดลำดับการรักษาแทนแพทย์</p></div>
+    <div class="card module"><span class="num">④ MED PASSPORT <span class="star">★</span></span><h3>ใบเดียวติดตัวผู้ป่วย</h3><p>สรุปที่แพทย์ยืนยัน ยาที่ได้รับ และอาการที่ต้องกลับมา พิมพ์ได้ และส่งออก FHIR R4 ตามโครง IPS</p><p class="no"><b>ไม่ทำ:</b> ใส่ข้อมูลที่ยังไม่มีคนยืนยัน</p></div>
+  </div>
+</div></section>
+
+<section class="block safety" id="safety"><div class="wrap">
+  <div class="eyebrow"><span class="dot"></span>ความปลอดภัยที่ออกแบบไว้ในระบบ</div>
+  <h2>AI เสนอได้ แต่คนเป็นผู้ตัดสินเสมอ.</h2>
+  <div class="grid g3">
+    <div class="card"><h3>Red flag มาก่อนเสมอ</h3><p>กฎคัดกรองแบบตายตัวทำงานก่อนโมเดลทุกครั้ง เคสที่ถูกยกระดับต้องมีเหตุผลจากแพทย์ก่อนปิดเคส</p></div>
+    <div class="card"><h3>ข้อมูลที่ขาดไม่ใช่ "ไม่มี"</h3><p>ไม่รู้ประวัติแพ้ยาหรือยาที่ใช้อยู่ ระบบจะไม่ให้ผลว่าไม่พบปัญหา และบอกชัดว่าต้องถามเพิ่ม</p></div>
+    <div class="card"><h3>Agent ลดระดับความเสี่ยงไม่ได้</h3><p>AI เรียกได้เฉพาะเครื่องมืออ่านข้อมูล มีโควตาทุกครั้ง เพิ่มข้อกังวลได้ แต่ลบผลตรวจของกฎไม่ได้</p></div>
+    <div class="card"><h3>ตรวจย้อนหลังได้ทุกขั้น</h3><p>ทุกการกระทำมีผู้ทำ เวลา และหลักฐาน บันทึกแบบเพิ่มอย่างเดียว เปิดดูกราฟการทำงานของ AI ได้</p></div>
+    <div class="card"><h3>ไม่มีข้อมูลจากอนาคต</h3><p>ข้อมูลทุกชิ้นมีเวลาที่พร้อมใช้ Passport ย้อนดู ณ เวลาใดก็ได้โดยไม่มีข้อมูลที่มาทีหลังปน</p></div>
+    <div class="card"><h3>เปลี่ยนโมเดลได้โดยไม่แก้ระบบ</h3><p>ทุกการเรียกโมเดลผ่าน Model Gateway เดียว เปลี่ยนผู้ให้บริการได้โดยหน้าจอและกฎความปลอดภัยไม่เปลี่ยน</p></div>
+  </div>
+  <p class="imp"><b>→</b>ยังไม่ผ่านการประเมินทางคลินิก ใช้กับข้อมูลสังเคราะห์เท่านั้น การใช้กับผู้ป่วยจริงต้องผ่านการประเมินทางคลินิกและคณะกรรมการจริยธรรมก่อน</p>
+</div></section>
+
+<section class="block" id="try"><div class="wrap">
+  <div class="eyebrow"><span class="dot"></span>ลองระบบจริง</div>
+  <h2>เลือกบทบาท แล้วลองทำงานกับเคสตัวอย่างได้ทันที.</h2>
+  <p class="lede">คุณจะได้พื้นที่ทดลองส่วนตัว พร้อมเคสสังเคราะห์ 4 เคสในขั้นตอนต่างกัน เปลี่ยนบทบาทได้ตลอดจากเมนูด้านซ้าย</p>
+  <div class="roles">
+    <button class="role" data-role="intake"><strong>พยาบาล / หน้างาน</strong><span>ซักประวัติด้วยเสียงหรือข้อความ ตรวจข้อเสนอของ AI แล้วส่งร่างให้แพทย์</span><em>เริ่มเป็นพยาบาล →</em></button>
+    <button class="role" data-role="physician"><strong>แพทย์</strong><span>ทบทวนร่างพร้อมหลักฐาน สั่งยา ใส่อาการที่ต้องกลับมา และบันทึกการตัดสินใจ</span><em>เริ่มเป็นแพทย์ →</em></button>
+    <button class="role" data-role="pharmacist"><strong>เภสัชกร</strong><span>ดูผลตรวจยาและความเห็น Pharma Agent แล้วตัดสินใจจ่าย พัก หรือติดต่อแพทย์</span><em>เริ่มเป็นเภสัชกร →</em></button>
+  </div>
+  <p class="notice">⚠ ใช้ข้อมูลสมมติเท่านั้น ห้ามใส่ชื่อ เลขบัตร เบอร์โทร หรือ HN ของผู้ป่วยจริง ระบบจะปฏิเสธข้อความที่ดูเหมือนข้อมูลระบุตัวบุคคล ข้อมูลเดโมถูกล้างเป็นระยะ</p>
+</div></section>
+
+<section class="block alt" id="pilot"><div class="wrap pilot">
+  <div>
+    <div class="eyebrow"><span class="dot"></span>โรงพยาบาลนำร่อง</div>
+    <h2>นำ MedX ไปทดลองในแผนกผู้ป่วยนอกของคุณ.</h2>
+    <ul>
+      <li>ศึกษาการใช้งานร่วมกับพยาบาล แพทย์ และเภสัชกรในสภาพแวดล้อมจริงแบบมีการกำกับ</li>
+      <li>ปรับตำรับยาและกฎคัดกรองร่วมกับเภสัชกรและแพทย์ของโรงพยาบาล</li>
+      <li>เชื่อมต่อผ่าน API และส่งข้อมูลเป็น FHIR</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>ติดต่อทีมพัฒนา</h3>
+    <p>MedX เป็นต้นแบบงานวิจัย การทดลองกับผู้ป่วยจริงต้องผ่านคณะกรรมการจริยธรรมและการประเมินทางคลินิกก่อนทุกครั้ง</p>
+    <p style="margin-top:16px">{contact}</p>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <span><strong style="color:#fff">MedX</strong> · Case-Adaptive Medical Multimodal Foundation Model · Senior Project</span>
+  <span>ต้นแบบงานวิจัย · ข้อมูลสังเคราะห์ · ไม่ใช่เครื่องมือแพทย์ · ไม่ใช้แทนการตัดสินใจของบุคลากรทางการแพทย์</span>
+  <span class="stations">ไปที่สถานีโดยตรง: <a href="/nurse#/voice">① Voice Agent</a> · <a href="/platform#/cases">แพทย์</a> · <a href="/platform#/pharmacy">② ห้องยา</a> · <a href="/platform#/dashboard">③ Dashboard</a> · <a href="/platform#/passport">④ Med Passport</a></span>
+</div></footer>
+
+<script>
+document.querySelectorAll('.role').forEach(function (button) {
+  button.addEventListener('click', function () {
+    var role = button.dataset.role, fallback = role === 'intake' ? '/nurse' : '/platform';
+    if (!{public}) { location.href = fallback; return; }
+    button.disabled = true;
+    fetch('/v2/demo/role', {method: 'POST', credentials: 'same-origin', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({role: role})})
+      .then(function (r) { return r.ok ? r.json() : {open: fallback}; })
+      .then(function (d) { location.href = d.open || fallback; })
+      .catch(function () { location.href = fallback; });
+  });
+});
+</script>
+</body>
+</html>

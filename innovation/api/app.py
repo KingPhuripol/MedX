@@ -22,6 +22,7 @@ from functools import cache
 from fastapi import APIRouter, Body, FastAPI, HTTPException, Path, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
+from pathlib import Path as FilePath
 from pydantic import BaseModel, ConfigDict, Field
 
 from innovation.api.errors import install_error_handlers
@@ -463,20 +464,14 @@ def create_app(
     # Probes are infrastructure, not API: they stay unversioned so a deployment does not
     # have to learn the contract version to know whether the process is alive.
     @app.get("/", response_class=HTMLResponse, include_in_schema=False)
-    def hub() -> str:
-        """One page that links every MedX station (DEC-0021)."""
-        links = [("① Voice Agent · รับข้อมูล/ซักประวัติ", "/nurse#/voice"),
-                 ("แพทย์ทบทวนร่าง · สั่งยา · คำแนะนำอาการที่ต้องกลับมา · บันทึกการตัดสินใจ", "/platform#/cases"),
-                 ("② ห้องยา · Pharma Agent", "/platform#/pharmacy"),
-                 ("③ Dashboard Monitoring", "/platform#/dashboard"),
-                 ("④ Universal Med Passport (เปิดจากเคส)", "/platform#/passport"),
-                 ("API docs", "/docs")]
-        items = "".join(f'<li><a href="{href}">{label}</a></li>' for label, href in links)
-        return ('<!doctype html><html lang="th"><meta charset="utf-8"><meta name="viewport" content="width=device-width">'
-                '<title>MedX</title><style>body{font-family:system-ui,sans-serif;max-width:640px;margin:40px auto;padding:0 16px;'
-                'line-height:1.6}li{margin:8px 0}a{font-size:1.1em}</style><h1>MedX · OPD journey</h1>'
-                '<p>ต้นแบบงานวิจัย ข้อมูลสังเคราะห์เท่านั้น · ระบบช่วยเสนอ คนเป็นผู้ตัดสินใจ</p>'
-                f'<ol>{items}</ol></html>')
+    def landing() -> str:
+        """Product page with a link into every MedX station (DEC-0021/0022)."""
+        from html import escape
+        page = (FilePath(__file__).parent.parent / "ui" / "templates" / "landing.html").read_text(encoding="utf-8")
+        email = settings.contact_email.strip()
+        contact = (f'<a class="btn btn-primary" href="mailto:{escape(email)}?subject=MedX%20pilot">ติดต่อ {escape(email)}</a>'
+                   if email else "ช่องทางติดต่อจะประกาศเร็ว ๆ นี้")
+        return page.replace("{contact}", contact).replace("{public}", "true" if settings.auth_mode == "public_demo" else "false")
 
     @app.get("/health")
     def health() -> dict:

@@ -1,0 +1,25 @@
+# Only the runtime goes to Vercel. Never upload secrets, local databases or evidence.
+.secrets
+.env
+.env.*
+artifacts
+*.sqlite3
+*.sqlite3-*
+.git
+.claude
+.pytest_cache
+**/__pycache__
+**/node_modules
+innovation/workspace/test-results
+innovation/workspace/playwright-report
+docs
+research
+experiments
+tests
+tools
+scripts
+project_state
+schemas
+prototype
+Makefile
+CLAUDE.md
