@@ -55,7 +55,7 @@ def test_fact_values_are_validated():
             ClinicalFact(kind=kind, value=value, **fact)
 
 
-def test_opd_context_is_in_scope():
+def test_opd_context_escalates_until_the_screen_is_validated_for_it():
     store = Store()
     try:
         service = Service(store, Runtime(MockProvider()))
@@ -65,8 +65,9 @@ def test_opd_context_is_in_scope():
         screen = screen_case(service.snapshot('opd', T))
     finally:
         store.close()
-    assert 'SCR-003-OUT-OF-SCOPE' not in screen.applied_rules
-    assert all(flag.code != 'OUT_OF_SCOPE_PRESENTATION' for flag in screen.red_flags)
+    # Until DEC-0021 is accepted with a clinical review, the ED screen escalates OPD as out of scope.
+    assert 'SCR-003-OUT-OF-SCOPE' in screen.applied_rules
+    assert any(flag.code == 'OUT_OF_SCOPE_PRESENTATION' for flag in screen.red_flags)
 
 
 def test_roles_per_kind_order_reference_and_stage_progression(client):
@@ -104,15 +105,24 @@ def test_roles_per_kind_order_reference_and_stage_progression(client):
     held = post_fact(c, 'pharm', 'd1', 'DISPENSE', {'order_event_id': 'o1', 'outcome': 'HELD',
                                                     'reason': 'ตรวจสอบประวัติแพ้ยา'}, 3)
     assert held.status_code == 201 and stage(c, 'pharm') == 'PHARMACY_HOLD'
-    assert post_fact(c, 'pharm', 'd2', 'DISPENSE', {'order_event_id': 'o1', 'outcome': 'DISPENSED'}, 4).status_code == 201
-    assert stage(c, 'pharm') == 'READY_HOME'
-    [item] = c.get('/v2/encounters?stage=READY_HOME', headers=h('pharm')).json()['items']
+    bare = post_fact(c, 'pharm', 'd2', 'DISPENSE', {'order_event_id': 'o1', 'outcome': 'DISPENSED'}, 4)
+    assert (bare.status_code, bare.json()['error']['code']) == (422, 'OVERRIDE_REASON_REQUIRED')
+    assert post_fact(c, 'pharm', 'd2', 'DISPENSE', {'order_event_id': 'o1', 'outcome': 'DISPENSED', 'reason': 'ถามผู้ป่วยแล้ว',
+        'acknowledged_findings': ['ALLERGY_STATUS_UNKNOWN', 'MEDICATION_HISTORY_UNKNOWN']}, 4).status_code == 201
+    assert stage(c, 'pharm') == 'AWAITING_DISPOSITION'  # the system never decides the patient can go home
+    [item] = c.get('/v2/encounters?stage=AWAITING_DISPOSITION', headers=h('pharm')).json()['items']
+    assert item['escalation'] and item['attention']['needs_attention']  # OPD screen is out of scope → escalated
+    assert post_fact(c, 'pharm', 'x2', 'DISPOSITION', {'decision': 'HOME'}, 5).status_code == 403
+    unreasoned = post_fact(c, 'doctor', 'dp0', 'DISPOSITION', {'decision': 'HOME'}, 5)
+    assert (unreasoned.status_code, unreasoned.json()['error']['code']) == (422, 'DISPOSITION_REASON_REQUIRED')
+    assert post_fact(c, 'doctor', 'dp', 'DISPOSITION', {'decision': 'HOME', 'reason': 'อาการคงที่'}, 5).status_code == 201
+    [item] = c.get('/v2/encounters?stage=DISPOSITION_HOME', headers=h('pharm')).json()['items']
     assert item['handoff_status'] == 'CONFIRMED' and not item['attention']['stale_draft']
     assert c.get('/v2/encounters?stage=PHARMACY', headers=h('pharm')).json()['items'] == []
-    assert c.get('/v2/encounters?stage=HOME', headers=h('pharm')).status_code == 422
+    assert c.get('/v2/encounters?stage=READY_HOME', headers=h('pharm')).status_code == 422
     audit = c.get('/v2/encounters/opd/audit?limit=100', headers=h('pharm')).json()['items']
     assert [a['role'] for a in audit if a.get('fact_kind') == 'DISPENSE'] == ['pharmacist', 'pharmacist']
 
     # New intake evidence after confirmation still stales the draft and returns the case to the doctor.
-    assert post_fact(c, 'nurse', 'c2', 'HISTORY', 'ข้อมูลใหม่', 5).status_code == 201
+    assert post_fact(c, 'nurse', 'c2', 'HISTORY', 'ข้อมูลใหม่', 6).status_code == 201
     assert stage(c) == 'DOCTOR_REVIEW'

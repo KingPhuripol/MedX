@@ -36,13 +36,37 @@ def test_cross_reactivity_interaction_and_duplicate_are_flagged():
     assert ('DUPLICATE_THERAPY', 'moderate') in found  # two NSAIDs
 
 
-def test_clean_order_is_valid_but_unknown_allergy_is_not():
-    assert check([ev('a', 'ALLERGY', 'ไม่มี'), order('o', 'paracetamol')]).status == 'VALID'
-    unasked = check([ev('a', 'ALLERGY', None, state='UNKNOWN'), order('o', 'paracetamol')])
+NONE = [ev('a', 'ALLERGY', 'ไม่มี'), ev('m', 'MEDICATION', 'ไม่มี')]
+
+
+def test_clean_order_has_no_rule_findings_but_missing_history_is_not_clean():
+    assert check(NONE + [order('o', 'paracetamol')]).status == 'NO_RULE_FINDINGS'
+    unasked = check([ev('a', 'ALLERGY', None, state='UNKNOWN'), ev('m', 'MEDICATION', 'ไม่มี'), order('o', 'paracetamol')])
     assert unasked.status == 'INSUFFICIENT_INFORMATION'  # missing is not negative
-    assert check([ev('a', 'ALLERGY', 'none'), order('o', 'unobtainium')]).status == 'NEEDS_PHARMACIST_REVIEW'
-    assert check([ev('a', 'ALLERGY', 'none'), order('o', 'paracetamol', dose=None)]).findings[0].code == 'INCOMPLETE_ORDER'
-    assert check([ev('a', 'ALLERGY', 'none')]).status == 'NO_ORDERS'
+    for meds in ([], [ev('m', 'MEDICATION', None, state='UNKNOWN')], [ev('m', 'MEDICATION', None, state='REFUSED')]):
+        result = check([ev('a', 'ALLERGY', 'none'), *meds, order('o', 'clarithromycin')])
+        assert result.status == 'INSUFFICIENT_INFORMATION' and result.findings[0].code == 'MEDICATION_HISTORY_UNKNOWN'
+    assert check(NONE + [order('o', 'unobtainium')]).status == 'NEEDS_PHARMACIST_REVIEW'
+    assert check(NONE + [order('o', 'paracetamol', dose=None)]).findings[0].code == 'INCOMPLETE_ORDER'
+    assert check(NONE).status == 'NO_ORDERS'
+
+
+def test_lists_and_combinations_are_fully_parsed():  # clinical safety review B1
+    cases = [
+        ([ev('a', 'ALLERGY', 'amoxicillin, ibuprofen')], 'ibuprofen', 'ALLERGY_MATCH'),
+        ([ev('a', 'ALLERGY', 'aspirin, penicillin')], 'amoxicillin', 'ALLERGY_MATCH'),
+        ([ev('a', 'ALLERGY', 'แพ้แอสไพรินและเพนิซิลลิน')], 'amoxicillin', 'ALLERGY_MATCH'),
+        ([ev('a', 'ALLERGY', 'ไม่มี'), ev('m', 'MEDICATION', 'paracetamol, sertraline')], 'tramadol', 'INTERACTION'),
+        ([ev('a', 'ALLERGY', 'ไม่มี'), ev('m', 'MEDICATION', 'sertraline')], 'paracetamol/tramadol', 'INTERACTION'),
+        ([ev('a', 'ALLERGY', 'ไม่มี'), ev('b', 'ALLERGY', 'penicillin')], 'paracetamol', 'ALLERGY_CONFLICT'),
+        ([ev('a', 'ALLERGY', 'amoxicillin, ผื่นแพ้ยาไม่ทราบชื่อ')], 'paracetamol', 'ALLERGY_UNRESOLVED'),
+        ([ev('a', 'ALLERGY', 'ไม่มี'), ev('m', 'MEDICATION', 'ยาความดันไม่ทราบชื่อ')], 'paracetamol', 'MEDICATION_UNRESOLVED'),
+    ]
+    for facts, drug, code in cases:
+        meds = [] if any(f['fact']['kind'] == 'MEDICATION' for f in facts) else [ev('m', 'MEDICATION', 'ไม่มี')]
+        result = check(facts + meds + [order('o', drug)])
+        assert result.status == 'NEEDS_PHARMACIST_REVIEW' and code in {f.code for f in result.findings}, (facts, drug)
+    assert 'MULTI_DRUG_ORDER' in {f.code for f in check(NONE + [order('o', 'paracetamol/tramadol')]).findings}
 
 
 class Scripted:
@@ -63,7 +87,7 @@ def calls(*names):
                            for i, n in enumerate(names)]}
 
 
-EVENTS = [ev('a', 'ALLERGY', 'none'), order('o', 'paracetamol')]
+EVENTS = [ev('a', 'ALLERGY', 'none'), ev('m', 'MEDICATION', 'none'), order('o', 'paracetamol')]
 
 
 def test_harness_runs_tools_and_agent_can_only_escalate():

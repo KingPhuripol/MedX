@@ -11,7 +11,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import NAMESPACE_URL, uuid5
 from innovation.v2.agents import AgentTool, run_agent
-from innovation.v2.models import Model, now
+from innovation.v2.models import JOURNEY_KINDS, Model, now
 from innovation.v2.pharmacy import NO_ALLERGY, check, current
 from pydantic import Field
 
@@ -46,18 +46,28 @@ def build(service, encounter_id, actor, as_of=None):
             break
     pharmacy = check(events)
     outcome = {d['value']['order_event_id']: d for d in pharmacy.dispenses}
+    # A dispensed medicine stays on the record even if its order was later replaced.
+    live = {o['event_id'] for o in pharmacy.orders}
+    every = {e['fact']['event_id']: e['fact'] for e in events}
+    replaced = [{**every[oid], 'replaced': True} for oid, d in outcome.items()
+                if oid not in live and oid in every and d['value']['outcome'] == 'DISPENSED']
+    dispositions = [f for f in known if f['kind'] == 'DISPOSITION']
+    escalation = service.escalation(encounter_id)
     return {
         'passport_version': 'medx-passport-1', 'classification': 'SYNTHETIC',
         'encounter_id': encounter_id, 'age': case['age'], 'care_context': case.get('care_context'),
         'as_of': as_of.isoformat(), 'generated_at': now().isoformat(),
-        'intake': [f for f in facts if f['kind'] not in {'MEDICATION_ORDER', 'DISPENSE', 'RETURN_PRECAUTION', 'LABEL'}],
+        'intake': [f for f in facts if f['kind'] not in JOURNEY_KINDS | {'LABEL'}],
         'physician': confirmed,
-        'orders': [{**o, 'dispense': outcome.get(o['event_id'])} for o in pharmacy.orders],
+        'orders': [{**o, 'dispense': outcome.get(o['event_id'])} for o in pharmacy.orders + replaced],
+        'escalation': escalation,
+        'disposition': dispositions[-1] if dispositions else None,
         'pharmacy': {'status': pharmacy.status, 'findings': [f.model_dump() for f in pharmacy.findings]},
         'return_precautions': [f for f in known if f['kind'] == 'RETURN_PRECAUTION'],
         'recorded_by': sorted({e['actor'] for e in events}),
-        'limitations': ['ข้อมูลสังเคราะห์เพื่อการวิจัย ไม่ใช่เวชระเบียนจริง',
-                        'สรุปนี้ผ่านการยืนยันของแพทย์และเภสัชกรตามที่บันทึกไว้เท่านั้น'],
+        'limitations': ['ข้อมูลสังเคราะห์เพื่อการวิจัย ไม่ใช่เวชระเบียนจริง · ต้นแบบงานวิจัย ต้องมีบุคลากรทบทวน',
+                        'แพทย์ยืนยันสรุปแล้ว' if confirmed else 'ยังไม่มีสรุปที่แพทย์ยืนยัน',
+                        'แพทย์บันทึกการตัดสินใจหลังตรวจแล้ว' if dispositions else 'แพทย์ยังไม่ได้บันทึกการตัดสินใจ (กลับบ้าน/ส่งต่อ/สังเกตอาการ)'],
     }
 
 
@@ -115,6 +125,10 @@ def to_fhir(passport):
                 **({'whenHandedOver': order['dispense']['available_at_time']} if d['outcome'] == 'DISPENSED'
                    else {'statusReasonCodeableConcept': {'text': f"{d['outcome']}: {d.get('reason') or ''}".strip()}})},
                 order['dispense']['event_id'])
+    for reason in passport['escalation']:
+        add('alerts', {'resourceType': 'Flag', 'status': 'active', 'code': {'text': reason},
+            'category': [{'coding': [{'system': 'http://terminology.hl7.org/CodeSystem/flag-category', 'code': 'clinical'}]}],
+            'subject': {'reference': patient}, 'encounter': {'reference': encounter}}, 'flag-' + reason)
     if passport['return_precautions']:
         add('plan', {'resourceType': 'CarePlan', 'status': 'active', 'intent': 'plan',
             'title': 'อาการที่ต้องกลับมาโรงพยาบาล', 'subject': {'reference': patient},
@@ -129,18 +143,19 @@ def to_fhir(passport):
         'title': title, 'code': {'coding': [{'system': 'http://loinc.org', 'code': loinc}]},
         **({'entry': sections[key]} if sections.get(key) else {'emptyReason': {'coding': [{
             'system': 'http://terminology.hl7.org/CodeSystem/list-empty-reason', 'code': empty or 'unavailable'}]}})}
-    composition = {'resourceType': 'Composition', 'meta': SYNTHETIC, 'status': 'final',
+    composition = {'resourceType': 'Composition', 'meta': SYNTHETIC,
+        'status': 'final' if passport['physician'] and passport['disposition'] else 'preliminary',
         'type': {'coding': [{'system': 'http://loinc.org', 'code': '60591-5', 'display': 'Patient summary Document'}]},
         'subject': {'reference': patient}, 'encounter': {'reference': encounter}, 'date': passport['as_of'],
-        'author': [{'display': 'MedX research prototype (synthetic)'}], 'title': f'MedX Passport · {eid}',
+        'author': [{'display': 'MedX research prototype (synthetic)'}], 'title': f'MedX Passport · {eid} · SYNTHETIC research prototype',
         'section': [
             section('Allergies and intolerances', '48765-2', 'allergies', 'nilknown' if no_allergy and not allergy_unknown else None),
             section('Medication summary', '10160-0', 'medications'),
             section('Vital signs', '8716-3', 'vitals'),
-            section('Plan of care', '18776-5', 'plan')]}
+            section('Plan of care', '18776-5', 'plan'),
+            section('Alerts', '104605-1', 'alerts', 'nilknown')]}
     if passport['physician']:
-        composition['section'].insert(0, {'title': 'Physician-confirmed summary',
-            'code': {'coding': [{'system': 'http://loinc.org', 'code': '11348-0', 'display': 'History of Past illness'}]},
+        composition['section'].insert(0, {'title': 'Physician-confirmed summary (AI-drafted, physician-reviewed)',
             'text': {'status': 'generated', 'div': '<div xmlns="http://www.w3.org/1999/xhtml">'
                      + escape(passport['physician']['summary']) + '</div>'}})
     head = [
@@ -148,8 +163,8 @@ def to_fhir(passport):
         {'fullUrl': patient, 'resource': {'resourceType': 'Patient', 'meta': SYNTHETIC,
             'identifier': [{'system': 'urn:medx:synthetic-encounter', 'value': eid}]}},
         {'fullUrl': encounter, 'resource': {'resourceType': 'Encounter', 'meta': SYNTHETIC,
-            'status': 'finished' if passport['orders'] and all(o['dispense'] and o['dispense']['value']['outcome'] == 'DISPENSED'
-                                                                for o in passport['orders']) else 'in-progress',
+            # Only a physician's disposition record finishes the encounter; the system never infers it.
+            'status': 'finished' if passport['disposition'] else 'in-progress',
             'class': {'system': 'http://terminology.hl7.org/CodeSystem/v3-ActCode',
                       'code': 'EMER' if str(passport['care_context']).startswith('ED_') else 'AMB'},
             'subject': {'reference': patient}}},
@@ -178,7 +193,8 @@ SYSTEM = ('You help a physician prepare a plain-Thai take-home summary from a sy
 def assist(provider, passport):
     """Passport Agent: patient-friendly summary + proposed precautions, both for physician review."""
     tools = [
-        AgentTool('get_physician_summary', 'Physician-confirmed summary, or null.', lambda: passport['physician']),
+        AgentTool('get_physician_summary', 'Physician-confirmed summary text, or null.',
+                  lambda: passport['physician'] and passport['physician']['summary']),
         AgentTool('get_medications', 'Orders with their dispense outcome.', lambda: passport['orders']),
         AgentTool('get_return_precautions', 'Return precautions already confirmed by the physician.',
                   lambda: [f['value'] for f in passport['return_precautions']]),
@@ -188,10 +204,10 @@ def assist(provider, passport):
         meds = [o['value']['drug'] for o in results['get_medications']
                 if o.get('dispense') and o['dispense']['value']['outcome'] == 'DISPENSED']
         return {'patient_summary': 'สรุปการมาโรงพยาบาลครั้งนี้ (ข้อมูลสังเคราะห์): '
-                + ((results['get_physician_summary'] or {}).get('summary') or 'ยังไม่มีสรุปที่แพทย์ยืนยัน')
+                + (results['get_physician_summary'] or 'ยังไม่มีสรุปที่แพทย์ยืนยัน')
                 + ('\nยาที่ได้รับ: ' + ', '.join(meds) if meds else ''),
-                'proposed_return_precautions': [] if results['get_return_precautions'] else
-                    ['อาการไม่ดีขึ้นหรือแย่ลงภายใน 48 ชั่วโมง', 'หายใจลำบาก เจ็บหน้าอก ซึมลง หรือหมดสติ']}
+                # Offline mode has no clinical reasoning: it proposes nothing rather than generic advice.
+                'proposed_return_precautions': []}
 
     return run_agent(provider, system=SYSTEM, context={'task': 'take-home summary'}, tools=tools,
                      output=PassportNote, offline=offline)

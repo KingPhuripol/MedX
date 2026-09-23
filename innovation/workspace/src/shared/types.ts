@@ -25,6 +25,7 @@ export type Case = {
   case_revision: number;
   handoff_status?: string;
   journey_stage?: string;
+  escalation?: string[];
   attention?: AttentionSummary;
   events?: { fact: Fact }[];
 };
@@ -213,7 +214,10 @@ export const journeyLabels: Record<string, string> = {
   DOCTOR_REVIEW: "รอแพทย์",
   PHARMACY: "ห้องยา",
   PHARMACY_HOLD: "ห้องยา-พัก",
-  READY_HOME: "กลับบ้านได้",
+  AWAITING_DISPOSITION: "รอแพทย์ตัดสินใจ",
+  DISPOSITION_HOME: "แพทย์ให้กลับบ้าน",
+  DISPOSITION_REFER: "แพทย์ส่งต่อ",
+  DISPOSITION_OBSERVE: "แพทย์ให้สังเกตอาการ",
 };
 
 export function humanizeClinicalText(value: string): string {

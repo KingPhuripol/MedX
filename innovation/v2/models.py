@@ -33,6 +33,8 @@ class Dispense(Model):
     order_event_id: str = Field(min_length=1, max_length=128)
     outcome: Literal["DISPENSED", "HELD", "CONTACT_PRESCRIBER"]
     reason: str | None = Field(default=None, max_length=2000)
+    # Rule-finding codes the pharmacist read before dispensing over them.
+    acknowledged_findings: list[str] = Field(default_factory=list, max_length=20)
 
     @model_validator(mode="after")
     def reason_required(self):
@@ -41,15 +43,22 @@ class Dispense(Model):
         return self
 
 
+class Disposition(Model):
+    """The physician's decision on where the patient goes next; the system never derives it."""
+    decision: Literal["HOME", "REFER", "OBSERVE"]
+    reason: str | None = Field(default=None, max_length=2000)
+
+
 # OPD journey records written after physician review (DEC-0021). They are not intake
 # evidence: the model snapshot excludes them like LABEL, and they do not stale a draft.
-JOURNEY_KINDS = frozenset({"MEDICATION_ORDER", "DISPENSE", "RETURN_PRECAUTION"})
+JOURNEY_KINDS = frozenset({"MEDICATION_ORDER", "DISPENSE", "RETURN_PRECAUTION", "DISPOSITION"})
+JOURNEY_MODELS = {"MEDICATION_ORDER": MedicationOrder, "DISPENSE": Dispense, "DISPOSITION": Disposition}
 
 
 class ClinicalFact(Model):
     event_id: str = Field(min_length=1, max_length=128)
     kind: Literal["CHIEF_COMPLAINT", "HISTORY", "MEDICATION", "ALLERGY", "VITAL", "LAB", "REPORT", "LABEL",
-                  "MEDICATION_ORDER", "DISPENSE", "RETURN_PRECAUTION"]
+                  "MEDICATION_ORDER", "DISPENSE", "RETURN_PRECAUTION", "DISPOSITION"]
     state: Literal["KNOWN", "UNKNOWN", "REFUSED", "NOT_AVAILABLE"] = "KNOWN"
     value: str | float | int | dict | None = None
     observed_at: AwareDatetime
@@ -68,10 +77,12 @@ class ClinicalFact(Model):
             raise ValueError("observation cannot follow availability")
         if self.kind in {'VITAL', 'LAB'} and isinstance(self.value, dict) and {'name', 'value', 'unit'} <= self.value.keys():
             Measurement.model_validate(self.value)
-        if self.state == "KNOWN" and self.kind in {"MEDICATION_ORDER", "DISPENSE"}:
+        if self.kind in JOURNEY_KINDS and self.state != "KNOWN":
+            raise ValueError(f"{self.kind} is a recorded action and must be KNOWN")
+        if self.kind in JOURNEY_MODELS:
             if not isinstance(self.value, dict):
                 raise ValueError(f"{self.kind} requires an object value")
-            (MedicationOrder if self.kind == "MEDICATION_ORDER" else Dispense).model_validate(self.value)
+            JOURNEY_MODELS[self.kind].model_validate(self.value)
         if self.kind == "RETURN_PRECAUTION" and self.state == "KNOWN" and not (isinstance(self.value, str) and self.value.strip()):
             raise ValueError("RETURN_PRECAUTION requires text")
         return self

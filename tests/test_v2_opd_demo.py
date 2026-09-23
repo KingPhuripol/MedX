@@ -22,7 +22,7 @@ def test_seeded_demo_has_one_case_per_stage_and_links_every_station(tmp_path, mo
         auth = lambda role: {'Authorization': f'Bearer {tokens[role]}'}
         items = c.get('/v2/encounters', headers=auth('pharmacist')).json()['items']
         assert {i['encounter_id']: i['journey_stage'] for i in items} == {
-            'opd-001': 'INTAKE', 'opd-002': 'DOCTOR_REVIEW', 'opd-003': 'PHARMACY', 'opd-004': 'READY_HOME'}
+            'opd-001': 'INTAKE', 'opd-002': 'DOCTOR_REVIEW', 'opd-003': 'PHARMACY', 'opd-004': 'DISPOSITION_HOME'}
         codes = {f['code'] for f in c.get('/v2/encounters/opd-003/pharmacy-check', headers=auth('pharmacist')).json()['findings']}
         assert {'ALLERGY_MATCH', 'INTERACTION'} <= codes
         assert c.get('/v2/dashboard', headers=auth('evaluator')).json()['total'] == 4

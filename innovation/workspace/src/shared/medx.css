@@ -70,3 +70,6 @@
 .stage-bar__track { height: 12px; }
 .stage-bar__fill { display: block; height: 100%; min-width: 2px; background: var(--accent-purple); border-radius: 0 4px 4px 0; }
 .stage-bar:hover .stage-bar__fill { background: var(--action-primary-active); }
+@media print {
+  .passport::before { content: attr(data-watermark); display: block; border: 2px solid #b3261e; color: #b3261e; padding: 6px 12px; font-weight: 600; text-align: center; }
+}

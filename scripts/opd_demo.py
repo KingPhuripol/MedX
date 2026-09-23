@@ -24,13 +24,13 @@ DB = Path('artifacts/opd-demo.sqlite3')
 ROLES = [('nurse-1', 'intake'), ('doctor-1', 'physician'), ('pharmacist-1', 'pharmacist'), ('evaluator-1', 'evaluator')]
 CASES = {  # encounter: (age, intake facts, orders, dispense outcomes, return precautions, confirm?)
     'opd-001': (34, [('CHIEF_COMPLAINT', 'ปวดศีรษะ 2 วัน')], [], [], [], False),
-    'opd-002': (61, [('CHIEF_COMPLAINT', 'ไอ มีเสมหะ 5 วัน'), ('ALLERGY', 'ไม่มี'),
+    'opd-002': (61, [('CHIEF_COMPLAINT', 'ไอ มีเสมหะ 5 วัน'), ('ALLERGY', 'ไม่มี'), ('MEDICATION', 'ไม่มี'),
                      ('VITAL', {'name': 'temperature', 'value': 37.9, 'unit': 'Cel'})], [], [], [], False),
     'opd-003': (72, [('CHIEF_COMPLAINT', 'เจ็บคอ ไข้ 3 วัน'), ('ALLERGY', 'แพ้ penicillin ผื่นลมพิษ'),
                      ('MEDICATION', 'warfarin 3 mg วันละครั้ง')],
                 [{'drug': 'amoxicillin', 'dose': '500 mg', 'route': 'PO', 'frequency': 'วันละ 3 ครั้ง', 'days': 7},
                  {'drug': 'ibuprofen', 'dose': '400 mg', 'route': 'PO', 'frequency': 'เมื่อปวด', 'days': 3}], [], [], True),
-    'opd-004': (45, [('CHIEF_COMPLAINT', 'ไข้ ปวดเมื่อยตัว 1 วัน'), ('ALLERGY', 'ไม่มี'),
+    'opd-004': (45, [('CHIEF_COMPLAINT', 'ไข้ ปวดเมื่อยตัว 1 วัน'), ('ALLERGY', 'ไม่มี'), ('MEDICATION', 'ไม่มี'),
                      ('VITAL', {'name': 'temperature', 'value': 38.4, 'unit': 'Cel'})],
                 [{'drug': 'paracetamol', 'dose': '500 mg', 'route': 'PO', 'frequency': 'ทุก 6 ชม. เมื่อมีไข้', 'days': 3}],
                 ['DISPENSED'], ['ไข้เกิน 3 วัน หายใจเหนื่อย หรือซึมลง'], True),
@@ -80,6 +80,8 @@ def seed(who):
                 add('RETURN_PRECAUTION', text, who['physician'], 'rp')
             for i, outcome in enumerate(outcomes):
                 add('DISPENSE', {'order_event_id': f'{eid}-o{i}', 'outcome': outcome}, who['pharmacist'], f'd{i}')
+            if outcomes:  # the physician, not the system, records where the patient goes
+                add('DISPOSITION', {'decision': 'HOME', 'reason': 'อาการคงที่ ได้รับยาแล้ว'}, who['physician'], 'dp')
     finally:
         store.close()
 

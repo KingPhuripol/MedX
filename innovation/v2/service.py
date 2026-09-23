@@ -16,6 +16,11 @@ class Principal:
     workspace: str = "default"
 
 
+assert JOURNEY_KINDS == {"MEDICATION_ORDER", "DISPENSE", "RETURN_PRECAUTION", "DISPOSITION"}, "update the queue SQL staleness list"
+STAGES = ("INTAKE", "DOCTOR_REVIEW", "PHARMACY", "PHARMACY_HOLD", "AWAITING_DISPOSITION",
+          "DISPOSITION_HOME", "DISPOSITION_REFER", "DISPOSITION_OBSERVE")
+
+
 class Service:
     def __init__(self, store, runtime):
         self.store, self.runtime = store, runtime
@@ -96,16 +101,21 @@ class Service:
         self.authorize_case(encounter_id, actor)
         fact = body.fact
         # DEC-0005/DEC-0021: physicians prescribe, pharmacists dispense; intake records evidence.
-        self.require(actor, {"DISPENSE": {"pharmacist"}, "MEDICATION_ORDER": {"physician"},
+        self.require(actor, {"DISPENSE": {"pharmacist"}, "MEDICATION_ORDER": {"physician"}, "DISPOSITION": {"physician"},
                              "RETURN_PRECAUTION": {"physician"}}.get(fact.kind, {"intake", "physician"}))
         def perform():
             self.ensure_revision(encounter_id, body.expected_revision)
             events = self.case(encounter_id)["events"]
-            if fact.kind == "DISPENSE" and fact.state == "KNOWN":
+            check_record = None
+            if fact.kind == "DISPENSE":
                 orders = {e["fact"]["event_id"] for e in events if e["fact"]["kind"] == "MEDICATION_ORDER"}
                 replaced = {e["fact"]["supersedes_event_id"] for e in events}
                 if fact.value["order_event_id"] not in orders - replaced:
                     raise DomainError(422, "INVALID_ORDER_REFERENCE")
+                check_record = self.dispense_gate(encounter_id, events, fact, actor)
+            if fact.kind == "DISPOSITION" and self.escalation(encounter_id) and not fact.value.get("reason"):
+                # Red flags outrank routine flow: overriding an escalation is a recorded, reasoned decision.
+                raise DomainError(422, "DISPOSITION_REASON_REQUIRED")
             available_ids = {f.event_id for f in self.snapshot(encounter_id, fact.available_at_time).evidence}
             if not set(fact.conflicts_with_event_ids) <= available_ids:
                 raise DomainError(422, 'INVALID_CONFLICT_TARGET')
@@ -120,7 +130,8 @@ class Service:
                 if fact.available_at_time < old.available_at_time:
                     raise DomainError(422, "BACKDATED_CORRECTION")
             self.store.append("event", encounter_id, {"fact": fact.model_dump(mode="json"),
-                "actor": actor.subject, "recorded_at": now().isoformat()})
+                "actor": actor.subject, "recorded_at": now().isoformat(),
+                **({"pharmacy_check": check_record} if fact.kind == "DISPENSE" else {})})
             self.audit(encounter_id, "EVIDENCE_APPENDED", actor,
                        event_id=fact.event_id, fact_kind=fact.kind,
                        case_revision=body.expected_revision + 1,
@@ -347,6 +358,20 @@ class Service:
                 record['content'] = {**record['content'], 'differentials': []}
         return result
 
+    def dispense_gate(self, encounter_id, events, fact, actor):
+        """Dispensing needs a confirmed hand-off; dispensing over rule findings needs a reason and acknowledgement."""
+        from innovation.v2.pharmacy import check
+        result = check(events)
+        oid = fact.value["order_event_id"]
+        relevant = sorted({f.code for f in result.findings if f.order_event_id in {oid, None}})
+        if fact.value["outcome"] == "DISPENSED":
+            drafts = self.drafts(encounter_id, actor)
+            if not drafts or not drafts[-1]["effective"] or drafts[-1]["status"] != "CONFIRM":
+                raise DomainError(409, "HANDOFF_NOT_CONFIRMED")
+            if relevant and (not fact.value.get("reason") or set(relevant) - set(fact.value.get("acknowledged_findings", []))):
+                raise DomainError(422, "OVERRIDE_REASON_REQUIRED", {"findings": relevant})
+        return {"status": result.status, "formulary_version": result.formulary_version, "finding_codes": relevant}
+
     def pharmacy_check(self, encounter_id, actor):
         from innovation.v2.pharmacy import check
         self.require(actor, {"pharmacist", "physician"})
@@ -368,7 +393,8 @@ class Service:
         except DomainError as exc:
             result = check(case["events"])
             agent.update(status="FAILED_SAFE", error_code=exc.code, summary=None, trace=[])
-        self.store.append("pharmacy_review", encounter_id, {**agent, "status_verdict": result.status})
+        self.store.append("pharmacy_review", encounter_id, {**agent, "status_verdict": result.status,
+            "formulary_version": result.formulary_version, "findings": [f.model_dump() for f in result.findings]})
         self.audit(encounter_id, "PHARMACY_AGENT_RUN", actor, run_id=agent["run_id"], agent_status=agent["status"],
                    verdict=result.status, model=agent["model"], provider=agent["provider"],
                    case_revision=case["case_revision"])
@@ -409,7 +435,7 @@ class Service:
         items = self.queue(actor, limit=10_000)["items"]
         at = lambda value: datetime.fromisoformat(value)
         waits = {"intake_to_draft": [], "draft_to_review": [], "review_to_dispense": []}
-        urgency, red_flags, agents = Counter(), 0, Counter()
+        urgency, agents = Counter(), Counter()
         for item in items:
             eid = item["encounter_id"]
             audit = self.store.all("audit", eid)
@@ -424,24 +450,27 @@ class Service:
             if drafts:
                 screen = drafts[-1].get("screen") or {}
                 urgency[screen.get("urgency_floor", "UNSCREENED")] += 1
-                red_flags += any(f.get("state") in {"TRIGGERED", "UNKNOWN"} for f in screen.get("red_flags", []))
                 if created:
                     waits["intake_to_draft"].append(at(drafts[0]["created_at"]) - created)
                 if confirmed:
                     waits["draft_to_review"].append(confirmed - at(drafts[0]["created_at"]))
-            if confirmed and dispensed and item["journey_stage"] == "READY_HOME":
+            if confirmed and dispensed and item["journey_stage"] in {"AWAITING_DISPOSITION", "DISPOSITION_HOME"}:
                 waits["review_to_dispense"].append(max(dispensed) - confirmed)
         minutes = lambda values: {"n": len(values), "median_minutes": round(median(v.total_seconds() for v in values) / 60, 1) if values else None}
         stages = Counter(item["journey_stage"] for item in items)
         return {"generated_at": now().isoformat(), "total": len(items),
-                "stages": {s: stages[s] for s in ("INTAKE", "DOCTOR_REVIEW", "PHARMACY", "PHARMACY_HOLD", "READY_HOME")},
+                "stages": {s: stages[s] for s in STAGES}, "escalated": sum(bool(item["escalation"]) for item in items),
                 "waits": {k: minutes(v) for k, v in waits.items()},
-                "urgency_floor": dict(urgency), "red_flag_cases": red_flags,
+                "urgency_floor": dict(urgency),
                 "needs_attention": sum(item["attention"]["needs_attention"] for item in items),
                 "agent_runs": dict(agents)}
 
     def journey_stage(self, encounter_id, handoff):
-        """OPD journey stage derived from handoff status and journey facts; no extra state."""
+        """OPD journey stage derived from handoff status and journey facts; no extra state.
+
+        Going home is never inferred: once pharmacy work is done the case waits for the
+        physician's DISPOSITION record (DEC-0005).
+        """
         if handoff == 'NO_DRAFT':
             return 'INTAKE'
         if handoff != 'CONFIRMED':
@@ -453,7 +482,20 @@ class Service:
         outcomes = [latest.get(f['event_id']) for f in facts if f['kind'] == 'MEDICATION_ORDER']
         if any(o in {'HELD', 'CONTACT_PRESCRIBER'} for o in outcomes):
             return 'PHARMACY_HOLD'
-        return 'PHARMACY' if any(o != 'DISPENSED' for o in outcomes) else 'READY_HOME'
+        if any(o != 'DISPENSED' for o in outcomes):
+            return 'PHARMACY'
+        dispositions = [f for f in facts if f['kind'] == 'DISPOSITION']
+        return 'DISPOSITION_' + dispositions[-1]['value']['decision'] if dispositions else 'AWAITING_DISPOSITION'
+
+    def escalation(self, encounter_id):
+        """Red flags and urgency floor from the latest draft's deterministic screen; they outrank the stage."""
+        with self.store.lock:
+            row = self.store.conn.execute("SELECT payload FROM v2_records WHERE kind='draft' AND json_extract(payload,'$.encounter_id')=? ORDER BY sequence DESC LIMIT 1", (encounter_id,)).fetchone()
+        screen = (json.loads(row[0]).get('screen') or {}) if row else {}
+        reasons = [f"{flag['code']}:{flag['state']}" for flag in screen.get('red_flags', []) if flag.get('state') in {'TRIGGERED', 'UNKNOWN'}]
+        if screen.get('urgency_floor') in {'URGENT_REVIEW', 'IMMEDIATE_REVIEW'}:
+            reasons.append(screen['urgency_floor'])
+        return reasons
 
     def queue(self, actor, q='', status='', offset=0, limit=25, stage=''):
         """The case list with the attention fields the queue needs, scoped to the actor's workspace."""
@@ -469,7 +511,7 @@ class Service:
                     CASE WHEN d.sequence IS NULL THEN 'NO_DRAFT'
                     WHEN json_extract(d.payload,'$.case_revision')>COALESCE(c.revision,0) OR EXISTS(SELECT 1 FROM events v
                         WHERE v.resource=e.resource AND v.n>json_extract(d.payload,'$.case_revision')
-                        AND v.fact_kind NOT IN ('MEDICATION_ORDER','DISPENSE','RETURN_PRECAUTION')) THEN 'STALE'
+                        AND v.fact_kind NOT IN ('MEDICATION_ORDER','DISPENSE','RETURN_PRECAUTION','DISPOSITION')) THEN 'STALE'
                     WHEN json_extract(r.payload,'$.action')='CONFIRM' AND json_extract(r.payload,'$.draft_revision')=json_extract(d.payload,'$.draft_revision') THEN 'CONFIRMED'
                     WHEN json_extract(r.payload,'$.action')='REJECT' THEN 'REJECTED' ELSE 'PENDING' END handoff_status
                     FROM v2_records e LEFT JOIN counts c ON c.resource=e.resource
@@ -503,8 +545,10 @@ class Service:
                 'active_job_status':active['status'] if active else None,
                 'stale_draft':handoff=='STALE',
                 'needs_attention':bool(pending or active or handoff in {'PENDING','STALE','REJECTED'})}
+            escalation=self.escalation(encounter_id)
+            attention['needs_attention']=attention['needs_attention'] or (bool(escalation) and not stages[encounter_id].startswith('DISPOSITION_'))
             items.append({**json.loads(row['payload']),'case_revision':revision,
-                'handoff_status':handoff,'journey_stage':stages[encounter_id],'attention':attention})
+                'handoff_status':handoff,'journey_stage':stages[encounter_id],'escalation':escalation,'attention':attention})
         return {'items':items,
                 'next_offset':offset+limit if len(rows)>limit else None}
 

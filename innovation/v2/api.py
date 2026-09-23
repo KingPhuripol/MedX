@@ -110,7 +110,7 @@ def mount(app, service, speech):
     @router.get('/encounters')
     def encounters(q: str = Query(default='', max_length=128),
                    status: str = Query(default='', pattern=r'^(|NO_DRAFT|STALE|CONFIRMED|REJECTED|PENDING)$'),
-                   stage: str = Query(default='', pattern=r'^(|INTAKE|DOCTOR_REVIEW|PHARMACY|PHARMACY_HOLD|READY_HOME)$'),
+                   stage: str = Query(default='', pattern=r'^(|INTAKE|DOCTOR_REVIEW|PHARMACY|PHARMACY_HOLD|AWAITING_DISPOSITION|DISPOSITION_HOME|DISPOSITION_REFER|DISPOSITION_OBSERVE)$'),
                    offset: int = Query(default=0, ge=0),
                    limit: int = Query(default=25, ge=1, le=100), actor=Depends(identity)):
         return service.queue(actor, q, status, offset, limit, stage)
@@ -152,7 +152,7 @@ def mount(app, service, speech):
     def pharmacy_review(encounter_id: str, actor=Depends(identity)):
         return service.pharmacy_review(encounter_id, actor)
 
-    from datetime import datetime as _datetime
+    from pydantic import AwareDatetime as _datetime
 
     @router.get('/encounters/{encounter_id}/passport')
     def passport(encounter_id: str, as_of: _datetime | None = None, actor=Depends(identity)):
@@ -162,7 +162,9 @@ def mount(app, service, speech):
     def passport_fhir(encounter_id: str, as_of: _datetime | None = None, actor=Depends(identity)):
         from fastapi.responses import JSONResponse
         from innovation.v2.passport import to_fhir
-        return JSONResponse(to_fhir(service.passport(encounter_id, actor, as_of)), media_type='application/fhir+json',
+        bundle = to_fhir(service.passport(encounter_id, actor, as_of))
+        service.audit(encounter_id, 'PASSPORT_EXPORTED', actor, format='FHIR_R4_DOCUMENT', bundle=bundle['identifier']['value'])
+        return JSONResponse(bundle, media_type='application/fhir+json',
                             headers={'Content-Disposition': f'attachment; filename="medx-passport-{encounter_id}.json"'})
 
     @router.post('/encounters/{encounter_id}/passport-assist')
