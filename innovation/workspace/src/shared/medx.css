@@ -51,3 +51,11 @@
 .findings { list-style: none; padding: 0; display: grid; gap: 8px; }
 .agent-note { border-left: 4px solid var(--accent, #1a73e8); padding: 8px 16px; margin: 12px 0; background: var(--surface-2, transparent); }
 .limitations { font-size: 0.85em; opacity: 0.8; }
+.passport { display: grid; gap: 16px; max-width: 880px; }
+.passport__head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; align-items: start; }
+.passport section { border-top: 1px solid var(--border, #d0d7de); padding-top: 12px; }
+.passport__redflag { border-left: 4px solid #d93025; padding-left: 12px; }
+@media print {
+  .no-print, nav, .topbar, .navigation__footer, .mobile-menu, .skip-link, .surface-switch { display: none !important; }
+  .passport { max-width: none; }
+}

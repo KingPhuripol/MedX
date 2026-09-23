@@ -5,13 +5,13 @@ import { useWorkspace } from "../../shared/useWorkspace";
 import { CasesPage } from "./CasesPage";
 import { SettingsPage } from "./SettingsPage";
 import { Research } from "./system";
-import { PharmacyPage } from "./journey";
+import { PassportPage, PharmacyPage } from "./journey";
 import type { Draft } from "../../shared/types";
-type Page = "cases" | "research" | "settings" | "pharmacy";
-const pages: Record<string, Page> = { experiments: "research", settings: "settings", pharmacy: "pharmacy" };
+type Page = "cases" | "research" | "settings" | "pharmacy" | "passport";
+const pages: Record<string, Page> = { experiments: "research", settings: "settings", pharmacy: "pharmacy", passport: "passport" };
 function route() {
   const parts = location.hash.replace(/^#\/?/, "").split("/");
-  return { page: pages[parts[0]] || "cases", id: parts[0] === "cases" ? parts[1] : undefined, pharmacy: parts[0] === "pharmacy" && parts[1] ? decodeURIComponent(parts[1]) : undefined, step: parts[2], draft: parts[0] === "drafts" ? parts[1] : undefined };
+  return { page: pages[parts[0]] || "cases", id: parts[0] === "cases" ? parts[1] : undefined, pharmacy: ["pharmacy", "passport"].includes(parts[0]) && parts[1] ? decodeURIComponent(parts[1]) : undefined, step: parts[2], draft: parts[0] === "drafts" ? parts[1] : undefined };
 }
 function PlatformApp() {
   const ws = useWorkspace();
@@ -45,9 +45,9 @@ function PlatformApp() {
     { id: "settings", label: "ความพร้อมระบบ", description: "ความสามารถและหลักฐาน", icon: "settings" },
   ];
   return <Shell product="platform" identity={{ name: "MedX Clinical Review", tagline: "ทบทวนข้อมูลทางคลินิก" }} nav={nav} page={page} onNavigate={navigate}
-    switchLink={{ href: "/nurse", label: "MedX Intake", icon: "mic" }} title={page === "pharmacy" ? "ห้องยา · Pharma Agent" : page === "cases" ? "ทบทวนข้อมูลทางคลินิก" : page === "research" ? "การทดลอง workflow" : "ความพร้อมระบบ"}
+    switchLink={{ href: "/nurse", label: "MedX Intake", icon: "mic" }} title={page === "passport" ? "Universal Med Passport" : page === "pharmacy" ? "ห้องยา · Pharma Agent" : page === "cases" ? "ทบทวนข้อมูลทางคลินิก" : page === "research" ? "การทดลอง workflow" : "ความพร้อมระบบ"}
     description="ตรวจหลักฐาน ทบทวนข้อเสนอ และบันทึกการตัดสินใจ" ws={ws} onSignedIn={initialize}>
-    {ws.session?.role === "intake" ? <section className="panel"><h2>บัญชีรับข้อมูลใช้งาน MedX Intake</h2><a href="/nurse">เปิดหน้ารับข้อมูลและซักประวัติ</a></section> : !ws.session ? null : page === "settings" ? <SettingsPage session={ws.session} caps={ws.caps} logout={ws.signOut} /> : page === "research" ? <Research /> : page === "pharmacy" ? <PharmacyPage ws={ws} selected={pharmacyCase} /> : <CasesPage ws={ws} changeCase={changeCase} />}
+    {ws.session && page === "passport" ? <PassportPage ws={ws} encounterId={pharmacyCase} /> : ws.session?.role === "intake" ? <section className="panel"><h2>บัญชีรับข้อมูลใช้งาน MedX Intake</h2><a href="/nurse">เปิดหน้ารับข้อมูลและซักประวัติ</a></section> : !ws.session ? null : page === "settings" ? <SettingsPage session={ws.session} caps={ws.caps} logout={ws.signOut} /> : page === "research" ? <Research /> : page === "pharmacy" ? <PharmacyPage ws={ws} selected={pharmacyCase} /> : <CasesPage ws={ws} changeCase={changeCase} />}
   </Shell>;
 }
 mount(PlatformApp);

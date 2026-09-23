@@ -148,6 +148,23 @@ def mount(app, service, speech):
     def pharmacy_review(encounter_id: str, actor=Depends(identity)):
         return service.pharmacy_review(encounter_id, actor)
 
+    from datetime import datetime as _datetime
+
+    @router.get('/encounters/{encounter_id}/passport')
+    def passport(encounter_id: str, as_of: _datetime | None = None, actor=Depends(identity)):
+        return service.passport(encounter_id, actor, as_of)
+
+    @router.get('/encounters/{encounter_id}/passport/fhir')
+    def passport_fhir(encounter_id: str, as_of: _datetime | None = None, actor=Depends(identity)):
+        from fastapi.responses import JSONResponse
+        from innovation.v2.passport import to_fhir
+        return JSONResponse(to_fhir(service.passport(encounter_id, actor, as_of)), media_type='application/fhir+json',
+                            headers={'Content-Disposition': f'attachment; filename="medx-passport-{encounter_id}.json"'})
+
+    @router.post('/encounters/{encounter_id}/passport-assist')
+    def passport_assist(encounter_id: str, actor=Depends(identity)):
+        return service.passport_assist(encounter_id, actor)
+
     @router.post('/encounters/{encounter_id}/events', status_code=201)
     def event(encounter_id: str, body: EventRequest, actor=Depends(identity)):
         return service.append_event(encounter_id, body, actor)

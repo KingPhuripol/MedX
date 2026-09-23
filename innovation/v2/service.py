@@ -373,6 +373,31 @@ class Service:
                    case_revision=case["case_revision"])
         return {**result.model_dump(mode="json"), "agent": agent}
 
+    def passport(self, encounter_id, actor, as_of=None):
+        from innovation.v2.passport import build
+        self.require(actor, {"intake", "physician", "pharmacist"})
+        self.authorize_case(encounter_id, actor)
+        return build(self, encounter_id, actor, as_of)
+
+    def passport_assist(self, encounter_id, actor):
+        """Passport Agent run: a take-home summary and proposed precautions for the physician."""
+        from innovation.v2.passport import assist
+        self.require(actor, {"physician"})
+        passport = self.passport(encounter_id, actor)
+        provider = self.runtime.provider
+        run = {"run_id": uuid4().hex, "provider": provider.name, "model": provider.model_version,
+               "case_revision": self.case_summary(encounter_id)["case_revision"], "created_at": now().isoformat()}
+        try:
+            note, trace = assist(provider, passport)
+            run.update(status="COMPLETED", **note.model_dump(), trace=[t.model_dump(mode="json") for t in trace])
+        except DomainError as exc:
+            run.update(status="FAILED_SAFE", error_code=exc.code, patient_summary=None,
+                       proposed_return_precautions=[], trace=[])
+        self.store.append("passport_assist", encounter_id, run)
+        self.audit(encounter_id, "PASSPORT_AGENT_RUN", actor, run_id=run["run_id"], agent_status=run["status"],
+                   model=run["model"], provider=run["provider"], case_revision=run["case_revision"])
+        return run
+
     def journey_stage(self, encounter_id, handoff):
         """OPD journey stage derived from handoff status and journey facts; no extra state."""
         if handoff == 'NO_DRAFT':

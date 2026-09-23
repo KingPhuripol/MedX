@@ -104,3 +104,42 @@ export function PharmacyPage({ ws, selected }: { ws: Workspace; selected?: strin
     </section> : <section className="empty-state"><h2>เลือกเคสจากคิวห้องยา</h2><p>ตรวจคำสั่งยาเทียบประวัติแพ้ยาและยาที่ใช้อยู่ ก่อนตัดสินใจจ่ายยา</p></section>}
   </>;
 }
+
+type Passport = { encounter_id: string; age: number; care_context: string; as_of: string; intake: Fact[];
+  physician: { summary: string; reviewed_by: string; reviewed_at: string; still_current: boolean } | null;
+  orders: (Fact & { dispense: Fact | null })[]; pharmacy: { status: string; findings: Finding[] };
+  return_precautions: Fact[]; recorded_by: string[]; limitations: string[] };
+type Assist = { status: string; patient_summary: string | null; proposed_return_precautions: string[]; model: string; error_code?: string };
+const kindLabels: Record<string, string> = { CHIEF_COMPLAINT: "อาการสำคัญ", HISTORY: "ประวัติ", MEDICATION: "ยาที่ใช้อยู่", ALLERGY: "การแพ้ยา", VITAL: "สัญญาณชีพ", LAB: "ผลแล็บ", REPORT: "รายงาน" };
+const factText = (f: Fact) => f.state !== "KNOWN" ? `(${f.state})` : typeof f.value === "object" && f.value && "unit" in f.value ? `${String(f.value.name)} ${String(f.value.value)} ${String(f.value.unit)}` : String(f.value);
+
+/** Universal Med Passport: printable hand-off for the next station or the patient, plus FHIR export. */
+export function PassportPage({ ws, encounterId }: { ws: Workspace; encounterId?: string }) {
+  const [passport, setPassport] = useState<Passport | null>(null);
+  const [assist, setAssist] = useState<Assist | null>(null);
+  const id = encounterId ? encodeURIComponent(encounterId) : "";
+  const refresh = async () => setPassport(await apiCall<Passport>(`/encounters/${id}/passport`));
+  useEffect(() => { setPassport(null); setAssist(null); if (encounterId) ws.work(refresh); }, [encounterId]);
+  if (!encounterId) return <section className="empty-state"><h2>เลือกเคสเพื่อเปิด Med Passport</h2><p>เปิดจากคิวตรวจทบทวนหรือห้องยา</p></section>;
+  if (!passport) return null;
+  const confirm = (text: string) => ws.work(async () => { const detail = await loadCase(encounterId); await postFact(encounterId, detail.case_revision, "RETURN_PRECAUTION", text);
+    setAssist(a => a && { ...a, proposed_return_precautions: a.proposed_return_precautions.filter(p => p !== text) }); await refresh(); });
+  return <article className="passport">
+    <header className="passport__head"><div><span className="eyebrow">MedX · Universal Med Passport</span><h2>{passport.encounter_id}</h2>
+      <p>ผู้ป่วยสมมติ อายุ {passport.age} ปี · {passport.care_context === "OPD_ADULT_GENERAL" ? "ผู้ป่วยนอก (OPD)" : "ห้องฉุกเฉิน (ED)"} · ข้อมูล ณ {new Date(passport.as_of).toLocaleString("th-TH")}</p></div>
+      <div className="actions no-print"><button className="button" onClick={() => window.print()}>พิมพ์ / บันทึก PDF</button>
+        <a className="button button--secondary" href={`/v2/encounters/${id}/passport/fhir`} download={`medx-passport-${passport.encounter_id}.json`}>ดาวน์โหลด FHIR</a></div></header>
+    <section><h3>1 · ข้อมูลแรกรับ</h3><ul>{passport.intake.map(f => <li key={f.event_id}><strong>{kindLabels[f.kind] || f.kind}:</strong> {factText(f)}</li>)}</ul></section>
+    <section><h3>2 · สรุปที่แพทย์ยืนยัน</h3>{passport.physician ? <><p className="summary-text">{passport.physician.summary}</p>
+      <p className="supporting-text">ยืนยันโดย {passport.physician.reviewed_by} · {new Date(passport.physician.reviewed_at).toLocaleString("th-TH")}{passport.physician.still_current ? "" : " · มีข้อมูลใหม่หลังยืนยัน ต้องทบทวน"}</p></> : <p>ยังไม่มีสรุปที่แพทย์ยืนยัน</p>}</section>
+    <section><h3>3 · ยา</h3>{passport.orders.length ? <ul>{passport.orders.map(o => <li key={o.event_id}>💊 {orderText(o)} — {o.dispense ? outcomeLabels[(o.dispense.value as { outcome: string }).outcome] : "รอห้องยา"}</li>)}</ul> : <p>ไม่มีคำสั่งยา</p>}
+      <p className="supporting-text">ผลตรวจห้องยา: {statusLabels[passport.pharmacy.status]?.[0]} ({passport.pharmacy.findings.length} ประเด็น)</p></section>
+    <section className="passport__redflag"><h3>4 · กลับมาโรงพยาบาลทันทีถ้ามีอาการ</h3>{passport.return_precautions.length ? <ul>{passport.return_precautions.map(f => <li key={f.event_id}>⚠️ {String(f.value)}</li>)}</ul> : <p>แพทย์ยังไม่ได้ระบุ</p>}</section>
+    {ws.session?.role === "physician" ? <section className="no-print agent-note"><h3>Passport Agent</h3>
+      <button className="button button--secondary" onClick={() => ws.work(async () => setAssist(await apiCall<Assist>(`/encounters/${id}/passport-assist`, "POST")))}>ให้ Agent ร่างคำอธิบายสำหรับผู้ป่วย</button>
+      {assist ? assist.status === "COMPLETED" ? <><p className="summary-text">{assist.patient_summary}</p>
+        {assist.proposed_return_precautions.map(p => <p key={p}>ข้อเสนอ: {p} <button className="button button--text" onClick={() => confirm(p)}>แพทย์ยืนยันเพิ่ม</button></p>)}</>
+        : <p>Agent ทำงานไม่สำเร็จ ({assist.error_code})</p> : null}</section> : null}
+    <footer><ul className="limitations">{passport.limitations.map(l => <li key={l}>{l}</li>)}</ul><p className="supporting-text">บันทึกโดย: {passport.recorded_by.join(", ")}</p></footer>
+  </article>;
+}
