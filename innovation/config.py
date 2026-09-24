@@ -145,8 +145,10 @@ class Settings(BaseSettings):
             )
         if self.auth_mode == "public_demo" and (self.v2_speech_url or self.v2_synthesis_url):
             raise ValueError("public_demo refuses speech/synthesis providers: raw visitor audio cannot be screened (DEC-0022)")
-        if self.auth_mode == "public_demo" and self.v2_provider_url and self.v2_paid_budget_usd <= 0:
-            raise ValueError("public_demo with a model provider requires FRONT_DOOR_V2_PAID_BUDGET_USD > 0")
+        if self.auth_mode == "public_demo" and self.v2_provider_url:
+            # Blocked until a shared (cross-instance) cost cap exists and a data-governance/PDPA
+            # approval is recorded; enabling a model publicly is a code change plus re-review.
+            raise ValueError("public_demo refuses a model provider until the shared cost cap is in place (DEC-0022)")
         if self.auth_mode == "token" and self.principals_file is None:
             raise ValueError("auth_mode=token requires FRONT_DOOR_PRINCIPALS_FILE")
         if self.v2_provider_url or self.v2_speech_url or self.v2_synthesis_url:

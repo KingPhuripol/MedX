@@ -45,11 +45,22 @@ def test_each_visitor_gets_a_private_seeded_sandbox_and_picks_a_role(tmp_path):
         assert b.post('/v2/demo/reset').json() == {'reset': True}
 
 
-def test_public_demo_with_a_model_requires_a_budget(tmp_path):
+def test_public_demo_refuses_a_model_provider_even_with_a_budget(tmp_path):
     import pytest
     with pytest.raises(ValueError):
         Settings(auth_mode='public_demo', allow_external=True, v2_transport='openai_compatible',
-                 v2_provider_url='https://llm.example/v1', v2_budget_db=tmp_path / 'b.sqlite3')
+                 v2_provider_url='https://llm.example/v1', v2_budget_db=tmp_path / 'b.sqlite3',
+                 v2_paid_budget_usd=5, v2_call_reservation_usd=0.05)
+
+
+def test_hospital_number_guard_ignores_ordinary_words():
+    from innovation.v2.identifiers import guard
+    guard('ปวดหลังตั้งแต่ Jan 2019 และ Plan 2026')  # must not raise
+    import pytest
+    from innovation.v2.store import DomainError
+    for text in ('เลขHN6512345', 'HN: 6512345', 'mrn 12345'):
+        with pytest.raises(DomainError):
+            guard(text)
 
 
 def test_public_demo_refuses_speech_and_guards_ids_and_review_text(tmp_path):
