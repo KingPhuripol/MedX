@@ -9,10 +9,10 @@ import re
 from innovation.v2.store import DomainError
 
 PATTERNS = {
-    'THAI_NATIONAL_ID': re.compile(r'(?<!\d)\d[\s-]?\d{4}[\s-]?\d{5}[\s-]?\d{2}[\s-]?\d(?!\d)'),
-    'PHONE': re.compile(r'(?<!\d)(?:\+66[\s-]?|0)[689]\d[\s-]?\d{3}[\s-]?\d{4}(?!\d)'),
+    'THAI_NATIONAL_ID': re.compile(r'(?<!\d)\d[\s.-]?\d{4}[\s.-]?\d{5}[\s.-]?\d{2}[\s.-]?\d(?!\d)'),
+    'PHONE': re.compile(r'(?<!\d)(?:\+66[\s.-]?|0)[2-9]\d?[\s.-]?\d{3}[\s.-]?\d{4}(?!\d)'),
     'EMAIL': re.compile(r'[\w.+-]+@[\w-]+\.[\w.-]+'),
-    'HOSPITAL_NUMBER': re.compile(r'\b(?:HN|AN|MRN)\s*[:#.]?\s*\d{4,}', re.IGNORECASE),
+    'HOSPITAL_NUMBER': re.compile(r'(?:HN|AN|MRN)\s*[:#.]?\s*\d{4,}', re.IGNORECASE),
 }
 
 

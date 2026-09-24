@@ -126,7 +126,9 @@ def public_visitor(request):
                 # Example drafts come from the offline provider: seeding never spends model budget.
                 seed_cases(Service(service.store, Runtime(MockProvider())), workspace, prefix=sandbox[:6] + '-')
                 _seeded.add(workspace)
-    return Principal('visitor-' + sandbox[:8], role if role in PUBLIC_ROLES else 'intake', workspace)
+    import hashlib
+    subject = 'visitor-' + hashlib.sha256(sandbox.encode()).hexdigest()[:24]  # idempotency is keyed on subject
+    return Principal(subject, role if role in PUBLIC_ROLES else 'intake', workspace)
 
 
 def install_public_demo(app, settings):

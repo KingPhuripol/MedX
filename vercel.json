@@ -1,13 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "",
-  "installCommand": "",
   "functions": {
     "api/index.py": {
       "maxDuration": 60,
       "includeFiles": "{innovation/**,shared/**,data/**,requirements.txt}",
       "excludeFiles": "{innovation/workspace/node_modules/**,innovation/workspace/src/**,innovation/workspace/e2e/**,**/__pycache__/**}"
     }
-  },
-  "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }]
+  }
 }

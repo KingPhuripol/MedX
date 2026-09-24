@@ -50,3 +50,25 @@ def test_public_demo_with_a_model_requires_a_budget(tmp_path):
     with pytest.raises(ValueError):
         Settings(auth_mode='public_demo', allow_external=True, v2_transport='openai_compatible',
                  v2_provider_url='https://llm.example/v1', v2_budget_db=tmp_path / 'b.sqlite3')
+
+
+def test_public_demo_refuses_speech_and_guards_ids_and_review_text(tmp_path):
+    import pytest
+    for key in ('v2_speech_url', 'v2_synthesis_url'):
+        with pytest.raises(ValueError):
+            Settings(auth_mode='public_demo', allow_external=True, v2_budget_db=tmp_path / 'b.sqlite3',
+                     **{key: 'https://speech.example/v1'})
+    app = create_app(settings=Settings(auth_mode='public_demo', db=tmp_path / 'demo.sqlite3', v2_inline_jobs=True))
+    with TestClient(app) as bootstrap:
+        bootstrap.get('/health')
+        a = visitor(app)
+        for bad in ('1103702345678', 'HN6512345'):
+            r = a.post('/v2/encounters', headers={'Idempotency-Key': bad}, json={'encounter_id': bad, 'age': 40})
+            assert r.json()['error']['code'] == 'POSSIBLE_REAL_IDENTIFIER', bad
+        a.post('/v2/demo/role', json={'role': 'physician'})
+        case = next(i for i in a.get('/v2/encounters').json()['items'] if i['encounter_id'].endswith('opd-002'))
+        draft = a.get(f"/v2/encounters/{case['encounter_id']}/drafts").json()[-1]
+        content = {**draft['content'], 'summary': 'โทร 081.234.5678 เลขHN6512345'}
+        r = a.post(f"/v2/drafts/{draft['draft_id']}/reviews", json={'expected_revision': case['case_revision'], 'idempotency_key': 'm',
+            'draft_revision': 1, 'expected_review_sequence': 0, 'action': 'MODIFY', 'reason': 'แก้ถ้อยคำ', 'content': content})
+        assert r.json()['error']['code'] == 'POSSIBLE_REAL_IDENTIFIER'

@@ -14,7 +14,7 @@ defaults = {
     'FRONT_DOOR_DB': '/tmp/medx-demo.sqlite3',
     'FRONT_DOOR_V2_INLINE_JOBS': 'true',
 }
-if os.environ.get('FRONT_DOOR_V2_PROVIDER_URL') or os.environ.get('FRONT_DOOR_V2_SPEECH_URL'):
+if os.environ.get('FRONT_DOOR_V2_PROVIDER_URL'):
     # A model provider is configured: OpenAI-compatible transport, gpt-6-luna by default,
     # and a per-instance spending ceiling on top of the provider-side hard limit.
     defaults.update({

@@ -143,6 +143,8 @@ class Settings(BaseSettings):
                 "refusing to enable an external provider with auth_mode=none: an "
                 "unauthenticated caller could cause content to leave the process."
             )
+        if self.auth_mode == "public_demo" and (self.v2_speech_url or self.v2_synthesis_url):
+            raise ValueError("public_demo refuses speech/synthesis providers: raw visitor audio cannot be screened (DEC-0022)")
         if self.auth_mode == "public_demo" and self.v2_provider_url and self.v2_paid_budget_usd <= 0:
             raise ValueError("public_demo with a model provider requires FRONT_DOOR_V2_PAID_BUDGET_USD > 0")
         if self.auth_mode == "token" and self.principals_file is None:

@@ -471,7 +471,10 @@ def create_app(
         email = settings.contact_email.strip()
         contact = (f'<a class="btn btn-primary" href="mailto:{escape(email)}?subject=MedX%20pilot">ติดต่อ {escape(email)}</a>'
                    if email else "ช่องทางติดต่อจะประกาศเร็ว ๆ นี้")
-        return page.replace("{contact}", contact).replace("{public}", "true" if settings.auth_mode == "public_demo" else "false")
+        mode = (f"AI จริง ({escape(settings.v2_model)}) ยังไม่ผ่านการประเมินทางคลินิก" if settings.v2_provider_url
+                else "ผู้ช่วยแบบกฎตายตัว (offline) ยังไม่ได้เชื่อมโมเดลภาษา")
+        return (page.replace("{contact}", contact).replace("{mode}", mode)
+                .replace("{public}", "true" if settings.auth_mode == "public_demo" else "false"))
 
     @app.get("/health")
     def health() -> dict:

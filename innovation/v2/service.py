@@ -56,6 +56,8 @@ class Service:
 
     def create(self, body, key, actor):
         self.require(actor, {"intake", "physician"})
+        from innovation.v2.identifiers import guard
+        guard(body.encounter_id)
         def perform():
             if self.store.all("encounter", body.encounter_id):
                 raise DomainError(409, "ENCOUNTER_EXISTS")
@@ -575,6 +577,12 @@ class Service:
                 raise DomainError(409, "STALE_DRAFT")
             if current['draft_revision'] != body.draft_revision or current['review_sequence'] != body.expected_review_sequence:
                 raise DomainError(409, "STALE_REVIEW")
+            if body.content is not None:
+                from innovation.v2.identifiers import guard
+                guard(body.content.model_dump(mode='json'))
+            if body.reason:
+                from innovation.v2.identifiers import guard
+                guard(body.reason)
             if body.action == 'MODIFY':
                 snapshot = CaseRevision.model_validate(current['snapshot'])
                 validate_content(body.content, snapshot, self.runtime.allow_differential)

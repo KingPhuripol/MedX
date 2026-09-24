@@ -55,6 +55,7 @@ nav.top .links a:hover { color:var(--white); }
 .hero .lede { color:var(--grey-3); margin-top:20px; }
 .hero .cta { display:flex; flex-wrap:wrap; gap:12px; margin-top:32px; }
 .hero .imp { border-color:var(--grey-5); color:var(--grey-3); max-width:760px; }
+.mode { margin-top:12px; font-size:14px; color:var(--grey-3); }
 .hero .imp b { color:#c79be6; }
 
 section.block { padding:88px 0; }
@@ -127,15 +128,16 @@ footer .wrap { display:flex; flex-wrap:wrap; gap:16px; justify-content:space-bet
 <nav class="top" aria-label="เมนูหลัก"><div class="wrap">
   <a class="mark" href="#top"><i>Mx</i>MedX</a>
   <div class="links"><a href="#problem">ปัญหา</a><a href="#journey">เส้นทางผู้ป่วย</a><a href="#modules">ระบบ</a><a href="#safety">ความปลอดภัย</a><a href="#pilot">โรงพยาบาลนำร่อง</a></div>
-  <a class="btn btn-primary" href="#try">ลองระบบจริง</a>
+  <a class="btn btn-primary" href="#try">ลองเดโม</a>
 </div></nav>
 
 <header class="hero" id="top"><div class="wrap">
   <div class="eyebrow"><span class="dot"></span>MedX · OPD Journey Copilot</div>
   <h1>ผู้ช่วย AI ที่เดินไปกับ<span class="nb">ผู้ป่วยนอก</span> ตั้งแต่<span class="nb">หน้าเคาน์เตอร์</span>จน<span class="nb">กลับบ้าน.</span></h1>
-  <p class="lede">ซักประวัติด้วยเสียง ส่งสรุปให้แพทย์ยืนยัน ตรวจยาก่อนจ่าย และรวมทุกอย่างไว้ใน Med Passport ใบเดียวที่ส่งต่อเป็นมาตรฐาน FHIR ได้ ออกแบบมาเพื่อลดงานซ้ำซ้อนของบุคลากร โดยทุกการตัดสินใจทางคลินิกยังเป็นของคน</p>
-  <div class="cta"><a class="btn btn-primary" href="#try">ลองใช้ระบบจริงตอนนี้</a><a class="btn btn-ghost" href="#pilot">ขอทดลองในโรงพยาบาล</a></div>
-  <p class="imp"><b>→</b>ต้นแบบงานวิจัยที่ใช้งานได้จริงทั้งระบบ รันบนเคสสังเคราะห์ ระบบไม่วินิจฉัย ไม่สั่งยา และไม่ตัดสินให้ผู้ป่วยกลับบ้านเอง</p>
+  <p class="lede">ซักประวัติ ส่งสรุปให้แพทย์ยืนยัน ตรวจยาก่อนจ่าย และรวมทุกอย่างไว้ใน Med Passport ใบเดียวที่ส่งออกเป็นไฟล์ FHIR ได้ ออกแบบมาเพื่อลดงานซ้ำซ้อนของบุคลากร โดยทุกการตัดสินใจทางคลินิกยังเป็นของคน</p>
+  <div class="cta"><a class="btn btn-primary" href="#try">ลองใช้เดโมตอนนี้</a><a class="btn btn-ghost" href="#pilot">ขอทดลองในโรงพยาบาล</a></div>
+  <p class="imp"><b>→</b>ต้นแบบงานวิจัย รันบนเคสสังเคราะห์ ระบบไม่วินิจฉัย ไม่สั่งยา และไม่ตัดสินให้ผู้ป่วยกลับบ้านเอง</p>
+  <p class="mode">โหมดของเดโมนี้: {mode} · การพูดด้วยเสียง: ปิดในเดโมสาธารณะ (พิมพ์ข้อความแทน) · ข้อมูลเดโมอาจรีเซ็ตได้ทุกเมื่อ</p>
 </div></header>
 
 <section class="block" id="problem"><div class="wrap">
@@ -155,20 +157,20 @@ footer .wrap { display:flex; flex-wrap:wrap; gap:16px; justify-content:space-bet
   <div class="journey">
     <div class="step"><h3>หน้างาน / พยาบาล</h3><p>พูดหรือพิมพ์ AI เสนอข้อมูลให้พยาบาลตรวจและยืนยันก่อนบันทึก</p><span class="tag">① Voice Agent</span></div>
     <div class="step"><h3>แพทย์</h3><p>เห็นสรุปพร้อมหลักฐาน red flag ขึ้นก่อน ยืนยัน แก้ หรือปฏิเสธร่าง แล้วสั่งยาเอง</p><span class="tag">ทบทวนโดยแพทย์</span></div>
-    <div class="step"><h3>ห้องยา</h3><p>ระบบตรวจแพ้ยา ยาซ้ำ ยาตีกัน เภสัชกรตัดสินใจจ่าย พัก หรือติดต่อแพทย์</p><span class="tag">② Pharma Agent</span></div>
-    <div class="step"><h3>Med Passport</h3><p>สรุปทั้งเส้นทาง ยาที่ได้รับ และอาการที่ต้องกลับมา พิมพ์ได้และส่งออก FHIR</p><span class="tag">④ Universal Med Passport</span></div>
+    <div class="step"><h3>ห้องยา</h3><p>ระบบช่วยตรวจแพ้ยา ยาซ้ำ ยาตีกันจากตำรับทดลอง เภสัชกรตัดสินใจจ่าย พัก หรือติดต่อแพทย์</p><span class="tag">② Pharma Agent</span></div>
+    <div class="step"><h3>Med Passport</h3><p>สรุปทั้งเส้นทาง ยาที่ได้รับ และอาการที่ต้องกลับมา พิมพ์ได้และส่งออกไฟล์ FHIR</p><span class="tag">④ Universal Med Passport</span></div>
     <div class="step"><h3>กลับบ้าน</h3><p>แพทย์บันทึกการตัดสินใจ กลับบ้าน ส่งต่อ หรือสังเกตอาการ ระบบไม่ตัดสินแทน</p><span class="tag">③ Dashboard ติดตามทุกขั้น</span></div>
   </div>
 </div></section>
 
 <section class="block" id="modules"><div class="wrap">
   <div class="eyebrow"><span class="dot"></span>4 โมดูลที่ใช้งานได้วันนี้</div>
-  <h2>ทุกโมดูลทำงานได้จริงในเดโม และกำหนดชัดว่าไม่ทำอะไร.</h2>
+  <h2>แต่ละโมดูลทำอะไร และกำหนดชัดว่าไม่ทำอะไร.</h2>
   <div class="grid g4">
-    <div class="card module"><span class="num">① VOICE AGENT</span><h3>ซักประวัติด้วยเสียง</h3><p>ถอดเสียงภาษาไทย แปลงเป็นข้อเท็จจริงที่มีโครงสร้าง แยก "ไม่ทราบ" "ปฏิเสธ" "ไม่มีข้อมูล" ออกจากกัน</p><p class="no"><b>ไม่ทำ:</b> บันทึกเองโดยไม่ผ่านพยาบาล</p></div>
-    <div class="card module"><span class="num">② PHARMA AGENT</span><h3>ตรวจยาก่อนจ่าย</h3><p>กฎตายตัวตรวจแพ้ยา แพ้ข้ามกลุ่ม ยาซ้ำ ยาตีกัน แล้ว AI ช่วยสรุปให้เภสัชกร ข้อมูลที่ขาดจะไม่ถูกถือว่าปลอดภัย</p><p class="no"><b>ไม่ทำ:</b> สั่งยา เปลี่ยนยา หรือจ่ายยาเอง</p></div>
+    <div class="card module"><span class="num">① VOICE AGENT</span><h3>ซักประวัติ พูดหรือพิมพ์</h3><p>แปลงคำบอกเล่าเป็นข้อเท็จจริงที่มีโครงสร้าง แยก "ไม่ทราบ" "ปฏิเสธ" "ไม่มีข้อมูล" ออกจากกัน การพูดด้วยเสียงเปิดเฉพาะการติดตั้งภายใน เดโมสาธารณะใช้การพิมพ์</p><p class="no"><b>ไม่ทำ:</b> บันทึกเองโดยไม่ผ่านพยาบาล</p></div>
+    <div class="card module"><span class="num">② PHARMA AGENT</span><h3>ตรวจยาก่อนจ่าย</h3><p>กฎตายตัวตรวจแพ้ยา แพ้ข้ามกลุ่ม ยาซ้ำ ยาตีกัน กับตำรับทดลอง 20 รายการที่ยังไม่ผ่านการทบทวนโดยเภสัชกร ข้อมูลที่ขาดจะไม่ถูกถือว่าปลอดภัย และ "ไม่พบประเด็น" ไม่ได้แปลว่ายาปลอดภัย</p><p class="no"><b>ไม่ทำ:</b> สั่งยา เปลี่ยนยา หรือจ่ายยาเอง</p></div>
     <div class="card module"><span class="num">③ DASHBOARD</span><h3>เห็นคอขวดแบบสด</h3><p>ผู้ป่วยอยู่ขั้นไหน รอนานเท่าไรในแต่ละช่วง เคสไหนถูกยกระดับจาก red flag</p><p class="no"><b>ไม่ทำ:</b> จัดลำดับการรักษาแทนแพทย์</p></div>
-    <div class="card module"><span class="num">④ MED PASSPORT <span class="star">★</span></span><h3>ใบเดียวติดตัวผู้ป่วย</h3><p>สรุปที่แพทย์ยืนยัน ยาที่ได้รับ และอาการที่ต้องกลับมา พิมพ์ได้ และส่งออก FHIR R4 ตามโครง IPS</p><p class="no"><b>ไม่ทำ:</b> ใส่ข้อมูลที่ยังไม่มีคนยืนยัน</p></div>
+    <div class="card module"><span class="num">④ MED PASSPORT <span class="star">★</span></span><h3>ใบเดียวติดตัวผู้ป่วย</h3><p>สรุปที่แพทย์ยืนยัน ยาที่ได้รับ และอาการที่ต้องกลับมา พิมพ์ได้ และส่งออกไฟล์ FHIR R4 ที่จัดโครงตาม IPS (ยังไม่ผ่านการตรวจด้วย validator ทางการ)</p><p class="no"><b>ไม่ทำ:</b> ใส่ข้อมูลที่ยังไม่มีคนยืนยัน</p></div>
   </div>
 </div></section>
 
@@ -179,17 +181,17 @@ footer .wrap { display:flex; flex-wrap:wrap; gap:16px; justify-content:space-bet
     <div class="card"><h3>Red flag มาก่อนเสมอ</h3><p>กฎคัดกรองแบบตายตัวทำงานก่อนโมเดลทุกครั้ง เคสที่ถูกยกระดับต้องมีเหตุผลจากแพทย์ก่อนปิดเคส</p></div>
     <div class="card"><h3>ข้อมูลที่ขาดไม่ใช่ "ไม่มี"</h3><p>ไม่รู้ประวัติแพ้ยาหรือยาที่ใช้อยู่ ระบบจะไม่ให้ผลว่าไม่พบปัญหา และบอกชัดว่าต้องถามเพิ่ม</p></div>
     <div class="card"><h3>Agent ลดระดับความเสี่ยงไม่ได้</h3><p>AI เรียกได้เฉพาะเครื่องมืออ่านข้อมูล มีโควตาทุกครั้ง เพิ่มข้อกังวลได้ แต่ลบผลตรวจของกฎไม่ได้</p></div>
-    <div class="card"><h3>ตรวจย้อนหลังได้ทุกขั้น</h3><p>ทุกการกระทำมีผู้ทำ เวลา และหลักฐาน บันทึกแบบเพิ่มอย่างเดียว เปิดดูกราฟการทำงานของ AI ได้</p></div>
-    <div class="card"><h3>ไม่มีข้อมูลจากอนาคต</h3><p>ข้อมูลทุกชิ้นมีเวลาที่พร้อมใช้ Passport ย้อนดู ณ เวลาใดก็ได้โดยไม่มีข้อมูลที่มาทีหลังปน</p></div>
+    <div class="card"><h3>ตรวจย้อนหลังได้</h3><p>การกระทำหลักถูกบันทึกพร้อมผู้ทำ เวลา และหลักฐานแบบเพิ่มอย่างเดียว เปิดดูกราฟการทำงานของ AI ได้ ในเดโมผู้เยี่ยมชมคนเดียวสลับได้ทุกบทบาท</p></div>
+    <div class="card"><h3>คุมเวลาของข้อมูล</h3><p>ข้อมูลทุกชิ้นมีเวลาที่พร้อมใช้ และ Passport กรองตามเวลาที่เลือก เพื่อไม่ให้ข้อมูลที่มาทีหลังปนเข้าการตัดสินใจก่อนหน้า</p></div>
     <div class="card"><h3>เปลี่ยนโมเดลได้โดยไม่แก้ระบบ</h3><p>ทุกการเรียกโมเดลผ่าน Model Gateway เดียว เปลี่ยนผู้ให้บริการได้โดยหน้าจอและกฎความปลอดภัยไม่เปลี่ยน</p></div>
   </div>
   <p class="imp"><b>→</b>ยังไม่ผ่านการประเมินทางคลินิก ใช้กับข้อมูลสังเคราะห์เท่านั้น การใช้กับผู้ป่วยจริงต้องผ่านการประเมินทางคลินิกและคณะกรรมการจริยธรรมก่อน</p>
 </div></section>
 
 <section class="block" id="try"><div class="wrap">
-  <div class="eyebrow"><span class="dot"></span>ลองระบบจริง</div>
+  <div class="eyebrow"><span class="dot"></span>ลองเดโม</div>
   <h2>เลือกบทบาท แล้วลองทำงานกับเคสตัวอย่างได้ทันที.</h2>
-  <p class="lede">คุณจะได้พื้นที่ทดลองส่วนตัว พร้อมเคสสังเคราะห์ 4 เคสในขั้นตอนต่างกัน เปลี่ยนบทบาทได้ตลอดจากเมนูด้านซ้าย</p>
+  <p class="lede">คุณจะได้พื้นที่ทดลองส่วนตัว พร้อมเคสสังเคราะห์ 4 เคสในขั้นตอนต่างกัน เปลี่ยนบทบาทได้ตลอดจากเมนูด้านซ้าย โหมด: {mode}</p>
   <div class="roles">
     <button class="role" data-role="intake"><strong>พยาบาล / หน้างาน</strong><span>ซักประวัติด้วยเสียงหรือข้อความ ตรวจข้อเสนอของ AI แล้วส่งร่างให้แพทย์</span><em>เริ่มเป็นพยาบาล →</em></button>
     <button class="role" data-role="physician"><strong>แพทย์</strong><span>ทบทวนร่างพร้อมหลักฐาน สั่งยา ใส่อาการที่ต้องกลับมา และบันทึกการตัดสินใจ</span><em>เริ่มเป็นแพทย์ →</em></button>
@@ -216,7 +218,7 @@ footer .wrap { display:flex; flex-wrap:wrap; gap:16px; justify-content:space-bet
 </div></section>
 
 <footer><div class="wrap">
-  <span><strong style="color:#fff">MedX</strong> · Case-Adaptive Medical Multimodal Foundation Model · Senior Project</span>
+  <span><strong style="color:#fff">MedX</strong> · Senior Project (Innovation Track) · เดโมนี้ไม่ได้ใช้โมเดล foundation ที่อยู่ระหว่างวิจัยของโครงการ</span>
   <span>ต้นแบบงานวิจัย · ข้อมูลสังเคราะห์ · ไม่ใช่เครื่องมือแพทย์ · ไม่ใช้แทนการตัดสินใจของบุคลากรทางการแพทย์</span>
   <span class="stations">ไปที่สถานีโดยตรง: <a href="/nurse#/voice">① Voice Agent</a> · <a href="/platform#/cases">แพทย์</a> · <a href="/platform#/pharmacy">② ห้องยา</a> · <a href="/platform#/dashboard">③ Dashboard</a> · <a href="/platform#/passport">④ Med Passport</a></span>
 </div></footer>
