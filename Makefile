@@ -49,12 +49,11 @@ test-pg: install
 	docker compose down; exit $$rc
 
 ## Synthetic case factory (slice s1): deterministic for a given SEED; output is gitignored.
+## OUT must resolve strictly inside data/ or the temp dir; replacement happens in Python after that check.
 data: $(VENV)/.installed
-	@if [ -e "$(OUT)" ] && [ ! -f "$(OUT)/splits.json" ]; then echo "refusing to replace $(OUT): not a factory dataset"; exit 1; fi
-	rm -rf "$(OUT)"
-	$(PY) -m data_factory generate --seed $(SEED) --out $(OUT)
+	$(PY) -m data_factory generate --seed $(SEED) --out "$(OUT)" --replace
 
-## Leakage audit + schema + gold separation + identifier scan + manifest hashes over OUT.
+## Leakage audit + schema + gold separation + identifier scan + manifest hashes + snapshot_items_after_T over OUT.
 audit: $(VENV)/.installed
 	$(PY) scripts/temporal_leakage_audit.py --dataset $(OUT)
 	$(PY) -m data_factory audit --dataset $(OUT)

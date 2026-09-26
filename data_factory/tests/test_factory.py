@@ -1,3 +1,4 @@
+import hashlib
 import importlib.util
 import json
 import os
@@ -13,13 +14,15 @@ from pydantic import BaseModel
 
 import casegraph
 from data_factory import audit
-from data_factory.generate import QUOTAS, generate
+from data_factory.generate import QUOTAS, generate, load_templates, red_flags_at, tree_sha256
 
 from .conftest import REPO_ROOT, SEED, load
+from .test_oracles import news_aggregate, oracle_red_flags, qsofa
 
 TEMPLATES = REPO_ROOT / "data_factory" / "templates"
 DEPT_CODES = {"01", "02", "03", "04", "06", "07", "08", "09", "11", "12"}
-RULES = ("RF-QSOFA", "RF-NEWS-SINGLE3", "RF-FAST", "RF-ACUTE-CHEST-PAIN", "RF-THUNDERCLAP", "RF-ANAPHYLAXIS")
+RULES = ("RF-QSOFA", "RF-NEWS-SINGLE3", "RF-NEWS-AGG5", "RF-FAST", "RF-ACUTE-CHEST-PAIN", "RF-THUNDERCLAP",
+         "RF-ANAPHYLAXIS")
 ISSUE_TYPES = ("duplicate_therapy", "dose_mismatch", "frequency_mismatch", "omission", "allergy_conflict")
 
 
@@ -202,6 +205,12 @@ def _plant(kind, root):
         s = load(case / "snapshot_T2.json")
         s["expected_action"] = "suggest"
         (case / "snapshot_T2.json").write_text(json.dumps(s, ensure_ascii=False))
+    elif kind == "snapshot_after_T":
+        j = load(case / "journey.json")
+        s = load(case / "snapshot_T1.json")
+        s["items"].append(j["items"][-1])
+        (case / "snapshot_T1.json").write_text(json.dumps(s, ensure_ascii=False))
+        _rehash(root)
     elif kind == "T_mismatch":
         gp = root / "gold" / "test" / f"{case.name}.json"
         g = load(gp)
@@ -209,13 +218,32 @@ def _plant(kind, root):
         gp.write_text(json.dumps(g, ensure_ascii=False))
 
 
-@pytest.mark.parametrize("kind", ["future_item", "cross_split", "patient_mismatch", "gold_in_input", "T_mismatch"])
+def _rehash(root):
+    """Recompute manifest hashes so that only content checks (not the manifest check) can catch a planted fault."""
+    m = load(root / "manifest.json")
+    m["files"] = {p.relative_to(root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+                  for p in sorted(root.rglob("*")) if p.is_file() and p.name != "manifest.json"
+                  and not p.name.endswith("audit_report.json")}
+    m["tree_sha256"] = tree_sha256(m["files"], m["model_inputs_glob"], m["audit_only_globs"])
+    (root / "manifest.json").write_text(json.dumps(m, ensure_ascii=False))
+
+
+@pytest.mark.parametrize("kind", ["future_item", "cross_split", "patient_mismatch", "gold_in_input", "T_mismatch",
+                                  "snapshot_after_T"])
 def test_audit_detects_planted(kind, dataset, tmp_path):
     root = tmp_path / "ds"
     shutil.copytree(dataset.root, root)
     assert leakage_module().main(["--dataset", str(root)]) == 0
     _plant(kind, root)
     assert leakage_module().main(["--dataset", str(root)]) != 0
+    if kind == "snapshot_after_T":
+        r = run_cli("-m", "data_factory", "audit", "--dataset", str(root))
+        rep = load(root / "factory_audit_report.json")
+        assert r.returncode != 0 and rep["status"] == "FAIL"
+        assert {k for k, v in rep["steps"].items() if v != "PASS"} == {"snapshot_items_after_T"}, rep["steps"]
+        case = sorted((root / "inputs" / "test").iterdir())[0]
+        planted = load(case / "journey.json")["items"][-1]["item_id"]
+        assert [e for e in rep["errors"] if "snapshot_T1.json" in e and planted in e], rep["errors"]
 
 
 def test_audit_legacy_as_of_mode(dataset):
@@ -238,6 +266,9 @@ def test_gold_separation(dataset):
                 assert tok not in text, (p, tok)
     assert audit.gold_separation(dataset.root) == []
     assert not list((dataset.root / "inputs").rglob("*gold*"))
+    assert {"department_evaluable", "department_reason", "NOT_EVALUABLE"} <= set(audit.GOLD_KEYS)
+    tla = leakage_module()
+    assert {"department_evaluable", "department_reason"} <= tla.GOLD_KEYS
 
 
 def _rows(dataset):
@@ -265,7 +296,9 @@ def test_red_flag_evolves_at_T2(dataset):
     assert len(evolving) >= 5
     for cid in evolving:
         rows = dataset.cases[cid]["gold"]["decision_times"]
-        assert rows[0]["target_department"] != "12" and rows[1]["target_department"] == "12"
+        assert rows[0]["department_evaluable"] == rows[1]["department_evaluable"]
+        if rows[0]["department_evaluable"]:
+            assert rows[0]["target_department"] != "12" and rows[1]["target_department"] == "12"
 
 
 def test_department_labels(dataset):
@@ -274,6 +307,9 @@ def test_department_labels(dataset):
     assert {c["code"] for c in dep["codes"]} == DEPT_CODES
     per_code = {}
     for cid, _, r in _rows(dataset):
+        if not r["department_evaluable"]:  # scored only over evaluable rows (S1R-A09)
+            assert r["target_department"] == "NOT_EVALUABLE"
+            continue
         assert r["target_department"] in DEPT_CODES
         per_code.setdefault(r["target_department"], set()).add(cid)
         if r["red_flags"]:
@@ -320,6 +356,49 @@ def test_expected_action_precedence(dataset):
         missing = any(v == "MISSING" for v in r["required_fields"].values())
         want = "escalate" if r["red_flags"] else ("abstain" if missing else "suggest")
         assert r["expected_action"] == want, cid
+        if r["required_fields"]["chief_complaint"] == "MISSING":
+            assert r["target_department"] == "NOT_EVALUABLE", cid
+
+
+def test_missing_cc_department_not_evaluable(dataset):
+    miss = [(cid, r) for cid, _, r in _rows(dataset) if r["required_fields"]["chief_complaint"] == "MISSING"]
+    rest = [(cid, r) for cid, _, r in _rows(dataset) if r["required_fields"]["chief_complaint"] != "MISSING"]
+    assert miss and rest
+    for cid, r in miss:
+        assert r["department_evaluable"] is False and r["target_department"] == "NOT_EVALUABLE", cid
+        assert r["department_reason"] == "chief_complaint_missing", cid
+        assert r["expected_action"] == ("escalate" if r["red_flags"] else "abstain"), cid
+    for cid, r in rest:
+        assert r["department_evaluable"] is True and r["target_department"] in DEPT_CODES, cid
+
+
+def test_pregnancy_no_ras_or_statin(dataset):
+    excl = load(TEMPLATES / "pregnancy_exclusions.json")
+    refs = {r["ref_id"] for r in load(TEMPLATES / "references.json")}
+    assert {x["atc_prefix"] for x in excl} == {"C09", "C10AA"} and all(x["source_ref"] in refs for x in excl)
+    preg = [c for c in dataset.cases.values() if c["gold"]["scenario"]["pregnant"]]
+    obstetric = {x["id"] for x in load(TEMPLATES / "complaints.json") if x["group"] == "obstetric"}
+    assert all(c["gold"]["scenario"]["complaint_id"] in obstetric for c in preg)
+    assert sum(c["gold"]["scenario"]["complaint_id"] in obstetric for c in dataset.cases.values()) == len(preg)
+    with_meds = 0
+    for c in preg:
+        lists = [i for i in c["journey"]["items"] if i["data_type"] == "MedicationList"]
+        with_meds += bool(lists)
+        codes = [e["atc_code"] for i in lists for e in i["entries"]]
+        assert not [a for a in codes if a.startswith(("C09", "C10AA"))], codes
+    drugs = {r["case_id"]: r["drugs"] for r in dataset.injections}
+    form = {f["generic_name"]: f["atc_code"] for f in load(TEMPLATES / "formulary.json")}
+    for c in preg:
+        for d in drugs.get(c["journey"]["case_id"], []):
+            assert not form[d].startswith(("C09", "C10AA"))
+    assert with_meds >= 5
+
+def test_news_agg_regression_vector():
+    v = {"item_id": "X-VS", "data_type": "Vitals", "rr": 22, "sbp": 101, "temp_c": 38.5, "hr": 95, "spo2": 97,
+         "consciousness": "A", "on_oxygen": False}
+    assert news_aggregate(v) == 5 and qsofa(v) == 1
+    assert oracle_red_flags([v]) == {"RF-NEWS-AGG5": ["X-VS"]}
+    assert red_flags_at(load_templates()["red_flags"], [v]) == [{"rule_id": "RF-NEWS-AGG5", "item_ids": ["X-VS"]}]
 
 
 # ------------------------------------------------------------------ medication
@@ -378,6 +457,9 @@ def test_injection_log_one_to_one(dataset):
 def test_transcripts_wellformed(dataset):
     drugs = sorted((f["generic_name"] for f in load(TEMPLATES / "formulary.json")), key=len, reverse=True)
     used = set()
+    scripts = {tuple(x["text"] for x in transcript(c["journey"]["items"])["turns"] if x["speaker"] == "nurse")
+               for c in dataset.cases.values()}
+    assert len(scripts) == 1  # the nurse script never depends on the label
     for cid, c in dataset.cases.items():
         tx = transcript(c["journey"]["items"])
         turns = tx["turns"]
@@ -447,11 +529,17 @@ def test_templates_have_source_ref():
     vb = load(TEMPLATES / "vitals_bands.json")
     dep = load(TEMPLATES / "departments.json")
     records = [*load(TEMPLATES / "complaints.json"), *load(TEMPLATES / "red_flags.json"), *vb["normal"],
+               *load(TEMPLATES / "pregnancy_exclusions.json"),
                *vb["red_flag_variants"], *vb["near_miss_variants"], vb["anaphylaxis_host"],
                *load(TEMPLATES / "formulary.json"), *load(TEMPLATES / "allergy_classes.json"), dep, *dep["codes"],
                *load(TEMPLATES / "issue_types.json"), *load(TEMPLATES / "labs.json")]
     unresolved = [r for r in records if r.get("source_ref") not in refs]
     unresolved += [r for r in load(TEMPLATES / "complaints.json") if r.get("department_source_ref") not in refs]
+    tnm = [r for r in load(TEMPLATES / "complaints.json") if "near_miss_family" in r]
+    assert len(tnm) >= 4 and all(r["near_miss_reason"] for r in tnm)
+    unresolved += [r for r in tnm if r["near_miss_ref"] not in refs]
+    agg = next(r for r in load(TEMPLATES / "red_flags.json") if r["rule_id"] == "RF-NEWS-AGG5")
+    assert refs[agg["chart_ref"]]["url"] and refs[agg["source_ref"]]["pmid"]
     assert unresolved == []
 
 
@@ -473,3 +561,106 @@ def test_manifest_detects_tamper(dataset, tmp_path):
 def test_datacard_present(dataset):
     text = (dataset.root / "DATACARD.md").read_text("utf-8")
     assert "synthetic, not for clinical use, not expert-reviewed, system evaluation only" in text
+
+
+SNAPSHOT_SENTENCE = ("Only `inputs/<split>/<case_id>/snapshot_T*.json` files are valid model inputs. `journey.json` is "
+                     "the full timeline, including items after every decision time, for audit only; it must never be "
+                     "given to a model.")
+
+
+def test_datacard_snapshot_only(dataset):
+    card = (dataset.root / "DATACARD.md").read_text("utf-8")
+    readme = (dataset.root / "gold" / "README.md").read_text("utf-8")
+    assert SNAPSHOT_SENTENCE in card
+    for text in (card, readme):
+        assert "Department accuracy is computed only over rows with `department_evaluable == true`" in text
+
+
+def test_manifest_model_inputs(dataset, tmp_path):
+    m = dataset.manifest
+    assert m["model_inputs_glob"] == "inputs/*/*/snapshot_T*.json"
+    assert m["audit_only_globs"] == ["inputs/*/*/journey.json", "gold/**"]
+    assert m["generator_version"] == "1.1.0"
+    assert len(list(dataset.root.glob(m["model_inputs_glob"]))) == 400
+    rep = audit.run_audit(dataset.root, write_report=False)
+    assert rep["status"] == "PASS" and rep["steps"]["snapshot_items_after_T"] == "PASS"
+    root = tmp_path / "ds"
+    shutil.copytree(dataset.root, root)
+    mm = load(root / "manifest.json")
+    mm["model_inputs_glob"] = "inputs/*/*/*.json"  # widening the model-input glob breaks the manifest hash
+    (root / "manifest.json").write_text(json.dumps(mm))
+    assert audit.run_audit(root, write_report=False)["steps"]["manifest"].startswith("FAIL")
+
+
+# ------------------------------------------------------------------ OUT path guard (probe dirs only)
+def _probe(path):
+    path.mkdir(parents=True, exist_ok=True)
+    (path / "splits.json").write_text("{}")
+    (path / "sentinel.txt").write_text("keep")
+    return path
+
+
+def _listing(path):
+    return sorted(p.relative_to(path).as_posix() for p in path.rglob("*")) if path.is_dir() else None
+
+
+@pytest.mark.parametrize("case", ["parent", "absolute", "symlink", "data_root", "repo_root"])
+def test_out_path_guard(case, tmp_path):
+    data = REPO_ROOT / "data"
+    data.mkdir(exist_ok=True)
+    cwd, link = REPO_ROOT, None
+    if case == "parent":
+        watch = _probe(REPO_ROOT / "build" / "s1r_guard_parent")
+        cwd, out = data, "../build/s1r_guard_parent"
+    elif case == "absolute":
+        watch = _probe(REPO_ROOT / "build" / "s1r_guard_absolute")
+        out = str(watch)
+    elif case == "symlink":
+        watch = _probe(REPO_ROOT / "build" / "s1r_guard_symlink")
+        link = data / "s1r_guard_link"
+        if link.is_symlink():
+            link.unlink()
+        link.symlink_to(watch, target_is_directory=True)
+        out = str(link)
+    elif case == "data_root":
+        watch, out = data, str(data)
+    else:
+        watch, out = REPO_ROOT, str(REPO_ROOT)
+    before = _listing(watch)
+    try:
+        env = {**os.environ, "PYTHONPATH": str(REPO_ROOT)}
+        r = subprocess.run([sys.executable, "-m", "data_factory", "generate", "--seed", "1", "--out", out, "--replace"],
+                           cwd=cwd, env=env, capture_output=True, text=True, timeout=60)
+        assert r.returncode == 2, r.stdout + r.stderr
+        assert "refusing" in r.stderr and os.path.realpath(data) in r.stderr
+        assert _listing(watch) == before
+        if case not in ("data_root", "repo_root"):
+            assert (watch / "sentinel.txt").read_text() == "keep"
+    finally:
+        if link is not None:
+            link.unlink()
+        if case in ("parent", "absolute", "symlink"):
+            shutil.rmtree(watch)
+
+
+def test_make_data_rejects_out_of_tree():
+    probe = _probe(REPO_ROOT / "build" / "s1r_probe")
+    try:
+        r = subprocess.run(["make", "data", f"OUT={probe}"], cwd=REPO_ROOT, capture_output=True, text=True, timeout=120)
+        assert r.returncode != 0, r.stdout + r.stderr
+        assert sorted(p.name for p in probe.iterdir()) == ["sentinel.txt", "splits.json"]
+    finally:
+        shutil.rmtree(probe)
+
+
+def test_out_path_allowed(tmp_path):
+    under_data = REPO_ROOT / "data" / "synthetic" / "s1r_guard_allowed"
+    try:
+        for out in (under_data, tmp_path / "ok"):
+            for _ in range(2):  # second run replaces the factory dataset created by the first
+                r = run_cli("-m", "data_factory", "generate", "--seed", str(SEED), "--out", str(out), "--splits-only",
+                            "--replace")
+                assert r.returncode == 0, r.stderr
+                assert (out / "splits.json").is_file()
+    finally:
+        shutil.rmtree(under_data, ignore_errors=True)

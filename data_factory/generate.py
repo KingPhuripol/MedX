@@ -17,7 +17,7 @@ from pathlib import Path
 
 from casegraph import evidence_adapter
 
-GENERATOR_VERSION = "s1-1.0.0"
+GENERATOR_VERSION = "1.1.0"
 PKG_DIR = Path(__file__).resolve().parent
 TEMPLATES = PKG_DIR / "templates"
 TZ = timezone(timedelta(hours=7))
@@ -34,15 +34,24 @@ QUOTAS = {
     "no_medication": "1/10",
     "late_items": "7/20",
     "near_miss_of_non_red_flag": "1/5",
+    "text_near_miss_of_plain": "1/4",
+    "arrival_tamtee": "1/6",
     "injected_of_medication": "3/5",
 }
-RULE_CYCLE = ("RF-QSOFA", "RF-NEWS-SINGLE3", "RF-FAST", "RF-ACUTE-CHEST-PAIN", "RF-THUNDERCLAP", "RF-ANAPHYLAXIS")
-VITALS_RULES = ("RF-QSOFA", "RF-NEWS-SINGLE3")
+RULE_CYCLE = ("RF-QSOFA", "RF-NEWS-SINGLE3", "RF-FAST", "RF-ACUTE-CHEST-PAIN", "RF-THUNDERCLAP", "RF-ANAPHYLAXIS",
+              "RF-NEWS-AGG5")
+VITALS_RULES = ("RF-QSOFA", "RF-NEWS-SINGLE3", "RF-NEWS-AGG5")
+TNM_CYCLE = ("TNM-CHEST-STABLE", "TNM-HEADACHE-GRADUAL", "TNM-NUMB-BILATERAL", "TNM-URTICARIA-ONLY")
+# Answers to the fixed nurse question about arrival. The TAMTEE ones use ทันที only in a travel/arrival sense.
+ARRIVAL_PLAIN = ("มาคนเดียว", "ลูกพามา", "เพื่อนขับรถมาส่ง")
+ARRIVAL_TAMTEE = ("ลูกพามาทันทีหลังเลิกงาน", "นั่งรถมาทันทีหลังเลิกงาน")
+MODEL_INPUTS_GLOB = "inputs/*/*/snapshot_T*.json"
+AUDIT_ONLY_GLOBS = ["inputs/*/*/journey.json", "gold/**"]
 MISSING_CYCLE = (("chief_complaint",), ("duration",), ("allergy_status",), ("duration", "allergy_status"))
 ISSUE_TYPES = ("duplicate_therapy", "dose_mismatch", "frequency_mismatch", "omission", "allergy_conflict")
 FREQ_TH = {"OD": "วันละ 1 ครั้ง", "BID": "วันละ 2 ครั้ง", "TID": "วันละ 3 ครั้ง", "QID": "วันละ 4 ครั้ง", "HS": "ก่อนนอน"}
 UNIT_TH = {"mg": "มิลลิกรัม", "mcg": "ไมโครกรัม"}
-DURATION_TH = {"hour": "ชั่วโมง", "day": "วัน", "week": "สัปดาห์"}
+DURATION_TH = {"hour": "ชั่วโมง", "day": "วัน", "week": "สัปดาห์", "month": "เดือน"}
 VITAL_PARAMS = ("sbp", "dbp", "hr", "rr", "temp_c", "spo2", "consciousness", "on_oxygen")
 
 
@@ -59,7 +68,7 @@ def _nfc(obj):
 
 def load_templates() -> dict:
     names = ("complaints", "departments", "red_flags", "references", "formulary", "allergy_classes",
-             "vitals_bands", "issue_types", "labs")
+             "vitals_bands", "issue_types", "labs", "pregnancy_exclusions")
     return {n: _nfc(json.loads((TEMPLATES / f"{n}.json").read_text(encoding="utf-8"))) for n in names}
 
 
@@ -78,6 +87,13 @@ def parse(ts: str) -> datetime:
 def _hit(i: int, q: Fraction) -> bool:
     """Even spread: exactly floor(n*q) hits among indices 0..n-1."""
     return int((i + 1) * q) > int(i * q)
+
+
+def tree_sha256(files: dict, model_inputs_glob: str, audit_only_globs: list) -> str:
+    """Manifest hash over per-file hashes plus the model-input / audit-only globs."""
+    text = "".join(f"{k}\t{v}\n" for k, v in files.items())
+    text += f"model_inputs_glob\t{model_inputs_glob}\naudit_only_globs\t{json.dumps(audit_only_globs)}\n"
+    return hashlib.sha256(text.encode()).hexdigest()
 
 
 def source_code_sha256() -> str:
@@ -124,25 +140,36 @@ def make_splits(main: random.Random, roster: list[dict]) -> dict[str, str]:
 def plan_cases(main: random.Random, roster: list[dict], splits: dict[str, str], tpl: dict, quotas: dict) -> list[dict]:
     q = {k: Fraction(v) for k, v in quotas.items()}
     complaints = tpl["complaints"]
-    by_group = {g: [c for c in complaints if c["group"] == g] for g in ("general", "obstetric", "gynecologic")}
+    by_group = {g: [c for c in complaints if c["group"] == g and "near_miss_family" not in c]
+                for g in ("general", "obstetric", "gynecologic")}
     hosts = [c for c in complaints if c["vitals_rf_host"]]
-    text_cc = {c["red_flag_rule"]: c for c in complaints if c["group"] == "red_flag_text"}
+    text_cc: dict[str, list] = {}
+    for c in complaints:
+        if c["group"] == "red_flag_text":
+            text_cc.setdefault(c["red_flag_rule"], []).append(c)
+    tnm_cc: dict[str, list] = {}
+    for c in complaints:
+        if "near_miss_family" in c:
+            tnm_cc.setdefault(c["near_miss_family"], []).append(c)
     variants = {r: [v for v in tpl["vitals_bands"]["red_flag_variants"] if v["rule_id"] == r] for r in VITALS_RULES}
     near = tpl["vitals_bands"]["near_miss_variants"]
     patients = {p["patient_ref"]: p for p in roster}
     ctr = dict.fromkeys(("rf", "vit", "swap", "miss", "host", "gen", "ob", "gyn", "yf", "of", "near", "inj",
-                         "var_q", "var_n"), 0)
+                         "var_q", "var_n", "var_a", "tnm"), 0)
+    ctr_rule = dict.fromkeys(RULE_CYCLE, 0)
+    ctr_tnm = dict.fromkeys(TNM_CYCLE, 0)
     plans = []
     for split in SPLITS:
         cases = sorted((c["case_id"], p["patient_ref"]) for p in roster if splits[p["patient_ref"]] == split
                        for c in p["cases"])
         main.shuffle(cases)
-        n_nonrf = n_med = 0
+        n_nonrf = n_med = n_plain = 0
         for i, (case_id, ref) in enumerate(cases):
             pat = patients[ref]
             plan = {"case_id": case_id, "patient_ref": ref, "split": split, "red_flag": None, "near_miss": None,
-                    "missing": [], "injections": [], "has_meds": not _hit(i, q["no_medication"]),
-                    "late": _hit(i, q["late_items"])}
+                    "text_near_miss": None, "missing": [], "injections": [],
+                    "has_meds": not _hit(i, q["no_medication"]), "late": _hit(i, q["late_items"]),
+                    "arrival_tamtee": _hit(i, q["arrival_tamtee"])}
             if _hit(i, q["missing_info"]):
                 plan["missing"] = list(MISSING_CYCLE[ctr["miss"] % len(MISSING_CYCLE)])
                 ctr["miss"] += 1
@@ -150,13 +177,13 @@ def plan_cases(main: random.Random, roster: list[dict], splits: dict[str, str], 
                 rule = RULE_CYCLE[ctr["rf"] % len(RULE_CYCLE)]
                 ctr["rf"] += 1
                 if "chief_complaint" in plan["missing"] and rule not in VITALS_RULES:
-                    rule = VITALS_RULES[ctr["swap"] % 2]  # a text red flag needs the complaint to be stated
+                    rule = VITALS_RULES[ctr["swap"] % len(VITALS_RULES)]  # a text red flag needs the complaint stated
                     ctr["swap"] += 1
                 rf = {"rule_id": rule, "onset": "T1", "variant": None}
                 if rule in VITALS_RULES:
                     rf["onset"] = "T2" if ctr["vit"] % 2 else "T1"
                     ctr["vit"] += 1
-                    key = "var_q" if rule == "RF-QSOFA" else "var_n"
+                    key = {"RF-QSOFA": "var_q", "RF-NEWS-SINGLE3": "var_n", "RF-NEWS-AGG5": "var_a"}[rule]
                     rf["variant"] = variants[rule][ctr[key] % len(variants[rule])]["variant_id"]
                     ctr[key] += 1
                 plan["red_flag"] = rf
@@ -164,11 +191,23 @@ def plan_cases(main: random.Random, roster: list[dict], splits: dict[str, str], 
                 if _hit(n_nonrf, q["near_miss_of_non_red_flag"]):
                     plan["near_miss"] = near[ctr["near"] % len(near)]["variant_id"]
                     ctr["near"] += 1
+                elif "chief_complaint" not in plan["missing"]:  # a text near-miss needs the complaint stated
+                    if _hit(n_plain, q["text_near_miss_of_plain"]):
+                        plan["text_near_miss"] = TNM_CYCLE[ctr["tnm"] % len(TNM_CYCLE)]
+                        plan["arrival_tamtee"] = ctr["tnm"] % 2 == 0
+                        ctr["tnm"] += 1
+                    n_plain += 1
                 n_nonrf += 1
             # complaint template
             rf = plan["red_flag"]
             if rf and rf["rule_id"] not in VITALS_RULES:
-                cc = text_cc[rf["rule_id"]]
+                pool = text_cc[rf["rule_id"]]
+                cc = pool[ctr_rule[rf["rule_id"]] % len(pool)]
+                ctr_rule[rf["rule_id"]] += 1
+            elif plan["text_near_miss"]:
+                pool = tnm_cc[plan["text_near_miss"]]
+                cc = pool[ctr_tnm[plan["text_near_miss"]] % len(pool)]
+                ctr_tnm[plan["text_near_miss"]] += 1
             elif rf:
                 cc = hosts[ctr["host"] % len(hosts)]
                 ctr["host"] += 1
@@ -184,6 +223,7 @@ def plan_cases(main: random.Random, roster: list[dict], splits: dict[str, str], 
                 cc = by_group[group][ctr[key] % len(by_group[group])]
                 ctr[key] += 1
             plan["complaint_id"] = cc["id"]
+            plan["pregnant"] = cc["group"] == "obstetric"
             # medication discrepancy injections
             if plan["has_meds"]:
                 if _hit(n_med, q["injected_of_medication"]):
@@ -210,8 +250,26 @@ def _vitals_ok(cond: dict, v: dict) -> bool:
             "in": lambda: x in val}[op]()
 
 
+def news_score(v: dict, bands: dict) -> int:
+    """Aggregate NEWS (RCP 2012). A null parameter scores 0, so the result is a lower bound."""
+    total = 0
+    for param in ("rr", "spo2", "temp_c", "sbp", "hr"):
+        x = v.get(param)
+        if x is not None:
+            total += next(score for upper, score in bands[param] if upper is None or x <= upper)
+    if v.get("on_oxygen") is not None:
+        total += bands["on_oxygen"][str(v["on_oxygen"]).lower()]
+    if v.get("consciousness") is not None:
+        total += bands["consciousness"][v["consciousness"]]
+    return total
+
+
 def eval_criterion(crit: dict, items: list[dict]) -> tuple[bool, set[str]]:
     kind = crit["kind"]
+    if kind == "news_aggregate":
+        ids = {it["item_id"] for it in items if it["data_type"] == "Vitals"
+               and news_score(it, crit["bands"]) >= crit["min_score"]}
+        return bool(ids), ids
     if kind == "vitals":
         ids = {it["item_id"] for it in items if it["data_type"] == "Vitals"
                and sum(_vitals_ok(c, it) for c in crit["conditions"]) >= crit["min_count"]}
@@ -221,8 +279,9 @@ def eval_criterion(crit: dict, items: list[dict]) -> tuple[bool, set[str]]:
         for it in items:
             if it["data_type"] != "IntakeTranscript":
                 continue
-            text = " ".join(t["text"] for t in it["turns"] if t["speaker"] == crit["speaker"])
-            if all(any(ph in text for ph in group) for group in crit["all_of"]):
+            # every term group must co-occur within one turn of the speaker
+            if any(all(any(ph in t["text"] for ph in group) for group in crit["all_of"])
+                   for t in it["turns"] if t["speaker"] == crit["speaker"]):
                 ids.add(it["item_id"])
         return bool(ids), ids
     results = [eval_criterion(c, items) for c in crit["of"]]
@@ -254,6 +313,10 @@ class _Case:
         self.cc = next(c for c in tpl["complaints"] if c["id"] == plan["complaint_id"])
         self.arrival = BASE_DATE + timedelta(days=day, hours=self.rng.randint(8, 15), minutes=self.rng.randint(0, 59))
         self.form = {f["generic_name"]: f for f in tpl["formulary"]}
+        self.news_bands = next(r for r in tpl["red_flags"] if r["rule_id"] == "RF-NEWS-AGG5")["criterion"]["bands"]
+        # pregnancy: no renin-angiotensin-acting drug or statin in any list (pregnancy_exclusions.json)
+        blocked = tuple(x["atc_prefix"] for x in tpl["pregnancy_exclusions"]) if plan["pregnant"] else ()
+        self.allowed = lambda name: not self.form[name]["atc_code"].startswith(blocked) if blocked else True
 
     def item(self, suffix, data_type, source, event, observed, available, **body) -> dict:
         it = {"item_id": f"{self.cid}-{suffix}", "data_type": data_type, "patient_ref": self.plan["patient_ref"],
@@ -270,12 +333,12 @@ class _Case:
             return round(self.rng.uniform(b["low"], b["high"]), 1)
         return self.rng.randint(b["low"], b["high"])
 
-    def vitals_values(self, variant_set: dict | None, allow_null: bool) -> dict:
-        fever = self.cc["fever"]
+    def vitals_values(self, variant_set: dict | None, allow_null: bool, fever: bool | None = None) -> dict:
+        fever = self.cc["fever"] if fever is None else fever
         v = {"sbp": self._band("sbp"), "hr": self._band("hr_fever" if fever else "hr"), "rr": self._band("rr"),
              "temp_c": self._band("temp_c_fever" if fever else "temp_c"), "spo2": self._band("spo2"),
              "consciousness": "A", "on_oxygen": False}
-        if self.cc["id"] == "CC-RF-ANAPHYLAXIS":
+        if self.cc.get("red_flag_rule") == "RF-ANAPHYLAXIS":
             variant_set = {**self.tpl["vitals_bands"]["anaphylaxis_host"]["set"], **(variant_set or {})}
         for k, val in (variant_set or {}).items():
             if isinstance(val, str):
@@ -303,7 +366,8 @@ class _Case:
         chronic = [f for f in self.tpl["formulary"] if f["role"] == "chronic"]
         injected = self.plan["injections"]
         k = self.rng.randint(2, 4) if injected else self.rng.randint(0, 4)
-        names = [f["generic_name"] for f in chronic]
+        names = [f["generic_name"] for f in chronic if self.allowed(f["generic_name"])
+                 and self.allowed(f.get("duplicate_partner", f["generic_name"]))]
         self.rng.shuffle(names)
         if "duplicate_therapy" in injected:
             with_partner = [n for n in names if "duplicate_partner" in self.form[n]]
@@ -351,23 +415,28 @@ class _Case:
         rf, nm = plan["red_flag"], plan["near_miss"]
         vs1_set = self.variant("red_flag_variants", rf["variant"]) if rf and rf["variant"] and rf["onset"] == "T1" \
             else (self.variant("near_miss_variants", nm) if nm else None)
-        self.item("VS1", "Vitals", "synthetic-triage", A + 5 * m, A + 6 * m, A + 7 * m,
-                  **self.vitals_values(vs1_set, allow_null=not (rf or nm)))
+        vs1 = self.vitals_values(vs1_set, allow_null=not (rf or nm or plan["text_near_miss"]))
+        if nm and news_score(vs1, self.news_bands) >= 5:  # a fever band must not push a near-miss to NEWS >= 5
+            vs1 = self.vitals_values(vs1_set, allow_null=False, fever=False)
+        self.item("VS1", "Vitals", "synthetic-triage", A + 5 * m, A + 6 * m, A + 7 * m, **vs1)
 
         # Thai nurse-patient intake dialogue
         lo, hi = self.cc["duration_range"]
         dur_value = rng.randint(lo, hi)
         dur_th = f"{dur_value} {DURATION_TH[self.cc['duration_unit']]}"
         allergy_th = f"แพ้ยา{allergy_class['th']}" if allergy == "known" else "ไม่เคยแพ้ยา"
+        arrival = ARRIVAL_TAMTEE if plan["arrival_tamtee"] else ARRIVAL_PLAIN
+        # the nurse script is identical for every case; missing fields are unanswered, not unasked
         lines = [("nurse", "สวัสดีค่ะ วันนี้มาด้วยอาการอะไรคะ"),
                  ("patient", (f"รู้สึกไม่ค่อยสบาย บอกไม่ถูกว่าเป็นอะไร{p}" if "chief_complaint" in missing
-                              else f"{self.cc['th']}{p}"))]
-        if "duration" not in missing:
-            lines += [("nurse", "เป็นมานานเท่าไรแล้วคะ"), ("patient", f"เป็นมา {dur_th}{p}")]
-        lines += [("nurse", "มียาที่ใช้ประจำไหมคะ"), ("patient", self.med_text(home or [], p))]
-        if "allergy_status" not in missing:
-            lines += [("nurse", "เคยแพ้ยาอะไรไหมคะ"), ("patient", f"{allergy_th}{p}")]
-        lines += [("nurse", "ขอบคุณค่ะ กรุณานั่งรอสักครู่นะคะ"), ("patient", f"ได้{p} ขอบคุณ{p}")]
+                              else f"{self.cc['th']}{p}")),
+                 ("nurse", "เป็นมานานเท่าไรแล้วคะ"),
+                 ("patient", f"จำไม่ได้ว่าเป็นมานานเท่าไร{p}" if "duration" in missing else f"เป็นมา {dur_th}{p}"),
+                 ("nurse", "วันนี้มากับใครคะ"), ("patient", f"{rng.choice(arrival)}{p}"),
+                 ("nurse", "มียาที่ใช้ประจำไหมคะ"), ("patient", self.med_text(home or [], p)),
+                 ("nurse", "เคยมีอาการผิดปกติหลังใช้ยาไหมคะ"),  # no "แพ้": an unanswered slot stays absent
+                 ("patient", f"ไม่แน่ใจ{p} จำไม่ได้" if "allergy_status" in missing else f"{allergy_th}{p}"),
+                 ("nurse", "ขอบคุณค่ะ กรุณานั่งรอสักครู่นะคะ"), ("patient", f"ได้{p} ขอบคุณ{p}")]
         t = A + 10 * m
         turns = []
         for idx, (spk, text) in enumerate(lines):
@@ -430,7 +499,7 @@ class _Case:
     def acute_drug(self, home, allergy_entries) -> str | None:
         blocked3 = {a["atc_class"][:3] for a in allergy_entries}
         atc4 = {e["atc_code"][:5] for e in home}
-        pool = [f["generic_name"] for f in self.tpl["formulary"] if f["role"] == "acute"
+        pool = [f["generic_name"] for f in self.tpl["formulary"] if f["role"] == "acute" and self.allowed(f["generic_name"])
                 and f["atc_code"][:3] not in blocked3 and f["atc_code"][:5] not in atc4]
         return self.rng.choice(pool) if pool else None
 
@@ -492,13 +561,19 @@ def gold_for(case: _Case, journey: dict, injections: list[dict], rules: list[dic
                    "item_ids": r["item_ids"]} for r in injections if f"{case.cid}-NO" in visible]
         any_missing = any(v == "MISSING" for v in case.fields.values())
         action = "escalate" if flags else ("abstain" if any_missing else "suggest")
-        rows.append({"decision_point": label, "T": T, "target_department": "12" if flags else cc_dept,
+        # department is not derivable without a stated complaint (escalation needs no department, D4)
+        cc_missing = case.fields["chief_complaint"] == "MISSING"
+        dept = "NOT_EVALUABLE" if cc_missing else ("12" if flags else cc_dept)
+        rows.append({"decision_point": label, "T": T, "target_department": dept,
+                     "department_evaluable": not cc_missing,
+                     "department_reason": "chief_complaint_missing" if cc_missing else None,
                      "red_flags": flags, "required_fields": case.fields, "medication_issues": issues,
                      "expected_action": action})
     return {"case_id": case.cid, "patient_ref": case.plan["patient_ref"], "split": case.plan["split"],
             "label_version": GENERATOR_VERSION,
             "label_status": "synthetic reference labels from predeclared rules; not clinical ground truth; not expert-reviewed",
-            "scenario": {k: case.plan[k] for k in ("complaint_id", "red_flag", "near_miss", "missing", "has_meds",
+            "scenario": {k: case.plan[k] for k in ("complaint_id", "red_flag", "near_miss", "text_near_miss",
+                                                   "arrival_tamtee", "pregnant", "missing", "has_meds",
                                                    "injections", "late")},
             "decision_times": rows}
 
@@ -554,6 +629,7 @@ def generate(seed: int, out: Path, splits_only: bool = False, quotas: dict | Non
                     for r in all_injections))
     counts = summarize(plans, golds, all_injections, splits)
     _write(out / "DATACARD.md", datacard(seed, counts).encode())
+    _write(out / "gold" / "README.md", GOLD_README.encode())
     return write_manifest(out, seed, counts)
 
 
@@ -575,6 +651,10 @@ def summarize(plans, golds, injections, splits) -> dict:
         "red_flag_cases": sum(1 for g in golds if any(r["red_flags"] for r in g["decision_times"])),
         "red_flag_rule_uses": tally(f["rule_id"] for g in golds for f in g["decision_times"][-1]["red_flags"]),
         "missing_info_cases": sum(1 for p in plans if p["missing"]),
+        "vitals_near_miss_cases": sum(1 for p in plans if p["near_miss"]),
+        "text_near_miss_cases": tally(p["text_near_miss"] for p in plans if p["text_near_miss"]),
+        "pregnancy_cases": sum(1 for p in plans if p["pregnant"]),
+        "department_not_evaluable_rows": sum(1 for r in rows if not r["department_evaluable"]),
         "expected_action_T1": tally(g["decision_times"][0]["expected_action"] for g in golds),
         "expected_action_T2": tally(g["decision_times"][-1]["expected_action"] for g in golds),
         "target_department_T2": tally(g["decision_times"][-1]["target_department"] for g in golds),
@@ -583,6 +663,23 @@ def summarize(plans, golds, injections, splits) -> dict:
         "injections_per_type": tally(r["issue_type"] for r in injections),
         "cases_with_late_items": sum(1 for p in plans if p["late"]),
     }
+
+
+SNAPSHOT_ONLY = ("Only `inputs/<split>/<case_id>/snapshot_T*.json` files are valid model inputs. `journey.json` is the "
+                 "full timeline, including items after every decision time, for audit only; it must never be given to "
+                 "a model.")
+DEPT_EVALUABLE = ("Department accuracy is computed only over rows with `department_evaluable == true`. Rows with "
+                  "`target_department == \"NOT_EVALUABLE\"` (chief complaint missing) are excluded from department "
+                  "accuracy and enter the abstention/coverage metric instead (PROPOSAL 3.6).")
+GOLD_README = f"""# gold/ — synthetic reference labels (audit and evaluation only; never model input)
+
+Labels are synthetic reference labels from predeclared rules, not clinical ground truth, not expert-reviewed (D1).
+A "no red flag" row means only that no rule in the registry fires; it does not mean the patient is clinically safe.
+
+{DEPT_EVALUABLE}
+
+{SNAPSHOT_ONLY}
+"""
 
 
 def datacard(seed: int, counts: dict) -> str:
@@ -597,11 +694,13 @@ def datacard(seed: int, counts: dict) -> str:
 - Adults 18-95 only. No names, dates of birth, addresses, phone numbers or national IDs.
 
 ## Label rules
-- `red_flags`: rules in `red_flags.json` (qSOFA PMID 26903335; NEWS single-parameter 3 PMID 23295778; FAST
-  PMID 12511753; acute chest pain PMID 34709879; thunderclap PMID 24065011; anaphylaxis PMID 16461139),
-  evaluated over the snapshot at each decision time.
+- `red_flags`: rules in `red_flags.json` (qSOFA PMID 26903335; NEWS single-parameter 3 PMID 23295778; NEWS
+  aggregate >= 5, RCP 2012 Chart 1; FAST PMID 12511753; acute chest pain PMID 34709879; thunderclap PMID 24065011;
+  anaphylaxis PMID 16461139), evaluated over the snapshot at each decision time. Text rules need a concept term and
+  a sudden-onset term in the same patient turn. "No red flag" means no registry rule fires, not clinically safe.
 - `target_department`: SIL-TH cs-chi-clinic v0.1.2 code; `12` whenever a red flag is present, else the complaint
-  template's department (synthetic map pending expert review).
+  template's department (synthetic map pending expert review); `NOT_EVALUABLE` when the chief complaint is missing.
+- {DEPT_EVALUABLE}
 - `expected_action`: `escalate` if any red flag, else `abstain` if any required intake field is missing, else
   `suggest`.
 - `medication_issues`: deliberately injected discrepancies (AHRQ MATCH; ASHP 2021), each logged in
@@ -610,6 +709,11 @@ def datacard(seed: int, counts: dict) -> str:
 ## Leakage controls
 Patients are split before cases are generated (`splits.json`). Snapshot at T contains only items with
 `available_at_time <= T`. Gold lives only under `gold/`.
+
+{SNAPSHOT_ONLY}
+
+## Pregnancy
+Obstetric-complaint cases carry no drug with ATC `C09*` or `C10AA*` in any list (`pregnancy_exclusions.json`).
 
 ## Counts
 ```
@@ -624,8 +728,9 @@ def write_manifest(out: Path, seed: int, counts: dict) -> dict:
         rel = p.relative_to(out).as_posix()
         if p.is_file() and rel != "manifest.json" and not rel.endswith("audit_report.json"):
             files[rel] = hashlib.sha256(p.read_bytes()).hexdigest()
-    tree = hashlib.sha256("".join(f"{k}\t{v}\n" for k, v in files.items()).encode()).hexdigest()
     manifest = {"seed": seed, "generator_version": GENERATOR_VERSION, "source_code_sha256": source_code_sha256(),
-                "counts": counts, "split_sizes": counts["patients_per_split"], "files": files, "tree_sha256": tree}
+                "counts": counts, "split_sizes": counts["patients_per_split"],
+                "model_inputs_glob": MODEL_INPUTS_GLOB, "audit_only_globs": AUDIT_ONLY_GLOBS, "files": files,
+                "tree_sha256": tree_sha256(files, MODEL_INPUTS_GLOB, AUDIT_ONLY_GLOBS)}
     _write(out / "manifest.json", dumps(manifest))
     return manifest

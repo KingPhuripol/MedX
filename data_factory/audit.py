@@ -1,16 +1,18 @@
-"""Dataset audits for ``make audit``: schema, gold separation, identifier scan, manifest hashes."""
+"""Dataset audits for ``make audit``: schema, gold separation, identifier scan, manifest hashes, snapshot times."""
 
 from __future__ import annotations
 
 import hashlib
 import json
 import re
+from datetime import datetime
 from pathlib import Path
 
-from .generate import TEMPLATES, dumps, validate_item
+from .generate import TEMPLATES, dumps, tree_sha256, validate_item
 
 GOLD_KEYS = ("target_department", "red_flags", "rule_id", "required_fields", "medication_issues",
-             "expected_action", "injection_id", "issue_type")
+             "expected_action", "injection_id", "issue_type", "department_evaluable", "department_reason",
+             "NOT_EVALUABLE")
 TIME_FIELDS = ("event_time", "observed_at", "available_at_time")
 IDENTIFIER_PATTERNS = {
     "thai_national_id": r"(?<!\d)\d{13}(?!\d)|(?<!\d)\d-\d{4}-\d{5}-\d{2}-\d(?!\d)",
@@ -105,9 +107,22 @@ def manifest_check(ds: Path) -> list[str]:
         rel = p.relative_to(ds).as_posix()
         if p.is_file() and rel not in listed and rel != "manifest.json" and not rel.endswith("audit_report.json"):
             errors.append(f"unlisted file {rel}")
-    tree = hashlib.sha256("".join(f"{k}\t{v}\n" for k, v in manifest["files"].items()).encode()).hexdigest()
+    tree = tree_sha256(manifest["files"], manifest.get("model_inputs_glob"), manifest.get("audit_only_globs"))
     if tree != manifest["tree_sha256"]:
         errors.append("tree_sha256 mismatch")
+    return errors
+
+
+def snapshot_items_after_T(ds: Path) -> list[str]:
+    """Every item in every model-input snapshot must have event/observed/available time <= the snapshot's T."""
+    errors = []
+    for p in sorted((ds / "inputs").glob("*/*/snapshot_T*.json")):
+        s = json.loads(p.read_text(encoding="utf-8"))
+        T = datetime.fromisoformat(s["as_of"])
+        for it in s["items"]:
+            late = [f for f in TIME_FIELDS if datetime.fromisoformat(it[f]) > T]
+            if late:
+                errors.append(f"{p}: {it['item_id']} {','.join(late)} > {s['as_of']}")
     return errors
 
 
@@ -121,6 +136,7 @@ def run_audit(ds: Path, write_report: bool = True) -> dict:
         "identifier_scan": identifier_scan([ds / "inputs", ds / "gold", TEMPLATES]),
         "identifier_self_test": [k for k, ok in self_test.items() if not ok],
         "manifest": manifest_check(ds),
+        "snapshot_items_after_T": snapshot_items_after_T(ds),
     }
     report = {"status": "PASS" if not any(steps.values()) else "FAIL", "items_validated": n_items,
               "steps": {k: ("PASS" if not v else f"FAIL ({len(v)})") for k, v in steps.items()},

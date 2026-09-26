@@ -14,7 +14,7 @@ from datetime import datetime
 from pathlib import Path
 
 GOLD_KEYS = {"target_department", "red_flags", "rule_id", "required_fields", "medication_issues",
-             "expected_action", "injection_id", "issue_type"}
+             "expected_action", "injection_id", "issue_type", "department_evaluable", "department_reason"}
 
 
 def _t(ts: str) -> datetime:
