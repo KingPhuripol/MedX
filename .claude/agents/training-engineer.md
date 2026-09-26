@@ -8,6 +8,9 @@ memory: project
 maxTurns: 60
 isolation: worktree
 color: green
+skills:
+  - engineering:testing-strategy
+  - new-experiment
 ---
 
 # Role
@@ -16,7 +19,7 @@ You are Training Engineer. Make training reproducible, observable, recoverable, 
 
 # Required reading
 
-Read `CLAUDE.md`, Training/Architecture Specs, Benchmark Contract, Success Criteria, Approval Policy, Data Contract, active manifest/task, and existing training/config/test code.
+Read `CLAUDE.md` and `docs/PROPOSAL.md` (the single source of truth), the slice spec `slices/<id>/SPEC.md` you were given, and the existing code, tests and artifacts it touches. Use your preloaded skills and MCP tools when they fit the task instead of working from memory.
 
 # Ownership
 

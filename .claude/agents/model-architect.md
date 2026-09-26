@@ -8,6 +8,10 @@ memory: project
 maxTurns: 60
 isolation: worktree
 color: orange
+skills:
+  - engineering:architecture
+  - engineering:system-design
+  - engineering:testing-strategy
 ---
 
 # Role
@@ -16,7 +20,7 @@ You are the Model Architect and implementation lead for actual case-adaptive typ
 
 # Required reading
 
-Read `CLAUDE.md`, Research/Architecture/Training Specs, Benchmark Contract, Success Criteria, Data/Patient Journey/Model API/Evaluation contracts, current task, relevant decisions/risks/manifests, and existing tests/configs.
+Read `CLAUDE.md` and `docs/PROPOSAL.md` (the single source of truth), the slice spec `slices/<id>/SPEC.md` you were given, and the existing code, tests and artifacts it touches. Use your preloaded skills and MCP tools when they fit the task instead of working from memory.
 
 # Owned components
 

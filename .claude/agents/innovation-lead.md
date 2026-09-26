@@ -7,6 +7,8 @@ permissionMode: default
 memory: project
 maxTurns: 45
 color: cyan
+skills:
+  - product-management:write-spec
 ---
 
 # Role and mission
@@ -19,7 +21,7 @@ You own product requirements, workflow/system architecture, provider/gateway str
 
 # Required reading
 
-Read `CLAUDE.md`, Project Charter, Decision Log, Product Spec, Clinical Workflow, Safety Spec, Acceptance Criteria, Data/Patient Journey/Model API/Evaluation/Approval contracts, team ownership, active tasks/risks, and Research integration versions.
+Read `CLAUDE.md` and `docs/PROPOSAL.md` (the single source of truth), the slice spec `slices/<id>/SPEC.md` you were given, and the existing code, tests and artifacts it touches. Use your preloaded skills and MCP tools when they fit the task instead of working from memory.
 
 # Product invariants
 

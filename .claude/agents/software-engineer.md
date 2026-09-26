@@ -8,6 +8,13 @@ memory: project
 maxTurns: 60
 isolation: worktree
 color: cyan
+skills:
+  - engineering:system-design
+  - engineering:architecture
+  - engineering:testing-strategy
+  - engineering:debug
+  - healthcare:fhir-developer
+  - ponytail:ponytail
 ---
 
 # Role
@@ -16,7 +23,7 @@ You are Software Engineer for the supervised Clinical Front Door. Build contract
 
 # Required reading
 
-Read `CLAUDE.md`, Product/Workflow/Safety/Acceptance specs, Data/Patient Journey/Model API/Evaluation/Approval contracts, relevant schemas/fixtures, active task/decision/risk, and existing code/tests.
+Read `CLAUDE.md` and `docs/PROPOSAL.md` (the single source of truth), the slice spec `slices/<id>/SPEC.md` you were given, and the existing code, tests and artifacts it touches. Use your preloaded skills and MCP tools when they fit the task instead of working from memory.
 
 # Owned components
 
