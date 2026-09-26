@@ -17,13 +17,14 @@ from pydantic import ValidationError
 
 from ..gateway import GatewayRequest, GatewayResponse
 from .formulary import Formulary, load_formulary
-from .mock_rules import EXTRACT_TASK, PHRASE_TASK
+from .mock_rules import EXTRACT_TASK, MOCK_RULES_VERSION, PHRASE_TASK
 from .models import ExtractOutput, Issue, MedSnapshot, Mode, Notice
 from .phrasing import TEMPLATE_VERSION, parse_phrase_output, phrase_input, template_text, validate_text
-from .rules import NOTICE_RANK, RULES_VERSION, AllergyItem, MedItem, run_rules
+from .rules import NOTICE_RANK, RULES_VERSION, AllergyItem, MedItem, find_unchecked_comparisons, run_rules
 
 Invoke = Callable[[GatewayRequest], GatewayResponse]
-PIPELINE_VERSION = "s5-pipeline-1.0.0"
+PIPELINE_VERSION = "s5-pipeline-1.1.0"
+_FIELD_LABEL = {"dose": "dose", "frequency_code": "frequency"}
 
 
 def canonical_json(data: Any) -> str:
@@ -197,6 +198,20 @@ def reconcile(
                             "evidence_ref": a.evidence_ref, "raw_span": a.text,
                             "detail": "allergen not mapped to the formulary; not checked automatically"})
 
+    # A dose or frequency that is not stated is never read as agreement: each comparison that could
+    # not be made is a visible, audited notice (CLAUDE.md data rule 6; SPEC section 3).
+    unchecked = find_unchecked_comparisons(items)
+    for u in unchecked:
+        stated = ", ".join(u["stated_in"]) or "no other source"
+        notices.append({
+            "type": "missing_field", **u,
+            "detail": (
+                f"{_FIELD_LABEL[u['field']]} not stated in {u['source_type']} for {', '.join(u['ingredients'])}; "
+                f"it could not be compared with {', '.join(u['compared_with'])} (stated in: {stated}). "
+                "Not counted as a match; please check the source."
+            ),
+        })
+
     drafts = run_rules(items, allergy_items, form, readable_orders)
     issues = []
     for n, d in enumerate(drafts, start=1):
@@ -242,6 +257,8 @@ def reconcile(
         "rules_version": RULES_VERSION,
         "cross_reactivity_version": form.cross_version,
         "excluded_future_items": excluded,
+        "unchecked_comparisons": len(unchecked),
+        "extract_mock_version": MOCK_RULES_VERSION,
         "extraction": extraction,
         "issues": issues,
         "notices": notice_out,

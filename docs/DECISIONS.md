@@ -17,3 +17,10 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
 - **Attribution (shown on `/pharmacist/reconcile` and stored in formulary metadata):** "This product uses publicly available data from the U.S. National Library of Medicine (NLM), National Institutes of Health, Department of Health and Human Services; NLM is not responsible for the product and does not endorse or recommend this or any other product."
 - **Enforced by:** `test_formulary_licence_and_coverage` (0 ATC-pattern and 0 TMT-pattern codes).
 - **Approved by:** planner decision in `slices/s5/SPEC.md`; pending human confirmation. Clinical sign-off of `cross_reactivity.json` and of `duplication_relevant` / `allergy_group` flags by a pharmacist is required before any non-synthetic use.
+
+## 2026-09-26 — OPEN: do `missing_field` notices count as S5-A06 false alerts? (slice s5)
+- **Context:** reviewers found that a dose or frequency not stated in one source was silently read as agreement (HIGH, CLAUDE.md data rule 6). The fix raises a visible, audited `missing_field` notice for every such comparison and shows every source list on the page.
+- **Effect on A06:** A06 counts every issue and notice. The clean fixtures deliberately leave dose (about 40%) and frequency (about 15%) out of patient-reported lines, so clean lists now average 1.10 alerts (test) and 1.375 (all), all of them `missing_field` notices. With those notices excluded, the value is 0.00 on both scopes. Threshold: 0.10. Breakdown: `slices/s5/eval/results.json` → `alert_breakdown`.
+- **Options:** (a) keep counting them, so A06 fails until the notice design or fixtures change; (b) report them as a separate "information gap" metric outside A06; (c) another rule decided by a human.
+- **Status:** NOT DECIDED. The builder did not change the threshold or the metric. `test_eval_thresholds` fails on A06 alone and says so in its message.
+- **Owner:** s5 implementation owner (ธัญรดา / ภูริณัฐ) with the project owner; pharmacist input advised.

@@ -124,6 +124,7 @@ def test_injection_reproducible():
 
 def test_eval_thresholds(tmp_path):
     r = evaluate(tmp_path)
+    a06_values: dict[str, tuple[float, float]] = {}
     assert (tmp_path / "results.json").exists() and (tmp_path / "injection_log.jsonl").exists()
     for scope in ("test", "all"):
         for t in ISSUE_TYPES:
@@ -133,8 +134,13 @@ def test_eval_thresholds(tmp_path):
             assert r["precision"][t][scope]["precision"] is not None
             if scope == "all":
                 assert rec["cases"] >= THRESHOLDS["min_cases_per_type"]
-        assert r["clean_false_alerts"][scope]["mean_per_list"] <= THRESHOLDS["clean_false_alerts_max"]
-        assert r["extra_issues_per_injected_case"][scope]["mean_per_case"] <= THRESHOLDS["extra_issues_per_case_max"]
+        # Everything except missing_field notices must still meet the A06 threshold.
+        for part in ("clean_lists", "injected_case_extras"):
+            assert r["alert_breakdown"][part][scope]["informational_mean_excluding_missing_field"] <= 0.10
+        a06_values[scope] = (
+            r["clean_false_alerts"][scope]["mean_per_list"],
+            r["extra_issues_per_injected_case"][scope]["mean_per_case"],
+        )
         assert r["extraction"][scope]["overall_accuracy"] >= THRESHOLDS["extraction_accuracy_min"]
         assert r["extraction"][scope]["fabricated_values"] == 0
         for mode in ("rules_only", "rules_plus_model"):
@@ -143,6 +149,15 @@ def test_eval_thresholds(tmp_path):
     assert r["issue_sources_complete"]["violations"] == 0
     committed = json.loads((REPO_ROOT / "slices" / "s5" / "eval" / "results.json").read_text(encoding="utf-8"))
     assert committed == json.loads((tmp_path / "results.json").read_text(encoding="utf-8")), "re-run make pharma-eval"
+    # A06 last, so every other criterion above is still verified. A06 counts every issue and notice
+    # (SPEC); the threshold is unchanged. missing_field notices currently exceed it: human decision needed.
+    a06 = (
+        "S5-A06 DECISION REQUIRED (human): missing_field notices (dose/frequency not stated in one source) "
+        "are counted as alerts; see results.json.alert_breakdown. Threshold not changed."
+    )
+    for scope, (clean, extra) in a06_values.items():
+        assert clean <= THRESHOLDS["clean_false_alerts_max"], (a06, scope, r["alert_breakdown"]["clean_lists"][scope])
+        assert extra <= THRESHOLDS["extra_issues_per_case_max"], (a06, scope, r["alert_breakdown"]["injected_case_extras"][scope])
 
 
 def test_makefile_port_defaults():

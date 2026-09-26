@@ -123,6 +123,7 @@ def test_decision_audit(app, client, login, audit_rows):
     rec_audit = [r for r in audit_rows() if r["action"] == "pharma.reconcile"][-1]
     assert set(rec_audit["details"]) == {
         "run_id", "snapshot_sha256", "formulary_version", "rules_version", "mode", "issue_count", "notice_count",
+        "unchecked_comparison_count",
     }
     for issue, action, body in (
         (run["issues"][0], "confirm", None),

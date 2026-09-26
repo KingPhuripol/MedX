@@ -169,6 +169,37 @@ def _extraction(patients: list[dict], runs: dict[str, dict]) -> dict:
     return out
 
 
+def _kinds(run: dict, matched_issue: dict | None = None) -> dict[str, int]:
+    """Alert counts by kind (issue type or notice type), excluding the matched injected issue."""
+    out: dict[str, int] = {}
+    for i in run["issues"]:
+        if i is not matched_issue:
+            out[f"issue:{i['type']}"] = out.get(f"issue:{i['type']}", 0) + 1
+    for n in run["notices"]:
+        out[f"notice:{n['type']}"] = out.get(f"notice:{n['type']}", 0) + 1
+    return out
+
+
+def _breakdown(rows: list[tuple[str, dict[str, int]]], split_of: dict[str, str]) -> dict:
+    """Informational: which kinds make up the A06 counts. Does not change the A06 metric or threshold."""
+    out = {}
+    for scope in ("test", "all"):
+        picked = [k for ref, k in rows if scope == "all" or split_of[ref] == "test"]
+        totals: dict[str, int] = {}
+        for kinds in picked:
+            for k, v in kinds.items():
+                totals[k] = totals.get(k, 0) + v
+        n = len(picked)
+        mf = totals.get("notice:missing_field", 0)
+        out[scope] = {
+            "units": n,
+            "by_kind": dict(sorted(totals.items())),
+            "missing_field_notices_per_unit": _ratio(mf, n),
+            "informational_mean_excluding_missing_field": _ratio(sum(totals.values()) - mf, n),
+        }
+    return out
+
+
 def evaluate(out_dir: Path | None = DEFAULT_OUT) -> dict:
     invoke = make_invoke()
     patients = load_patients()
@@ -178,6 +209,8 @@ def evaluate(out_dir: Path | None = DEFAULT_OUT) -> dict:
     per_mode: dict[str, dict] = {}
     clean_runs_primary: dict[str, dict] = {}
     sources_complete = {"issues": 0, "violations": 0}
+    clean_kinds: list[tuple[str, dict[str, int]]] = []
+    case_kinds: list[tuple[str, dict[str, int]]] = []
 
     for m_index, mode in enumerate(MODES):
         per_patient = {p["patient_ref"]: {"clean_alerts": 0, "cases": []} for p in patients}
@@ -187,9 +220,13 @@ def evaluate(out_dir: Path | None = DEFAULT_OUT) -> dict:
             signatures[mode][p["patient_ref"]] = [issue_signature(i) for i in run["issues"]]
             if mode == PRIMARY_MODE:
                 clean_runs_primary[p["patient_ref"]] = run
+                clean_kinds.append((p["patient_ref"], _kinds(run)))
         for case in cases:
             run = reconcile(MedSnapshot.model_validate(case["snapshot"]), invoke, mode, run_id=f"eval-{case['case_id']}")
-            matched_one = any(matches(i, case["expected"]) for i in run["issues"])
+            matched_issue = next((i for i in run["issues"] if matches(i, case["expected"])), None)
+            matched_one = matched_issue is not None
+            if mode == PRIMARY_MODE:
+                case_kinds.append((case["patient_ref"], _kinds(run, matched_issue)))
             predicted: dict[str, list[int]] = {}
             for i in run["issues"]:
                 slot = predicted.setdefault(i["type"], [0, 0])
@@ -241,6 +278,14 @@ def evaluate(out_dir: Path | None = DEFAULT_OUT) -> dict:
         "precision": {t: {s: primary[s]["precision"][t] for s in ("test", "all")} for t in ISSUE_TYPES},
         "clean_false_alerts": {s: primary[s]["clean_false_alerts"] for s in ("test", "all")},
         "extra_issues_per_injected_case": {s: primary[s]["extra_issues_per_injected_case"] for s in ("test", "all")},
+        "alert_breakdown": {
+            "note": (
+                "Informational only. A06 counts every issue and notice; whether missing_field notices "
+                "(a dose or frequency not stated in one source) count as false alerts is a pending human decision."
+            ),
+            "clean_lists": _breakdown(clean_kinds, split_of),
+            "injected_case_extras": _breakdown(case_kinds, split_of),
+        },
         "extraction": extraction,
         "modes": per_mode,
         "mode_equality": {"runs_compared": len(keys), "identical": identical, "fraction": _ratio(identical, len(keys))},

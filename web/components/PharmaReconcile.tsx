@@ -7,12 +7,16 @@ import RoleGuard from "@/components/RoleGuard";
 import {
   NLM_ATTRIBUTION,
   NOTICE_LABELS,
+  NOT_STATED,
   PHRASING_LABEL,
   REVIEW_NOTE,
   SOURCE_LABELS,
   TYPE_LABELS,
   formatDose,
+  orNotStated,
   sortIssues,
+  uncheckedSummary,
+  type ExtractionRecord,
   type Fixture,
   type Issue,
   type Run,
@@ -88,7 +92,7 @@ function IssueCard({
               <td>{src.available_at_time}</td>
               <td>{src.presence === "absent" ? "—" : src.raw_span}</td>
               <td>{src.source_type === "allergy_record" ? "—" : formatDose(src)}</td>
-              <td>{src.source_type === "allergy_record" || src.presence === "absent" ? "—" : src.frequency_code ?? "not stated"}</td>
+              <td>{src.source_type === "allergy_record" || src.presence === "absent" ? "—" : orNotStated(src.frequency_code)}</td>
             </tr>
           ))}
         </tbody>
@@ -125,6 +129,49 @@ function IssueCard({
         </p>
       )}
     </article>
+  );
+}
+
+function SourceTable({ record, index }: { record: ExtractionRecord; index: number }) {
+  const label = SOURCE_LABELS[record.source_type] ?? record.source_type;
+  const caption = `${label} as read (${record.evidence_ref}, available at ${record.available_at_time})`;
+  if (record.status !== "ok" || !record.entries) {
+    return (
+      <p data-testid={`source-${index}`}>
+        <strong>{caption}</strong>: could not be read ({record.failure_reason ?? "extraction failed"}). This list was not
+        checked.
+      </p>
+    );
+  }
+  return (
+    <table className="sources" data-testid={`source-${index}`}>
+      <caption>{caption}</caption>
+      <thead>
+        <tr>
+          <th scope="col">Text as recorded</th>
+          <th scope="col">Name read</th>
+          <th scope="col">Matched ingredient(s)</th>
+          <th scope="col">Dose</th>
+          <th scope="col">Route</th>
+          <th scope="col">Frequency</th>
+        </tr>
+      </thead>
+      <tbody>
+        {record.entries.map((e, n) => (
+          <tr key={`${record.evidence_ref}-${n}`}>
+            <th scope="row">
+              {e.source_text}
+              {e.discontinue_intent ? " (intended to end)" : ""}
+            </th>
+            <td>{e.drug_name_raw}</td>
+            <td>{e.recognised ? e.ingredients.join(", ") : "not recognised"}</td>
+            <td>{formatDose(e)}</td>
+            <td>{orNotStated(e.route)}</td>
+            <td>{orNotStated(e.frequency_code)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 
@@ -194,8 +241,10 @@ function Reconcile() {
       const data: Run = await resp.json();
       setRun(data);
       window.history.replaceState(null, "", `?run=${encodeURIComponent(data.run_id)}`);
+      const unchecked = data.unchecked_comparisons ?? 0;
       setStatus(
-        `Check ${data.status}: ${data.issues.length} issue(s) and ${data.notices.length} notice(s) for pharmacist review.`,
+        `Check ${data.status}: ${data.issues.length} issue(s) and ${data.notices.length} notice(s) for pharmacist review` +
+          (unchecked ? `; ${unchecked} comparison(s) could not be checked.` : "."),
       );
     } catch {
       setStatus("The service is unavailable. Please try again.");
@@ -281,8 +330,12 @@ function Reconcile() {
               {run.rules_version}
               {run.excluded_future_items ? ` · ${run.excluded_future_items} item(s) after the decision time excluded` : ""}
             </p>
+            <p data-testid="unchecked-summary">{uncheckedSummary(run)}</p>
             {issues.length === 0 ? (
-              <p>No issues were found by the rules. Notices, if any, are listed below.</p>
+              <p>
+                No discrepancies were found by the rules among the fields that could be compared. This is not a
+                confirmation that the lists agree; check the notices and the lists below.
+              </p>
             ) : (
               <ol className="issue-list">
                 {issues.map((issue, n) => (
@@ -313,6 +366,16 @@ function Reconcile() {
                 ))}
               </ul>
             )}
+          </section>
+          <section aria-labelledby="lists-title">
+            <h2 id="lists-title">Medication lists as read ({run.extraction?.length ?? 0})</h2>
+            <p>
+              Every source list with the fields read from each line. A field shown as “{NOT_STATED}” was not in the text
+              and was not compared.
+            </p>
+            {(run.extraction ?? []).map((record, n) => (
+              <SourceTable key={record.evidence_ref} record={record} index={n + 1} />
+            ))}
           </section>
         </>
       )}

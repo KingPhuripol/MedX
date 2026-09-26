@@ -48,8 +48,13 @@ def test_rule_dose_mismatch():
     # units that cannot be compared -> mismatch flagged unverifiable
     [unv] = of_type(run(snapshot(home=["Lantus 10 units hs"], orders=["Lantus 10 mg hs"])), "dose_mismatch")
     assert unv["unverifiable"] is True
-    # a missing dose alone is neither a match nor a mismatch; it becomes a missing_field note
-    assert of_type(run(snapshot(home=["Simvastatin 20 mg daily"], reported=["Simvastatin daily"], orders=["Simvastatin 20 mg daily"])), "dose_mismatch") == []
+    # a missing dose is not a match: no dose_mismatch issue, but a visible missing_field notice (never silence)
+    gap = run(snapshot(home=["Simvastatin 20 mg daily"], reported=["Simvastatin daily"], orders=["Simvastatin 20 mg daily"]))
+    assert of_type(gap, "dose_mismatch") == []
+    [notice] = notices(gap, "missing_field")
+    assert (notice["field"], notice["source_type"], notice["evidence_ref"]) == ("dose", "patient_reported", "t/patient_reported/1")
+    assert notice["ingredients"] == ["simvastatin"] and notice["stated_in"] == ["home_list", "new_order"]
+    assert notice["raw_span"] == "Simvastatin daily" and gap["unchecked_comparisons"] == 1
     noted = run(snapshot(home=["Simvastatin 20 mg daily"], reported=["ซิมวาสแตติน วันละครั้ง"], orders=["Simvastatin 40 mg daily"]))
     [issue] = of_type(noted, "dose_mismatch")
     assert issue["notes"] == [{"kind": "missing_field", "field": "dose", "source_type": "patient_reported", "evidence_ref": "t/patient_reported/1"}]
@@ -59,13 +64,96 @@ def test_rule_dose_mismatch():
 def test_rule_frequency_mismatch():
     for surface in ("bid", "วันละ 2 ครั้ง", "1x2 pc", "q12h", "twice daily"):
         assert parse_entry(f"Metformin 500 mg {surface}")["frequency_code"] == "q12h"
+    assert same_meds_clean(run(snapshot(home=["Metformin 500 mg twice a day"], orders=["Metformin 500 mg เช้า-เย็น"])))
     same = run(snapshot(home=["Metformin 500 mg bid"], reported=["เมทฟอร์มิน 500 มก. วันละ 2 ครั้ง"], orders=["Metformin 500 mg 1x2 pc"]))
     assert of_type(same, "frequency_mismatch") == []
     diff = run(snapshot(home=["Metformin 500 mg bid"], orders=["Metformin 500 mg tid"]))
     [issue] = of_type(diff, "frequency_mismatch")
     assert {s["frequency_code"] for s in issue["conflicting_sources"]} == {"q12h", "q8h"}
-    # missing frequency is not a mismatch
-    assert of_type(run(snapshot(home=["Metformin 500 mg bid"], orders=["Metformin 500 mg"])), "frequency_mismatch") == []
+    # a missing frequency is not a match: no frequency_mismatch issue, but a visible missing_field notice
+    gap = run(snapshot(home=["Metformin 500 mg bid"], orders=["Metformin 500 mg"]))
+    assert of_type(gap, "frequency_mismatch") == []
+    [notice] = notices(gap, "missing_field")
+    assert (notice["field"], notice["source_type"], notice["stated_in"]) == ("frequency_code", "new_order", ["home_list"])
+    assert gap["unchecked_comparisons"] == 1
+
+
+def same_meds_clean(result: dict) -> bool:
+    return result["issues"] == [] and result["notices"] == [] and result["unchecked_comparisons"] == 0
+
+
+# Reviewer probe cases (HIGH finding, 144b1fa): each was reported as complete with 0 issues and 0 notices.
+MISSING_OR_MISREAD = {
+    "en_freq_twice_a_day": ("Metformin 500 mg twice a day", "Metformin 500 mg once daily", "frequency_mismatch", None),
+    "th_freq_chao_yen": ("Metformin 500 mg เช้า-เย็น", "Metformin 500 mg daily", "frequency_mismatch", None),
+    "en_dose_missing_home": ("Simvastatin daily", "Simvastatin 40 mg daily", None, ("dose", "home_list")),
+    "warfarin_tabs_no_dose": ("Warfarin 5 mg 1 tab daily", "Warfarin 2 tab daily", None, ("dose", "new_order")),
+    "warfarin_twice_a_day": ("Warfarin 3 mg once daily", "Warfarin 3 mg twice a day", "frequency_mismatch", None),
+    "warfarin_th_freq": ("Warfarin 3 mg วันละ 1 ครั้ง", "Warfarin 3 mg เช้า-เย็น", "frequency_mismatch", None),
+    "warfarin_order_no_dose": ("Warfarin 3 mg daily", "Warfarin 1 tab daily", None, ("dose", "new_order")),
+    "th_dose_missing": ("วาร์ฟาริน วันละ 1 ครั้ง", "Warfarin 3 mg daily", None, ("dose", "home_list")),
+    "en_freq_unreadable": ("Metformin 500 mg thrice weekly", "Metformin 500 mg daily", None, ("frequency_code", "home_list")),
+    "th_freq_unreadable": ("เมทฟอร์มิน 500 มก. สัปดาห์ละ 3 ครั้ง", "Metformin 500 mg daily", None, ("frequency_code", "home_list")),
+}
+
+
+@pytest.mark.parametrize("mode", ["rules_only", "rules_plus_model"])
+@pytest.mark.parametrize("case", list(MISSING_OR_MISREAD))
+def test_missing_field_is_never_silent(case, mode):
+    home, order, issue_type, gap = MISSING_OR_MISREAD[case]
+    result = run(snapshot(home=[home], orders=[order]), mode=mode)
+    assert not same_meds_clean(result)
+    if issue_type:
+        assert [i["type"] for i in result["issues"]] == [issue_type]
+    if gap:
+        [notice] = notices(result, "missing_field")
+        assert (notice["field"], notice["source_type"]) == gap
+        assert notice["evidence_ref"] and notice["raw_span"] and notice["compared_with"]
+        assert result["unchecked_comparisons"] == 1
+
+
+def test_missing_field_scope():
+    # an order line with neither dose nor frequency: one notice per field
+    bare = run(snapshot(home=["Metformin 500 mg twice a day"], orders=["Metformin"]))
+    assert [(n["field"], n["source_type"]) for n in notices(bare, "missing_field")] == [
+        ("dose", "new_order"), ("frequency_code", "new_order")]
+    # ingredient in one source only: nothing to compare, so no missing_field notice (omission covers it)
+    only_home = run(snapshot(home=["Metformin"], orders=["Amlodipine 5 mg daily"]))
+    assert notices(only_home, "missing_field") == []
+    # null in every source is still unchecked (one notice per source and field)
+    both = run(snapshot(home=["Metformin"], orders=["Metformin"]))
+    assert len(notices(both, "missing_field")) == 4 and both["unchecked_comparisons"] == 4
+    # a discontinued order entry is not compared
+    ended = run(snapshot(home=["Metformin 500 mg bid"], orders=[{"text": "Metformin", "discontinue_intent": True, "reason": "synthetic"}]))
+    assert notices(ended, "missing_field") == []
+    # the missing_field note on a mismatch issue is kept, and the notice is also raised
+    both_ways = run(snapshot(home=["Simvastatin 20 mg daily"], reported=["ซิมวาสแตติน วันละครั้ง"], orders=["Simvastatin 40 mg daily"]))
+    assert of_type(both_ways, "dose_mismatch") and len(notices(both_ways, "missing_field")) == 1
+
+
+FREQ_PHRASINGS = {
+    "twice a day": "q12h", "every 12 hours": "q12h", "once a day": "q24h", "q.d.": "q24h", "เช้า-เย็น": "q12h",
+    "every 8 hours": "q8h", "every 6 hours": "q6h", "every 24 hours": "q24h", "q 12 h": "q12h",
+    "เช้า กลางวัน เย็น": "q8h", "เช้า กลางวัน เย็น ก่อนนอน": "q6h", "ทุก 12 ชั่วโมง": "q12h",
+    "three times a day": "q8h", "2 times a day": "q12h", "every 4 hours": None, "q4h prn": "prn",
+}
+
+
+@pytest.mark.parametrize("surface", list(FREQ_PHRASINGS))
+def test_mock_frequency_phrasings(surface):
+    assert parse_entry(f"Metformin 500 mg {surface}")["frequency_code"] == FREQ_PHRASINGS[surface]
+    assert parse_entry(f"Metformin 500 mg {surface}")["drug_name_raw"] == "Metformin"
+
+
+def test_injector_heldout_surfaces_parse():
+    from app.pharma.eval.inject import HELDOUT_FREQ_SURFACES
+    from app.pharma.fixtures.build import FREQ_SURFACES
+
+    for code, styles in HELDOUT_FREQ_SURFACES.items():
+        for style, forms in styles.items():
+            for form in forms:
+                assert form not in FREQ_SURFACES[code][style], form  # held out from the clean fixtures
+                assert parse_entry(f"Metformin 500 mg {form}")["frequency_code"] == code, form
 
 
 def test_rule_omission():

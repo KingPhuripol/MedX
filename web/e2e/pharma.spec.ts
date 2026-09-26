@@ -54,6 +54,20 @@ test("pharmacist runs a fixture, sees allergy first with sources, confirms and d
   await expect(byTitle(secondTitle).getByTestId("issue-status")).toHaveText("dismissed");
 });
 
+test("every source list is shown as read, with not-stated fields and the unchecked comparison count", async ({ page }) => {
+  await runDemo(page);
+  await expect(page.getByRole("status")).toContainText("1 comparison(s) could not be checked");
+  await expect(page.getByTestId("unchecked-summary")).toContainText("1 comparison(s) could not be checked");
+  const lists = page.locator("section[aria-labelledby='lists-title']");
+  await expect(lists.getByRole("heading", { level: 2 })).toHaveText("Medication lists as read (3)");
+  await expect(lists.locator("table")).toHaveCount(3);
+  const reported = lists.getByTestId("source-2");
+  await expect(reported.locator("caption")).toContainText("Patient-reported list as read");
+  const row = reported.locator("tbody tr").filter({ has: page.getByRole("rowheader", { name: "เมทฟอร์มิน วันละ 2 ครั้ง" }) });
+  await expect(row.locator("td").nth(2)).toHaveText("not stated");
+  await expect(page.locator(".notice-list")).toContainText("Not stated, so not compared");
+});
+
 test("dismiss without a reason is blocked in the UI", async ({ page }) => {
   await runDemo(page);
   const last = page.locator("ol.issue-list > li > article").last();

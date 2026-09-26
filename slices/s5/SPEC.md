@@ -44,6 +44,7 @@ All code lives in `backend/app/pharma/` (its own module). Local Pydantic models 
      - `allergy_unmapped`
      - `source_unreadable` (extraction failed)
      - `source_missing` (no `new_order` source). This gives one notice and zero omission issues.
+     - `missing_field` (added by the builder after review, 2026-09-26): an active ingredient set appears in 2 or more source types and one entry's dose or frequency is not stated. One notice per entry and field, with source, `evidence_ref` and `raw_span`. A missing value is never read as agreement. The run also reports `unchecked_comparisons`. Whether these notices count toward the S5-A06 false-alert metric is an open human decision (see `docs/DECISIONS.md`); the A06 threshold is unchanged.
    - Severity order is fixed by rule: allergy_* > duplication_* > dose/frequency > omission > notices. Model output never changes this order.
 
 4. **Step 3: phrase.** Each run makes one gateway call, task `pharma.phrase.v1`, with the typed issues. The mock is a deterministic template.

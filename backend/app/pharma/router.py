@@ -111,6 +111,7 @@ def post_reconcile(body: ReconcileBody, request: Request, user: CurrentUser = De
             "mode": run["mode"],
             "issue_count": len(run["issues"]),
             "notice_count": len(run["notices"]),
+            "unchecked_comparison_count": run["unchecked_comparisons"],
         },
     )
     return _load_run(engine, run["run_id"])  # type: ignore[return-value]

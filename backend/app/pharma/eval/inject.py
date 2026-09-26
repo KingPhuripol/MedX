@@ -24,6 +24,15 @@ from ..models import ISSUE_TYPES
 INJECT_SEED = 7
 _FREQ_SHIFT = {"q24h": "q12h", "q12h": "q24h", "q8h": "q12h", "q6h": "q8h", "prn": "q6h"}
 _ALLERGY_FORMS = ("{x} (rash)", "แพ้ยา {x}", "{x} - urticaria", "{x}")
+# Held-out frequency surface forms: never used by the clean fixture generator (FREQ_SURFACES), only
+# by injected edits, so recall is also measured on phrasings the clean lists do not contain.
+HELDOUT_FREQ_SURFACES: dict[str, dict[str, tuple[str, ...]]] = {
+    "q24h": {"en": ("once a day", "q.d.", "every 24 hours", "every morning"), "th": ("ทุก 24 ชั่วโมง",)},
+    "q12h": {"en": ("twice a day", "every 12 hours", "q 12 h", "2 times a day"), "th": ("เช้า-เย็น", "เช้า เย็น", "ทุก 12 ชั่วโมง")},
+    "q8h": {"en": ("three times a day", "every 8 hours", "t.i.d."), "th": ("เช้า กลางวัน เย็น", "ทุก 8 ชั่วโมง")},
+    "q6h": {"en": ("four times a day", "every 6 hours", "q.i.d."), "th": ("เช้า กลางวัน เย็น ก่อนนอน", "ทุก 6 ชั่วโมง")},
+    "prn": {"en": ("p.r.n.", "when needed"), "th": ("เมื่อจำเป็น",)},
+}
 
 
 class InjectionError(RuntimeError):
@@ -79,7 +88,7 @@ def _route_surface(g: dict, style: str) -> str | None:
 def _rerender(g: dict, *, name: str | None = None, dose=None, unit=None, freq_code=None, style="en",
               rng: random.Random) -> str:
     fc = freq_code if freq_code is not None else g["frequency_code"]
-    freq_s = rng.choice(FREQ_SURFACES[fc][style]) if fc else None
+    freq_s = rng.choice(FREQ_SURFACES[fc][style] + HELDOUT_FREQ_SURFACES[fc][style]) if fc else None
     return render(
         name or g["drug_name_raw"],
         dose if dose is not None else g["dose_value"],

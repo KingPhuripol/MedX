@@ -12,7 +12,9 @@ from dataclasses import dataclass, field
 
 from .formulary import Formulary, Resolution
 
-RULES_VERSION = "s5-rules-1.0.0"
+RULES_VERSION = "s5-rules-1.1.0"
+# Not a discrepancy type: a cross-source comparison that could not be made (a notice, never silence).
+MISSING_FIELD_RULE = "missing_field@1.0.0"
 RULE_VERSIONS: dict[str, str] = {
     "allergy_direct": "1.0.0",
     "allergy_class": "1.0.0",
@@ -216,7 +218,7 @@ def rule_dose_mismatch(items: list[MedItem], form: Formulary) -> list[IssueDraft
             if a.source_type != b.source_type and da != db
         ]
         if not pairs:
-            continue  # a missing dose is neither a match nor a mismatch on its own
+            continue  # a missing dose is not a match either: find_unchecked_comparisons() raises a notice
         families = {d[0] for _, d in dosed}
         out.append(
             IssueDraft(
@@ -249,6 +251,39 @@ def rule_frequency_mismatch(items: list[MedItem], form: Formulary) -> list[Issue
                     notes=_missing_notes(missing, "frequency_code"),
                 )
             )
+    return out
+
+
+_COMPARED_FIELDS = (("dose", _canonical_dose), ("frequency_code", lambda i: i.frequency_code))
+
+
+def find_unchecked_comparisons(items: list[MedItem]) -> list[dict]:
+    """Cross-source comparisons that could not be made because a field is not stated.
+
+    For every active ingredient set present in 2 or more source types, each entry whose dose (value
+    and unit) or frequency is null yields one record. A missing value is never read as agreement;
+    the pipeline turns every record into a visible, audited ``missing_field`` notice.
+    """
+    out = []
+    for ings, group in sorted(_comparable_groups(items).items()):
+        if len({i.source_type for i in group}) < 2:
+            continue
+        for field_name, value_of in _COMPARED_FIELDS:
+            known_in = sorted({i.source_type for i in group if value_of(i) is not None})
+            for item in group:
+                if value_of(item) is not None:
+                    continue
+                others = sorted({i.source_type for i in group if i.source_type != item.source_type})
+                out.append({
+                    "rule_id": MISSING_FIELD_RULE,
+                    "field": field_name,
+                    "ingredients": list(ings),
+                    "source_type": item.source_type,
+                    "evidence_ref": item.evidence_ref,
+                    "raw_span": item.raw_span,
+                    "compared_with": others,
+                    "stated_in": [s for s in known_in if s != item.source_type],
+                })
     return out
 
 

@@ -11,6 +11,8 @@ from typing import Any
 
 EXTRACT_TASK = "pharma.extract.v1"
 PHRASE_TASK = "pharma.phrase.v1"
+# Bumped when the deterministic parsing patterns change (recorded on every run).
+MOCK_RULES_VERSION = "s5-mock-rules-1.1.0"
 
 _NUM = r"(\d+(?:\.\d+)?)"
 _UNITS = {
@@ -30,20 +32,37 @@ ROUTE_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"(?<![A-Za-z])(?:sc|subcut|subcutaneous|sq)(?![A-Za-z])|ฉีดใต้ผิวหนัง", re.IGNORECASE), "subcutaneous"),
     (re.compile(r"(?<![A-Za-z])(?:iv|intravenous)(?![A-Za-z])", re.IGNORECASE), "intravenous"),
 )
+_A_DAY = r"(?:a |per )?(?:day|daily)"
 FREQ_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
-    (re.compile(r"(?<![A-Za-z])(?:prn|as needed|when needed)(?![A-Za-z])", re.IGNORECASE), "prn"),
+    (re.compile(r"(?<![A-Za-z])(?:prn|p\.r\.n\.?|as needed|when needed)(?![A-Za-z])", re.IGNORECASE), "prn"),
     (re.compile(r"เวลาปวด|เมื่อมีอาการ|เมื่อจำเป็น"), "prn"),
-    (re.compile(r"(?<![A-Za-z])(?:qid|q\.i\.d\.|four times (?:a )?daily|q6h)(?![A-Za-z])", re.IGNORECASE), "q6h"),
-    (re.compile(r"(?<![A-Za-z])(?:tid|t\.i\.d\.|three times (?:a )?daily|q8h)(?![A-Za-z])", re.IGNORECASE), "q8h"),
-    (re.compile(r"(?<![A-Za-z])(?:bid|b\.i\.d\.|twice (?:a )?daily|q12h)(?![A-Za-z])", re.IGNORECASE), "q12h"),
-    (re.compile(r"(?<![A-Za-z])(?:od|qd|once (?:a )?daily|daily|q24h|hs|qhs|at bedtime)(?![A-Za-z])", re.IGNORECASE), "q24h"),
+    (re.compile(rf"(?<![A-Za-z])(?:qid|q\.i\.d\.?|(?:four|4) times {_A_DAY}|q6h)(?![A-Za-z])", re.IGNORECASE), "q6h"),
+    (re.compile(rf"(?<![A-Za-z])(?:tid|t\.i\.d\.?|(?:three|3) times {_A_DAY}|q8h)(?![A-Za-z])", re.IGNORECASE), "q8h"),
+    (re.compile(rf"(?<![A-Za-z])(?:bid|b\.i\.d\.?|(?:twice|two times|2 times) {_A_DAY}|q12h)(?![A-Za-z])", re.IGNORECASE), "q12h"),
+    (re.compile(
+        rf"(?<![A-Za-z])(?:od|qd|o\.d\.?|q\.d\.?|(?:once|one time|1 time) {_A_DAY}|daily|every day|q24h"
+        r"|hs|qhs|q\.?h\.?s\.?|at bedtime|nightly|every (?:morning|night))(?![A-Za-z])",
+        re.IGNORECASE,
+    ), "q24h"),
     (re.compile(r"วันละ\s*4\s*ครั้ง"), "q6h"),
     (re.compile(r"วันละ\s*3\s*ครั้ง"), "q8h"),
     (re.compile(r"วันละ\s*2\s*ครั้ง"), "q12h"),
     (re.compile(r"วันละ\s*(?:1\s*)?ครั้ง|ก่อนนอน"), "q24h"),
+    # Thai meal-time slots: morning-evening, morning-noon-evening, (+ bedtime).
+    (re.compile(r"เช้า\s*[-,/]?\s*กลางวัน\s*[-,/]?\s*เย็น\s*[-,/]?\s*ก่อนนอน"), "q6h"),
+    (re.compile(r"เช้า\s*[-,/]?\s*กลางวัน\s*[-,/]?\s*เย็น"), "q8h"),
+    (re.compile(r"เช้า\s*[-,/]?\s*เย็น"), "q12h"),
 )
 TIMES_RE = re.compile(r"(?<![\w.])\d+\s*[x×]\s*([1-4])(?!\d)", re.IGNORECASE)
 _TIMES_CODE = {"1": "q24h", "2": "q12h", "3": "q8h", "4": "q6h"}
+# "every N hours" / "q N h" / "ทุก N ชั่วโมง". Only intervals with a schema code are mapped; any other
+# interval (e.g. q4h) gives no code, so the field stays null unless another phrase (e.g. prn) is present.
+EVERY_RE = re.compile(
+    r"(?<![A-Za-z])(?:every\s*(\d+)\s*(?:hours?|hrs?|h)(?![A-Za-z])|q\s*(\d+)\s*(?:hours?|hrs?|h)(?![A-Za-z]))"
+    r"|ทุก\s*(\d+)\s*(?:ชั่วโมง|ชม\.?)",
+    re.IGNORECASE,
+)
+_EVERY_CODE = {"6": "q6h", "8": "q8h", "12": "q12h", "24": "q24h"}
 
 
 def _first_start(text: str, patterns: list[re.Pattern[str]]) -> int:
@@ -65,13 +84,18 @@ def parse_entry(text: str) -> dict[str, Any]:
     if times:
         freq = _TIMES_CODE[times.group(1)]
     else:
-        hits = [(m.start(), code) for pat, code in FREQ_PATTERNS if (m := pat.search(raw))]
+        # Earliest phrase wins; at the same start the longest phrase wins ("เช้า กลางวัน เย็น" over "เช้า เย็น").
+        hits = [(m.start(), -len(m.group(0)), code) for pat, code in FREQ_PATTERNS if (m := pat.search(raw))]
+        every = EVERY_RE.search(raw)
+        code = _EVERY_CODE.get(next(g for g in every.groups() if g is not None).lstrip("0")) if every else None
+        if every and code:
+            hits.append((every.start(), -len(every.group(0)), code))
         if hits:
-            freq = min(hits)[1]
+            freq = min(hits, key=lambda h: (h[0], h[1]))[2]
 
     boundary = _first_start(
         raw,
-        [DOSE_RE, QTY_RE, TIMES_RE, *(p for p, _ in ROUTE_PATTERNS), *(p for p, _ in FREQ_PATTERNS)],
+        [DOSE_RE, QTY_RE, TIMES_RE, EVERY_RE, *(p for p, _ in ROUTE_PATTERNS), *(p for p, _ in FREQ_PATTERNS)],
     )
     name = raw[:boundary].strip(" ,;:-") or raw
     return {

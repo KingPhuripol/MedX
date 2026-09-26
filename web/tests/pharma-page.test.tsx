@@ -46,7 +46,55 @@ const RUN = {
   rules_version: "s5-rules-1.0.0",
   excluded_future_items: 0,
   issues: [issue(2, "dose_mismatch", 3, "moderate"), issue(1, "allergy_class", 1, "high")],
-  notices: [{ notice_id: "run1-n01", type: "unrecognised_drug", detail: "not in the formulary", raw_span: "Qelvadrine" }],
+  notices: [
+    { notice_id: "run1-n01", type: "unrecognised_drug", detail: "not in the formulary", raw_span: "Qelvadrine" },
+    {
+      notice_id: "run1-n02",
+      type: "missing_field",
+      field: "dose",
+      ingredients: ["warfarin"],
+      source_type: "new_order",
+      evidence_ref: "demo/new_order/1",
+      detail: "dose not stated in new_order for warfarin; it could not be compared with home_list",
+      raw_span: "Warfarin 2 tab daily",
+    },
+  ],
+  unchecked_comparisons: 1,
+  extraction: [
+    {
+      source_index: 0,
+      source_type: "home_list",
+      evidence_ref: "demo/home_list/1",
+      available_at_time: "2026-06-10T09:00:00+07:00",
+      status: "ok",
+      failure_reason: null,
+      entries: [
+        { source_text: "Warfarin 3 mg daily", drug_name_raw: "Warfarin", dose_value: 3, dose_unit: "mg", route: null,
+          frequency_code: "q24h", ingredients: ["warfarin"], recognised: true, discontinue_intent: false },
+      ],
+    },
+    {
+      source_index: 1,
+      source_type: "patient_reported",
+      evidence_ref: "demo/patient_reported/1",
+      available_at_time: "2026-06-10T09:00:00+07:00",
+      status: "extraction_failed",
+      failure_reason: "timeout",
+      entries: null,
+    },
+    {
+      source_index: 2,
+      source_type: "new_order",
+      evidence_ref: "demo/new_order/1",
+      available_at_time: "2026-06-10T09:50:00+07:00",
+      status: "ok",
+      failure_reason: null,
+      entries: [
+        { source_text: "Warfarin 2 tab daily", drug_name_raw: "Warfarin", dose_value: null, dose_unit: null, route: null,
+          frequency_code: "q24h", ingredients: ["warfarin"], recognised: true, discontinue_intent: false },
+      ],
+    },
+  ],
 };
 
 let decided: Record<string, string> = {};
@@ -97,7 +145,8 @@ describe("pharmacist reconciliation page", () => {
     expect(region).toHaveAttribute("aria-labelledby", "reconcile-title");
     for (const s of document.querySelectorAll("section")) expect(s).toHaveAttribute("aria-labelledby");
     expect(screen.getByTestId("nlm-attribution")).toHaveTextContent(NLM_ATTRIBUTION);
-    expect(screen.getByRole("status")).toHaveTextContent(/2 issue\(s\) and 1 notice\(s\)/);
+    expect(screen.getByRole("status")).toHaveTextContent(/2 issue\(s\) and 2 notice\(s\)/);
+    expect(screen.getByRole("status")).toHaveTextContent(/1 comparison\(s\) could not be checked/);
     expect(window.location.search).toBe("?run=run1");
   });
 
@@ -116,6 +165,23 @@ describe("pharmacist reconciliation page", () => {
     cols.forEach((th) => expect(th).toHaveAttribute("scope", "col"));
     table.querySelectorAll("tbody th").forEach((th) => expect(th).toHaveAttribute("scope", "row"));
     expect(within(articles[0] as HTMLElement).getByText(new RegExp(PHRASING_LABEL.replace(/\//g, "\\/")))).toBeInTheDocument();
+  });
+
+  it("shows every source list as read, with not-stated fields and the unchecked comparison count", async () => {
+    installFetch();
+    await runCheck();
+    const lists = screen.getByRole("heading", { level: 2, name: /Medication lists as read \(3\)/ }).closest("section")!;
+    expect(lists).toHaveAttribute("aria-labelledby", "lists-title");
+    expect(screen.getByTestId("unchecked-summary")).toHaveTextContent(/1 comparison\(s\) could not be checked/);
+    expect(screen.getByTestId("unchecked-summary")).toHaveTextContent(/not counted as matches/);
+    const orders = within(lists).getByTestId("source-3");
+    expect(orders.tagName).toBe("TABLE");
+    expect(orders.querySelector("caption")).toHaveTextContent(/New order as read \(demo\/new_order\/1/);
+    const row = within(orders).getByRole("rowheader", { name: "Warfarin 2 tab daily" }).closest("tr")!;
+    expect(within(row).getAllByText("not stated").length).toBeGreaterThanOrEqual(2); // dose and route
+    orders.querySelectorAll("thead th").forEach((th) => expect(th).toHaveAttribute("scope", "col"));
+    expect(within(lists).getByTestId("source-2")).toHaveTextContent(/could not be read \(timeout\)/);
+    expect(screen.getByText("Not stated, so not compared")).toBeInTheDocument();
   });
 
   it("requires a labelled reason to dismiss and confirms with the keyboard", async () => {

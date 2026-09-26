@@ -1,22 +1,61 @@
 {
+ "alert_breakdown": {
+  "clean_lists": {
+   "all": {
+    "by_kind": {
+     "notice:missing_field": 44
+    },
+    "informational_mean_excluding_missing_field": 0.0,
+    "missing_field_notices_per_unit": 1.375,
+    "units": 32
+   },
+   "test": {
+    "by_kind": {
+     "notice:missing_field": 11
+    },
+    "informational_mean_excluding_missing_field": 0.0,
+    "missing_field_notices_per_unit": 1.1,
+    "units": 10
+   }
+  },
+  "injected_case_extras": {
+   "all": {
+    "by_kind": {
+     "notice:missing_field": 352
+    },
+    "informational_mean_excluding_missing_field": 0.0,
+    "missing_field_notices_per_unit": 1.375,
+    "units": 256
+   },
+   "test": {
+    "by_kind": {
+     "notice:missing_field": 88
+    },
+    "informational_mean_excluding_missing_field": 0.0,
+    "missing_field_notices_per_unit": 1.1,
+    "units": 80
+   }
+  },
+  "note": "Informational only. A06 counts every issue and notice; whether missing_field notices (a dose or frequency not stated in one source) count as false alerts is a pending human decision."
+ },
  "clean_false_alerts": {
   "all": {
-   "alerts": 0,
+   "alerts": 44,
    "ci95": [
-    0.0,
-    0.0
+    1.125,
+    1.625
    ],
    "lists": 32,
-   "mean_per_list": 0.0
+   "mean_per_list": 1.375
   },
   "test": {
-   "alerts": 0,
+   "alerts": 11,
    "ci95": [
-    0.0,
-    0.0
+    0.6,
+    1.6
    ],
    "lists": 10,
-   "mean_per_list": 0.0
+   "mean_per_list": 1.1
   }
  },
  "counts": {
@@ -39,20 +78,20 @@
   "all": {
    "cases": 256,
    "ci95": [
-    0.0,
-    0.0
+    1.125,
+    1.625
    ],
-   "extra": 0,
-   "mean_per_case": 0.0
+   "extra": 352,
+   "mean_per_case": 1.375
   },
   "test": {
    "cases": 80,
    "ci95": [
-    0.0,
-    0.0
+    0.6,
+    1.6
    ],
-   "extra": 0,
-   "mean_per_case": 0.0
+   "extra": 88,
+   "mean_per_case": 1.1
   }
  },
  "extraction": {
@@ -97,22 +136,22 @@
   "rules_only": {
    "all": {
     "clean_false_alerts": {
-     "alerts": 0,
+     "alerts": 44,
      "ci95": [
-      0.0,
-      0.0
+      1.0938,
+      1.625
      ],
      "lists": 32,
-     "mean_per_list": 0.0
+     "mean_per_list": 1.375
     },
     "extra_issues_per_injected_case": {
      "cases": 256,
      "ci95": [
-      0.0,
-      0.0
+      1.0938,
+      1.625
      ],
-     "extra": 0,
-     "mean_per_case": 0.0
+     "extra": 352,
+     "mean_per_case": 1.375
     },
     "n_patients": 32,
     "precision": {
@@ -266,22 +305,22 @@
    },
    "test": {
     "clean_false_alerts": {
-     "alerts": 0,
+     "alerts": 11,
      "ci95": [
-      0.0,
-      0.0
+      0.6,
+      1.6
      ],
      "lists": 10,
-     "mean_per_list": 0.0
+     "mean_per_list": 1.1
     },
     "extra_issues_per_injected_case": {
      "cases": 80,
      "ci95": [
-      0.0,
-      0.0
+      0.6,
+      1.6
      ],
-     "extra": 0,
-     "mean_per_case": 0.0
+     "extra": 88,
+     "mean_per_case": 1.1
     },
     "n_patients": 10,
     "precision": {
@@ -437,22 +476,22 @@
   "rules_plus_model": {
    "all": {
     "clean_false_alerts": {
-     "alerts": 0,
+     "alerts": 44,
      "ci95": [
-      0.0,
-      0.0
+      1.125,
+      1.625
      ],
      "lists": 32,
-     "mean_per_list": 0.0
+     "mean_per_list": 1.375
     },
     "extra_issues_per_injected_case": {
      "cases": 256,
      "ci95": [
-      0.0,
-      0.0
+      1.125,
+      1.625
      ],
-     "extra": 0,
-     "mean_per_case": 0.0
+     "extra": 352,
+     "mean_per_case": 1.375
     },
     "n_patients": 32,
     "precision": {
@@ -606,22 +645,22 @@
    },
    "test": {
     "clean_false_alerts": {
-     "alerts": 0,
+     "alerts": 11,
      "ci95": [
-      0.0,
-      0.0
+      0.6,
+      1.6
      ],
      "lists": 10,
-     "mean_per_list": 0.0
+     "mean_per_list": 1.1
     },
     "extra_issues_per_injected_case": {
      "cases": 80,
      "ci95": [
-      0.0,
-      0.0
+      0.6,
+      1.6
      ],
-     "extra": 0,
-     "mean_per_case": 0.0
+     "extra": 88,
+     "mean_per_case": 1.1
     },
     "n_patients": 10,
     "precision": {
@@ -1116,8 +1155,8 @@
  "versions": {
   "cross_reactivity": "s5-cross-reactivity-1.0.0",
   "formulary": "s5-formulary-1.0.0",
-  "pipeline": "s5-pipeline-1.0.0",
+  "pipeline": "s5-pipeline-1.1.0",
   "provider": "mock",
-  "rules": "s5-rules-1.0.0"
+  "rules": "s5-rules-1.1.0"
  }
 }

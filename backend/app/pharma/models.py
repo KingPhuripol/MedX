@@ -25,7 +25,7 @@ IssueType = Literal[
     "frequency_mismatch",
     "omission",
 ]
-NoticeType = Literal["unrecognised_drug", "allergy_unmapped", "source_unreadable", "source_missing"]
+NoticeType = Literal["unrecognised_drug", "allergy_unmapped", "source_unreadable", "source_missing", "missing_field"]
 ISSUE_TYPES: tuple[str, ...] = IssueType.__args__  # type: ignore[attr-defined]
 NOTICE_TYPES: tuple[str, ...] = NoticeType.__args__  # type: ignore[attr-defined]
 
@@ -172,6 +172,12 @@ class Notice(_Frozen):
     evidence_ref: str | None = None
     raw_span: str | None = None
     detail: str
+    # missing_field only: which comparison could not be made, and against which sources.
+    rule_id: str | None = None
+    field: Literal["dose", "frequency_code"] | None = None
+    ingredients: tuple[str, ...] | None = None
+    compared_with: tuple[str, ...] | None = None
+    stated_in: tuple[str, ...] | None = None
 
 
 class DecisionBody(BaseModel):
