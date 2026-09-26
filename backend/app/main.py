@@ -6,7 +6,7 @@ import uuid
 
 from fastapi import FastAPI, Request
 
-from . import auth
+from . import auth, voice
 from .config import Settings
 from .db import create_schema, make_engine
 from .gateway import build_provider
@@ -17,6 +17,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings.from_env()
     engine = make_engine(settings.database_url)
     create_schema(engine)
+    voice.create_voice_schema(engine)
 
     app = FastAPI(title="Clinical Front Door (research prototype)", version="0.1.0")
     app.state.settings = settings
@@ -36,4 +37,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.include_router(auth.router)
     app.include_router(gateway_router.router)
+    app.include_router(voice.router)
     return app

@@ -3,10 +3,12 @@ SHELL := /bin/bash
 PYTHON ?= python3
 VENV := .venv
 PY := $(VENV)/bin/python
+API_PORT ?= 8000
+WEB_PORT ?= 3000
 PG_URL = postgresql+psycopg://frontdoor:$${POSTGRES_PASSWORD:-frontdoor_dev_only}@127.0.0.1:55432/frontdoor
 export PYTHONPATH := $(CURDIR)/backend:$(CURDIR)
 
-.PHONY: install test dev e2e test-pg clean
+.PHONY: install test dev e2e test-pg eval-voice clean
 
 install: $(VENV)/.installed web/node_modules/.installed
 
@@ -25,17 +27,17 @@ test: install
 	$(PY) -m pytest -q -rs
 	cd web && npm test
 
-## API on 127.0.0.1:8000, web on 127.0.0.1:3000 (dev seed applied; loads .env if present).
+## API on 127.0.0.1:$(API_PORT) (default 8000), web on 127.0.0.1:$(WEB_PORT) (default 3000); dev seed applied; loads .env if present.
 dev: install
 	@set -a; if [ -f .env ]; then . ./.env; fi; set +a; \
 	$(PY) -m app.seed || exit 1; \
-	$(VENV)/bin/uvicorn --factory app.main:create_app --host 127.0.0.1 --port 8000 & API_PID=$$!; \
+	$(VENV)/bin/uvicorn --factory app.main:create_app --host 127.0.0.1 --port $(API_PORT) & API_PID=$$!; \
 	trap 'kill $$API_PID 2>/dev/null' EXIT INT TERM; \
-	cd web && npm run dev
+	cd web && API_ORIGIN=http://127.0.0.1:$(API_PORT) npx next dev -H 127.0.0.1 -p $(WEB_PORT)
 
 ## Browser tests (Playwright) against `make dev` (started automatically if not running).
 e2e: install
-	cd web && npx playwright install chromium && npx playwright test
+	cd web && npx playwright install chromium && WEB_PORT=$(WEB_PORT) API_PORT=$(API_PORT) npx playwright test
 
 ## Optional: audit append-only on docker-compose PostgreSQL. Skips if Docker is unavailable.
 test-pg: install
@@ -44,6 +46,10 @@ test-pg: install
 	docker compose config -q && docker compose up -d --wait postgres || exit 1; \
 	TEST_PG_URL="$(PG_URL)" $(PY) -m pytest -q -rs -m pg; rc=$$?; \
 	docker compose down; exit $$rc
+
+## Voice intake system evaluation (mock rules, synthetic fixtures) -> slices/s3/eval/voice_intake_eval.json
+eval-voice: install
+	$(PY) -m app.voice.eval
 
 clean:
 	rm -rf $(VENV) web/node_modules web/.next backend/dev.db

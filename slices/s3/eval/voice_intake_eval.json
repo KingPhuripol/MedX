@@ -1,0 +1,1223 @@
+{
+  "label": "system evaluation — mock rules, synthetic dialogues, not clinical performance",
+  "slice": "s3",
+  "provider": "mock",
+  "extractor": "voice-mock-rules-0.1.0",
+  "inputs_sha256": "e5208d092d5262e03d2ec894d0cc4ed622c8b1f6566180655744ff4b22c97cbc",
+  "n_dialogues": 15,
+  "bootstrap": {
+    "resamples": 2000,
+    "seed": 0,
+    "unit": "dialogue (patient)",
+    "method": "percentile"
+  },
+  "fields": {
+    "chief_complaint": {
+      "tp": 15,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "ci95": {
+        "precision": [
+          1.0,
+          1.0
+        ],
+        "recall": [
+          1.0,
+          1.0
+        ],
+        "f1": [
+          1.0,
+          1.0
+        ]
+      }
+    },
+    "onset_duration": {
+      "tp": 15,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "ci95": {
+        "precision": [
+          1.0,
+          1.0
+        ],
+        "recall": [
+          1.0,
+          1.0
+        ],
+        "f1": [
+          1.0,
+          1.0
+        ]
+      }
+    },
+    "severity": {
+      "tp": 12,
+      "fp": 1,
+      "fn": 0,
+      "precision": 0.9231,
+      "recall": 1.0,
+      "f1": 0.96,
+      "ci95": {
+        "precision": [
+          0.75,
+          1.0
+        ],
+        "recall": [
+          1.0,
+          1.0
+        ],
+        "f1": [
+          0.8571,
+          1.0
+        ]
+      }
+    },
+    "allergy_status": {
+      "tp": 12,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "ci95": {
+        "precision": [
+          1.0,
+          1.0
+        ],
+        "recall": [
+          1.0,
+          1.0
+        ],
+        "f1": [
+          1.0,
+          1.0
+        ]
+      }
+    },
+    "allergens": {
+      "tp": 4,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "ci95": {
+        "precision": [
+          1.0,
+          1.0
+        ],
+        "recall": [
+          1.0,
+          1.0
+        ],
+        "f1": [
+          1.0,
+          1.0
+        ]
+      }
+    },
+    "current_medications": {
+      "tp": 16,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "ci95": {
+        "precision": [
+          1.0,
+          1.0
+        ],
+        "recall": [
+          1.0,
+          1.0
+        ],
+        "f1": [
+          1.0,
+          1.0
+        ]
+      }
+    },
+    "relevant_history": {
+      "tp": 13,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "ci95": {
+        "precision": [
+          1.0,
+          1.0
+        ],
+        "recall": [
+          1.0,
+          1.0
+        ],
+        "f1": [
+          1.0,
+          1.0
+        ]
+      }
+    },
+    "micro_overall": {
+      "tp": 87,
+      "fp": 1,
+      "fn": 0,
+      "precision": 0.9886,
+      "recall": 1.0,
+      "f1": 0.9943,
+      "ci95": {
+        "precision": [
+          0.96,
+          1.0
+        ],
+        "recall": [
+          1.0,
+          1.0
+        ],
+        "f1": [
+          0.9796,
+          1.0
+        ]
+      }
+    }
+  },
+  "splits": {
+    "dev": {
+      "chief_complaint": {
+        "tp": 10,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "ci95": {
+          "precision": [
+            1.0,
+            1.0
+          ],
+          "recall": [
+            1.0,
+            1.0
+          ],
+          "f1": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      "onset_duration": {
+        "tp": 10,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "ci95": {
+          "precision": [
+            1.0,
+            1.0
+          ],
+          "recall": [
+            1.0,
+            1.0
+          ],
+          "f1": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      "severity": {
+        "tp": 8,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.8889,
+        "recall": 1.0,
+        "f1": 0.9412,
+        "ci95": {
+          "precision": [
+            0.6667,
+            1.0
+          ],
+          "recall": [
+            1.0,
+            1.0
+          ],
+          "f1": [
+            0.8,
+            1.0
+          ]
+        }
+      },
+      "allergy_status": {
+        "tp": 8,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "ci95": {
+          "precision": [
+            1.0,
+            1.0
+          ],
+          "recall": [
+            1.0,
+            1.0
+          ],
+          "f1": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      "allergens": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "ci95": {
+          "precision": [
+            1.0,
+            1.0
+          ],
+          "recall": [
+            1.0,
+            1.0
+          ],
+          "f1": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      "current_medications": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "ci95": {
+          "precision": [
+            1.0,
+            1.0
+          ],
+          "recall": [
+            1.0,
+            1.0
+          ],
+          "f1": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      "relevant_history": {
+        "tp": 8,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "ci95": {
+          "precision": [
+            1.0,
+            1.0
+          ],
+          "recall": [
+            1.0,
+            1.0
+          ],
+          "f1": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      "micro_overall": {
+        "tp": 57,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.9828,
+        "recall": 1.0,
+        "f1": 0.9913,
+        "ci95": {
+          "precision": [
+            0.9388,
+            1.0
+          ],
+          "recall": [
+            1.0,
+            1.0
+          ],
+          "f1": [
+            0.9684,
+            1.0
+          ]
+        }
+      }
+    },
+    "heldout": {
+      "chief_complaint": {
+        "tp": 5,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "ci95": {
+          "precision": [
+            1.0,
+            1.0
+          ],
+          "recall": [
+            1.0,
+            1.0
+          ],
+          "f1": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      "onset_duration": {
+        "tp": 5,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "ci95": {
+          "precision": [
+            1.0,
+            1.0
+          ],
+          "recall": [
+            1.0,
+            1.0
+          ],
+          "f1": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      "severity": {
+        "tp": 4,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "ci95": {
+          "precision": [
+            1.0,
+            1.0
+          ],
+          "recall": [
+            1.0,
+            1.0
+          ],
+          "f1": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      "allergy_status": {
+        "tp": 4,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "ci95": {
+          "precision": [
+            1.0,
+            1.0
+          ],
+          "recall": [
+            1.0,
+            1.0
+          ],
+          "f1": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      "allergens": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "ci95": {
+          "precision": [
+            1.0,
+            1.0
+          ],
+          "recall": [
+            1.0,
+            1.0
+          ],
+          "f1": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      "current_medications": {
+        "tp": 5,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "ci95": {
+          "precision": [
+            1.0,
+            1.0
+          ],
+          "recall": [
+            1.0,
+            1.0
+          ],
+          "f1": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      "relevant_history": {
+        "tp": 5,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "ci95": {
+          "precision": [
+            1.0,
+            1.0
+          ],
+          "recall": [
+            1.0,
+            1.0
+          ],
+          "f1": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      "micro_overall": {
+        "tp": 30,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "ci95": {
+          "precision": [
+            1.0,
+            1.0
+          ],
+          "recall": [
+            1.0,
+            1.0
+          ],
+          "f1": [
+            1.0,
+            1.0
+          ]
+        }
+      }
+    }
+  },
+  "allergy_false_none": 0,
+  "latency_ms": {
+    "n_turns": 80,
+    "p50": 1.661,
+    "p95": 2.185,
+    "scope": "per-turn processing, mock provider in process"
+  },
+  "per_dialogue": [
+    {
+      "dialogue_id": "th_intake_01",
+      "heldout": false,
+      "handoff_reason": "complete",
+      "missing_fields": [],
+      "counts": {
+        "chief_complaint": [
+          1,
+          0,
+          0
+        ],
+        "onset_duration": [
+          1,
+          0,
+          0
+        ],
+        "severity": [
+          1,
+          0,
+          0
+        ],
+        "allergy_status": [
+          1,
+          0,
+          0
+        ],
+        "allergens": [
+          0,
+          0,
+          0
+        ],
+        "current_medications": [
+          1,
+          0,
+          0
+        ],
+        "relevant_history": [
+          1,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "dialogue_id": "th_intake_02",
+      "heldout": false,
+      "handoff_reason": "complete",
+      "missing_fields": [],
+      "counts": {
+        "chief_complaint": [
+          1,
+          0,
+          0
+        ],
+        "onset_duration": [
+          1,
+          0,
+          0
+        ],
+        "severity": [
+          1,
+          0,
+          0
+        ],
+        "allergy_status": [
+          1,
+          0,
+          0
+        ],
+        "allergens": [
+          1,
+          0,
+          0
+        ],
+        "current_medications": [
+          2,
+          0,
+          0
+        ],
+        "relevant_history": [
+          1,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "dialogue_id": "th_intake_03",
+      "heldout": false,
+      "handoff_reason": "complete",
+      "missing_fields": [],
+      "counts": {
+        "chief_complaint": [
+          1,
+          0,
+          0
+        ],
+        "onset_duration": [
+          1,
+          0,
+          0
+        ],
+        "severity": [
+          1,
+          0,
+          0
+        ],
+        "allergy_status": [
+          1,
+          0,
+          0
+        ],
+        "allergens": [
+          0,
+          0,
+          0
+        ],
+        "current_medications": [
+          2,
+          0,
+          0
+        ],
+        "relevant_history": [
+          2,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "dialogue_id": "th_intake_04",
+      "heldout": false,
+      "handoff_reason": "complete",
+      "missing_fields": [],
+      "counts": {
+        "chief_complaint": [
+          1,
+          0,
+          0
+        ],
+        "onset_duration": [
+          1,
+          0,
+          0
+        ],
+        "severity": [
+          1,
+          0,
+          0
+        ],
+        "allergy_status": [
+          1,
+          0,
+          0
+        ],
+        "allergens": [
+          0,
+          0,
+          0
+        ],
+        "current_medications": [
+          1,
+          0,
+          0
+        ],
+        "relevant_history": [
+          1,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "dialogue_id": "th_intake_05",
+      "heldout": false,
+      "handoff_reason": "complete",
+      "missing_fields": [],
+      "counts": {
+        "chief_complaint": [
+          1,
+          0,
+          0
+        ],
+        "onset_duration": [
+          1,
+          0,
+          0
+        ],
+        "severity": [
+          1,
+          0,
+          0
+        ],
+        "allergy_status": [
+          1,
+          0,
+          0
+        ],
+        "allergens": [
+          0,
+          0,
+          0
+        ],
+        "current_medications": [
+          1,
+          0,
+          0
+        ],
+        "relevant_history": [
+          1,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "dialogue_id": "th_intake_06",
+      "heldout": false,
+      "handoff_reason": "nurse_attention_phrase",
+      "missing_fields": [
+        "severity",
+        "allergy_status",
+        "current_medications",
+        "relevant_history"
+      ],
+      "counts": {
+        "chief_complaint": [
+          1,
+          0,
+          0
+        ],
+        "onset_duration": [
+          1,
+          0,
+          0
+        ],
+        "severity": [
+          0,
+          0,
+          0
+        ],
+        "allergy_status": [
+          0,
+          0,
+          0
+        ],
+        "allergens": [
+          0,
+          0,
+          0
+        ],
+        "current_medications": [
+          0,
+          0,
+          0
+        ],
+        "relevant_history": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "dialogue_id": "th_intake_07",
+      "heldout": false,
+      "handoff_reason": "attempts_exhausted",
+      "missing_fields": [
+        "relevant_history"
+      ],
+      "counts": {
+        "chief_complaint": [
+          1,
+          0,
+          0
+        ],
+        "onset_duration": [
+          1,
+          0,
+          0
+        ],
+        "severity": [
+          1,
+          0,
+          0
+        ],
+        "allergy_status": [
+          1,
+          0,
+          0
+        ],
+        "allergens": [
+          1,
+          0,
+          0
+        ],
+        "current_medications": [
+          1,
+          0,
+          0
+        ],
+        "relevant_history": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "dialogue_id": "th_intake_08",
+      "heldout": false,
+      "handoff_reason": "complete",
+      "missing_fields": [],
+      "counts": {
+        "chief_complaint": [
+          1,
+          0,
+          0
+        ],
+        "onset_duration": [
+          1,
+          0,
+          0
+        ],
+        "severity": [
+          1,
+          0,
+          0
+        ],
+        "allergy_status": [
+          1,
+          0,
+          0
+        ],
+        "allergens": [
+          0,
+          0,
+          0
+        ],
+        "current_medications": [
+          2,
+          0,
+          0
+        ],
+        "relevant_history": [
+          1,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "dialogue_id": "th_intake_09",
+      "heldout": false,
+      "handoff_reason": "nurse_attention_phrase",
+      "missing_fields": [
+        "allergy_status",
+        "current_medications",
+        "relevant_history"
+      ],
+      "counts": {
+        "chief_complaint": [
+          1,
+          0,
+          0
+        ],
+        "onset_duration": [
+          1,
+          0,
+          0
+        ],
+        "severity": [
+          0,
+          1,
+          0
+        ],
+        "allergy_status": [
+          0,
+          0,
+          0
+        ],
+        "allergens": [
+          0,
+          0,
+          0
+        ],
+        "current_medications": [
+          0,
+          0,
+          0
+        ],
+        "relevant_history": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "dialogue_id": "th_intake_10",
+      "heldout": false,
+      "handoff_reason": "complete",
+      "missing_fields": [],
+      "counts": {
+        "chief_complaint": [
+          1,
+          0,
+          0
+        ],
+        "onset_duration": [
+          1,
+          0,
+          0
+        ],
+        "severity": [
+          1,
+          0,
+          0
+        ],
+        "allergy_status": [
+          1,
+          0,
+          0
+        ],
+        "allergens": [
+          0,
+          0,
+          0
+        ],
+        "current_medications": [
+          1,
+          0,
+          0
+        ],
+        "relevant_history": [
+          1,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "dialogue_id": "th_intake_11",
+      "heldout": true,
+      "handoff_reason": "complete",
+      "missing_fields": [],
+      "counts": {
+        "chief_complaint": [
+          1,
+          0,
+          0
+        ],
+        "onset_duration": [
+          1,
+          0,
+          0
+        ],
+        "severity": [
+          1,
+          0,
+          0
+        ],
+        "allergy_status": [
+          1,
+          0,
+          0
+        ],
+        "allergens": [
+          0,
+          0,
+          0
+        ],
+        "current_medications": [
+          2,
+          0,
+          0
+        ],
+        "relevant_history": [
+          1,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "dialogue_id": "th_intake_12",
+      "heldout": true,
+      "handoff_reason": "nurse_attention_phrase",
+      "missing_fields": [
+        "severity",
+        "allergy_status",
+        "current_medications",
+        "relevant_history"
+      ],
+      "counts": {
+        "chief_complaint": [
+          1,
+          0,
+          0
+        ],
+        "onset_duration": [
+          1,
+          0,
+          0
+        ],
+        "severity": [
+          0,
+          0,
+          0
+        ],
+        "allergy_status": [
+          0,
+          0,
+          0
+        ],
+        "allergens": [
+          0,
+          0,
+          0
+        ],
+        "current_medications": [
+          0,
+          0,
+          0
+        ],
+        "relevant_history": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "dialogue_id": "th_intake_13",
+      "heldout": true,
+      "handoff_reason": "complete",
+      "missing_fields": [],
+      "counts": {
+        "chief_complaint": [
+          1,
+          0,
+          0
+        ],
+        "onset_duration": [
+          1,
+          0,
+          0
+        ],
+        "severity": [
+          1,
+          0,
+          0
+        ],
+        "allergy_status": [
+          1,
+          0,
+          0
+        ],
+        "allergens": [
+          2,
+          0,
+          0
+        ],
+        "current_medications": [
+          1,
+          0,
+          0
+        ],
+        "relevant_history": [
+          1,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "dialogue_id": "th_intake_14",
+      "heldout": true,
+      "handoff_reason": "complete",
+      "missing_fields": [],
+      "counts": {
+        "chief_complaint": [
+          1,
+          0,
+          0
+        ],
+        "onset_duration": [
+          1,
+          0,
+          0
+        ],
+        "severity": [
+          1,
+          0,
+          0
+        ],
+        "allergy_status": [
+          1,
+          0,
+          0
+        ],
+        "allergens": [
+          0,
+          0,
+          0
+        ],
+        "current_medications": [
+          2,
+          0,
+          0
+        ],
+        "relevant_history": [
+          2,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "dialogue_id": "th_intake_15",
+      "heldout": true,
+      "handoff_reason": "attempts_exhausted",
+      "missing_fields": [
+        "current_medications"
+      ],
+      "counts": {
+        "chief_complaint": [
+          1,
+          0,
+          0
+        ],
+        "onset_duration": [
+          1,
+          0,
+          0
+        ],
+        "severity": [
+          1,
+          0,
+          0
+        ],
+        "allergy_status": [
+          1,
+          0,
+          0
+        ],
+        "allergens": [
+          0,
+          0,
+          0
+        ],
+        "current_medications": [
+          0,
+          0,
+          0
+        ],
+        "relevant_history": [
+          1,
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "notes": "Fixtures and rules share one author; the held-out split was committed before the rules but is not independent evidence. With n=15 the CIs are wide by design."
+}
