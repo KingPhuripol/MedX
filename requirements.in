@@ -8,3 +8,7 @@ psycopg[binary]>=3.2,<4
 # Test
 pytest>=8,<9
 pytest-socket>=0.7,<1
+# Evaluation harness (s8) — runtime
+numpy>=2.0,<3
+# Evaluation harness (s8) — test-only reference implementation
+scikit-learn>=1.5,<2

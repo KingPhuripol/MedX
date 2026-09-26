@@ -1,0 +1,471 @@
+{
+  "$comment": "Toy synthetic manifest for slice s8. Research prototype - not for clinical use.",
+  "manifest_version": "1.0",
+  "evaluation_id": "s8-toy-test-0001",
+  "slice": "s8",
+  "dataset": {
+    "name": "s8-toy-synthetic",
+    "version": "0.1.0",
+    "data_class": "synthetic"
+  },
+  "split": "test",
+  "split_version": "toy-split-v1",
+  "split_patient_list": [
+    "SYN-P001",
+    "SYN-P002",
+    "SYN-P003",
+    "SYN-P004",
+    "SYN-P005",
+    "SYN-P006",
+    "SYN-P007",
+    "SYN-P008",
+    "SYN-P009",
+    "SYN-P010",
+    "SYN-P011",
+    "SYN-P012",
+    "SYN-P013",
+    "SYN-P014",
+    "SYN-P015",
+    "SYN-P016",
+    "SYN-P017",
+    "SYN-P018",
+    "SYN-P019",
+    "SYN-P020",
+    "SYN-P021",
+    "SYN-P022",
+    "SYN-P023",
+    "SYN-P024",
+    "SYN-P025",
+    "SYN-P026",
+    "SYN-P027",
+    "SYN-P028",
+    "SYN-P029",
+    "SYN-P030",
+    "SYN-P031",
+    "SYN-P032",
+    "SYN-P033",
+    "SYN-P034",
+    "SYN-P035",
+    "SYN-P036",
+    "SYN-P037",
+    "SYN-P038",
+    "SYN-P039",
+    "SYN-P040"
+  ],
+  "metrics": [
+    {
+      "id": "cxr_macro_f1",
+      "item": "Model, by modality",
+      "task": "model_cxr",
+      "name": "multilabel_macro_f1",
+      "params": {
+        "labels": [
+          "atelectasis",
+          "cardiomegaly",
+          "consolidation",
+          "edema",
+          "effusion"
+        ]
+      },
+      "primary": true
+    },
+    {
+      "id": "cxr_auroc",
+      "item": "Model, by modality",
+      "task": "model_cxr",
+      "name": "auroc",
+      "params": {
+        "mode": "multilabel",
+        "labels": [
+          "atelectasis",
+          "cardiomegaly",
+          "consolidation",
+          "edema",
+          "effusion"
+        ]
+      },
+      "primary": false
+    },
+    {
+      "id": "ct_dice",
+      "item": "Model, by modality",
+      "task": "model_ct_seg",
+      "name": "dice",
+      "params": {
+        "empty_empty": 1.0
+      },
+      "primary": true
+    },
+    {
+      "id": "cp_hit3",
+      "item": "Case Graph",
+      "task": "care_pathway",
+      "name": "hit_at_k",
+      "params": {
+        "k": 3
+      },
+      "primary": true
+    },
+    {
+      "id": "cp_f1",
+      "item": "Case Graph",
+      "task": "care_pathway",
+      "name": "set_prf",
+      "params": {
+        "component": "f1"
+      },
+      "primary": false
+    },
+    {
+      "id": "cp_calls",
+      "item": "Case Graph",
+      "task": "care_pathway",
+      "name": "calls_per_patient",
+      "params": {},
+      "primary": false
+    },
+    {
+      "id": "cp_latency",
+      "item": "Case Graph",
+      "task": "care_pathway",
+      "name": "latency_per_patient",
+      "params": {},
+      "primary": false
+    },
+    {
+      "id": "ps_accuracy",
+      "item": "Provider swap",
+      "task": "provider_swap",
+      "name": "accuracy",
+      "params": {},
+      "primary": true
+    },
+    {
+      "id": "ps_macro_f1",
+      "item": "Provider swap",
+      "task": "provider_swap",
+      "name": "macro_f1",
+      "params": {
+        "labels": [
+          "normal",
+          "abnormal",
+          "indeterminate"
+        ]
+      },
+      "primary": false
+    },
+    {
+      "id": "ps_latency_p90",
+      "item": "Provider swap",
+      "task": "provider_swap",
+      "name": "latency_summary",
+      "params": {
+        "component": "p90"
+      },
+      "primary": false
+    },
+    {
+      "id": "ps_cost",
+      "item": "Provider swap",
+      "task": "provider_swap",
+      "name": "cost_per_patient",
+      "params": {},
+      "primary": false
+    },
+    {
+      "id": "voice_f1",
+      "item": "Voice Agent",
+      "task": "voice_intake",
+      "name": "field_prf",
+      "params": {
+        "component": "f1"
+      },
+      "primary": true
+    },
+    {
+      "id": "voice_cc_recall",
+      "item": "Voice Agent",
+      "task": "voice_intake",
+      "name": "field_prf",
+      "params": {
+        "component": "recall",
+        "field": "chief_complaint"
+      },
+      "primary": false
+    },
+    {
+      "id": "voice_resp_median",
+      "item": "Voice Agent",
+      "task": "voice_intake",
+      "name": "response_latency",
+      "params": {
+        "component": "median"
+      },
+      "primary": false
+    },
+    {
+      "id": "voice_total_mean",
+      "item": "Voice Agent",
+      "task": "voice_intake",
+      "name": "total_time",
+      "params": {
+        "component": "mean"
+      },
+      "primary": false
+    },
+    {
+      "id": "dept_top1",
+      "item": "Department suggestion",
+      "task": "department",
+      "name": "topk_accuracy",
+      "params": {
+        "k": 1
+      },
+      "primary": true
+    },
+    {
+      "id": "dept_top3",
+      "item": "Department suggestion",
+      "task": "department",
+      "name": "topk_accuracy",
+      "params": {
+        "k": 3
+      },
+      "primary": false
+    },
+    {
+      "id": "pharma_duplicate_precision",
+      "item": "Pharma Agent",
+      "task": "pharma",
+      "name": "per_issue_type_pr",
+      "params": {
+        "issue_type": "duplicate",
+        "component": "precision"
+      },
+      "primary": false
+    },
+    {
+      "id": "pharma_duplicate_recall",
+      "item": "Pharma Agent",
+      "task": "pharma",
+      "name": "per_issue_type_pr",
+      "params": {
+        "issue_type": "duplicate",
+        "component": "recall"
+      },
+      "primary": false
+    },
+    {
+      "id": "pharma_dose_mismatch_precision",
+      "item": "Pharma Agent",
+      "task": "pharma",
+      "name": "per_issue_type_pr",
+      "params": {
+        "issue_type": "dose_mismatch",
+        "component": "precision"
+      },
+      "primary": false
+    },
+    {
+      "id": "pharma_dose_mismatch_recall",
+      "item": "Pharma Agent",
+      "task": "pharma",
+      "name": "per_issue_type_pr",
+      "params": {
+        "issue_type": "dose_mismatch",
+        "component": "recall"
+      },
+      "primary": false
+    },
+    {
+      "id": "pharma_allergy_conflict_precision",
+      "item": "Pharma Agent",
+      "task": "pharma",
+      "name": "per_issue_type_pr",
+      "params": {
+        "issue_type": "allergy_conflict",
+        "component": "precision"
+      },
+      "primary": true
+    },
+    {
+      "id": "pharma_allergy_conflict_recall",
+      "item": "Pharma Agent",
+      "task": "pharma",
+      "name": "per_issue_type_pr",
+      "params": {
+        "issue_type": "allergy_conflict",
+        "component": "recall"
+      },
+      "primary": true
+    },
+    {
+      "id": "pharma_duplicate_f1",
+      "item": "Pharma Agent",
+      "task": "pharma",
+      "name": "per_issue_type_pr",
+      "params": {
+        "issue_type": "duplicate",
+        "component": "f1"
+      },
+      "primary": false
+    },
+    {
+      "id": "abst_coverage",
+      "item": "Abstention",
+      "task": "abstention",
+      "name": "coverage",
+      "params": {},
+      "primary": false
+    },
+    {
+      "id": "abst_selective_accuracy",
+      "item": "Abstention",
+      "task": "abstention",
+      "name": "selective_accuracy",
+      "params": {},
+      "primary": true
+    },
+    {
+      "id": "replay_graph",
+      "item": "Replay / Regenerate",
+      "task": "replay",
+      "name": "replay_determinism",
+      "params": {
+        "component": "graph_fraction"
+      },
+      "primary": true
+    },
+    {
+      "id": "replay_node",
+      "item": "Replay / Regenerate",
+      "task": "replay",
+      "name": "replay_determinism",
+      "params": {
+        "component": "node_fraction"
+      },
+      "primary": false
+    },
+    {
+      "id": "regen_ratio",
+      "item": "Replay / Regenerate",
+      "task": "replay",
+      "name": "recomputed_nodes",
+      "params": {
+        "component": "ratio"
+      },
+      "primary": false
+    },
+    {
+      "id": "regen_median",
+      "item": "Replay / Regenerate",
+      "task": "replay",
+      "name": "recomputed_nodes",
+      "params": {
+        "component": "median_recomputed"
+      },
+      "primary": false
+    }
+  ],
+  "comparators": [
+    {
+      "name": "base_model_before_finetune",
+      "description": "Base model before fine-tuning",
+      "tasks": [
+        "model_cxr",
+        "model_ct_seg"
+      ]
+    },
+    {
+      "name": "single_prompt_no_graph",
+      "description": "Same model, whole snapshot in one prompt, no graph",
+      "tasks": [
+        "care_pathway"
+      ]
+    },
+    {
+      "name": "external_model",
+      "description": "External model (synthetic data only)",
+      "tasks": [
+        "provider_swap"
+      ]
+    },
+    {
+      "name": "classifier",
+      "description": "Classifier provider",
+      "tasks": [
+        "provider_swap"
+      ]
+    },
+    {
+      "name": "form_filling",
+      "description": "Nurse form filling",
+      "tasks": [
+        "voice_intake"
+      ]
+    },
+    {
+      "name": "rules_only",
+      "description": "Rule-based checks only",
+      "tasks": [
+        "pharma"
+      ]
+    },
+    {
+      "name": "always_answer",
+      "description": "System that answers every case",
+      "tasks": [
+        "abstention"
+      ]
+    },
+    {
+      "name": "full_graph_recompute",
+      "description": "Recompute the whole graph",
+      "tasks": [
+        "replay"
+      ]
+    }
+  ],
+  "thresholds": [
+    {
+      "metric": "cp_hit3",
+      "op": ">=",
+      "value": 0.5,
+      "rule": "ci_lower"
+    },
+    {
+      "metric": "dept_top3",
+      "op": ">=",
+      "value": 0.8,
+      "rule": "point"
+    },
+    {
+      "metric": "abst_selective_accuracy",
+      "op": ">=",
+      "value": 0.8,
+      "rule": "ci_lower"
+    },
+    {
+      "metric": "ps_latency_p90",
+      "op": "<=",
+      "value": 10.0,
+      "rule": "ci_upper"
+    },
+    {
+      "metric": "replay_graph",
+      "op": ">=",
+      "value": 0.95,
+      "rule": "point"
+    }
+  ],
+  "bootstrap": {
+    "n_boot": 2000,
+    "seed": 20260926,
+    "ci_level": 0.95,
+    "method": "percentile"
+  },
+  "expert_review": {
+    "done": false,
+    "n_reviewers": 0
+  }
+}
