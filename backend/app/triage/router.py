@@ -10,6 +10,7 @@ import hashlib
 from typing import Any, NoReturn
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
 from pydantic import AwareDatetime, BaseModel, Field
 from sqlalchemy.exc import IntegrityError
 
@@ -146,15 +147,31 @@ def get_assessment(assessment_id: str, request: Request, user: CurrentUser = Dep
 
 
 @router.get("/cases/{case_ref}/confirmed")
-def confirmed(case_ref: str, request: Request, user: CurrentUser = Depends(require_user)) -> dict:
-    """The only care-facing read: returns a department only after a nurse confirmed or edited it."""
+def confirmed(case_ref: str, request: Request, user: CurrentUser = Depends(require_user)) -> Any:
+    """The only care-facing read.
+
+    Resolves against the newest assessment for the case (``as_of``, then ``created_at``), never against
+    review order. A department is returned only if that newest assessment was confirmed or edited. Otherwise
+    the answer is 404 ``pending_review`` and, if an assessment exists, its alerts and escalation flag are
+    included so urgency from an unreviewed or rejected newer assessment is never hidden behind an older one.
+    """
     _require(request, user, READ_ROLES, f"triage/cases/{case_ref}/confirmed")
     if case_ref not in engine_cases():
         raise HTTPException(status_code=404, detail="unknown_case")
-    review = store.latest_review_for_case(get_engine(request), case_ref)
-    if review is None or review["action"] not in ("confirm", "edit"):
-        raise HTTPException(status_code=404, detail="pending_review")
-    a = _load(request, review["assessment_id"])
+    engine = get_engine(request)
+    a = store.newest_assessment_for_case(engine, case_ref)
+    review = store.get_review(engine, a.assessment_id) if a else None
+    if a is None or review is None or review["action"] not in ("confirm", "edit"):
+        pending = None
+        if a is not None:
+            pending = {
+                "assessment_id": a.assessment_id,
+                "as_of": a.as_of.isoformat(),
+                "review_status": REVIEW_STATUS[review["action"]] if review else "pending_review",
+                "alert_rule_ids": [x.rule_id for x in a.alerts],
+                "escalation_required": a.escalation_required,
+            }
+        return JSONResponse(status_code=404, content={"detail": "pending_review", "newest_assessment": pending})
     dept = BY_CODE[review["final_department"]]
     return {
         "case_ref": case_ref,

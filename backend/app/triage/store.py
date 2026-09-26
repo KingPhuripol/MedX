@@ -47,17 +47,18 @@ def get_review(engine: Engine, assessment_id: str) -> dict[str, Any] | None:
     return _review_dict(row) if row else None
 
 
-def latest_review_for_case(engine: Engine, case_ref: str) -> dict[str, Any] | None:
-    stmt = (
-        select(triage_reviews)
-        .join(triage_assessments, triage_assessments.c.assessment_id == triage_reviews.c.assessment_id)
-        .where(triage_assessments.c.case_ref == case_ref)
-        .order_by(triage_reviews.c.id.desc())
-        .limit(1)
-    )
+def newest_assessment_for_case(engine: Engine, case_ref: str) -> TriageAssessment | None:
+    """The assessment that reflects the most recent information for a case.
+
+    Ordered by clinical time ``as_of`` (parsed, so UTC offsets compare correctly), then ``created_at``.
+    Review insert order is deliberately ignored: reviewing an older snapshot never makes it current.
+    """
     with engine.connect() as conn:
-        row = conn.execute(stmt).first()
-    return _review_dict(row) if row else None
+        rows = conn.execute(
+            select(triage_assessments.c.payload_json).where(triage_assessments.c.case_ref == case_ref)
+        ).all()
+    items = [TriageAssessment.model_validate_json(r.payload_json) for r in rows]
+    return max(items, key=lambda a: (a.as_of, a.created_at), default=None)
 
 
 def _review_dict(row: Any) -> dict[str, Any]:

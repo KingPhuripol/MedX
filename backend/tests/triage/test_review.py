@@ -242,3 +242,82 @@ def test_triage_role_matrix(client, audit_rows):
     listing = client.get("/api/triage/cases").json()
     assert len(listing["cases"]) == 40 and set(listing["cases"][0]) == {"case_ref", "chief_complaint", "suggested_as_of"}
     assert client.post(writes[1][0], json=writes[1][1]).status_code == 200  # nurse write succeeds
+
+
+TEMPORAL_REFS = sorted(ref for ref, e in BY_REF.items() if e.gold.temporal is not None)
+
+
+def _assess_at(client, ref, as_of):
+    resp = client.post(f"/api/triage/cases/{ref}/assess", json={"as_of": as_of.isoformat()})
+    assert resp.status_code == 201, resp.text
+    return resp.json()
+
+
+def _confirm(client, a):
+    resp = client.post(f"/api/triage/assessments/{a['assessment_id']}/confirm", json=review_body("confirm", a))
+    assert resp.status_code == 200, resp.text
+
+
+def _ids(a):
+    return sorted(x["rule_id"] for x in a["alerts"])
+
+
+def test_temporal_fixtures_present():
+    assert TEMPORAL_REFS == ["SYN-S4-009", "SYN-S4-017", "SYN-S4-019"]
+
+
+@pytest.mark.parametrize("ref", TEMPORAL_REFS)
+@pytest.mark.parametrize("order", ["early_first", "late_first"])
+def test_confirmed_not_stale_after_reassessment(client, login, ref, order):
+    """/confirmed resolves against the newest assessment by as_of, never by review order (S4-A15)."""
+    login("nurse1")
+    url = f"/api/triage/cases/{ref}/confirmed"
+    entry = BY_REF[ref]
+    early_at, late_at = entry.gold.temporal.early_as_of, entry.as_of
+
+    if order == "early_first":
+        # Confirm the early snapshot, then a later snapshot adds red flags and is still pending.
+        early = _assess_at(client, ref, early_at)
+        _confirm(client, early)
+        assert client.get(url).json()["assessment_id"] == early["assessment_id"]
+        late = _assess_at(client, ref, late_at)
+    else:
+        # Later snapshot is assessed and confirmed first; an earlier snapshot is assessed afterwards.
+        late = _assess_at(client, ref, late_at)
+        _confirm(client, late)
+        early = _assess_at(client, ref, early_at)
+    assert set(_ids(late)) > set(_ids(early)) and late["escalation_required"] is True
+
+    if order == "early_first":
+        # Newer assessment unreviewed: no care-facing department, and its urgency is surfaced.
+        got = client.get(url)
+        assert got.status_code == 404 and got.json()["detail"] == "pending_review"
+        pending = got.json()["newest_assessment"]
+        assert pending["assessment_id"] == late["assessment_id"]
+        assert pending["review_status"] == "pending_review"
+        assert pending["escalation_required"] is True and sorted(pending["alert_rule_ids"]) == _ids(late)
+        _confirm(client, late)
+    else:
+        # Reviewing an older snapshot later must not override the newer confirmed one.
+        _confirm(client, early)
+
+    got = client.get(url)
+    assert got.status_code == 200, got.text
+    body = got.json()
+    assert body["assessment_id"] == late["assessment_id"]
+    assert sorted(body["alert_rule_ids"]) == _ids(late) and body["escalation_required"] is True
+
+
+def test_confirmed_pending_when_newest_rejected(client, login):
+    login("nurse1")
+    ref = "SYN-S4-019"
+    url = f"/api/triage/cases/{ref}/confirmed"
+    early = _assess_at(client, ref, BY_REF[ref].gold.temporal.early_as_of)
+    _confirm(client, early)
+    late = _assess_at(client, ref, BY_REF[ref].as_of)
+    resp = client.post(f"/api/triage/assessments/{late['assessment_id']}/reject", json=review_body("reject", late))
+    assert resp.status_code == 200
+    got = client.get(url)
+    assert got.status_code == 404 and got.json()["detail"] == "pending_review"
+    assert got.json()["newest_assessment"]["review_status"] == "rejected"
+    assert got.json()["newest_assessment"]["escalation_required"] is True

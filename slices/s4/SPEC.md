@@ -100,6 +100,7 @@
    - Re-assessing creates a new assessment and never mutates an old one.
    - Storage: new tables `triage_assessments` and `triage_reviews`, both with append-only triggers like `audit_events`.
    - `GET /cases/{ref}/confirmed` returns only confirmed or edited results. If nothing is confirmed it returns 404 `pending_review`. This is the only care-facing read.
+   - `/confirmed` resolves against the **newest assessment** for the case (by `as_of`, then `created_at`), never by review order. If that assessment is pending or rejected, it returns 404 `pending_review` with `newest_assessment {assessment_id, as_of, review_status, alert_rule_ids, escalation_required}`, so an older confirmed result never hides newer red flags.
 5. **Audit** (via s0 `write_audit`)
    - Actions:
      - `triage.assess`: details include `assessment_id`, `case_ref`, `as_of`, `ruleset_version`, `alert_rule_ids`, dept status and top-3 codes/scores, `provider`, `model_version`, and `request_sha256`.
@@ -165,7 +166,7 @@
 | S4-A12 | Suggestion goes through the gateway and fails safe | Department calls go through `gateway.service.invoke` with `data_class=synthetic`, giving exactly 1 `gateway.invoke` audit row per assessment. A forced error, rejected, or schema-invalid provider gives `status=error` or `abstained` with 0 fabricated departments (3/3). The s0 tests pass unchanged. There are 0 `gateway.adapters` imports outside the gateway. | pytest `test_department_via_gateway`, `test_department_fail_safe[error\|rejected\|invalid]`; s0 `test_provider_isolation` |
 | S4-A13 | Deterministic | Two identical assessments give byte-identical alerts and department output (excluding ids and timestamps). | pytest `test_assessment_deterministic` |
 | S4-A14 | Review is audited with reviewer, time, and original suggestion | For each of confirm, edit, and reject: exactly 1 `triage.review.*` audit row with reviewer id and role, UTC ts, the original suggestion, the final department (or null), and the acknowledged alerts. A second review gives 409 plus a `triage.review.denied` row. Sentinel text from the chief complaint or reason appears in 0 audit rows. `triage_*` tables reject UPDATE and DELETE. | pytest `test_review_audit[confirm\|edit\|reject]`, `test_double_review_409`, `test_audit_no_raw_text`, `test_triage_tables_append_only` |
-| S4-A15 | Nothing reaches care without confirmation | `GET /cases/{ref}/confirmed` gives 404 `pending_review` before a review and after a reject. It gives the department only after confirm or edit. The assess response always has `confirmed_department=null`. | pytest `test_confirmed_only_after_review` |
+| S4-A15 | Nothing reaches care without confirmation | `GET /cases/{ref}/confirmed` gives 404 `pending_review` before a review and after a reject. It gives the department only after confirm or edit. The assess response always has `confirmed_department=null`. After re-assessment it reflects only the newest assessment (by `as_of`); a pending newer assessment yields 404 with its alerts, and reviewing an older snapshot later never overrides it. | pytest `test_confirmed_only_after_review`, `test_confirmed_not_stale_after_reassessment` (3 temporal fixtures x both review orders) |
 | S4-A16 | Role enforcement | Write endpoints: nurse gets 2xx, physician and pharmacist get 403, no session gets 401. Read endpoints: pharmacist gets 403. Every denial is audited. | pytest `test_triage_role_matrix` |
 | S4-A17 | Fixture set meets composition | 40 cases, `data_class=synthetic`, and every composition minimum in Scope 6. The fixture hash is pinned. The fixture commit precedes the engine commit in git history. | pytest `test_fixture_composition`; `git log` check by the checker |
 | S4-A18 | `make test` green | Exit 0 with 0 failed. The s0 suite is included and unchanged in behavior. Offline (sockets blocked). | `make test` from a clean clone |
@@ -199,6 +200,7 @@
   - `test_audit_no_raw_text`
   - `test_triage_tables_append_only`
   - `test_confirmed_only_after_review`
+  - `test_confirmed_not_stale_after_reassessment`
   - `test_triage_role_matrix`
   - `test_fixture_composition`
   - `test_mock_task_registry_backward_compatible`
