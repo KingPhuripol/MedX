@@ -1,6 +1,7 @@
 """S8-A12..A18: runner guards, thresholds, ledgers, reproducibility, labelling, schema, isolation, demo.
 
-Ledger tests always use a tmp_path ledger; the committed eval/ledger/ is never written.
+Ledger tests always use a tmp_path ledger (initialised with genesis entries, s8r); the committed
+eval/ledger/ is never written.
 """
 
 from __future__ import annotations
@@ -35,7 +36,9 @@ def _isolated_ledger(tmp_path, monkeypatch):
 
 @pytest.fixture
 def ledger(tmp_path) -> Ledger:
-    return Ledger(tmp_path / "ledger")
+    lg = Ledger(tmp_path / "ledger")
+    lg.init()  # s8r: ledgers are never auto-created
+    return lg
 
 
 def variant(tmp_path: Path, name: str, **changes) -> Path:
@@ -80,7 +83,7 @@ def test_runner_refuses_unfrozen_test(tmp_path, ledger):
     assert_refused(run_cli(ledger, m, out), out)
     with pytest.raises(RunRefused, match="frozen"):
         run(m, PREDS, out, CMP, ledger)
-    assert not ledger.runs_path.exists()
+    assert ledger._read(ledger.runs_path) == []  # only the genesis entry: nothing recorded
 
 
 def test_runner_refuses_hash_mismatch(tmp_path, ledger):
@@ -196,6 +199,7 @@ def test_threshold_rules(tmp_path, ledger):
 
 
 def test_ledgers_append_only(tmp_path, ledger):
+    committed = {p: p.read_bytes() for p in (EVAL_DIR / "ledger").glob("*.jsonl")}
     snapshots = []
 
     def snap():
@@ -221,8 +225,9 @@ def test_ledgers_append_only(tmp_path, ledger):
             assert y.startswith(x)  # earlier lines are never rewritten
     assert snapshots[-1] == snapshots[-2]
     assert len(ledger._read(ledger.frozen_path)) == 2 and len(ledger._read(ledger.runs_path)) == 3
-    assert not (EVAL_DIR / "ledger" / "frozen.jsonl").exists()
-    assert not (EVAL_DIR / "ledger" / "runs.jsonl").exists()
+    ledger.verify()  # s8r: still a valid hash chain after every append
+    # the committed eval/ledger/ is never written by tests
+    assert {p: p.read_bytes() for p in (EVAL_DIR / "ledger").glob("*.jsonl")} == committed
 
 
 # ---------------------------------------------------------------- A14
@@ -238,6 +243,7 @@ def test_byte_reproducible(tmp_path, ledger):
     text = (tmp_path / "a" / "results.json").read_text()
     assert str(tmp_path) not in text and "/Users/" not in text
     res = json.loads(text)
+    assert res["frozen_entry_hash"] == ledger.frozen("s8-toy-test-0001")[0]["entry_hash"]  # s8r
     assert res["bootstrap"]["seed"] == 20260926 and res["bootstrap"]["n_boot"] == 200
     assert res["environment"]["numpy_version"] and len(res["predictions_sha256"]) == 64
 
@@ -319,6 +325,13 @@ def test_results_schema(tmp_path, ledger):
     # an invalid results object is rejected by the schema
     bad = dict(res, rows=[{k: v for k, v in res["rows"][0].items() if k != "ci_low"}])
     assert validate(bad, schema)
+    # s8r: split coverage is reported for every task, and is required by the schema
+    assert {c["task"] for c in res["split_coverage"]} == {r["task"] for r in res["rows"]}
+    for c in res["split_coverage"]:
+        assert c["n_listed"] == c["n_predicted"] + c["n_missing"] and c["missing_policy"] == "complete"
+    assert validate({k: v for k, v in res.items() if k != "split_coverage"}, schema)
+    bad_cov = dict(res, split_coverage=[dict(res["split_coverage"][0], missing_policy="dropped")])
+    assert validate(bad_cov, schema)
 
 
 # ---------------------------------------------------------------- A17

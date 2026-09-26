@@ -23,6 +23,11 @@
     "split": {"type": "string", "enum": ["train", "dev", "test"]},
     "split_version": {"type": "string", "minLength": 1},
     "split_patient_list": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "task_patient_lists": {
+      "$comment": "s8r: optional frozen listed set per '<task>' or '<task>:<population>'; each a subset of split_patient_list",
+      "type": "object",
+      "additionalProperties": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+    },
     "metrics": {
       "type": "array",
       "minItems": 1,

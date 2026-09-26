@@ -10,10 +10,13 @@ Conventions
   exactly as scikit-learn does.)
 - A missing prediction (``None``) raises ``MissingPredictionError`` unless the metric is
   abstention-aware (``coverage``, ``selective_accuracy``), where it counts as abstain.
+- NaN and +/-inf (Python or numpy floats, anywhere in any input) raise ``NonFiniteValueError``.
+  A NaN is never treated as missing, abstain or negative (s8r).
 """
 
 from __future__ import annotations
 
+import functools
 from collections.abc import Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
@@ -23,6 +26,8 @@ import numpy as np
 __all__ = [
     "Undefined",
     "MissingPredictionError",
+    "NonFiniteValueError",
+    "check_finite",
     "is_undefined",
     "accuracy",
     "macro_f1",
@@ -61,12 +66,58 @@ class MissingPredictionError(ValueError):
     """A prediction is missing. Missing predictions are never dropped or treated as negative."""
 
 
+class NonFiniteValueError(ValueError):
+    """A NaN or +/-inf value was found in an input. Corrupt values never become numbers or abstentions."""
+
+
+def check_finite(obj: Any, what: str = "input") -> None:
+    """Raise ``NonFiniteValueError`` if ``obj`` contains a NaN or +/-inf anywhere (recursively)."""
+    if obj is None or isinstance(obj, (str, bytes, bool, int, Undefined)):
+        return
+    if isinstance(obj, (float, np.floating, complex, np.complexfloating)):
+        if not np.isfinite(obj):
+            raise NonFiniteValueError(f"{what}: non-finite value {obj!r}; NaN/inf is an error, never missing or 0")
+        return
+    if isinstance(obj, np.ndarray):
+        if obj.dtype.kind in "fc":
+            if not np.isfinite(obj).all():
+                raise NonFiniteValueError(f"{what}: array contains NaN/inf; NaN/inf is an error, never missing or 0")
+            return
+        if obj.dtype.kind != "O":
+            return
+        for v in obj.ravel():
+            check_finite(v, what)
+        return
+    if isinstance(obj, Mapping):
+        for v in obj.values():
+            check_finite(v, what)
+        return
+    if isinstance(obj, (list, tuple, set, frozenset)):
+        for v in obj:
+            check_finite(v, what)
+
+
+def _finite_args(fn):
+    """Decorator: every positional and keyword argument of a public metric is checked for NaN/inf."""
+
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        for i, a in enumerate(args):
+            check_finite(a, f"{fn.__name__} argument {i}")
+        for k, a in kwargs.items():
+            check_finite(a, f"{fn.__name__} argument {k!r}")
+        return fn(*args, **kwargs)
+
+    return wrapper
+
+
 def is_undefined(value: Any) -> bool:
     return isinstance(value, Undefined)
 
 
 def _is_missing(v: Any) -> bool:
-    return v is None or (isinstance(v, float) and np.isnan(v))
+    """Missing means ``None`` (or an absent field) only. NaN is rejected earlier, never missing."""
+    return v is None
 
 
 def _require(values: Sequence[Any], what: str) -> None:
@@ -89,6 +140,7 @@ def _ratio(num: float, den: float, reason: str) -> float | Undefined:
 # ---------------------------------------------------------------- classification
 
 
+@_finite_args
 def accuracy(y_true: Sequence[Hashable], y_pred: Sequence[Hashable]) -> float | Undefined:
     _same_len(y_true, y_pred, "accuracy")
     _require(y_true, "accuracy y_true")
@@ -114,6 +166,7 @@ def _macro_f1_codes(t: np.ndarray, p: np.ndarray, n_labels: int) -> float | Unde
     return float(f1.mean())
 
 
+@_finite_args
 def macro_f1(y_true: Sequence[Hashable], y_pred: Sequence[Hashable], labels: Sequence[Hashable]) -> float | Undefined:
     """Macro-F1 over the declared ``labels`` (zero_division=0, as sklearn ``f1_score(average="macro")``)."""
     labels = list(labels)
@@ -146,6 +199,7 @@ def _ml_f1(T: np.ndarray, P: np.ndarray) -> float | Undefined:
     return float(f1.mean())
 
 
+@_finite_args
 def multilabel_macro_f1(
     y_true: Sequence[Iterable[Hashable]], y_pred: Sequence[Iterable[Hashable]], labels: Sequence[Hashable]
 ) -> float | Undefined:
@@ -199,6 +253,7 @@ def _score_matrix(y_score: Sequence[Any], labels: Sequence[Hashable]) -> np.ndar
     return np.asarray(rows, dtype=float).reshape(len(rows), len(labels))
 
 
+@_finite_args
 def auroc(
     y_true: Sequence[Any],
     y_score: Sequence[Any],
@@ -240,6 +295,7 @@ def auroc(
 # ---------------------------------------------------------------- segmentation
 
 
+@_finite_args
 def dice_case(mask_true: Any, mask_pred: Any, empty_empty: float = 1.0) -> float:
     """Dice = 2|A∩B| / (|A|+|B|). Both masks empty -> the declared ``empty_empty`` value."""
     if mask_pred is None:
@@ -254,6 +310,7 @@ def dice_case(mask_true: Any, mask_pred: Any, empty_empty: float = 1.0) -> float
     return 2.0 * int((a & b).sum()) / s
 
 
+@_finite_args
 def dice_summary(masks_true: Sequence[Any], masks_pred: Sequence[Any], empty_empty: float = 1.0) -> dict[str, Any]:
     _same_len(masks_true, masks_pred, "dice")
     per_case = [dice_case(t, p, empty_empty) for t, p in zip(masks_true, masks_pred)]
@@ -269,6 +326,7 @@ def dice_summary(masks_true: Sequence[Any], masks_pred: Sequence[Any], empty_emp
     }
 
 
+@_finite_args
 def dice(masks_true: Sequence[Any], masks_pred: Sequence[Any], empty_empty: float = 1.0) -> float | Undefined:
     """Dice per case, then averaged over cases."""
     return dice_summary(masks_true, masks_pred, empty_empty)["value"]
@@ -287,6 +345,7 @@ def _hit(suggested: Sequence[Hashable], ordered: Iterable[Hashable], k: int) -> 
     return bool(set(list(suggested)[:k]) & ordered)
 
 
+@_finite_args
 def hit_at_k(suggested: Sequence[Sequence[Hashable]], ordered: Sequence[Iterable[Hashable]], k: int) -> float | Undefined:
     """Fraction of decision points where any of the top-k suggested tests was later ordered."""
     _same_len(suggested, ordered, "hit_at_k")
@@ -302,6 +361,7 @@ def _set_counts(suggested: Iterable[Hashable], ordered: Iterable[Hashable]) -> t
     return len(s & o), len(s), len(o)
 
 
+@_finite_args
 def set_prf(suggested: Sequence[Iterable[Hashable]], ordered: Sequence[Iterable[Hashable]]) -> dict[str, Any]:
     """Pooled (micro) precision/recall/F1 of suggested vs later-ordered tests."""
     _same_len(suggested, ordered, "set_prf")
@@ -329,21 +389,25 @@ def _per_patient_mean(patient_ids: Sequence[Hashable], values: Sequence[float], 
     return float(sum(totals.values()) / len(totals))
 
 
+@_finite_args
 def calls_per_patient(patient_ids: Sequence[Hashable], n_calls: Sequence[float]) -> float | Undefined:
     """Model calls summed over each patient's decision points, then mean over patients."""
     return _per_patient_mean(patient_ids, n_calls, "calls_per_patient")
 
 
+@_finite_args
 def latency_per_patient(patient_ids: Sequence[Hashable], latency_s: Sequence[float]) -> float | Undefined:
     """Latency summed over each patient's decision points, then mean over patients."""
     return _per_patient_mean(patient_ids, latency_s, "latency_per_patient")
 
 
+@_finite_args
 def cost_per_patient(patient_ids: Sequence[Hashable], costs: Sequence[float]) -> float | Undefined:
     """Cost summed over the patient's decision points, then mean over patients."""
     return _per_patient_mean(patient_ids, costs, "cost_per_patient")
 
 
+@_finite_args
 def latency_summary(values: Sequence[float]) -> dict[str, Any]:
     """Mean, median and p90 (numpy ``method="linear"``). Timeouts must be recorded, not dropped."""
     _require(values, "latency")
@@ -358,11 +422,13 @@ def latency_summary(values: Sequence[float]) -> dict[str, Any]:
     }
 
 
+@_finite_args
 def response_latency(values: Sequence[float]) -> dict[str, Any]:
     """Voice Agent response latency (seconds) summary."""
     return latency_summary(values)
 
 
+@_finite_args
 def total_time(values: Sequence[float]) -> dict[str, Any]:
     """Voice Agent total interaction time (seconds) summary."""
     return latency_summary(values)
@@ -371,6 +437,7 @@ def total_time(values: Sequence[float]) -> dict[str, Any]:
 # ---------------------------------------------------------------- Voice Agent fields
 
 
+@_finite_args
 def normalize_field_value(v: Any) -> str | None:
     """Casefold, strip and collapse whitespace. ``None``/empty -> no value."""
     if v is None:
@@ -402,6 +469,7 @@ def _prf(tp: int, fp: int, fn: int) -> dict[str, Any]:
     }
 
 
+@_finite_args
 def field_prf(
     gold_fields: Sequence[Mapping[str, Any]],
     extracted_fields: Sequence[Mapping[str, Any] | None],
@@ -423,6 +491,7 @@ def field_prf(
 # ---------------------------------------------------------------- Department suggestion
 
 
+@_finite_args
 def topk_accuracy(y_true: Sequence[Hashable], ranked: Sequence[Sequence[Hashable]], k: int) -> float | Undefined:
     """Fraction of decision points whose true department is in the top-k ranked suggestions."""
     _same_len(y_true, ranked, "topk_accuracy")
@@ -440,6 +509,7 @@ def _issue_keys(issues: Iterable[Mapping[str, Any]], issue_type: str) -> set[Any
     return {i["id"] for i in issues if i["type"] == issue_type}
 
 
+@_finite_args
 def per_issue_type_pr(
     recall_rows: Sequence[Mapping[str, Any]],
     precision_rows: Sequence[Mapping[str, Any]],
@@ -495,6 +565,7 @@ def per_issue_type_pr(
 # ---------------------------------------------------------------- Abstention
 
 
+@_finite_args
 def coverage(y_pred: Sequence[Any]) -> float | Undefined:
     """Fraction of decision points answered. ``None`` (missing) counts as abstain."""
     if len(y_pred) == 0:
@@ -502,6 +573,7 @@ def coverage(y_pred: Sequence[Any]) -> float | Undefined:
     return float(np.mean([not _is_missing(p) for p in y_pred]))
 
 
+@_finite_args
 def selective_accuracy(y_true: Sequence[Hashable], y_pred: Sequence[Any]) -> float | Undefined:
     """Accuracy on answered decision points. Coverage 0 -> Undefined."""
     _same_len(y_true, y_pred, "selective_accuracy")
@@ -523,6 +595,7 @@ def _replay_counts(original: Mapping[str, str], replay: Mapping[str, str] | None
     return deterministic, identical, len(original)
 
 
+@_finite_args
 def replay_determinism(
     original_hashes: Sequence[Mapping[str, str]], replay_hashes: Sequence[Mapping[str, str] | None]
 ) -> dict[str, Any]:
@@ -540,6 +613,7 @@ def replay_determinism(
     }
 
 
+@_finite_args
 def recomputed_nodes(n_recomputed: Sequence[float], n_nodes_full: Sequence[float]) -> dict[str, Any]:
     """Recomputed nodes on Regenerate vs a full-graph node count."""
     _same_len(n_recomputed, n_nodes_full, "recomputed_nodes")

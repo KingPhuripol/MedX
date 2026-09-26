@@ -1,10 +1,13 @@
-"""Evaluation runner (slice s8). Research prototype - not for clinical use.
+"""Evaluation runner (slices s8, s8r). Research prototype - not for clinical use.
 
 ``run()`` scores prediction records against a manifest, computes patient-level bootstrap CIs
 (paired for comparators), evaluates predeclared thresholds and writes results.json/.md/.html.
-On the test split it refuses - non-zero exit, nothing written - unless the manifest is frozen,
-unchanged since freezing, every patient is in ``split_patient_list`` and no different inputs
-were already recorded for the same ``evaluation_id``.
+It refuses - exit 2, nothing written, no ledger line - when the ledger fails verification; on the
+test split unless the manifest is frozen, unchanged since freezing, every patient is in
+``split_patient_list`` and no different inputs were already recorded for the same ``evaluation_id``;
+for real data (mimic/hospital) on test unless both ledgers are committed in git; and whenever a
+listed patient has no predictions for a task with a non-abstention metric (split coverage, s8r).
+For abstention-only tasks a missing listed patient is counted as abstain.
 """
 
 from __future__ import annotations
@@ -20,6 +23,8 @@ import numpy as np
 from . import __version__
 from .bootstrap import cluster_bootstrap, paired_cluster_bootstrap
 from .jsonschema_lite import validate
+from .errors import LedgerIntegrityError, RunRefused
+from .jsonio import loads_strict
 from .manifest import (
     PKG_DIR,
     Ledger,
@@ -32,28 +37,43 @@ from .manifest import (
     utc_now,
 )
 from .metrics import MissingPredictionError
-from .registry import population_for, prepare
+from .registry import ABSTENTION_AWARE, population_for, prepare
 from .report import labels_for, render_html, render_md
 
 RESULTS_SCHEMA = PKG_DIR / "schemas" / "results.schema.json"
 OUTPUT_FILES = ("results.json", "results.md", "results.html")
 KEY_FIELDS = ("patient_id", "decision_point_id", "task")
+MISSING_DP = "__missing__"
+REAL_DATA = ("mimic", "hospital")
+IMPUTATION_UNIT = "1 decision point per missing patient"
+IMPUTATION_RULE = (
+    "abstention-only tasks: a listed patient absent from every arm gets one decision point "
+    f"{MISSING_DP!r} (y_pred=null) in every arm; any (patient, decision point) key present in one arm "
+    "but absent from another is imputed as abstain (y_pred=null) where absent"
+)
 
 
-class RunRefused(RuntimeError):
-    """The run is not allowed; no results are written."""
+class InvalidManifest(RunRefused, ManifestError):
+    """The manifest is invalid: the run is refused and the CLI exits 3 (invalid input)."""
 
 
 def load_jsonl(path: str | os.PathLike[str]) -> tuple[list[dict[str, Any]], str]:
+    """Strict JSONL parse. NaN/Infinity/overflow -> ``NonFiniteValueError`` naming the file and line."""
     raw = Path(path).read_bytes()
+    name = Path(path).name
     rows = []
     for n, line in enumerate(raw.decode("utf-8").splitlines(), 1):
         if not line.strip():
             continue
-        r = json.loads(line)
+        r = loads_strict(line, name, n)
+        if not isinstance(r, dict):
+            raise ValueError(f"{name} line {n}: not a JSON object")
         missing = [k for k in KEY_FIELDS if not isinstance(r.get(k), str) or not r[k]]
         if missing:
-            raise ValueError(f"{Path(path).name} line {n}: missing/invalid {missing}")
+            raise ValueError(f"{name} line {n}: missing/invalid {missing}")
+        if "imputed_missing" in r or r["decision_point_id"] == MISSING_DP:
+            raise ValueError(f"{name} line {n}: 'imputed_missing' and decision_point_id {MISSING_DP!r} are "
+                             "reserved for runner imputation")
         rows.append(r)
     return rows, sha256_bytes(raw)
 
@@ -81,7 +101,7 @@ def _refusal_checks(m: dict[str, Any], digest: str, rows, cmp_rows, pred_sha: st
     """Returns whether the manifest is frozen. Raises RunRefused."""
     errors = manifest_errors(m)
     if errors:
-        raise RunRefused("invalid manifest:\n  " + "\n  ".join(errors))
+        raise InvalidManifest("invalid manifest:\n  " + "\n  ".join(errors))
     frozen = ledger.frozen(m["evaluation_id"])
     if frozen and not any(e["sha256"] == digest for e in frozen):
         raise RunRefused("manifest changed after freezing (hash mismatch); results would not be predeclared")
@@ -100,7 +120,136 @@ def _refusal_checks(m: dict[str, Any], digest: str, rows, cmp_rows, pred_sha: st
                     f"a test result was already recorded for {m['evaluation_id']!r} with different inputs; "
                     "resubmission to the test split is not allowed"
                 )
+    if m["split"] == "test" and m["dataset"]["data_class"] in REAL_DATA:
+        ledger.require_committed()
     return bool(frozen)
+
+
+# ---------------------------------------------------------------- split coverage (s8r)
+
+
+def _abstention_only(m: dict[str, Any], task: str) -> bool:
+    return all(x["name"] in ABSTENTION_AWARE for x in m["metrics"] if x["task"] == task)
+
+
+def _coverage_units(m: dict[str, Any]) -> list[tuple[str, str | None, list[str] | None]]:
+    """(task, population, listed patients) per task and per declared task population list."""
+    plist = m.get("split_patient_list")
+    tl = m.get("task_patient_lists") or {}
+    tasks = list(dict.fromkeys(x["task"] for x in m["metrics"]))
+    units: list[tuple[str, str | None, list[str] | None]] = []
+    for task in tasks:
+        pop_keys = sorted(k for k in tl if k.startswith(task + ":"))
+        if plist is None:
+            units.append((task, None, None))
+            continue
+        if task in tl:
+            chosen = set(tl[task])
+        elif pop_keys:
+            chosen = set().union(*(tl[k] for k in pop_keys))
+        else:
+            chosen = set(plist)
+        units.append((task, None, [p for p in plist if p in chosen]))
+        for k in pop_keys:
+            units.append((task, k.partition(":")[2], [p for p in plist if p in set(tl[k])]))
+    return units
+
+
+def _arms(m: dict[str, Any], task: str, rows: list[dict[str, Any]], cmp_rows: list[dict[str, Any]]):
+    """[(arm label, comparator name or None, rows of the task)] - system first, then declared comparators."""
+    arms = [("system", None, [r for r in rows if r["task"] == task])]
+    for c in m["comparators"]:
+        if task in c["tasks"]:
+            arms.append((f"comparator:{c['name']}", c["name"],
+                         [r for r in cmp_rows if r.get("comparator") == c["name"] and r["task"] == task]))
+    return arms
+
+
+def split_coverage(m: dict[str, Any], rows: list[dict[str, Any]], cmp_rows: list[dict[str, Any]]
+                   ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    """Check that every listed patient has predictions in every provided arm.
+
+    Returns ``(split_coverage entries, rows + imputed, cmp_rows + imputed)``. Raises ``RunRefused`` when a
+    listed patient is missing for a task with any non-abstention metric (or a task-listed task has rows for
+    patients outside its list). Abstention-only tasks count missing patients / keys as abstain.
+    """
+    synthetic = m["dataset"]["data_class"] == "synthetic"
+    entries: list[dict[str, Any]] = []
+    failures: list[str] = []
+    new_rows, new_cmp = list(rows), list(cmp_rows)
+    has_task_list = set(m.get("task_patient_lists") or {})
+    for task, pop, listed in _coverage_units(m):
+        abst = _abstention_only(m, task)
+        arm_info = []
+        imputed_by_arm: dict[str, int] = {}
+        arms = _arms(m, task, rows, cmp_rows)
+        provided = [a for a in arms if a[0] == "system" or a[2]]
+        if pop is not None:
+            arms = [(lab, name, [r for r in rs if r.get("population") == pop]) for lab, name, rs in arms]
+            provided = [(lab, name, [r for r in rs if r.get("population") == pop]) for lab, name, rs in provided]
+        if abst and pop is None:
+            universe = listed if listed is not None else list(dict.fromkeys(
+                r["patient_id"] for _, _, rs in provided for r in rs))
+            for p in universe:
+                keys = {lab: {r["decision_point_id"] for r in rs if r["patient_id"] == p} for lab, _, rs in provided}
+                union = set().union(*keys.values()) or {MISSING_DP}
+                for lab, name, _ in provided:
+                    for dp in sorted(union - keys[lab]):
+                        imp = {"patient_id": p, "decision_point_id": dp, "task": task, "y_pred": None,
+                               "imputed_missing": True}
+                        if name is None:
+                            new_rows.append(imp)
+                        else:
+                            new_cmp.append({**imp, "comparator": name})
+                        imputed_by_arm[lab] = imputed_by_arm.get(lab, 0) + 1
+        for lab, name, rs in arms:
+            predicted = {r["patient_id"] for r in rs}
+            is_provided = lab == "system" or any(a[0] == lab for a in provided)
+            if listed is None:
+                info = {"arm": lab, "status": "provided" if is_provided else "not provided",
+                        "n_predicted": len(predicted), "n_missing": None,
+                        "n_imputed_abstain_decision_points": imputed_by_arm.get(lab, 0)}
+                arm_info.append(info)
+                continue
+            missing = [p for p in listed if p not in predicted]
+            outside = sorted(predicted - set(listed))
+            key = task if pop is None else f"{task}:{pop}"
+            if outside and (key in has_task_list or pop is not None):
+                failures.append(f"task={task} population={pop} arm={lab}: {len(outside)} predicted patient(s) are "
+                                f"not on the frozen task patient list"
+                                + (f", e.g. {outside[:3]}" if synthetic else ""))
+            if missing and is_provided and not abst:
+                failures.append(f"task={task} population={pop} arm={lab} n_listed={len(listed)} "
+                                f"n_predicted={len(listed) - len(missing)} n_missing={len(missing)}"
+                                + (f" e.g. {missing[:3]}" if synthetic else ""))
+            arm_info.append({"arm": lab, "status": "provided" if is_provided else "not provided",
+                             "n_predicted": len(listed) - len(missing), "n_missing": len(missing),
+                             "n_imputed_abstain_decision_points": imputed_by_arm.get(lab, 0)})
+        sys_arm = arm_info[0]
+        n_imp = sum(imputed_by_arm.values())
+        entry = {
+            "task": task,
+            "population": pop,
+            "n_listed": None if listed is None else len(listed),
+            "n_predicted": sys_arm["n_predicted"],
+            "n_missing": sys_arm["n_missing"],
+            "missing_policy": ("not_checked" if listed is None
+                               else "counted_as_abstain" if n_imp else "complete"),
+            "n_imputed_abstain_decision_points": sys_arm["n_imputed_abstain_decision_points"],
+            "imputation_unit": IMPUTATION_UNIT,
+            "arms": arm_info,
+        }
+        if abst:
+            entry["imputation_rule"] = IMPUTATION_RULE
+        if listed is None:
+            entry["reason"] = "no split_patient_list (exploratory run): the listed set is unknown, omission not checked"
+        entries.append(entry)
+    if failures:
+        raise RunRefused(
+            "split coverage: listed patient(s) have no predictions for a task with a non-abstention metric; "
+            "they cannot be dropped or counted as abstain, so the run is refused\n  " + "\n  ".join(failures)
+        )
+    return entries, new_rows, new_cmp
 
 
 def _threshold(row: dict[str, Any], th: dict[str, Any]) -> dict[str, Any]:
@@ -183,11 +332,12 @@ def evaluate(m: dict[str, Any], rows: list[dict[str, Any]], cmp_rows: list[dict[
 
 
 def build_results(m: dict[str, Any], digest: str, rows, cmp_rows, pred_sha: str, cmp_sha: str | None,
-                  frozen: bool) -> dict[str, Any]:
+                  frozen: bool, frozen_entry_hash: str | None = None) -> dict[str, Any]:
     stamp = None if frozen else f"UNFROZEN - exploratory ({m['split']} split)"
     b = m["bootstrap"]
+    coverage, eval_rows, eval_cmp = split_coverage(m, rows, cmp_rows)
     results = {
-        "schema_version": "1.0",
+        "schema_version": "1.1",
         "evaluation_id": m["evaluation_id"],
         "slice": m["slice"],
         "split": m["split"],
@@ -206,9 +356,15 @@ def build_results(m: dict[str, Any], digest: str, rows, cmp_rows, pred_sha: str,
         "n_patients": len({r["patient_id"] for r in rows}),
         "n_decision_points": len({_key(r) for r in rows}),
         "n_patients_in_split_list": len(m["split_patient_list"]) if m.get("split_patient_list") else None,
-        "rows": evaluate(m, rows, cmp_rows),
+        "frozen_entry_hash": frozen_entry_hash,
+        "split_coverage": coverage,
+        "rows": evaluate(m, eval_rows, eval_cmp),
     }
     errors = validate(results, json.loads(RESULTS_SCHEMA.read_text(encoding="utf-8")))
+    for c in coverage:
+        for a in [c, *c["arms"]]:
+            if c["n_listed"] is not None and c["n_listed"] != a["n_predicted"] + a["n_missing"]:
+                errors.append(f"$.split_coverage[{c['task']}]: n_listed != n_predicted + n_missing")
     if errors:
         raise AssertionError("results do not match results.schema.json:\n  " + "\n  ".join(errors))
     return results
@@ -227,6 +383,7 @@ def run(manifest_path: str | os.PathLike[str], predictions_path: str | os.PathLi
         out_dir: str | os.PathLike[str], comparator_path: str | os.PathLike[str] | None = None,
         ledger: Ledger | None = None) -> dict[str, Any]:
     ledger = ledger or Ledger()
+    ledger.verify()  # LedgerIntegrityError (exit 2) before anything is read or written
     try:
         m = load_manifest(manifest_path)
     except (OSError, json.JSONDecodeError) as e:
@@ -235,7 +392,9 @@ def run(manifest_path: str | os.PathLike[str], predictions_path: str | os.PathLi
     rows, pred_sha = load_jsonl(predictions_path)
     cmp_rows, cmp_sha = load_jsonl(comparator_path) if comparator_path else ([], None)
     frozen = _refusal_checks(m, digest, rows, cmp_rows, pred_sha, cmp_sha, ledger)
-    results = build_results(m, digest, rows, cmp_rows, pred_sha, cmp_sha, frozen)
+    fe = [e for e in ledger.frozen(m["evaluation_id"]) if e["sha256"] == digest]
+    results = build_results(m, digest, rows, cmp_rows, pred_sha, cmp_sha, frozen,
+                            fe[0]["entry_hash"] if fe else None)
     files = render_all(results)
 
     out = Path(out_dir)
@@ -259,5 +418,5 @@ def run(manifest_path: str | os.PathLike[str], predictions_path: str | os.PathLi
     return results
 
 
-__all__ = ["RunRefused", "run", "load_jsonl", "evaluate", "build_results", "render_all", "ManifestError",
-           "canonical_bytes"]
+__all__ = ["RunRefused", "LedgerIntegrityError", "run", "load_jsonl", "evaluate", "build_results", "render_all",
+           "split_coverage", "ManifestError", "canonical_bytes"]

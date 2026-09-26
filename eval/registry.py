@@ -19,6 +19,10 @@ Scored-record fields (one JSONL row per decision point; gold label + system outp
 | topk_accuracy | y_true | ranked |
 | per_issue_type_pr | population, gold | flagged |
 | coverage, selective_accuracy (abstention-aware) | y_true | y_pred (null or absent = abstain) |
+
+NaN / +-inf anywhere in a row or in params raises ``NonFiniteValueError`` (s8r); NaN is never abstain.
+Rows imputed by the runner for a listed-but-missing patient (``imputed_missing: true``, ``y_pred: null``)
+carry no gold label: they are abstentions and never enter the answered set.
 | replay_determinism | original_hashes | replay_hashes |
 | recomputed_nodes | n_nodes_full | n_recomputed |
 """
@@ -33,7 +37,7 @@ import numpy as np
 
 from . import metrics as M
 from .bootstrap import RatioStat, Stat
-from .metrics import MissingPredictionError, Undefined
+from .metrics import MissingPredictionError, Undefined, check_finite
 
 Row = Mapping[str, Any]
 
@@ -253,9 +257,13 @@ def _coverage(rows, params):
 
 
 def _selective_accuracy(rows, params):
-    t = gold(rows, "y_true", "selective_accuracy")
+    # Gold is required on every row except runner-imputed abstentions (which are never answered).
+    for r in rows:
+        if r.get("imputed_missing") and r.get("y_pred") is not None:
+            raise ValueError(f"selective_accuracy: {_where(r)} is imputed as missing but has a prediction")
+    gold([r for r in rows if not r.get("imputed_missing")], "y_true", "selective_accuracy")
     ans = _answered(rows)
-    correct = np.array([r.get("y_pred") is not None and r["y_pred"] == y for r, y in zip(rows, t)], float)
+    correct = np.array([r.get("y_pred") is not None and r["y_pred"] == r["y_true"] for r in rows], float)
     return Prepared(RatioStat(correct, ans, "coverage is 0; selective accuracy is undefined"),
                     {"abstain": "y_pred null or absent"})
 
@@ -285,7 +293,18 @@ def _recomputed(rows, params):
     return Prepared(lambda idx: Undefined("no regenerations") if idx.size == 0 else float(np.median(v[idx])), d)
 
 
-REGISTRY: dict[str, Callable[[Sequence[Row], Mapping[str, Any]], Prepared]] = {
+def _finite_guard(name: str, fn: Callable[[Sequence[Row], Mapping[str, Any]], Prepared]):
+    def adapter(rows: Sequence[Row], params: Mapping[str, Any]) -> Prepared:
+        check_finite(params, f"{name} params")
+        for r in rows:
+            check_finite(r, f"{name}: {_where(r)}")
+        return fn(rows, params)
+
+    adapter.__name__ = adapter.__qualname__ = f"{name}_adapter"
+    return adapter
+
+
+_ADAPTERS: dict[str, Callable[[Sequence[Row], Mapping[str, Any]], Prepared]] = {
     "accuracy": _accuracy,
     "macro_f1": _macro_f1,
     "multilabel_macro_f1": _multilabel_macro_f1,
@@ -306,6 +325,10 @@ REGISTRY: dict[str, Callable[[Sequence[Row], Mapping[str, Any]], Prepared]] = {
     "selective_accuracy": _selective_accuracy,
     "replay_determinism": _replay,
     "recomputed_nodes": _recomputed,
+}
+
+REGISTRY: dict[str, Callable[[Sequence[Row], Mapping[str, Any]], Prepared]] = {
+    k: _finite_guard(k, v) for k, v in _ADAPTERS.items()
 }
 
 ABSTENTION_AWARE = frozenset({"coverage", "selective_accuracy"})

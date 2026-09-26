@@ -5,4 +5,4 @@ Research prototype - not for clinical use. Results without expert review are a
 patient-level cluster bootstrap.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"

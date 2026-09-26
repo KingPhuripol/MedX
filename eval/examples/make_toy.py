@@ -237,6 +237,13 @@ def manifest(pids: list[str]) -> dict:
         "split": "test",
         "split_version": "toy-split-v1",
         "split_patient_list": pids,
+        "task_patient_lists": {
+            "model_ct_seg": pids[:20],
+            "voice_intake": pids[:30],
+            "replay": pids[:30],
+            "pharma:synthetic_error_injection": pids[:20],
+            "pharma:pharmacist_review": pids[20:35],
+        },
         "metrics": ms,
         "comparators": [
             {"name": "base_model_before_finetune", "description": "Base model before fine-tuning",

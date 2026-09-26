@@ -77,6 +77,31 @@ def table_rows(results: dict[str, Any]) -> list[list[str]]:
     return out
 
 
+COVERAGE_TITLE = "Split coverage"
+COVERAGE_COLUMNS = ("Task", "Population", "Arm", "n_listed", "n_predicted", "n_missing", "missing_policy",
+                    "n_imputed_abstain_decision_points")
+COVERAGE_NOTE = ("Every listed patient must have predictions. A missing patient refuses the run unless all metrics "
+                 "of the task are abstention-aware, where it is counted as abstain "
+                 "(imputation unit: 1 decision point per missing patient).")
+
+
+def _n(v: Any) -> str:
+    return "null" if v is None else str(v)
+
+
+def coverage_rows(results: dict[str, Any]) -> list[list[str]]:
+    out = []
+    for c in results["split_coverage"]:
+        for i, a in enumerate(c["arms"]):
+            policy = c["missing_policy"] if i == 0 else ""
+            if a["status"] != "provided":
+                policy = "not provided"
+            out.append([c["task"] if i == 0 else "", _n(c["population"]) if i == 0 else "",
+                        a["arm"], _n(c["n_listed"]), _n(a["n_predicted"]), _n(a["n_missing"]), policy,
+                        _n(a["n_imputed_abstain_decision_points"])])
+    return out
+
+
 def header_lines(results: dict[str, Any]) -> list[str]:
     lab = results["labels"]
     lines = [lab["banner"], lab["research_prototype"]]
@@ -98,6 +123,7 @@ def meta_lines(results: dict[str, Any]) -> list[str]:
         f"CI: {b['ci_level'] * 100:g}% {b['method']} patient-level cluster bootstrap, n_boot={b['n_boot']}, "
         f"seed={b['seed']}",
         f"Manifest sha256: {results['manifest_sha256']}",
+        f"Frozen ledger entry hash: {results['frozen_entry_hash'] or 'none (not frozen)'}",
         f"Predictions sha256: {results['predictions_sha256']}",
         f"Comparator sha256: {results['comparator_sha256'] or 'none'}",
         f"numpy {results['environment']['numpy_version']}; eval {results['environment']['eval_version']}",
@@ -122,6 +148,12 @@ def render_md(results: dict[str, Any]) -> str:
         lines.append("| " + " | ".join(c.replace("|", "\\|") for c in row) + " |")
     lines += ["", "Undefined values are shown as null with a reason; they are never reported as 0 or 1. "
               "Differences are system minus comparator with a paired patient-level bootstrap CI.", ""]
+    lines += [f"## {COVERAGE_TITLE}", "", COVERAGE_NOTE, ""]
+    lines.append("| " + " | ".join(COVERAGE_COLUMNS) + " |")
+    lines.append("|" + "---|" * len(COVERAGE_COLUMNS))
+    for row in coverage_rows(results):
+        lines.append("| " + " | ".join(c.replace("|", "\\|") for c in row) + " |")
+    lines.append("")
     return "\n".join(lines)
 
 
@@ -139,6 +171,10 @@ def render_html(results: dict[str, Any]) -> str:
     for row in table_rows(results):
         parts.append("<tr>" + "".join(f"<td>{e(c)}</td>" for c in row) + "</tr>")
     parts += ["</table>", "<p>Undefined values are shown as null with a reason; they are never reported as 0 or 1. "
-              "Differences are system minus comparator with a paired patient-level bootstrap CI.</p>",
-              "</body>", "</html>", ""]
+              "Differences are system minus comparator with a paired patient-level bootstrap CI.</p>"]
+    parts += [f"<h2>{e(COVERAGE_TITLE)}</h2>", f"<p>{e(COVERAGE_NOTE)}</p>", "<table>",
+              "<tr>" + "".join(f"<th>{e(c)}</th>" for c in COVERAGE_COLUMNS) + "</tr>"]
+    for row in coverage_rows(results):
+        parts.append("<tr>" + "".join(f"<td>{e(c)}</td>" for c in row) + "</tr>")
+    parts += ["</table>", "</body>", "</html>", ""]
     return "\n".join(parts)

@@ -47,3 +47,6 @@ web/next-env.d.ts
 *.tsbuildinfo
 .pytest_cache/
 .venv-stamp
+
+# s8r: evaluation ledgers are committed (tamper-evident, hash-chained)
+!eval/ledger/*.jsonl
