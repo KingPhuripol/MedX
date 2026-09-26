@@ -24,35 +24,10 @@ Do not expose hidden chain-of-thought. The inspectable artifact is the executed 
 
 ## Read source of truth before acting
 
-General:
+- `docs/PROPOSAL.md` — Proposal v8, the single source of truth (reset on 26 Sep 2026; old code and docs are under git tags `archive/*`).
+- `slices/<id>/SPEC.md` — the spec for the slice being built.
 
-- `docs/PROJECT_CHARTER.md`
-- `docs/DECISION_LOG.md`
-
-Research:
-
-- `docs/research/RESEARCH_SPEC.md`
-- `docs/research/ARCHITECTURE_SPEC.md`
-- `docs/research/TRAINING_SPEC.md`
-- `docs/research/BENCHMARK_CONTRACT.md`
-- `docs/research/SUCCESS_CRITERIA.md`
-
-Innovation:
-
-- `docs/innovation/PRODUCT_SPEC.md`
-- `docs/innovation/CLINICAL_WORKFLOW.md`
-- `docs/innovation/SAFETY_SPEC.md`
-- `docs/innovation/ACCEPTANCE_CRITERIA.md`
-
-Shared contracts:
-
-- `docs/shared/DATA_CONTRACT.md`
-- `docs/shared/PATIENT_JOURNEY_SCHEMA.md`
-- `docs/shared/MODEL_API_CONTRACT.md`
-- `docs/shared/EVALUATION_CONTRACT.md`
-- `docs/shared/HUMAN_APPROVAL_POLICY.md`
-
-When documents conflict, contracts and accepted Decision Log entries override everything else. Stop and request a human decision for unresolved material conflicts.
+When a slice spec conflicts with the proposal, the proposal wins. Stop and request a human decision for unresolved material conflicts.
 
 ## Non-negotiable data rules
 
@@ -118,13 +93,24 @@ Stop and request explicit approval before:
 - sending real-patient data to an external API;
 - accepting clinical risk, overriding a safety failure, or enabling autonomous clinical action.
 
-Record approved actions using `schemas/human-approval.schema.json` and an accepted Decision Log entry when material.
+Record each approved action as a dated entry in `docs/DECISIONS.md` (what, who approved, scope).
 
 ## Agent delegation
 
 The main Claude session owns orchestration and final integration. Delegate bounded work to project agents. Leads define evidence and coordinate specialists; they do not silently approve scope or safety changes. Code-writing agents use worktree isolation. `clinical-safety-reviewer` and `integration-auditor` are read-only reviewers and must not repair the work they judge.
 
 Never treat agent memory or chat history as source of truth. Commit durable facts to the appropriate document or machine-readable state file.
+
+## Loop factory: four roles per slice
+
+Every slice runs planner → builder → checker → reviewer, looping back on failure (`.claude/workflows/product-loop.js`).
+
+- **Planner** writes `slices/<id>/SPEC.md`: scope, measurable acceptance, required test cases/gold labels, clinical risks.
+- **Builder** implements to the spec on branch `factory/<id>` and adds its own unit tests.
+- **Checker** runs every test and the real system against synthetic cases and reports PASS/FAIL against the spec with repro steps.
+- **Reviewer** gives a PASS / CONDITIONAL_PASS / FAIL verdict on clinical safety, proposal fit, and code quality.
+
+No agent plays two roles in the same slice. Checkers and reviewers never edit product code. A spec the checker finds wrong or unmeasurable goes back to the planner, not the builder.
 
 ## Work protocol
 
@@ -143,7 +129,7 @@ During work:
 
 Before declaring completion:
 
-1. Run the narrowest relevant tests and `python3 scripts/verify_harness.py` when Harness/contracts changed.
+1. Run the narrowest relevant tests, then `make test`.
 2. Verify acceptance criteria and required evidence, not merely command success.
 3. Update the decision, experiment, and evaluation records affected by the work.
 4. Report files changed, tests run, results, assumptions, risks, decisions required, and next action.
@@ -159,9 +145,7 @@ Return: `STATUS`, `SUMMARY`, `FILES READ`, `FILES MODIFIED`, `TESTS RUN`, `RESUL
 ## Common commands
 
 ```bash
-bash scripts/bootstrap.sh
-python3 scripts/verify_harness.py
-bash scripts/run_smoke_test.sh
-python3 scripts/validate_manifest.py <manifest.json>
-python3 scripts/temporal_leakage_audit.py <journey.json> --as-of <ISO-8601>
+make test        # all tests (created in slice S0)
+make dev         # run backend + web locally (created in slice S0)
+python3 scripts/temporal_leakage_audit.py <journey.json> --as-of <ISO-8601>   # rebuilt in slice S1
 ```
