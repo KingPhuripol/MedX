@@ -2,8 +2,8 @@
   "label": "system evaluation — mock rules, synthetic dialogues, not clinical performance",
   "slice": "s3",
   "provider": "mock",
-  "extractor": "voice-mock-rules-0.1.0",
-  "inputs_sha256": "c155808150adfcf2d02fca52c76a0249d9620482e46cbd58a4ac71962c95d2bd",
+  "extractor": "voice-mock-rules-0.3.0",
+  "inputs_sha256": "53bb440c7400650fd9036dfc55ef89ed011723d08ea98f2483009c7cf894ff13",
   "n_dialogues": 15,
   "bootstrap": {
     "resamples": 2000,
@@ -550,8 +550,8 @@
   "allergy_false_none": 0,
   "latency_ms": {
     "n_turns": 80,
-    "p50": 1.648,
-    "p95": 1.88,
+    "p50": 8.672,
+    "p95": 11.299,
     "scope": "per-turn processing, mock provider in process"
   },
   "per_dialogue": [

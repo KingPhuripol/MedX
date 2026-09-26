@@ -187,3 +187,168 @@ def test_none_is_allowed_when_nothing_recorded():
     none = ExtractedFact(field="allergy_status", state="KNOWN", value="none", value_text="ไม่แพ้", span_turn_ids=["t1"])
     kept, held = reconcile_allergy([none], {})
     assert kept == [none] and held == []
+
+
+# ---- re-review of 652beec (B1, B2, infixed hedges): a denial only counts when the whole turn is a plain denial.
+
+# B1: denial + reaction / memory qualifier / single named drug / third party -> never KNOWN none.
+QUALIFIED_ALLERGY_DENIALS = {
+    "denial_but_rash_on_antibiotic": "ไม่แพ้ยาค่ะ แต่เคยมีผื่นขึ้นตอนกินยาฆ่าเชื้อ",
+    "denial_but_dyspnea_on_antibiotic": "ไม่แพ้ยา ยาฆ่าเชื้อกินแล้วหายใจไม่ออก",
+    "denial_but_dont_remember_well": "ไม่แพ้ยาอะไรนะ แต่จำไม่ค่อยได้",
+    "denial_if_i_remember_right": "ไม่แพ้ยา ถ้าจำไม่ผิด",
+    "denial_as_far_as_i_remember": "ไม่แพ้ยาเท่าที่จำได้",
+    "denies_one_drug_only": "ไม่แพ้ยาเพนิซิลลิน",
+    "third_party_mother": "แม่ไม่แพ้ยา",
+    "no_space_denial_then_rash": "ไม่แพ้ยาค่ะแต่เคยมีผื่นขึ้นตอนกินยา",
+    "as_far_as_i_know": "ไม่แพ้ยาเท่าที่ทราบค่ะ",
+    "denial_then_swelling": "ไม่แพ้ยา กินยาแก้ปวดแล้วตาบวม",
+}
+
+# Hedges or adverbs between ไม่ and แพ้ are negations, never an affirmed ("present") allergy.
+INFIXED_HEDGE_DENIALS = {
+    "probably_not": "ไม่น่าจะแพ้ยานะ",
+    "probably_not_short": "ไม่น่าแพ้ยาค่ะ",
+    "dont_think": "ไม่คิดว่าแพ้ยา",
+    "not_really": "ไม่ค่อยแพ้ยา",
+    "dont_see": "ไม่เห็นแพ้ยาอะไร",
+}
+
+
+@pytest.mark.parametrize("case", list(QUALIFIED_ALLERGY_DENIALS) + list(INFIXED_HEDGE_DENIALS))
+def test_qualified_or_hedged_allergy_denial_is_unknown(case):
+    text = {**QUALIFIED_ALLERGY_DENIALS, **INFIXED_HEDGE_DENIALS}[case]
+    facts = _facts(text, "allergy_status")
+    status = facts["allergy_status"]
+    assert not _is_known_negative(status), text
+    assert status["value"] != "present", text
+    assert status["state"] == "UNKNOWN", text
+    assert status["value_text"] in text
+
+
+@pytest.mark.parametrize("case", list(QUALIFIED_ALLERGY_DENIALS) + list(INFIXED_HEDGE_DENIALS))
+@pytest.mark.parametrize("asked", [None, "chief_complaint", "current_medications", "relevant_history"])
+def test_qualified_allergy_denial_unasked_is_never_known(case, asked):
+    text = {**QUALIFIED_ALLERGY_DENIALS, **INFIXED_HEDGE_DENIALS}[case]
+    status = _facts(text, asked).get("allergy_status")
+    assert not (status and status["state"] == "KNOWN" and status["value"] in ("none", "present")), (text, asked)
+
+
+PLAIN_ALLERGY_DENIALS = [
+    "ไม่แพ้ยาค่ะ", "ปฏิเสธแพ้ยา", "ปฏิเสธการแพ้ยาครับ", "ไม่ได้แพ้ยาค่ะ", "ไม่แพ้ยาอะไรเลยค่ะ",
+    "ไม่มียาที่แพ้ค่ะ", "ไม่มีประวัติการแพ้ยาครับ", "ไม่แพ้ยาค่ะ ไม่แพ้ยาแน่นอน", "ไม่แพ้ยาค่ะ แต่แพ้กุ้ง",
+]
+
+
+@pytest.mark.parametrize("text", PLAIN_ALLERGY_DENIALS)
+def test_plain_allergy_denial_is_known_none(text):
+    status = _facts(text, "allergy_status")["allergy_status"]
+    assert (status["state"], status["value"]) == ("KNOWN", "none"), text
+
+
+def test_volunteered_denial_with_symptom_and_duration_is_known_none():
+    facts = _facts("เจ็บคอ ไอด้วยค่ะ เป็นมาสองวันแล้ว ไม่แพ้ยาอะไรนะคะ", None)
+    assert (facts["allergy_status"]["state"], facts["allergy_status"]["value"]) == ("KNOWN", "none")
+
+
+def test_volunteered_denial_next_to_a_rash_is_not_none():
+    status = _facts("มีผื่นขึ้นค่ะ ไม่แพ้ยา", None).get("allergy_status")
+    assert not _is_known_negative(status)
+
+
+def test_hedged_then_clear_denial_never_ends_present(client, login, app):
+    """E2E: 'ไม่น่าจะแพ้ยานะ' must not become a sticky KNOWN present that hides the later clear denial."""
+    login("nurse1")
+    api = VoiceAPI(client, app)
+    api.start()
+    api.turn("ปวดท้องค่ะ")
+    api.turn("สองวันค่ะ")
+    api.turn("ประมาณ 5 ค่ะ")
+    first = api.turn("ไม่น่าจะแพ้ยานะ").json()
+    allergy = [f for f in first["new_facts"] if f["field"] == "allergy_status"]
+    assert [(f["state"], f["value"]) for f in allergy] == [("UNKNOWN", None)]
+    assert first["allergy_conflict"] is False
+    second = api.turn("ไม่แพ้ยาค่ะ ไม่แพ้ยาแน่นอน").json()
+    assert second["held_facts"] == [] and second["allergy_conflict"] is False
+    done = api.finish().json()
+    latest = {f["field"]: f for f in done["facts"]}
+    status = latest["allergy_status"]
+    assert status["value"] != "present"
+    assert (status["state"], status["value"]) in {("KNOWN", "none"), ("UNKNOWN", None)}
+    assert "allergens" not in latest
+    assert done["evidence"][-1]["payload"]["allergy_conflict"] is False
+    for item in done["evidence"]:
+        fact = item["payload"].get("fact")
+        assert not (fact and fact["field"] == "allergy_status" and fact["value"] == "present")
+
+
+# B2: a drug named in the same turn is recorded; a denial beside it never empties the list.
+NAMED_DRUG_WITH_DENIAL = {
+    "no_pills_but_insulin": ("ไม่ได้กินยาอะไร แต่ฉีดอินซูลินทุกวัน", ["อินซูลิน"]),
+    "no_pills_but_inhaler": ("ไม่ได้กินยา ใช้ยาพ่น", ["ยาพ่น"]),
+    "no_pills_but_english_drug": ("ไม่ได้กินยาอะไร แต่ใช้ salbutamol", ["salbutamol"]),
+}
+
+
+@pytest.mark.parametrize("case", list(NAMED_DRUG_WITH_DENIAL))
+def test_named_drug_beats_medication_denial(case):
+    text, expected = NAMED_DRUG_WITH_DENIAL[case]
+    meds = _facts(text, "current_medications")["current_medications"]
+    assert (meds["state"], meds["value"]) == ("KNOWN", expected), text
+
+
+QUALIFIED_MED_DENIALS = [
+    "ไม่ได้กินยาความดันแล้ว",  # stopped one drug: not "takes none"
+    "ไม่ได้กินยาพารา",  # denies one drug
+    "ไม่ได้กินยาอะไร ถ้าจำไม่ผิด",
+    "ไม่ได้กินยาเท่าที่จำได้",
+    "แม่ไม่ได้กินยา",
+]
+
+
+@pytest.mark.parametrize("text", QUALIFIED_MED_DENIALS)
+def test_qualified_medication_denial_is_unknown(text):
+    meds = _facts(text, "current_medications").get("current_medications")
+    assert not _is_known_negative(meds), text
+    assert meds is not None and meds["state"] == "UNKNOWN", text
+
+
+@pytest.mark.parametrize("text", ["ไม่ได้กินยาอะไรเลยค่ะ", "ไม่ได้ใช้ยาอะไรครับ", "ไม่มียาประจำค่ะ", "ไม่มีค่ะ"])
+def test_plain_medication_denial_is_known_empty(text):
+    meds = _facts(text, "current_medications")["current_medications"]
+    assert (meds["state"], meds["value"]) == ("KNOWN", []), text
+
+
+QUALIFIED_HISTORY_DENIALS = [
+    "ไม่มีโรคประจำตัว ถ้าจำไม่ผิด",
+    "ไม่มีโรคประจำตัวเท่าที่ทราบ",
+    "แม่ไม่มีโรคประจำตัว",
+    "ไม่มีเบาหวาน",  # denies one condition, not all history
+    "ไม่เป็นเบาหวาน",
+]
+
+
+@pytest.mark.parametrize("text", QUALIFIED_HISTORY_DENIALS)
+def test_qualified_history_denial_is_unknown(text):
+    hx = _facts(text, "relevant_history").get("relevant_history")
+    assert not _is_known_negative(hx), text
+    assert hx is not None and hx["state"] == "UNKNOWN", text
+    assert hx["value"] is None  # a negated condition is never recorded as a reported condition
+
+
+def test_history_denial_with_named_item_keeps_the_item():
+    hx = _facts("ไม่มีโรคประจำตัว แต่เคยผ่าตัดไส้ติ่ง", "relevant_history")["relevant_history"]
+    assert (hx["state"], hx["value"]) == ("KNOWN", ["ผ่าตัดไส้ติ่ง"])
+
+
+@pytest.mark.parametrize("text", ["ไม่มีโรคประจำตัวค่ะ", "ไม่มีครับ", "แข็งแรงดีค่ะ"])
+def test_plain_history_denial_is_known_empty(text):
+    hx = _facts(text, "relevant_history")["relevant_history"]
+    assert (hx["state"], hx["value"]) == ("KNOWN", []), text
+
+
+def test_bare_denial_chunk_plus_plain_denial_is_known_empty():
+    hx = _facts("ไม่มีค่ะ แข็งแรงดี", "relevant_history")["relevant_history"]
+    assert (hx["state"], hx["value"]) == ("KNOWN", [])
+    assert not _is_known_negative(_facts("ไม่มีค่ะ กินยาความดัน", "current_medications").get("current_medications"))
+    assert not _is_known_negative(_facts("ไม่มีค่ะ ถ้าจำไม่ผิด", "relevant_history").get("relevant_history"))

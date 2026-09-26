@@ -23,6 +23,7 @@ from ..deps import CurrentUser
 from ..gateway import build_provider
 from ..roles import Role
 from .db import create_voice_schema
+from .mock_rules import EXTRACTOR_VERSION
 from .models import FACT_FIELDS, LIST_FIELDS
 from .service import VoiceContext
 from .simulate import SimRun, simulate
@@ -175,7 +176,7 @@ def run_eval() -> dict:
         "label": LABEL,
         "slice": "s3",
         "provider": "mock",
-        "extractor": "voice-mock-rules-0.1.0",
+        "extractor": EXTRACTOR_VERSION,
         "inputs_sha256": inputs_sha256(),
         "n_dialogues": len(rows),
         "bootstrap": {"resamples": N_BOOT, "seed": SEED, "unit": "dialogue (patient)", "method": "percentile"},

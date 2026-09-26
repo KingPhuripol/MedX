@@ -13,7 +13,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-EXTRACTOR_VERSION = "voice-mock-rules-0.2.0"
+EXTRACTOR_VERSION = "voice-mock-rules-0.3.0"
 
 # ---------------------------------------------------------------- numbers
 _DIGITS = {"ศูนย์": 0, "หนึ่ง": 1, "นึง": 1, "เอ็ด": 1, "สอง": 2, "สาม": 3, "สี่": 4, "ห้า": 5,
@@ -84,7 +84,8 @@ _PARTICLES = re.compile(r"(?:ค่ะ|คะ|ครับ|คับ|นะ|จ�
 
 # Non-answers ("I have no information", "never been tested/noticed") are UNKNOWN, never a negative.
 UNKNOWN_PHRASES = re.compile(
-    r"จำไม่ได้|ไม่แน่ใจ|ไม่ทราบ|ไม่รู้|ไม่มีข้อมูล|ไม่(?:เคย|ได้)ตรวจ|ไม่(?:เคย|ได้)สังเกต"
+    r"จำไม่ได้|จำไม่ค่อยได้|ไม่ค่อยแน่ใจ|ไม่แน่ใจ|ไม่ทราบ|ไม่รู้|ไม่มีข้อมูล|ไม่(?:เคย|ได้)ตรวจ|ไม่(?:เคย|ได้)สังเกต"
+    r"|ถ้าจำไม่ผิด|เท่าที่จำได้|เท่าที่ทราบ|เท่าที่รู้"
 )
 REFUSED_PHRASES = re.compile(r"ไม่ขอตอบ|ขอไม่ตอบ|ไม่อยากบอก|ไม่อยากตอบ|ไม่สะดวกตอบ|ขอไม่บอก")
 CORRECTION = re.compile(r"ไม่ใช่|เอ้ย|เอ๊ย|เอ๊ะ|ขอโทษ|นับผิด|แก้เป็น")
@@ -241,18 +242,104 @@ def _severity(text: str, tid: str, asked: str | None) -> list[dict]:
     return []
 
 
-ALLERGY_NONE = re.compile(
-    r"ปฏิเสธ(?:การ|ประวัติ)?แพ้ยา|ไม่(?:ได้|เคย)*แพ้ยา|ไม่มี(?:ประวัติ)?(?:การ)?แพ้ยา|ไม่มียาที่แพ้|ไม่(?:ได้|เคย)*แพ้อะไร"
+# ---- allergy
+# Any negated "แพ้" (used to decide the fallback when the utterance is not a plain denial). The infix list
+# covers hedges and adverbs ("ไม่น่าจะแพ้", "ไม่คิดว่าแพ้", "ไม่ค่อยแพ้", "ไม่เห็นแพ้"): these are negations,
+# never an affirmed allergy.
+_NEG_INFIX = (
+    r"(?:ได้|เคย|มี|การ|ประวัติ|น่าจะ|น่า|คิดว่า|ค่อย|เห็น|ถึงกับ|ถึง|ใช่ว่า|แน่ใจว่า|รู้ว่า|ทราบว่า|จำได้ว่า|ยาที่)"
 )
+_NEGATED_BEFORE = re.compile(rf"(?:ไม่|ปฏิเสธ)(?:\s*{_NEG_INFIX})*\s*$")
+ALLERGY_DENIAL = re.compile(rf"(?:ไม่|ปฏิเสธ)(?:\s*{_NEG_INFIX})*\s*แพ้(?:ยา)?")
 # "not allergic to any drug except X" / "not allergic to other drugs": an allergy exists, so never "none".
 ALLERGY_EXCEPT = re.compile(r"นอกจาก|ยกเว้น|เว้นแต่")
 ALLERGY_OTHER = re.compile(r"(?:ไม่|ปฏิเสธ)(?:ได้|เคย)*แพ้(?:ยา)?(?:ตัว|ชนิด|อย่าง)?อื่น")
-_NEGATED_BEFORE = re.compile(r"(?:ไม่|ปฏิเสธ)(?:ได้|เคย|มี|การ|ประวัติ)*$")
 _CLAUSE_END = re.compile(r"แต่(?!ยา)|ส่วน|ไม่")
+
+# ---- plain denials: a KNOWN negative is recorded only when every whitespace-separated chunk of the
+# utterance is a recognised plain denial or a neutral chunk (see _neutral_chunk). Anything else said in the
+# same turn (drug name, reaction, memory qualifier, third-party subject, hedge) makes the negative UNKNOWN.
+_DENIAL_TAIL = r"(?:อะไร|ใดๆ|ทุกชนิด|ทุกตัว|สักตัว|ทั้งนั้น|ทั้งสิ้น|แน่นอน|เลย)*"
+PLAIN_DENIAL: dict[str, re.Pattern[str]] = {
+    "allergy_status": re.compile(
+        r"(?:ปฏิเสธ(?:การ|ประวัติ(?:การ)?)?แพ้ยา|ไม่(?:ได้|เคย)*แพ้(?:ยา|อะไร)|ไม่มี(?:ประวัติ)?(?:การ)?แพ้ยา"
+        rf"|ไม่มียาที่แพ้){_DENIAL_TAIL}"
+    ),
+    "current_medications": re.compile(
+        rf"(?:ไม่ได้|ไม่)(?:กิน|ใช้|ทาน)ยา{_DENIAL_TAIL}(?:ประจำ)?|ไม่มียา(?:ประจำ|ที่(?:กิน|ใช้|ทาน)(?:ประจำ)?)?{_DENIAL_TAIL}"
+    ),
+    "relevant_history": re.compile(
+        rf"(?:ไม่มีโรคประจำตัว|ไม่มีโรค|ปฏิเสธโรคประจำตัว|ไม่เคยป่วย|ไม่เคยเป็นโรค|แข็งแรงดี){_DENIAL_TAIL}"
+    ),
+}
+# Allergy-relevant words that must never sit next to a "none": reactions and third-party subjects.
+REACTION = re.compile(r"ผื่น|ลมพิษ|บวม|คัน|หายใจไม่ออก|หายใจลำบาก|ตุ่ม|ผิวลอก|ช็อก|หน้ามืด")
+_NON_DRUG_ALLERGEN = (
+    r"(?:อาหารทะเล|กุ้ง|ปู|หอย|ปลา|ถั่วลิสง|ถั่ว|นมวัว|นม|ไข่|แป้งสาลี|ไรฝุ่น|ฝุ่น|ขนแมว|ขนหมา|ขนสัตว์|"
+    r"เกสรดอกไม้|เกสร|อากาศ|แมลง|ผึ้ง)"
+)
+NON_DRUG_ALLERGY = re.compile(rf"(?:เคย)?แพ้{_NON_DRUG_ALLERGEN}(?:(?:กับ|และ|แล้วก็)?{_NON_DRUG_ALLERGEN})*")
+_LEAD = re.compile(r"^(?:แต่|และ|แล้วก็|ส่วน)")
+_FILLER = re.compile(r"เป็นมาได้|เป็นมา|มาได้|ประมาณ|ตั้งแต่|มีอาการ|รู้สึก|แล้วก็|อาการ|เป็น|มี|มา|กับ|และ|ก็")
+_CC_PHRASES = tuple(sorted((p for _, ps in CC_PATTERNS for p in ps), key=len, reverse=True))
+_CHUNK_SPLIT = re.compile(r"[\s,，]+")
+
+
+def _chunks(text: str) -> list[str]:
+    return [ch for ch in _CHUNK_SPLIT.split(text.strip()) if ch]
+
+
+def _core(chunk: str) -> str:
+    return _PARTICLES.sub("", chunk)
+
+
+def _is_plain_denial(chunk: str) -> bool:
+    return any(p.fullmatch(_core(chunk)) for p in PLAIN_DENIAL.values())
+
+
+def _neutral_chunk(chunk: str) -> bool:
+    """A chunk that says nothing about allergy, medicines or history: a symptom or duration, or a non-drug
+    allergy ("แต่แพ้กุ้ง"). Anything mentioning ยา, a reaction or an English word is never neutral."""
+    if "ยา" in chunk or REACTION.search(chunk) or ENGLISH_WORD.search(chunk):
+        return False
+    core = _LEAD.sub("", _core(chunk))
+    if NON_DRUG_ALLERGY.fullmatch(core):
+        return True
+    rest = core
+    for p in _CC_PHRASES:
+        rest = rest.replace(p, "")
+    rest = DURATION_UNIT_ONE.sub("", DURATION_NUM_UNIT.sub("", rest))
+    for phrase, _ in DURATION_RELATIVE:
+        rest = rest.replace(phrase, "")
+    return _FILLER.sub("", rest) == ""
+
+
+def _plain_negative(c: _Ctx, field: str) -> str | None:
+    """Surface of a plain denial for ``field`` if the whole utterance is one, else None."""
+    if bm := c.bare_none(field):
+        return bm.group(0).strip()
+    chunks = _chunks(c.text)
+
+    def own(ch: str) -> bool:  # a plain denial of this field; a bare "ไม่มีค่ะ" only when this field was asked
+        return bool(PLAIN_DENIAL[field].fullmatch(_core(ch)) or (c.asked == field and BARE_NONE[field].search(ch)))
+
+    hit = next((ch for ch in chunks if own(ch)), None)
+    if hit is None or not all(own(ch) or _is_plain_denial(ch) or _neutral_chunk(ch) for ch in chunks):
+        return None
+    return _core(hit)
 
 
 def _drug_items(segment: str) -> list[str]:
     return _merge_items(segment, _lexicon_items(segment, DRUG_LEXICON, (DRUG_DESCRIPTOR,)), _english_items(segment))
+
+
+def _split_negated(text: str, items: list[str], neg_before: re.Pattern[str]) -> tuple[list[str], list[str]]:
+    """(affirmed, negated): an item is negated only if every mention sits right after a negation."""
+    affirmed, negated = [], []
+    for item in items:
+        starts = [m.start() for m in re.finditer(re.escape(item), text)] or [text.find(item)]
+        (negated if all(neg_before.search(text[:s]) for s in starts) else affirmed).append(item)
+    return affirmed, negated
 
 
 def _allergy(c: _Ctx) -> list[dict]:
@@ -292,40 +379,56 @@ def _allergy(c: _Ctx) -> list[dict]:
         return [_fact("allergy_status", "REFUSED", None, c.refused.group(0), tid)]
     if ALLERGY_EXCEPT.search(text) or ALLERGY_OTHER.search(text):
         return []  # implies some allergy exists but no agent was named here
-    if nm := ALLERGY_NONE.search(text) or c.bare_none("allergy_status"):
-        return c.negative("allergy_status", "none", nm.group(0).strip())
+    if surface := _plain_negative(c, "allergy_status"):
+        return c.negative("allergy_status", "none", surface)
+    # A denial qualified by anything else in the turn ("ไม่แพ้ยาเพนิซิลลิน", "แม่ไม่แพ้ยา",
+    # "ไม่แพ้ยา ถ้าจำไม่ผิด", "ไม่น่าจะแพ้ยา") is UNKNOWN when answering the allergy question, never "none".
+    if asked == "allergy_status" and (dm := ALLERGY_DENIAL.search(text)):
+        return [_fact("allergy_status", "UNKNOWN", None, dm.group(0), tid)]
     return []
 
 
+# ---- medications
 MEDS_NONE = re.compile(r"ไม่ได้(?:กิน|ใช้|ทาน)ยา|ไม่(?:กิน|ใช้|ทาน)ยา|ไม่มียา(?!ที่แพ้)")
+_NEG_DRUG_BEFORE = re.compile(
+    r"(?:ไม่|ปฏิเสธ|เลิก|หยุด)(?:ได้|เคย|ค่อย|น่าจะ|มี)*(?:กิน|ใช้|ทาน|ฉีด|พ่น)?(?:ยา)?\s*$"
+)
 
 
 def _medications(c: _Ctx) -> list[dict]:
     text, tid, asked = c.text, c.tid, c.asked
     if asked != "current_medications" and (not re.search(r"(?:กิน|ใช้|ทาน)ยา", text) or "แพ้" in text):
         return []
-    if nm := MEDS_NONE.search(text):
-        return c.negative("current_medications", [], nm.group(0))
-    items = _drug_items(text)
+    # A drug named in the turn is recorded; a denial next to it never empties the list.
+    items, negated = _split_negated(text, _drug_items(text), _NEG_DRUG_BEFORE)
     if items:
         return [_fact("current_medications", "KNOWN", items, items[0], tid)]
-    if bm := c.bare_none("current_medications"):
-        return c.negative("current_medications", [], bm.group(0).strip())
+    if surface := _plain_negative(c, "current_medications"):
+        return c.negative("current_medications", [], surface)
+    # "ไม่ได้กินยาความดันแล้ว" (stopped one drug) or a qualified denial: UNKNOWN, never "takes none".
+    dm = MEDS_NONE.search(text)
+    if asked == "current_medications" and (dm or negated):
+        return [_fact("current_medications", "UNKNOWN", None, dm.group(0) if dm else negated[0], tid)]
     return []
 
 
-HISTORY_NONE = re.compile(r"ไม่มีโรคประจำตัว|ไม่มีโรค|แข็งแรงดี|ไม่เคยป่วย")
+# ---- history
+HISTORY_NONE = re.compile(r"ไม่มีโรคประจำตัว|ไม่มีโรค|แข็งแรงดี|ไม่เคยป่วย|ไม่เคยเป็นโรค|ปฏิเสธโรคประจำตัว")
+_NEG_COND_BEFORE = re.compile(r"(?:ไม่|ปฏิเสธ)(?:ได้|เคย|มี|เป็น|ป่วย|ประวัติ|โรค|ค่อย|น่าจะ)*\s*$")
 
 
 def _history(c: _Ctx) -> list[dict]:
     text, tid, asked = c.text, c.tid, c.asked
     if asked != "relevant_history" and not re.search(r"โรคประจำตัว|เป็นโรค", text):
         return []
-    items = _lexicon_items(text, CONDITION_LEXICON, (SURGERY,))
+    items, negated = _split_negated(text, _lexicon_items(text, CONDITION_LEXICON, (SURGERY,)), _NEG_COND_BEFORE)
     if items:
         return [_fact("relevant_history", "KNOWN", items, items[0], tid)]
-    if nm := HISTORY_NONE.search(text) or c.bare_none("relevant_history"):
-        return c.negative("relevant_history", [], nm.group(0).strip())
+    if surface := _plain_negative(c, "relevant_history"):
+        return c.negative("relevant_history", [], surface)
+    dm = HISTORY_NONE.search(text)
+    if asked == "relevant_history" and (dm or negated):
+        return [_fact("relevant_history", "UNKNOWN", None, dm.group(0) if dm else negated[0], tid)]
     return []
 
 
