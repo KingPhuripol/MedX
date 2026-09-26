@@ -50,7 +50,7 @@ def test_assess_response_shape(client, login):
     assert body.index('"alerts":') < body.index('"department":')
     a = raw.json()
     assert a["review_status"] == "pending_review" and a["confirmed_department"] is None
-    assert a["escalation_required"] is True and a["ruleset_version"] == "rf-1.0.0"
+    assert a["escalation_required"] is True and a["ruleset_version"] == "rf-1.1.0"
     assert a["output_label"] == "Suggestion for nurse review"
     copy = " ".join([a["output_label"]] + [x[k] for x in a["alerts"] for k in ("message_en", "name_en")])
     assert not CLAIMS.search(copy)

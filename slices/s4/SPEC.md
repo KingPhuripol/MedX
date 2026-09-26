@@ -23,10 +23,11 @@
    - **Snapshot at `as_of`:** only facts with `available_at_time <= as_of` are used, for both rules and the department suggestion.
 2. **Red-flag engine** (`triage/redflags.py` + `triage/rules/redflag_rules_v1.json`)
    - Deterministic and declarative. There is no model in this path.
-   - `RULESET_VERSION = "rf-1.0.0"`. The SHA-256 of the rules file is pinned next to the version. A test fails if the file changes without a version bump.
+   - `RULESET_VERSION = "rf-1.1.0"` (was rf-1.0.0; bumped when RF-MENING began accepting a measured temperature). The SHA-256 of the rules file is pinned next to the version. A test fails if the file changes without a version bump.
    - Each rule has: `id`, `name_en`, `name_th`, `condition`, `severity=escalate`, `rationale`, and `source {citation, pmid | url, accessed}`.
    - Output is `Alert {rule_id, ruleset_version, evidence_refs[fact_id], message_th/en}`.
    - Any alert sets `escalation_required=true`.
+   - A symptom element that has an objective vital counterpart must also accept the vital at a sourced threshold, so a self-report of "absent" can never override a measured abnormal value (rf-1.1.0: fever in RF-MENING).
    - `not_evaluable[]` lists rules that could not be checked because their inputs are missing. It is shown to the nurse and is never counted as "no red flag".
    - Model or gateway output can never add, remove, or downgrade alerts.
    - Candidate rules follow. The builder must verify every PMID or URL on PubMed or at the publisher. Thresholds come from the source and are not tuned to fixtures. No thresholds are invented.
@@ -47,7 +48,7 @@
    | RF-SUICIDE | Suicidal ideation or self-harm | ESI Handbook; Joint Commission NPSG 15.01.01 (URL) |
    | RF-GIBLEED | Hematemesis or melena | Laine et al., ACG 2021 (PMID 33929377) |
    | RF-ECTOPIC | Female 15–50 with abdominal pain or vaginal bleeding, and pregnancy status positive **or unknown** | ACOG Practice Bulletin 193 (2018) |
-   | RF-MENING | Fever plus neck stiffness or non-blanching rash | van de Beek et al., ESCMID 2016 (PMID 27062097) |
+   | RF-MENING | Fever (reported, **or** measured temp > 38.0 °C) plus neck stiffness or non-blanching rash | van de Beek et al., ESCMID 2016 (PMID 27062097); temp threshold: Sepsis-3 Box 1 SIRS (Singer 2016, PMID 26903338) and NEWS2 score-0 band upper limit |
    | RF-HYPOGLY | Capillary glucose < 54 mg/dL | ADA Standards of Care, Glycemic Targets (level 2) |
 
 3. **Department suggestion** (`triage/department.py`) via the s0 Model Gateway

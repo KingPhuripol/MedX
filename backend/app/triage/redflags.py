@@ -16,8 +16,8 @@ from typing import Any
 from .models import Alert, NotEvaluable, Snapshot
 
 RULES_PATH = Path(__file__).with_name("rules") / "redflag_rules_v1.json"
-RULESET_VERSION = "rf-1.0.0"
-RULESET_SHA256 = "0533eae4e81b4847e7952ad6d7efb44d37f1719b695aec6ecf0b744ab9ef8cec"
+RULESET_VERSION = "rf-1.1.0"
+RULESET_SHA256 = "086e0a29bde7fe7395cfd650342434920314fda8f5df7f96f8e091ab26f11a3a"
 
 _OPS = {
     "<=": lambda a, b: a <= b,

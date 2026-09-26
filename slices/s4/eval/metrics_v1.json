@@ -2,8 +2,8 @@
  "label": "System Evaluation on synthetic fixtures — not clinical performance",
  "slice": "s4",
  "versions": {
-  "ruleset_version": "rf-1.0.0",
-  "ruleset_sha256": "0533eae4e81b4847e7952ad6d7efb44d37f1719b695aec6ecf0b744ab9ef8cec",
+  "ruleset_version": "rf-1.1.0",
+  "ruleset_sha256": "086e0a29bde7fe7395cfd650342434920314fda8f5df7f96f8e091ab26f11a3a",
   "fixtures_sha256": "a757aa00872831d20be1b80e8d0235b60ed2f72b27ffad2020ccdf28c155fe8c",
   "baseline_version": "kw-1.0.0",
   "department_list_version": "dept-1.0.0-provisional",

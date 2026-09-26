@@ -1,5 +1,5 @@
 {
- "version": "rf-1.0.0",
+ "version": "rf-1.1.0",
  "status": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
  "population": "adult",
  "semantics": "Three-valued: a leaf is true, false, or unknown (input missing or symptom recorded as unknown). any = true if any leaf true; all = false if any leaf false; at_least k = true if >= k true. A rule that ends unknown is listed as not_evaluable and is never read as negative.",
@@ -149,14 +149,18 @@
   {
    "id": "RF-MENING", "name_en": "Possible meningitis", "name_th": "อาจเป็นเยื่อหุ้มสมองอักเสบ",
    "condition": {"all": [
-     {"symptom": "fever"},
+     {"any": [{"symptom": "fever"}, {"vital": "temp_c", "op": ">", "value": 38.0}]},
      {"any": [{"symptom": "neck_stiffness"}, {"symptom": "non_blanching_rash"}]}
    ]},
    "severity": "escalate",
-   "message_en": "Fever with neck stiffness or a non-blanching rash. Escalate to a clinician now.",
-   "message_th": "ไข้ร่วมกับคอแข็งหรือผื่นจ้ำเลือดที่กดไม่จาง ส่งต่อแพทย์ทันที",
-   "rationale": "ESCMID 2016: fever, neck stiffness and rash are key presenting signs of acute bacterial meningitis requiring urgent evaluation.",
-   "source": {"citation": "van de Beek D, et al. ESCMID guideline: diagnosis and treatment of acute bacterial meningitis. Clin Microbiol Infect. 2016;22 Suppl 3:S37-62.", "pmid": "27062097", "accessed": "2026-09-26"}
+   "message_en": "Fever (reported, or measured temperature above 38.0 °C) with neck stiffness or a non-blanching rash. Escalate to a clinician now.",
+   "message_th": "ไข้ (ผู้ป่วยแจ้ง หรือวัดอุณหภูมิได้สูงกว่า 38.0 °C) ร่วมกับคอแข็งหรือผื่นจ้ำเลือดที่กดไม่จาง ส่งต่อแพทย์ทันที",
+   "rationale": "ESCMID 2016: fever, neck stiffness and rash are key presenting signs of acute bacterial meningitis requiring urgent evaluation. Fever is satisfied by a reported fever OR a measured temperature above 38.0 °C, so a measured fever is never overridden by a self-report of no fever. The 38.0 °C threshold is the SIRS temperature criterion (>38 °C) in Sepsis-3 Box 1 (Singer 2016) and equals the upper limit of the NEWS2 score-0 temperature band (36.1-38.0 °C). The ESCMID guideline itself was not checked for a numeric fever threshold. If fever is not reported and no temperature is recorded, the rule stays not_evaluable.",
+   "source": {"citation": "van de Beek D, et al. ESCMID guideline: diagnosis and treatment of acute bacterial meningitis. Clin Microbiol Infect. 2016;22 Suppl 3:S37-62.", "pmid": "27062097", "accessed": "2026-09-26"},
+   "threshold_sources": [
+     {"element": "vital.temp_c > 38.0", "citation": "Singer M, et al. The Third International Consensus Definitions for Sepsis and Septic Shock (Sepsis-3). JAMA. 2016;315(8):801-810. Box 1: SIRS temperature >38 °C or <36 °C.", "pmid": "26903338", "accessed": "2026-09-26"},
+     {"element": "vital.temp_c > 38.0", "citation": "Royal College of Physicians. National Early Warning Score (NEWS) 2, Chart 1: The NEWS scoring system. London: RCP, 2017. Temperature 36.1-38.0 °C scores 0; 38.1-39.0 °C scores 1.", "url": "https://www.rcp.ac.uk/media/alxev00t/news2-chart-1_the-news-scoring-system_0_0.pdf", "accessed": "2026-09-26"}
+   ]
   },
   {
    "id": "RF-HYPOGLY", "name_en": "Level 2 hypoglycaemia", "name_th": "น้ำตาลในเลือดต่ำระดับ 2",

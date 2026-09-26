@@ -16,7 +16,7 @@ const DEPARTMENTS: Department[] = [
 function alert(rule_id: string, name_en: string) {
   return {
     rule_id,
-    ruleset_version: "rf-1.0.0",
+    ruleset_version: "rf-1.1.0",
     name_en,
     name_th: "ทดสอบ",
     severity: "escalate" as const,
@@ -30,7 +30,7 @@ const RED: Assessment = {
   assessment_id: "a1",
   case_ref: "SYN-S4-002",
   as_of: "2026-09-02T09:40:00+07:00",
-  ruleset_version: "rf-1.0.0",
+  ruleset_version: "rf-1.1.0",
   alerts: [alert("RF-CHEST", "Acute chest pain"), alert("RF-HR", "Abnormal pulse")],
   not_evaluable: [{ rule_id: "RF-HYPOGLY", name_en: "Level 2 hypoglycaemia", name_th: "x", missing_inputs: ["vital.capillary_glucose_mg_dl"] }],
   escalation_required: true,

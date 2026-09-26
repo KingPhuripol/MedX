@@ -35,7 +35,7 @@ def test_every_rule_has_source():
 
 
 def test_ruleset_hash_pinned_to_version(tmp_path):
-    assert redflags.RULESET_VERSION == "rf-1.0.0"
+    assert redflags.RULESET_VERSION == "rf-1.1.0"
     assert redflags.file_sha256() == redflags.RULESET_SHA256
     assert json.loads(redflags.RULES_PATH.read_text())["version"] == redflags.RULESET_VERSION
     tampered = tmp_path / "rules.json"
@@ -94,6 +94,11 @@ BOUNDARIES = {
         ({"symptom.fever": "present", "symptom.non_blanching_rash": "present"}, True),
         ({"symptom.fever": "absent", "symptom.neck_stiffness": "present"}, False),
         ({"symptom.fever": "present"}, False),
+        # Measured temperature threshold (> 38.0 C, Sepsis-3 SIRS / NEWS2 band edge), fever denied.
+        ({"symptom.fever": "absent", "vital.temp_c": 38.1, "symptom.neck_stiffness": "present"}, True),
+        ({"symptom.fever": "absent", "vital.temp_c": 38.0, "symptom.neck_stiffness": "present"}, False),
+        ({"symptom.fever": "absent", "vital.temp_c": 38.1, "symptom.non_blanching_rash": "present"}, True),
+        ({"symptom.fever": "absent", "vital.temp_c": 39.8}, False),
     ],
     "RF-HYPOGLY": [({"vital.capillary_glucose_mg_dl": 53}, True), ({"vital.capillary_glucose_mg_dl": 54}, False)],
 }
@@ -172,3 +177,101 @@ def test_snapshot_as_of():
 def test_naive_as_of_rejected():
     with pytest.raises(ValueError):
         Snapshot(make_case({}), T0.replace(tzinfo=None))
+
+
+# ---- F1: a measured temperature is never overridden by a self-reported "no fever" (rf-1.1.0) ----
+
+def _mening(overrides: dict):
+    alerts, ne = redflags.evaluate(snap(overrides))
+    alert = next((a for a in alerts if a.rule_id == "RF-MENING"), None)
+    listed = next((n for n in ne if n.rule_id == "RF-MENING"), None)
+    return alert, listed
+
+
+def test_mening_fires_on_measured_fever_when_fever_denied():
+    # Reproduction 1: temp 39.8, neck stiffness present, fever self-reported absent, AVPU A.
+    ov = {"vital.temp_c": 39.8, "symptom.neck_stiffness": "present", "symptom.fever": "absent", "vital.avpu": "A"}
+    alert, listed = _mening(ov)
+    assert alert is not None and listed is None
+    s = snap(ov)
+    # The measured temperature is the fever evidence; the denied self-report is not cited as evidence.
+    assert s.get("vital.temp_c").fact_id in alert.evidence_refs
+    assert s.get("symptom.fever").fact_id not in alert.evidence_refs
+
+
+def test_mening_fires_on_measured_fever_when_fever_not_recorded():
+    # Reproduction 2: same input with symptom.fever not recorded -> fires (not merely not_evaluable).
+    for fever in (DROP, "unknown"):
+        alert, listed = _mening({"vital.temp_c": 39.8, "symptom.neck_stiffness": "present",
+                                 "symptom.fever": fever, "vital.avpu": "A"})
+        assert alert is not None and listed is None, fever
+
+
+def test_mening_denied_fever_without_temperature_is_not_evaluable():
+    # Fever denied but no temperature recorded: cannot be read as "no red flag".
+    alert, listed = _mening({"vital.temp_c": DROP, "symptom.neck_stiffness": "present", "symptom.fever": "absent"})
+    assert alert is None and listed is not None
+    assert listed.missing_inputs == ["vital.temp_c"]
+
+
+def test_mening_fever_unknown_and_normal_temperature_is_not_evaluable():
+    alert, listed = _mening({"vital.temp_c": 37.0, "symptom.neck_stiffness": "present", "symptom.fever": DROP})
+    assert alert is None and listed is not None and listed.missing_inputs == ["symptom.fever"]
+
+
+def test_mening_no_fever_normal_temperature_no_meningeal_sign_is_quiet():
+    alert, listed = _mening({"vital.temp_c": 39.8, "symptom.fever": "absent"})
+    assert alert is None and listed is None
+
+
+def _leaves(cond):
+    if "symptom" in cond or "vital" in cond or "field" in cond:
+        yield cond
+    for c in cond.get("any") or cond.get("all") or cond.get("of") or []:
+        yield from _leaves(c)
+
+
+# Symptom elements that have an objective vital counterpart in the intake model. Each must be OR-ed with
+# that vital inside the same rule, so "absent" self-report can never evaluate the element as False while an
+# abnormal measurement is on record. Symptoms without a vital counterpart are listed with the reason.
+SYMPTOM_VITAL_COUNTERPART = {"fever": "temp_c"}
+NO_VITAL_COUNTERPART = {
+    "acute_chest_pain": "no ECG/troponin in intake",
+    "sudden_facial_droop": "neuro exam finding, no vital",
+    "sudden_limb_weakness": "neuro exam finding, no vital",
+    "sudden_speech_disturbance": "neuro exam finding, no vital",
+    "sudden_vision_disturbance": "neuro exam finding, no vital",
+    "thunderclap_headache": "history only",
+    "allergen_exposure": "history only",
+    # WAO 2020 gives no numeric SpO2/RR cut-off for respiratory compromise; RF-SPO2 / RF-RR cover severe
+    # measured values independently (see test_anaph_breathing_denied_but_hypoxic_still_escalates).
+    "airway_breathing_compromise": "no sourced numeric threshold; RF-SPO2/RF-RR escalate independently",
+    "suicidal_ideation": "history only",
+    "self_harm": "history only",
+    "hematemesis": "history only",
+    "melena": "history only",
+    "neck_stiffness": "exam finding, no vital",
+    "non_blanching_rash": "exam finding, no vital",
+    "abdominal_pain": "history only",
+    "vaginal_bleeding": "history only",
+}
+
+
+def test_symptom_elements_with_vital_counterpart_accept_the_vital():
+    for rule in redflags.rules():
+        leaves = list(_leaves(rule["condition"]))
+        for leaf in leaves:
+            if "symptom" not in leaf:
+                continue
+            name = leaf["symptom"]
+            assert name in SYMPTOM_VITAL_COUNTERPART or name in NO_VITAL_COUNTERPART, f"{rule['id']}: {name}"
+            if name in SYMPTOM_VITAL_COUNTERPART:
+                vital = SYMPTOM_VITAL_COUNTERPART[name]
+                assert any(l.get("vital") == vital for l in leaves), f"{rule['id']}: {name} lacks vital.{vital}"
+
+
+def test_anaph_breathing_denied_but_hypoxic_still_escalates():
+    alerts, _ = redflags.evaluate(snap({"symptom.allergen_exposure": "present",
+                                        "symptom.airway_breathing_compromise": "absent",
+                                        "vital.spo2": 88, "vital.rr": 26}))
+    assert {"RF-SPO2", "RF-RR"} <= {a.rule_id for a in alerts}
