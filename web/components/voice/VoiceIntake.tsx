@@ -131,6 +131,7 @@ export default function VoiceIntake() {
 
   const action = state?.next_action ?? null;
   const seqById = new Map((state?.turns ?? []).map((t) => [t.turn_id, t.seq]));
+  const speakerById = new Map((state?.turns ?? []).map((t) => [t.turn_id, t.speaker]));
   const missing = (state?.field_statuses ?? []).filter((s) => s.status === "MISSING");
 
   return (
@@ -186,6 +187,15 @@ export default function VoiceIntake() {
             </div>
           )}
 
+          {state.session.allergy_conflict && (
+            <div role="alert" data-testid="allergy-conflict-banner" className="disclaimer">
+              <p>
+                <strong>Drug allergy conflict:</strong> a later answer did not match the drug allergy already recorded.
+                The recorded allergy was kept. Nurse to confirm with the patient.
+              </p>
+            </div>
+          )}
+
           {!finished && (
             <form onSubmit={addTurn} aria-label="Add a turn">
               <div className="field">
@@ -237,7 +247,12 @@ export default function VoiceIntake() {
                 <tr key={f.fact_id} data-testid="fact-row" data-field={f.field}>
                   <th scope="row">{FIELD_LABELS[f.field] ?? f.field}</th>
                   <td>{f.state}</td>
-                  <td lang="th">{displayValue(f)}</td>
+                  <td lang="th">
+                    {displayValue(
+                      f,
+                      f.span_turn_ids.flatMap((id) => speakerById.get(id) ?? []),
+                    )}
+                  </td>
                   <td>
                     {f.span_turn_ids.map((id) => (
                       <a key={id} href={`#turn-${id}`} data-testid="source-link">

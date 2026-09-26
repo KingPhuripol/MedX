@@ -13,7 +13,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-EXTRACTOR_VERSION = "voice-mock-rules-0.1.0"
+EXTRACTOR_VERSION = "voice-mock-rules-0.2.0"
 
 # ---------------------------------------------------------------- numbers
 _DIGITS = {"ศูนย์": 0, "หนึ่ง": 1, "นึง": 1, "เอ็ด": 1, "สอง": 2, "สาม": 3, "สี่": 4, "ห้า": 5,
@@ -82,10 +82,26 @@ SURGERY = re.compile(r"ผ่าตัด[ก-๙]+")
 ENGLISH_WORD = re.compile(r"[A-Za-z][A-Za-z\-]{2,}")
 _PARTICLES = re.compile(r"(?:ค่ะ|คะ|ครับ|คับ|นะ|จ้ะ|จ้า|ด้วย|เลย|แล้ว|อยู่|ตอนนี้|ประจำ)+$")
 
-UNKNOWN_PHRASES = re.compile(r"จำไม่ได้|ไม่แน่ใจ|ไม่ทราบ|ไม่รู้")
+# Non-answers ("I have no information", "never been tested/noticed") are UNKNOWN, never a negative.
+UNKNOWN_PHRASES = re.compile(
+    r"จำไม่ได้|ไม่แน่ใจ|ไม่ทราบ|ไม่รู้|ไม่มีข้อมูล|ไม่(?:เคย|ได้)ตรวจ|ไม่(?:เคย|ได้)สังเกต"
+)
 REFUSED_PHRASES = re.compile(r"ไม่ขอตอบ|ขอไม่ตอบ|ไม่อยากบอก|ไม่อยากตอบ|ไม่สะดวกตอบ|ขอไม่บอก")
 CORRECTION = re.compile(r"ไม่ใช่|เอ้ย|เอ๊ย|เอ๊ะ|ขอโทษ|นับผิด|แก้เป็น")
-BARE_NONE = re.compile(r"^(?:ไม่มี|ไม่เคย|ไม่แพ้|ปฏิเสธ|ไม่ได้ใช้|ไม่ได้กิน|ไม่ได้ทาน)")
+# Hedges and questions: a negative said this way is not a KNOWN negative.
+HEDGE = re.compile(r"มั้ง|มั๊ง|น่าจะ|คิดว่า|อาจจะ|เหมือนจะ")
+_END_PARTICLES = r"(?:ค่ะ|คะ|ครับ|คับ|จ๊ะ|จ้ะ|จ้า|นะ|น่ะ)*"
+QUESTION = re.compile(
+    rf"(?:ใช่ไหม|ใช่มั้ย|ไหม(?!้)|มั้ย|ไม๊|หรือเปล่า|รึเปล่า|หรือไม่|เหรอ|หรอ|หรือ)\s*{_END_PARTICLES}\s*[?？]?\s*$|[?？]"
+)
+_BARE_HEAD = r"^(?:น่าจะ|คิดว่า|อาจจะ)?\s*"  # a hedged short denial is matched here, then made UNKNOWN
+_BARE_TAIL = rf"(?:มั้ง|มั๊ง)?\s*{_END_PARTICLES}\s*$"
+# Whole-utterance short denials only, per field. "ไม่แพ้" never answers medications or history.
+BARE_NONE = {
+    "allergy_status": re.compile(rf"{_BARE_HEAD}(?:ไม่มี|ไม่เคย|ไม่(?:ได้|เคย)*แพ้|ปฏิเสธ){_BARE_TAIL}"),
+    "current_medications": re.compile(rf"{_BARE_HEAD}(?:ไม่มี|ไม่ได้ใช้|ไม่ได้กิน|ไม่ได้ทาน|ไม่ใช้|ไม่กิน|ไม่ทาน){_BARE_TAIL}"),
+    "relevant_history": re.compile(rf"{_BARE_HEAD}(?:ไม่มี|ไม่เคย|ปฏิเสธ){_BARE_TAIL}"),
+}
 
 DURATION_UNITS: tuple[tuple[str, str, str], ...] = (
     ("นาที", "PT", "M"), ("ชั่วโมง", "PT", "H"), ("ชม.", "PT", "H"), ("วัน", "P", "D"),
@@ -106,6 +122,34 @@ SEVERITY_CATEGORIES: tuple[tuple[str, re.Pattern[str]], ...] = (
 
 
 # ---------------------------------------------------------------- helpers
+class _Ctx:
+    """Per-turn context shared by the field rules."""
+
+    def __init__(self, text: str, tid: str, asked: str | None) -> None:
+        self.text, self.tid, self.asked = text, tid, asked
+        self.hedge = HEDGE.search(text)
+        self.question = QUESTION.search(text)
+        self.uncertain = UNKNOWN_PHRASES.search(text)
+        self.refused = REFUSED_PHRASES.search(text)
+
+    @property
+    def negative_ok(self) -> bool:
+        """A KNOWN negative needs a plain statement: no hedge, question, non-answer or refusal."""
+        return not (self.hedge or self.question or self.uncertain or self.refused)
+
+    def negative(self, field: str, empty: Any, surface: str) -> list[dict]:
+        """KNOWN negative when stated plainly; UNKNOWN when hedged or asked back; otherwise no fact."""
+        if self.negative_ok:
+            return [_fact(field, "KNOWN", empty, surface, self.tid)]
+        marker = self.hedge or self.question
+        if marker and marker.group(0).strip():
+            return [_fact(field, "UNKNOWN", None, marker.group(0).strip(), self.tid)]
+        return []
+
+    def bare_none(self, field: str) -> re.Match[str] | None:
+        return BARE_NONE[field].search(self.text.strip()) if self.asked == field else None
+
+
 def _fact(field: str, state: str, value: Any, value_text: str, turn_id: str) -> dict[str, Any]:
     return {"field": field, "state": state, "value": value, "value_text": value_text, "span_turn_ids": [turn_id]}
 
@@ -198,81 +242,101 @@ def _severity(text: str, tid: str, asked: str | None) -> list[dict]:
 
 
 ALLERGY_NONE = re.compile(
-    r"ปฏิเสธ(?:การ|ประวัติ)?แพ้ยา|ไม่(?:เคย)?แพ้ยา|ไม่มี(?:ประวัติ)?(?:การ)?แพ้ยา|ไม่แพ้อะไร|ไม่เคยแพ้อะไร"
+    r"ปฏิเสธ(?:การ|ประวัติ)?แพ้ยา|ไม่(?:ได้|เคย)*แพ้ยา|ไม่มี(?:ประวัติ)?(?:การ)?แพ้ยา|ไม่มียาที่แพ้|ไม่(?:ได้|เคย)*แพ้อะไร"
 )
-ALLERGY_ANY = re.compile(r"(?:เคย)?แพ้ยา")
+# "not allergic to any drug except X" / "not allergic to other drugs": an allergy exists, so never "none".
+ALLERGY_EXCEPT = re.compile(r"นอกจาก|ยกเว้น|เว้นแต่")
+ALLERGY_OTHER = re.compile(r"(?:ไม่|ปฏิเสธ)(?:ได้|เคย)*แพ้(?:ยา)?(?:ตัว|ชนิด|อย่าง)?อื่น")
+_NEGATED_BEFORE = re.compile(r"(?:ไม่|ปฏิเสธ)(?:ได้|เคย|มี|การ|ประวัติ)*$")
+_CLAUSE_END = re.compile(r"แต่(?!ยา)|ส่วน|ไม่")
 
 
-def _allergy(text: str, tid: str, asked: str | None) -> list[dict]:
+def _drug_items(segment: str) -> list[str]:
+    return _merge_items(segment, _lexicon_items(segment, DRUG_LEXICON, (DRUG_DESCRIPTOR,)), _english_items(segment))
+
+
+def _allergy(c: _Ctx) -> list[dict]:
+    text, tid, asked = c.text, c.tid, c.asked
     if "แพ้" not in text and asked != "allergy_status":
         return []
-    # Allergens: drug names / English words said after an affirmative "แพ้" (not after "ไม่แพ้").
     allergens: list[str] = []
-    for m in re.finditer(r"(?<!ไม่)(?<!ไม่เคย)(?<!ปฏิเสธ)(?<!ปฏิเสธการ)แพ้", text):
-        tail = re.split(r"แต่|ส่วน", text[m.end():])[0]
-        thai = _lexicon_items(tail, DRUG_LEXICON, (DRUG_DESCRIPTOR,))
-        english = _english_items(tail)
-        for item in _merge_items(tail, thai, english):
-            if item.casefold() not in {a.casefold() for a in allergens}:
-                allergens.append(item)
+    affirmed: re.Match[str] | None = None  # first un-negated "แพ้ยา"
+    for m in re.finditer(r"แพ้", text):
+        if _NEGATED_BEFORE.search(text[: m.start()]):
+            continue
+        tail = text[m.end():]
+        tail = tail[3:] if tail.startswith("แต่") else tail  # "แพ้แต่ยาซัลฟา" = allergic only to sulfa
+        tail = _CLAUSE_END.split(tail)[0]
+        allergens += [i for i in _drug_items(tail) if i.casefold() not in {a.casefold() for a in allergens}]
+        if affirmed is None and tail.startswith("ยา"):
+            affirmed = m
+    for m in ALLERGY_EXCEPT.finditer(text):  # "ไม่แพ้ยาอะไรนอกจากเพนิซิลลิน"
+        if re.search(r"(?:ไม่|ปฏิเสธ)(?:ได้|เคย)*แพ้", text[: m.start()]):
+            tail = _CLAUSE_END.split(text[m.end():])[0]
+            allergens += [i for i in _drug_items(tail) if i.casefold() not in {a.casefold() for a in allergens}]
     if allergens:
         surface = next(m.group(0) for m in re.finditer(r"แพ้(?:ยา)?", text))
         return [_fact("allergy_status", "KNOWN", "present", surface, tid),
                 _fact("allergens", "KNOWN", allergens, allergens[0], tid)]
-    if um := UNKNOWN_PHRASES.search(text):
-        return [_fact("allergy_status", "UNKNOWN", None, um.group(0), tid)]
-    if rm := REFUSED_PHRASES.search(text):
-        return [_fact("allergy_status", "REFUSED", None, rm.group(0), tid)]
-    if nm := ALLERGY_NONE.search(text):
-        return [_fact("allergy_status", "KNOWN", "none", nm.group(0), tid)]
-    if asked == "allergy_status" and (bm := BARE_NONE.search(text.strip())):
-        return [_fact("allergy_status", "KNOWN", "none", bm.group(0), tid)]
-    if am := ALLERGY_ANY.search(text):
-        if not re.search(r"(?:ไม่|ปฏิเสธ)(?:เคย|การ)?" + re.escape(am.group(0)), text):
-            return [_fact("allergy_status", "KNOWN", "present", am.group(0), tid)]
+    # An affirmed drug allergy with an unknown/refused agent is still KNOWN present.
+    if affirmed and not c.question and not (c.uncertain and c.uncertain.start() < affirmed.start()):
+        facts = [_fact("allergy_status", "KNOWN", "present", affirmed.group(0), tid)]
+        if c.uncertain:
+            facts.append(_fact("allergens", "UNKNOWN", None, c.uncertain.group(0), tid))
+        elif c.refused:
+            facts.append(_fact("allergens", "REFUSED", None, c.refused.group(0), tid))
+        return facts
+    if c.uncertain:
+        return [_fact("allergy_status", "UNKNOWN", None, c.uncertain.group(0), tid)]
+    if c.refused:
+        return [_fact("allergy_status", "REFUSED", None, c.refused.group(0), tid)]
+    if ALLERGY_EXCEPT.search(text) or ALLERGY_OTHER.search(text):
+        return []  # implies some allergy exists but no agent was named here
+    if nm := ALLERGY_NONE.search(text) or c.bare_none("allergy_status"):
+        return c.negative("allergy_status", "none", nm.group(0).strip())
     return []
 
 
-MEDS_NONE = re.compile(r"ไม่ได้(?:กิน|ใช้|ทาน)ยา|ไม่(?:กิน|ใช้|ทาน)ยา|ไม่มียา")
+MEDS_NONE = re.compile(r"ไม่ได้(?:กิน|ใช้|ทาน)ยา|ไม่(?:กิน|ใช้|ทาน)ยา|ไม่มียา(?!ที่แพ้)")
 
 
-def _medications(text: str, tid: str, asked: str | None) -> list[dict]:
+def _medications(c: _Ctx) -> list[dict]:
+    text, tid, asked = c.text, c.tid, c.asked
     if asked != "current_medications" and (not re.search(r"(?:กิน|ใช้|ทาน)ยา", text) or "แพ้" in text):
         return []
     if nm := MEDS_NONE.search(text):
-        return [_fact("current_medications", "KNOWN", [], nm.group(0), tid)]
-    items = _merge_items(text, _lexicon_items(text, DRUG_LEXICON, (DRUG_DESCRIPTOR,)), _english_items(text))
+        return c.negative("current_medications", [], nm.group(0))
+    items = _drug_items(text)
     if items:
         return [_fact("current_medications", "KNOWN", items, items[0], tid)]
-    if asked == "current_medications" and (bm := BARE_NONE.search(text.strip())):
-        return [_fact("current_medications", "KNOWN", [], bm.group(0), tid)]
+    if bm := c.bare_none("current_medications"):
+        return c.negative("current_medications", [], bm.group(0).strip())
     return []
 
 
 HISTORY_NONE = re.compile(r"ไม่มีโรคประจำตัว|ไม่มีโรค|แข็งแรงดี|ไม่เคยป่วย")
 
 
-def _history(text: str, tid: str, asked: str | None) -> list[dict]:
+def _history(c: _Ctx) -> list[dict]:
+    text, tid, asked = c.text, c.tid, c.asked
     if asked != "relevant_history" and not re.search(r"โรคประจำตัว|เป็นโรค", text):
         return []
     items = _lexicon_items(text, CONDITION_LEXICON, (SURGERY,))
     if items:
         return [_fact("relevant_history", "KNOWN", items, items[0], tid)]
-    if nm := HISTORY_NONE.search(text):
-        return [_fact("relevant_history", "KNOWN", [], nm.group(0), tid)]
-    if asked == "relevant_history" and (bm := BARE_NONE.search(text.strip())):
-        return [_fact("relevant_history", "KNOWN", [], bm.group(0), tid)]
+    if nm := HISTORY_NONE.search(text) or c.bare_none("relevant_history"):
+        return c.negative("relevant_history", [], nm.group(0).strip())
     return []
 
 
-def _uncertain_answer(text: str, tid: str, asked: str | None, produced: set[str]) -> list[dict]:
+def _uncertain_answer(c: _Ctx, produced: set[str]) -> list[dict]:
     """"I can't remember" / "I'd rather not say" in reply to the field just asked."""
-    if asked is None or asked in produced or asked == "allergy_status":
+    if c.asked is None or c.asked in produced or c.asked == "allergy_status":
         return []
-    if um := UNKNOWN_PHRASES.search(text):
-        return [_fact(asked, "UNKNOWN", None, um.group(0), tid)]
-    if rm := REFUSED_PHRASES.search(text):
-        return [_fact(asked, "REFUSED", None, rm.group(0), tid)]
+    if c.uncertain:
+        return [_fact(c.asked, "UNKNOWN", None, c.uncertain.group(0), c.tid)]
+    if c.refused:
+        return [_fact(c.asked, "REFUSED", None, c.refused.group(0), c.tid)]
     return []
 
 
@@ -284,8 +348,14 @@ def extract(inputs: dict[str, Any]) -> dict[str, Any]:
         return {"extractor": EXTRACTOR_VERSION, "facts": []}
     target = turns[-1]
     text, tid = str(target["text"]), str(target["turn_id"])
+    if target.get("speaker") == "nurse" and QUESTION.search(text):
+        # A nurse's (possibly leading) question is not an answer: nothing is extracted from it.
+        return {"extractor": EXTRACTOR_VERSION, "facts": []}
     facts: list[dict] = []
-    for rule in (_chief_complaint, _duration, _severity, _allergy, _medications, _history):
+    for rule in (_chief_complaint, _duration, _severity):
         facts += rule(text, tid, asked)
-    facts += _uncertain_answer(text, tid, asked, {f["field"] for f in facts})
+    c = _Ctx(text, tid, asked)
+    for field_rule in (_allergy, _medications, _history):
+        facts += field_rule(c)
+    facts += _uncertain_answer(c, {f["field"] for f in facts})
     return {"extractor": EXTRACTOR_VERSION, "facts": facts}

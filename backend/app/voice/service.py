@@ -44,6 +44,7 @@ from .policy import MAX_ASKS, handoff, missing_fields, next_action, nurse_attent
 from .utterances_th import utterance
 
 FUTURE_TOLERANCE = timedelta(seconds=5)
+HELD_REASON = "allergy_downgrade_blocked"
 EVIDENCE_SOURCE = "voice_agent.cascade"
 
 
@@ -120,6 +121,15 @@ def latest_by_field(facts: list[IntakeFact]) -> dict[str, IntakeFact]:
     for f in facts:  # ordered by insertion; later versions win
         latest[f.field] = f
     return latest
+
+
+def _allergy_conflict(conn: Connection, session_id: str) -> bool:
+    n = conn.execute(
+        select(func.count()).select_from(voice_extractions).where(
+            voice_extractions.c.session_id == session_id, voice_extractions.c.reason == HELD_REASON
+        )
+    ).scalar_one()
+    return n > 0
 
 
 def _extraction_error(conn: Connection, session_id: str) -> bool:
@@ -227,6 +237,49 @@ def validate_extraction(
     return parsed.facts, None
 
 
+def _allergy_present(latest: dict[str, Any]) -> bool:
+    status, allergens = latest.get("allergy_status"), latest.get("allergens")
+    return (status is not None and status.state == "KNOWN" and status.value == "present") or (
+        allergens is not None and allergens.state == "KNOWN" and bool(allergens.value)
+    )
+
+
+def reconcile_allergy(
+    extracted: list[ExtractedFact], latest: dict[str, Any]
+) -> tuple[list[ExtractedFact], list[dict]]:
+    """Allergy safety guard, independent of the extractor.
+
+    - A stated drug allergy is never replaced by ``none``/UNKNOWN/REFUSED automatically: the weaker
+      fact is held (not written) and reported for nurse review.
+    - Known allergens are never replaced by an UNKNOWN/REFUSED allergens fact.
+    - Named allergens imply ``allergy_status`` KNOWN ``present`` (same span), so status and list agree.
+    """
+    batch_allergens = [f for f in extracted if f.field == "allergens" and f.state == "KNOWN" and f.value]
+    batch_present = any(
+        f.field == "allergy_status" and f.state == "KNOWN" and f.value == "present" for f in extracted
+    )
+    present = _allergy_present(latest) or bool(batch_allergens) or batch_present
+    kept: list[ExtractedFact] = []
+    held: list[dict] = []
+    for f in extracted:
+        weaker_status = f.field == "allergy_status" and not (f.state == "KNOWN" and f.value == "present")
+        prev_allergens = latest.get("allergens")
+        weaker_list = (
+            f.field == "allergens" and f.state != "KNOWN" and prev_allergens is not None
+            and prev_allergens.state == "KNOWN" and bool(prev_allergens.value)
+        )
+        if (weaker_status and present) or weaker_list:
+            held.append({"field": f.field, "state": f.state, "value": f.value, "span_turn_ids": f.span_turn_ids,
+                         "reason": "allergy_downgrade_blocked"})
+            continue
+        kept.append(f)
+    if batch_allergens and not batch_present:
+        src = batch_allergens[0]
+        kept.insert(0, ExtractedFact(field="allergy_status", state="KNOWN", value="present",
+                                     value_text=src.value_text, span_turn_ids=src.span_turn_ids))
+    return kept, held
+
+
 def _append_facts(
     conn: Connection, session_id: str, extracted: list[ExtractedFact], extractor: str, gw: Any,
     turns_by_id: dict[str, dict], existing: list[IntakeFact],
@@ -273,7 +326,7 @@ def _append_facts(
 # ------------------------------------------------------------------ public operations
 
 
-def _session_payload(row: Any, turns: list[dict], extraction_error: bool) -> dict:
+def _session_payload(row: Any, turns: list[dict], extraction_error: bool, allergy_conflict: bool = False) -> dict:
     return {
         "session_id": row["session_id"],
         "patient_ref": row["patient_ref"],
@@ -282,6 +335,8 @@ def _session_payload(row: Any, turns: list[dict], extraction_error: bool) -> dic
         "created_at": row["created_at"],
         "extraction_error": extraction_error,
         "nurse_attention": any(t["nurse_attention"] for t in turns),
+        # A later answer tried to weaken a recorded drug allergy; the allergy was kept for nurse review.
+        "allergy_conflict": allergy_conflict,
     }
 
 
@@ -366,6 +421,17 @@ def add_turn(ctx: VoiceContext, session_id: str, body: AddTurnBody, now: datetim
         extracted, reason = validate_extraction(gw.output, {t["turn_id"]: t for t in visible}, current_end)
 
     with ctx.engine.begin() as conn:
+        existing = _fact_rows(conn, session_id)
+        new_facts: list[IntakeFact] = []
+        held: list[dict] = []
+        if extracted is not None:
+            extracted, held = reconcile_allergy(extracted, latest_by_field(existing))
+            extractor = str((gw.output or {}).get("extractor", "unknown"))[:64]
+            new_facts = _append_facts(
+                conn, session_id, extracted, extractor, gw, {t["turn_id"]: t for t in visible}, existing
+            )
+        if held:
+            reason = HELD_REASON
         conn.execute(
             voice_extractions.insert().values(
                 session_id=session_id, turn_id=turn["turn_id"], status="ok" if extracted is not None else "error",
@@ -373,15 +439,9 @@ def add_turn(ctx: VoiceContext, session_id: str, body: AddTurnBody, now: datetim
                 request_sha256=gw.request_sha256, latency_ms=str(gw.latency_ms),
             )
         )
-        existing = _fact_rows(conn, session_id)
-        new_facts: list[IntakeFact] = []
-        if extracted is not None:
-            extractor = str((gw.output or {}).get("extractor", "unknown"))[:64]
-            new_facts = _append_facts(
-                conn, session_id, extracted, extractor, gw, {t["turn_id"]: t for t in visible}, existing
-            )
         facts = existing + new_facts
         extraction_error = _extraction_error(conn, session_id)
+        allergy_conflict = _allergy_conflict(conn, session_id)
         any_attention = any(t["nurse_attention"] for t in turns)
         # 5-6. Deterministic next action; the agent utterance is recorded as a turn.
         statuses = field_statuses(facts, turns)
@@ -394,6 +454,7 @@ def add_turn(ctx: VoiceContext, session_id: str, body: AddTurnBody, now: datetim
         "session_id": session_id, "turn_id": turn["turn_id"], "speaker": body.speaker,
         "request_sha256": gw.request_sha256, "extraction": "ok" if extracted is not None else "error",
         "new_fact_ids": [f.fact_id for f in new_facts], "agent_turn_id": agent_turn_id,
+        "held": [{k: h[k] for k in ("field", "state", "value", "span_turn_ids", "reason")} for h in held],
         "next_action": action.utterance_id,
     })
     return {
@@ -403,11 +464,15 @@ def add_turn(ctx: VoiceContext, session_id: str, body: AddTurnBody, now: datetim
         "next_action": action.model_dump(),
         "extraction_error": extraction_error,
         "nurse_attention": any_attention,
-        "session": _session_payload(session, turns, extraction_error),
+        "held_facts": held,
+        "allergy_conflict": allergy_conflict,
+        "session": _session_payload(session, turns, extraction_error, allergy_conflict),
     }
 
 
-def _state(conn: Connection, session_id: str) -> tuple[Any, list[dict], list[IntakeFact], dict, NextAction, bool]:
+def _state(
+    conn: Connection, session_id: str
+) -> tuple[Any, list[dict], list[IntakeFact], dict, NextAction, bool, bool]:
     session = _session_row(conn, session_id)
     turns = _turn_rows(conn, session_id)
     facts = _fact_rows(conn, session_id)
@@ -416,14 +481,14 @@ def _state(conn: Connection, session_id: str) -> tuple[Any, list[dict], list[Int
     action = _current_action(turns, statuses) or _decide(
         statuses, any(t["nurse_attention"] for t in turns), extraction_error
     )
-    return session, turns, facts, statuses, action, extraction_error
+    return session, turns, facts, statuses, action, extraction_error, _allergy_conflict(conn, session_id)
 
 
 def get_session(ctx: VoiceContext, session_id: str) -> dict:
     with ctx.engine.connect() as conn:
-        session, turns, facts, statuses, action, extraction_error = _state(conn, session_id)
+        session, turns, facts, statuses, action, extraction_error, allergy_conflict = _state(conn, session_id)
     return {
-        "session": _session_payload(session, turns, extraction_error),
+        "session": _session_payload(session, turns, extraction_error, allergy_conflict),
         "turns": [_turn_model(t).model_dump(mode="json") | {"utterance_id": t["utterance_id"]} for t in turns],
         "facts": [f.model_dump(mode="json") for f in latest_by_field(facts).values()],
         "field_statuses": [s.model_dump() for s in statuses.values()],
@@ -444,7 +509,7 @@ def facts_as_of(ctx: VoiceContext, session_id: str, as_of: datetime | None) -> d
 
 
 def build_evidence(session: Any, turns: list[dict], facts: list[IntakeFact], missing: list[str],
-                   reason: str) -> list[IntakeEvidence]:
+                   reason: str, allergy_conflict: bool = False) -> list[IntakeEvidence]:
     sid, ref = session["session_id"], session["patient_ref"]
     items: list[IntakeEvidence] = []
     for fact in latest_by_field(facts).values():
@@ -468,6 +533,7 @@ def build_evidence(session: Any, turns: list[dict], facts: list[IntakeFact], mis
                 "turns": [_turn_model(t).model_dump(mode="json") for t in turns],
                 "missing_fields": missing,
                 "handoff_reason": reason,
+                "allergy_conflict": allergy_conflict,
             },
         ))
     return items
@@ -475,7 +541,7 @@ def build_evidence(session: Any, turns: list[dict], facts: list[IntakeFact], mis
 
 def finish(ctx: VoiceContext, session_id: str, now: datetime) -> dict:
     with ctx.engine.begin() as conn:
-        session, turns, facts, statuses, action, extraction_error = _state(conn, session_id)
+        session, turns, facts, statuses, action, extraction_error, allergy_conflict = _state(conn, session_id)
         if session["status"] != "active":
             raise VoiceError(409, "voice session is already finished")
         conn.execute(
@@ -484,13 +550,14 @@ def finish(ctx: VoiceContext, session_id: str, now: datetime) -> dict:
         session = _session_row(conn, session_id)
     missing = missing_fields(statuses)
     reason = action.reason if action.action == "handoff" and action.reason else "finished_by_nurse"
-    evidence = build_evidence(session, turns, facts, missing, reason)
+    evidence = build_evidence(session, turns, facts, missing, reason, allergy_conflict)
     _audit(ctx, "voice.session.finish", session_id, "success", {
         "session_id": session_id, "status_change": "active->finished", "handoff_reason": reason,
         "missing_fields": missing, "n_turns": len(turns), "n_evidence": len(evidence),
+        "allergy_conflict": allergy_conflict,
     })
     return {
-        "session": _session_payload(session, turns, extraction_error),
+        "session": _session_payload(session, turns, extraction_error, allergy_conflict),
         "handoff_reason": reason,
         "missing_fields": missing,
         "field_statuses": [s.model_dump() for s in statuses.values()],

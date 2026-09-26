@@ -198,7 +198,10 @@ def run_eval() -> dict:
             for r in rows
         ],
         "notes": "Fixtures and rules share one author; the held-out split was committed before the rules "
-                 "but is not independent evidence. With n=15 the CIs are wide by design.",
+                 "but is not independent evidence. With n=15 the CIs are wide by design. "
+                 "allergy_false_none counts these 15 dialogues only and is not a general safety property; "
+                 "hedge/question/non-answer/exception phrasing is covered by the phrase regressions in "
+                 "backend/tests/voice/test_negative_safety.py and by the service allergy guard.",
     }
 
 

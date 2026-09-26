@@ -3,7 +3,7 @@
   "slice": "s3",
   "provider": "mock",
   "extractor": "voice-mock-rules-0.1.0",
-  "inputs_sha256": "e5208d092d5262e03d2ec894d0cc4ed622c8b1f6566180655744ff4b22c97cbc",
+  "inputs_sha256": "c155808150adfcf2d02fca52c76a0249d9620482e46cbd58a4ac71962c95d2bd",
   "n_dialogues": 15,
   "bootstrap": {
     "resamples": 2000,
@@ -550,8 +550,8 @@
   "allergy_false_none": 0,
   "latency_ms": {
     "n_turns": 80,
-    "p50": 1.661,
-    "p95": 2.185,
+    "p50": 1.648,
+    "p95": 1.88,
     "scope": "per-turn processing, mock provider in process"
   },
   "per_dialogue": [
@@ -1219,5 +1219,5 @@
       }
     }
   ],
-  "notes": "Fixtures and rules share one author; the held-out split was committed before the rules but is not independent evidence. With n=15 the CIs are wide by design."
+  "notes": "Fixtures and rules share one author; the held-out split was committed before the rules but is not independent evidence. With n=15 the CIs are wide by design. allergy_false_none counts these 15 dialogues only and is not a general safety property; hedge/question/non-answer/exception phrasing is covered by the phrase regressions in backend/tests/voice/test_negative_safety.py and by the service allergy guard."
 }

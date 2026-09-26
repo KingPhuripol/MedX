@@ -113,4 +113,26 @@ describe("VoiceIntake", () => {
     expect(within(missing).getAllByRole("listitem")).toHaveLength(2);
     expect(missing).not.toHaveTextContent(/no allergy/i);
   });
+
+  it("shows the allergy-conflict alert and never labels a nurse's statement as a patient denial", async () => {
+    const nurseNone = {
+      fact_id: "f2", field: "allergy_status", state: "KNOWN", value: "none", value_text: "ไม่แพ้ยา",
+      span_turn_ids: ["n1"], available_at_time: "2026-01-01T00:00:05+00:00",
+    };
+    const base = sessionState({ question: Q2, facts: [nurseNone], missing: [] });
+    const state = {
+      ...base,
+      session: { ...base.session, allergy_conflict: true },
+      turns: [...base.turns, { turn_id: "n1", seq: 3, speaker: "nurse", text: "ไม่แพ้ยาค่ะ",
+        started_at: "2026-01-01T00:00:04Z", ended_at: "2026-01-01T00:00:05Z" }],
+    };
+    routeFetch(() => state);
+    render(<VoiceIntake />);
+    await userEvent.type(screen.getByLabelText("Synthetic patient ref"), "T{Enter}");
+    const banner = await screen.findByTestId("allergy-conflict-banner");
+    expect(banner).toHaveAttribute("role", "alert");
+    const row = screen.getByTestId("fact-row");
+    expect(row).not.toHaveTextContent("patient denies");
+    expect(row).toHaveTextContent("confirm with patient");
+  });
 });

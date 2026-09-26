@@ -36,7 +36,14 @@ export interface FieldStatus {
 }
 
 export interface SessionState {
-  session: { session_id: string; patient_ref: string; status: string; extraction_error: boolean; nurse_attention: boolean };
+  session: {
+    session_id: string;
+    patient_ref: string;
+    status: string;
+    extraction_error: boolean;
+    nurse_attention: boolean;
+    allergy_conflict?: boolean;
+  };
   turns: Turn[];
   facts: Fact[];
   field_statuses: FieldStatus[];
@@ -74,10 +81,35 @@ export const REASON_LABELS: Record<string, string> = {
   finished_by_nurse: "Finished by nurse",
 };
 
-/** Human-readable value. Only explicit KNOWN answers carry a value; MISSING never appears as a fact. */
-export function displayValue(fact: Fact): string {
+type SourceKind = "patient" | "relative" | "other";
+
+/** Who a negative came from. Only a patient or relative answer is a denial; a nurse statement is not. */
+function negativeSource(speakers: Turn["speaker"][]): SourceKind {
+  const set = new Set(speakers);
+  if (set.size === 1 && set.has("patient")) return "patient";
+  if (set.size === 1 && set.has("relative")) return "relative";
+  return "other";
+}
+
+const NO_ALLERGY: Record<SourceKind, string> = {
+  patient: "none (patient denies drug allergy)",
+  relative: "none (relative reports no drug allergy)",
+  other: "none (stated by nurse, not the patient; confirm with patient)",
+};
+const EMPTY_LIST: Record<SourceKind, string> = {
+  patient: "none reported",
+  relative: "none reported (by relative)",
+  other: "none (stated by nurse, not the patient; confirm with patient)",
+};
+
+/**
+ * Human-readable value. Only explicit KNOWN answers carry a value; MISSING never appears as a fact.
+ * `speakers` are the speakers of the fact's source turns, taken from the transcript.
+ */
+export function displayValue(fact: Fact, speakers: Turn["speaker"][] = []): string {
   if (fact.state !== "KNOWN") return "—";
-  if (Array.isArray(fact.value)) return fact.value.length ? fact.value.join(", ") : "none reported";
-  if (fact.field === "allergy_status" && fact.value === "none") return "none (patient denies drug allergy)";
+  const source = negativeSource(speakers);
+  if (Array.isArray(fact.value)) return fact.value.length ? fact.value.join(", ") : EMPTY_LIST[source];
+  if (fact.field === "allergy_status" && fact.value === "none") return NO_ALLERGY[source];
   return String(fact.value);
 }
