@@ -33,4 +33,17 @@ describe("research-prototype disclaimer", () => {
     expect(html.indexOf("research-disclaimer")).toBeLessThan(html.indexOf("page-body"));
     expect(html).toContain('<html lang="en">');
   });
+
+  it("renders the MedX wordmark after the disclaimer and before page content", () => {
+    const html = renderToStaticMarkup(
+      <RootLayout>
+        <p>page-body</p>
+      </RootLayout>,
+    );
+    expect(html).toMatch(/<body><div class="disclaimer"/);
+    const wordmark = html.indexOf('data-testid="wordmark"');
+    expect(wordmark).toBeGreaterThan(html.indexOf("research-disclaimer"));
+    expect(wordmark).toBeLessThan(html.indexOf("page-body"));
+    expect(html).toContain('aria-label="MedX"');
+  });
 });

@@ -10,18 +10,37 @@ async function seriousViolations(page: Page) {
     .map((v) => `${v.id}: ${v.nodes.length} node(s)`);
 }
 
-test("login page has no serious/critical axe violations and labelled inputs", async ({ page }) => {
-  await page.goto("/login");
-  await expect(page.getByLabel("Username")).toBeVisible();
-  await expect(page.getByLabel("Password")).toBeVisible();
-  expect(await seriousViolations(page)).toEqual([]);
-});
+const VIEWPORTS = [
+  { width: 1280, height: 800 },
+  { width: 768, height: 1024 },
+];
 
-for (const role of ROLES) {
-  test(`${role} home has no serious/critical axe violations`, async ({ page }) => {
-    await login(page, role);
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    expect(await seriousViolations(page)).toEqual([]);
+for (const vp of VIEWPORTS) {
+  test.describe(`${vp.width}x${vp.height}`, () => {
+    test.use({ viewport: vp });
+
+    test("login page has no serious/critical axe violations and labelled inputs", async ({ page }) => {
+      await page.goto("/login");
+      await expect(page.getByLabel("Username")).toBeVisible();
+      await expect(page.getByLabel("Password")).toBeVisible();
+      expect(await seriousViolations(page)).toEqual([]);
+    });
+
+    for (const role of ROLES) {
+      test(`${role} home has no serious/critical axe violations`, async ({ page }) => {
+        await login(page, role);
+        await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+        expect(await seriousViolations(page)).toEqual([]);
+      });
+    }
+
+    for (const path of ["/403", "/definitely-missing"]) {
+      test(`${path} has no serious/critical axe violations`, async ({ page }) => {
+        await page.goto(path);
+        await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+        expect(await seriousViolations(page)).toEqual([]);
+      });
+    }
   });
 }
 
