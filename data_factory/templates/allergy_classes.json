@@ -1,0 +1,6 @@
+[
+  {"class_id": "ALG-PENICILLIN", "substance": "penicillins", "th": "เพนิซิลลิน", "atc_class": "J01C", "reaction": "urticarial rash", "probe_drug": "dicloxacillin", "source_ref": "WHOCC-ATC"},
+  {"class_id": "ALG-SULFONAMIDE", "substance": "sulfonamides", "th": "ซัลฟา", "atc_class": "J01E", "reaction": "maculopapular rash", "probe_drug": "sulfamethoxazole and trimethoprim", "source_ref": "WHOCC-ATC"},
+  {"class_id": "ALG-NSAID", "substance": "non-steroidal anti-inflammatory drugs", "th": "แก้ปวดข้อกลุ่มเอ็นเสด", "atc_class": "M01A", "reaction": "angioedema", "probe_drug": "naproxen", "source_ref": "WHOCC-ATC"},
+  {"class_id": "ALG-CEPHALOSPORIN", "substance": "cephalosporins", "th": "เซฟาโลสปอริน", "atc_class": "J01D", "reaction": "urticarial rash", "probe_drug": "cefuroxime", "source_ref": "WHOCC-ATC"}
+]

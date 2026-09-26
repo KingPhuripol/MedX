@@ -19,6 +19,7 @@ checkpoints/
 data/raw/
 data/interim/
 data/processed/
+data/synthetic/
 logs/
 wandb/
 mlruns/

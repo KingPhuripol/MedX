@@ -1,0 +1,14 @@
+[
+  {"ref_id": "PMID-26903335", "pmid": "26903335", "doi": "10.1001/jama.2016.0288", "citation": "Seymour CW et al. Assessment of Clinical Criteria for Sepsis (Sepsis-3). JAMA 2016;315(8):762-74. qSOFA: SBP <=100 mm Hg, RR >=22/min, altered mentation; score >=2."},
+  {"ref_id": "PMID-23295778", "pmid": "23295778", "doi": "10.1016/j.resuscitation.2012.12.016", "citation": "Smith GB et al. The ability of the National Early Warning Score (NEWS) to discriminate patients at risk. Resuscitation 2013;84(4):465-70. NEWS parameter bands (Royal College of Physicians 2012)."},
+  {"ref_id": "PMID-12511753", "pmid": "12511753", "citation": "Harbison J et al. Diagnostic accuracy of stroke referrals ... using the Face Arm Speech Test. Stroke 2003;34(1):71-6."},
+  {"ref_id": "PMID-34709879", "pmid": "34709879", "doi": "10.1161/CIR.0000000000001029", "citation": "Gulati M et al. 2021 AHA/ACC/ASE/CHEST/SAEM/SCCT/SCMR Guideline for the Evaluation and Diagnosis of Chest Pain. Circulation 2021;144(22):e368-e454."},
+  {"ref_id": "PMID-24065011", "pmid": "24065011", "doi": "10.1001/jama.2013.278018", "citation": "Perry JJ et al. Clinical decision rules to rule out subarachnoid hemorrhage for acute headache (thunderclap headache = instantly peaking pain). JAMA 2013;310(12):1248-55."},
+  {"ref_id": "PMID-16461139", "pmid": "16461139", "doi": "10.1016/j.jaci.2005.12.1303", "citation": "Sampson HA et al. Second symposium on the definition and management of anaphylaxis: summary report. J Allergy Clin Immunol 2006;117(2):391-7. Criterion 1: skin/mucosal involvement plus respiratory compromise or reduced BP (adult SBP <90 mm Hg)."},
+  {"ref_id": "AHRQ-MATCH-CH3", "url": "https://www.ahrq.gov/patient-safety/settings/hospital/match/chapter-3.html", "citation": "AHRQ MATCH Toolkit for Medication Reconciliation, ch. 3 (PROPOSAL ref [2]). Discrepancy types: omission, duplication, dose/frequency differences."},
+  {"ref_id": "ASHP-2021-EM", "doi": "10.1093/ajhp/zxaa378", "citation": "Ortmann MJ et al. ASHP guidelines on emergency medicine pharmacist services. Am J Health-Syst Pharm 2021;78(3):261-275 (PROPOSAL ref [3]). Medication history, reconciliation and allergy review."},
+  {"ref_id": "WHOCC-ATC", "url": "https://atcddd.fhi.no/atc_ddd_index/", "citation": "WHO Collaborating Centre for Drug Statistics Methodology. ATC/DDD Index (ATC codes and classes)."},
+  {"ref_id": "ICD10CM-FY2026", "url": "https://www.cms.gov/medicare/coding-billing/icd-10-codes", "citation": "ICD-10-CM FY2026 code set; each complaint code checked with the ICD-10 code lookup tool on 2026-09-26."},
+  {"ref_id": "SIL-TH-CS-CHI-CLINIC", "url": "https://terms.sil-th.org/core/CodeSystem/cs-chi-clinic", "citation": "SIL-TH CodeSystem cs-chi-clinic v0.1.2 (clinic codes sourced from CSOP OPServices)."},
+  {"ref_id": "LOINC", "url": "https://loinc.org/", "citation": "LOINC laboratory test codes (Regenstrief Institute)."}
+]

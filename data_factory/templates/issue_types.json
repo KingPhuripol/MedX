@@ -1,0 +1,7 @@
+[
+  {"issue_type": "duplicate_therapy", "definition": "two different generic drugs with the same ATC level-4 code in the active new order (continued home drug plus a new drug)", "source_ref": "AHRQ-MATCH-CH3"},
+  {"issue_type": "dose_mismatch", "definition": "same generic drug with different dose_value or dose_unit across home_list/patient_reported/new_order", "source_ref": "AHRQ-MATCH-CH3"},
+  {"issue_type": "frequency_mismatch", "definition": "same generic drug with different frequency across lists", "source_ref": "AHRQ-MATCH-CH3"},
+  {"issue_type": "omission", "definition": "home_list drug absent from the new_order", "source_ref": "AHRQ-MATCH-CH3"},
+  {"issue_type": "allergy_conflict", "definition": "new_order drug whose ATC code falls in the class of a documented allergy available at or before T2", "source_ref": "ASHP-2021-EM"}
+]

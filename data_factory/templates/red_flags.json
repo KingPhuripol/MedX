@@ -1,0 +1,30 @@
+[
+  {"rule_id": "RF-QSOFA", "source_ref": "PMID-26903335", "description": "qSOFA >= 2: RR >= 22/min, SBP <= 100 mm Hg, altered mentation (ACVPU other than A).",
+   "criterion": {"kind": "vitals", "min_count": 2, "conditions": [
+     {"param": "rr", "op": ">=", "value": 22},
+     {"param": "sbp", "op": "<=", "value": 100},
+     {"param": "consciousness", "op": "in", "value": ["C", "V", "P", "U"]}]}},
+  {"rule_id": "RF-NEWS-SINGLE3", "source_ref": "PMID-23295778", "description": "Any single NEWS parameter scoring 3: RR <=8 or >=25; SpO2 <=91; temp <=35.0; SBP <=90 or >=220; HR <=40 or >=131; consciousness V, P or U.",
+   "criterion": {"kind": "vitals", "min_count": 1, "conditions": [
+     {"param": "rr", "op": "<=", "value": 8},
+     {"param": "rr", "op": ">=", "value": 25},
+     {"param": "spo2", "op": "<=", "value": 91},
+     {"param": "temp_c", "op": "<=", "value": 35.0},
+     {"param": "sbp", "op": "<=", "value": 90},
+     {"param": "sbp", "op": ">=", "value": 220},
+     {"param": "hr", "op": "<=", "value": 40},
+     {"param": "hr", "op": ">=", "value": 131},
+     {"param": "consciousness", "op": "in", "value": ["V", "P", "U"]}]}},
+  {"rule_id": "RF-FAST", "source_ref": "PMID-12511753", "description": "Sudden face, arm or speech deficit (Face Arm Speech Test).",
+   "criterion": {"kind": "transcript", "speaker": "patient", "all_of": [["หน้าเบี้ยว", "แขนขาอ่อนแรงซีกเดียว", "พูดไม่ชัด"], ["ทันที"]]}},
+  {"rule_id": "RF-ACUTE-CHEST-PAIN", "source_ref": "PMID-34709879", "description": "Acute (sudden-onset) chest pain.",
+   "criterion": {"kind": "transcript", "speaker": "patient", "all_of": [["เจ็บแน่นหน้าอก", "เจ็บหน้าอก"], ["ทันที"]]}},
+  {"rule_id": "RF-THUNDERCLAP", "source_ref": "PMID-24065011", "description": "Headache peaking instantly (thunderclap).",
+   "criterion": {"kind": "transcript", "speaker": "patient", "all_of": [["ปวดศีรษะรุนแรง"], ["ทันที"]]}},
+  {"rule_id": "RF-ANAPHYLAXIS", "source_ref": "PMID-16461139", "description": "Skin/mucosal involvement plus respiratory compromise or reduced BP (adult SBP < 90 mm Hg).",
+   "criterion": {"kind": "all", "of": [
+     {"kind": "transcript", "speaker": "patient", "all_of": [["ผื่นลมพิษ", "ปากบวม"]]},
+     {"kind": "any", "of": [
+       {"kind": "transcript", "speaker": "patient", "all_of": [["หายใจลำบาก", "หายใจมีเสียงหวีด"]]},
+       {"kind": "vitals", "min_count": 1, "conditions": [{"param": "sbp", "op": "<", "value": 90}]}]}]}}
+]
