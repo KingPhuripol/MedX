@@ -1,4 +1,8 @@
-"""Case Graph typed base classes (slice s0). Compiler/Executor arrive in slice S2."""
+"""Case Graph: typed data, Node Library, Compiler, Executor, Output Store (slices s0 + s2).
+
+Research prototype — not for clinical use. Submodules are imported explicitly
+(``casegraph.compiler``, ``casegraph.executor`` ...) so ``python -m casegraph inspect`` stays light.
+"""
 
 from .types import EvidenceItem, Node, NodeType, TypedData
 
