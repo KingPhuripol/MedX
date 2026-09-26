@@ -1,0 +1,13 @@
+[project]
+name = "clinical-front-door"
+version = "0.1.0"
+description = "Research prototype — not for clinical use. Slice s0 skeleton (backend + casegraph)."
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests", "casegraph/tests"]
+pythonpath = [".", "backend"]
+addopts = "--disable-socket --allow-unix-socket -p no:cacheprovider"
+markers = [
+    "pg: needs PostgreSQL (TEST_PG_URL); run via `make test-pg`, skipped otherwise",
+]

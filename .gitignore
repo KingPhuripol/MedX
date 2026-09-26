@@ -38,3 +38,12 @@ playwright-report/
 .codex_work/
 .vscode/
 tmp/
+
+# s0 app artifacts
+*.db
+*.db-journal
+.next/
+web/next-env.d.ts
+*.tsbuildinfo
+.pytest_cache/
+.venv-stamp
