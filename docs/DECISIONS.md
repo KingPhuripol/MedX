@@ -24,3 +24,9 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
 - **Options:** (a) keep counting them, so A06 fails until the notice design or fixtures change; (b) report them as a separate "information gap" metric outside A06; (c) another rule decided by a human.
 - **Status:** NOT DECIDED. The builder did not change the threshold or the metric. `test_eval_thresholds` fails on A06 alone and says so in its message.
 - **Owner:** s5 implementation owner (ธัญรดา / ภูริณัฐ) with the project owner; pharmacist input advised.
+- **Resolved:** 2026-09-27 by the project owner — see "2026-09-27 — S5 Pharma evaluation definitions" below; applied in `slices/s5r/SPEC.md`.
+
+## 2026-09-27 — S5 Pharma evaluation definitions
+- **What:** (1) A notice that a source does not state dose or frequency counts as an alert. Clean medication lists are therefore fully specified in every source; an incomplete source is its own labelled discrepancy type `missing_field`, injected and measured by recall like the others. The pipeline still never treats a missing value as agreement. (2) The S5 fixture set grows to at least 90 patients (at least 30 in the frozen test split) so each discrepancy type has at least 30 injected cases, one per patient, with patient-level bootstrap CIs.
+- **Approved by:** project owner (chat, 2026-09-27).
+- **Timing:** decided on dev results before any frozen test-split evaluation; thresholds unchanged (false alerts per clean list <= 0.10, recall per type >= 0.95).
