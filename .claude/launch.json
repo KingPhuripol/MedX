@@ -4,7 +4,13 @@
     {
       "name": "front-door",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "uvicorn", "innovation.api.app:app", "--port", "8137"],
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "innovation.api.app:app",
+        "--port",
+        "8137"
+      ],
       "port": 8137
     },
     {
@@ -19,9 +25,52 @@
         "FRONT_DOOR_V2_SPEECH_URL=",
         "FRONT_DOOR_V2_SYNTHESIS_URL=",
         "FRONT_DOOR_DB=artifacts/pilot/pilot.sqlite3",
-        "python3", "-m", "uvicorn", "innovation.api.app:app", "--host", "127.0.0.1", "--port", "8138"
+        "python3",
+        "-m",
+        "uvicorn",
+        "innovation.api.app:app",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8138"
       ],
       "port": 8138
+    },
+    {
+      "name": "medx-opd-doctor",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "cd /Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent-opd && FRONT_DOOR_AUTH_MODE=none FRONT_DOOR_DEMO_ROLE=physician FRONT_DOOR_DB=artifacts/opd-demo.sqlite3 exec python3 -m uvicorn innovation.api.app:app --host 127.0.0.1 --port 8141"
+      ],
+      "port": 8141
+    },
+    {
+      "name": "medx-opd-pharmacist",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "cd /Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent-opd && FRONT_DOOR_AUTH_MODE=none FRONT_DOOR_DEMO_ROLE=pharmacist FRONT_DOOR_DB=artifacts/opd-demo.sqlite3 exec python3 -m uvicorn innovation.api.app:app --host 127.0.0.1 --port 8142"
+      ],
+      "port": 8142
+    },
+    {
+      "name": "medx-opd-nurse",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "cd /Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent-opd && FRONT_DOOR_AUTH_MODE=none FRONT_DOOR_DEMO_ROLE=intake FRONT_DOOR_DB=artifacts/opd-demo.sqlite3 exec python3 -m uvicorn innovation.api.app:app --host 127.0.0.1 --port 8143"
+      ],
+      "port": 8143
+    },
+    {
+      "name": "medx-public",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "cd /Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent-opd && rm -f /tmp/medx-demo.sqlite3* && exec python3 -m uvicorn api.index:app --host 127.0.0.1 --port 8150"
+      ],
+      "port": 8150
     }
   ]
 }
