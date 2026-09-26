@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from casegraph.compiler import build_snapshot, compile_graph
-from casegraph.executor import Executor, PENDING_KEY
+from casegraph.executor import Executor, PENDING_KEY, ResumeError
 from casegraph.library import MODEL_PROVIDERS, ProviderAssignment
 from casegraph.providers import mock_gateways
 from casegraph.store import (
@@ -179,6 +179,41 @@ def test_confirmed_result_is_new_evidence(env, action):
     assert item.item_id not in {i.item_id for i in build_snapshot(record, CONFIRM_AT - timedelta(microseconds=1)).items}
     later = compile_graph(build_snapshot(record, CONFIRM_AT), version=2, parent_version=1)
     assert item.item_id in {r.item_id for r in later.spec.evidence}
+
+
+@pytest.mark.parametrize("action", ["confirm", "edit", "reject"])
+def test_confirmation_before_T_refused(env, action):
+    """A clock earlier than the graph's T is refused; nothing is written (data rule 3)."""
+    T = F1_T1
+    early = T - timedelta(days=3)  # e.g. wall clock behind a date-shifted record
+    ex = env.executor(clock=lambda: early)
+    ex.run_sync(compile_case("F1", T))
+    with pytest.raises(ResumeError, match="earlier than graph T"):
+        ex.resume("SYN-F1/v1", action, "dr-01", "physician", edited_payload={"note": "synthetic edit"})
+    fresh = env.executor()
+    assert fresh.state.evidence("SYN-F1") == []
+    assert fresh.export("SYN-F1/v1").node("human_checkpoint").status == "pending_confirmation"
+
+
+@pytest.mark.parametrize("offset", [timedelta(0), timedelta(microseconds=1), timedelta(days=400)])
+def test_confirmed_result_never_visible_before_T(env, offset):
+    """Whatever the (accepted) clock, no snapshot earlier than the source graph's T sees the result."""
+    T = F1_T1
+    ex = env.executor(clock=lambda: T + offset)
+    ex.run_sync(compile_case("F1", T))
+    ex.resume("SYN-F1/v1", "confirm", "dr-01", "physician")
+    (item,) = env.executor().state.evidence("SYN-F1")
+    assert item.available_at_time >= T and item.result.confirmed_at >= T
+    record = f1() + [item]
+    for t in (T - timedelta(microseconds=1), T - timedelta(hours=1), T - timedelta(days=365)):
+        assert item.item_id not in {i.item_id for i in build_snapshot(record, t).items}
+
+
+def test_naive_confirmation_clock_refused(env):
+    ex = env.executor(clock=lambda: datetime(2026, 1, 2, 9, 0))
+    ex.run_sync(compile_case("F1", F1_T1))
+    with pytest.raises(ResumeError, match="naive"):
+        ex.resume("SYN-F1/v1", "confirm", "dr-01", "physician")
 
 
 @pytest.mark.parametrize("change", [True, False])

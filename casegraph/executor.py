@@ -391,6 +391,14 @@ class Executor:
             raise ResumeError("edit requires edited_payload")
         pending = hc.output[PENDING_KEY]
         now = self.clock()
+        if now.tzinfo is None:
+            raise ResumeError(f"{graph_id}: confirmation clock returned a naive datetime")
+        if now < graph.T:
+            # The payload depends on evidence up to T; stamping it earlier would leak it into
+            # snapshots before T (data rule 3). Refuse before any state is written.
+            raise ResumeError(
+                f"{graph_id}: confirmation time {now.isoformat()} is earlier than graph T {graph.T.isoformat()}"
+            )
         result = ConfirmedResult(
             produced_by=hc.id, input_refs=(f"{hc.id}:{hc.output_sha256}",), provider=hc.provider,
             model_version=hc.model_version, action=action, graph_id=graph_id,  # type: ignore[arg-type]
