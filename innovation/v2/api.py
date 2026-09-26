@@ -110,9 +110,10 @@ def mount(app, service, speech):
     @router.get('/encounters')
     def encounters(q: str = Query(default='', max_length=128),
                    status: str = Query(default='', pattern=r'^(|NO_DRAFT|STALE|CONFIRMED|REJECTED|PENDING)$'),
+                   stage: str = Query(default='', pattern=r'^(|INTAKE|DOCTOR_REVIEW|PHARMACY|PHARMACY_HOLD|READY_HOME)$'),
                    offset: int = Query(default=0, ge=0),
                    limit: int = Query(default=25, ge=1, le=100), actor=Depends(identity)):
-        return service.queue(actor, q, status, offset, limit)
+        return service.queue(actor, q, status, offset, limit, stage)
 
     @router.get('/encounters/{encounter_id}')
     def encounter(encounter_id: str, include_history: bool = True):
@@ -125,7 +126,7 @@ def mount(app, service, speech):
     @router.get('/encounters/{encounter_id}/audit')
     def audit(encounter_id: str, after: int = Query(default=0, ge=0),
               limit: int = Query(default=25, ge=1, le=100), actor=Depends(identity)):
-        service.require(actor, {'intake', 'physician', 'evaluator'})
+        service.require(actor, {'intake', 'physician', 'pharmacist', 'evaluator'})
         service.authorize_case(encounter_id, actor)
         return service.store.page('audit', encounter_id, after, limit)
 

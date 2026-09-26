@@ -21,9 +21,35 @@ class Measurement(Model):
     unit: str = Field(min_length=1, max_length=32)
 
 
+class MedicationOrder(Model):
+    drug: str = Field(min_length=1, max_length=256)
+    dose: str | None = Field(default=None, max_length=128)
+    route: str | None = Field(default=None, max_length=64)
+    frequency: str | None = Field(default=None, max_length=128)
+    days: int | None = Field(default=None, ge=1, le=365)
+
+
+class Dispense(Model):
+    order_event_id: str = Field(min_length=1, max_length=128)
+    outcome: Literal["DISPENSED", "HELD", "CONTACT_PRESCRIBER"]
+    reason: str | None = Field(default=None, max_length=2000)
+
+    @model_validator(mode="after")
+    def reason_required(self):
+        if self.outcome != "DISPENSED" and not self.reason:
+            raise ValueError(f"{self.outcome} requires reason")
+        return self
+
+
+# OPD journey records written after physician review (DEC-0021). They are not intake
+# evidence: the model snapshot excludes them like LABEL, and they do not stale a draft.
+JOURNEY_KINDS = frozenset({"MEDICATION_ORDER", "DISPENSE", "RETURN_PRECAUTION"})
+
+
 class ClinicalFact(Model):
     event_id: str = Field(min_length=1, max_length=128)
-    kind: Literal["CHIEF_COMPLAINT", "HISTORY", "MEDICATION", "ALLERGY", "VITAL", "LAB", "REPORT", "LABEL"]
+    kind: Literal["CHIEF_COMPLAINT", "HISTORY", "MEDICATION", "ALLERGY", "VITAL", "LAB", "REPORT", "LABEL",
+                  "MEDICATION_ORDER", "DISPENSE", "RETURN_PRECAUTION"]
     state: Literal["KNOWN", "UNKNOWN", "REFUSED", "NOT_AVAILABLE"] = "KNOWN"
     value: str | float | int | dict | None = None
     observed_at: AwareDatetime
@@ -42,6 +68,12 @@ class ClinicalFact(Model):
             raise ValueError("observation cannot follow availability")
         if self.kind in {'VITAL', 'LAB'} and isinstance(self.value, dict) and {'name', 'value', 'unit'} <= self.value.keys():
             Measurement.model_validate(self.value)
+        if self.state == "KNOWN" and self.kind in {"MEDICATION_ORDER", "DISPENSE"}:
+            if not isinstance(self.value, dict):
+                raise ValueError(f"{self.kind} requires an object value")
+            (MedicationOrder if self.kind == "MEDICATION_ORDER" else Dispense).model_validate(self.value)
+        if self.kind == "RETURN_PRECAUTION" and self.state == "KNOWN" and not (isinstance(self.value, str) and self.value.strip()):
+            raise ValueError("RETURN_PRECAUTION requires text")
         return self
 
 
@@ -51,7 +83,7 @@ class EncounterCreate(Model):
     profile: Literal["synthetic_intake_v1"] = "synthetic_intake_v1"
     classification: Literal["SYNTHETIC"] = "SYNTHETIC"
     care_context: Literal[
-        "ED_FIRST_CONTACT_ADULT_NON_TRAUMA_NON_OBSTETRIC",
+        "ED_FIRST_CONTACT_ADULT_NON_TRAUMA_NON_OBSTETRIC", "OPD_ADULT_GENERAL",
         "PAEDIATRIC", "TRAUMA", "OBSTETRIC", "PREHOSPITAL",
     ] = "ED_FIRST_CONTACT_ADULT_NON_TRAUMA_NON_OBSTETRIC"
 

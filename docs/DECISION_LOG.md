@@ -282,3 +282,11 @@ Machine-readable decisions are in `project_state/decisions.json` and validated a
 - **Alternatives considered:** revert to Pratu (rejected by the owner on 2026-09-23 for the V2 test round).
 - **Consequences:** DEC-0018 is superseded once this entry is accepted. The public showcase in `prototype/` and the DEC-0019 artifact still say Pratu and are not used as the V2 test stimulus. No trademark search has been done for "MedX"; do one before any public release.
 - **Approval:** Pending — Phurinat Polasa (PM), Supreeya Nuamkhayan (Innovation), team. This entry is proposed, not accepted.
+
+## DEC-0021 - OPD journey scope (intake → physician → pharmacy → passport → home) and agent harness
+
+- **Date:** 2026-09-23
+- **Status:** proposed
+- **Owner:** Phurinat Polasa
+- **Decision:** MedX extends from ED first contact to the adult OPD journey: care context `OPD_ADULT_GENERAL` is in scope alongside ED, which reopens the setting fixed by DEC-0016. Prescribing (`MEDICATION_ORDER`, `RETURN_PRECAUTION`) stays with physicians and dispensing (`DISPENSE`) with a new `pharmacist` role; the model neither prescribes nor dispenses and these records are excluded from its evidence snapshot (DEC-0005 unchanged). The journey stage is derived from recorded facts, not a new state machine. All data remains synthetic (DEC-0006 unchanged).
+- **Approval:** Pending — Phurinat Polasa (PM), Supreeya Nuamkhayan (Innovation), team. This entry is proposed, not accepted.

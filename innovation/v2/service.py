@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from uuid import uuid4
-from innovation.v2.models import (ClinicalFact, CaseRevision, ClinicalDraft, now)
+from innovation.v2.models import (ClinicalFact, CaseRevision, ClinicalDraft, JOURNEY_KINDS, now)
 from innovation.v2.safety import screen_case
 from innovation.v2.store import DomainError, digest
 from innovation.v2.runtime import DESIGNS, validate_content
@@ -93,11 +93,18 @@ class Service:
 
     def append_event(self, encounter_id, body, actor):
         self.authorize_case(encounter_id, actor)
-        self.require(actor, {"intake", "physician"})
+        fact = body.fact
+        # DEC-0005/DEC-0021: physicians prescribe, pharmacists dispense; intake records evidence.
+        self.require(actor, {"DISPENSE": {"pharmacist"}, "MEDICATION_ORDER": {"physician"},
+                             "RETURN_PRECAUTION": {"physician"}}.get(fact.kind, {"intake", "physician"}))
         def perform():
             self.ensure_revision(encounter_id, body.expected_revision)
             events = self.case(encounter_id)["events"]
-            fact = body.fact
+            if fact.kind == "DISPENSE" and fact.state == "KNOWN":
+                orders = {e["fact"]["event_id"] for e in events if e["fact"]["kind"] == "MEDICATION_ORDER"}
+                replaced = {e["fact"]["supersedes_event_id"] for e in events}
+                if fact.value["order_event_id"] not in orders - replaced:
+                    raise DomainError(422, "INVALID_ORDER_REFERENCE")
             available_ids = {f.event_id for f in self.snapshot(encounter_id, fact.available_at_time).evidence}
             if not set(fact.conflicts_with_event_ids) <= available_ids:
                 raise DomainError(422, 'INVALID_CONFLICT_TARGET')
@@ -123,7 +130,8 @@ class Service:
     def snapshot(self, encounter_id, decision_time):
         case = self.case(encounter_id)
         facts = [ClinicalFact.model_validate(e["fact"]) for e in case["events"]]
-        eligible = [f for f in facts if f.available_at_time <= decision_time and f.kind != "LABEL"]
+        eligible = [f for f in facts if f.available_at_time <= decision_time
+                    and f.kind != "LABEL" and f.kind not in JOURNEY_KINDS]
         superseded = {f.supersedes_event_id for f in eligible if f.supersedes_event_id}
         evidence = [f for f in eligible if f.event_id not in superseded]
         timepoint = "T1" if any(f.kind in {"LAB", "REPORT"} for f in evidence) else "T0"
@@ -321,7 +329,9 @@ class Service:
         latest = versions[-1]
         self.authorize_case(latest['encounter_id'], actor)
         reviews = self.store.all("review", draft_id)
-        stale = latest['case_revision'] != self.case(latest['encounter_id'])['case_revision']
+        events = self.case(latest['encounter_id'])['events']
+        stale = latest['case_revision'] > len(events) or any(
+            e['fact']['kind'] not in JOURNEY_KINDS for e in events[latest['case_revision']:])
         with self.store.lock:
             newest=self.store.conn.execute("SELECT resource FROM v2_records WHERE kind='draft' AND json_extract(payload,'$.encounter_id')=? ORDER BY sequence DESC LIMIT 1",(latest['encounter_id'],)).fetchone()
         superseded=bool(newest and newest[0] != draft_id)
@@ -336,17 +346,36 @@ class Service:
                 record['content'] = {**record['content'], 'differentials': []}
         return result
 
-    def queue(self, actor, q='', status='', offset=0, limit=25):
+    def journey_stage(self, encounter_id, handoff):
+        """OPD journey stage derived from handoff status and journey facts; no extra state."""
+        if handoff == 'NO_DRAFT':
+            return 'INTAKE'
+        if handoff != 'CONFIRMED':
+            return 'DOCTOR_REVIEW'
+        facts = [e['fact'] for e in self.store.all('event', encounter_id)]
+        replaced = {f['supersedes_event_id'] for f in facts}
+        facts = [f for f in facts if f['event_id'] not in replaced and f['state'] == 'KNOWN']
+        latest = {f['value']['order_event_id']: f['value']['outcome'] for f in facts if f['kind'] == 'DISPENSE'}
+        outcomes = [latest.get(f['event_id']) for f in facts if f['kind'] == 'MEDICATION_ORDER']
+        if any(o in {'HELD', 'CONTACT_PRESCRIBER'} for o in outcomes):
+            return 'PHARMACY_HOLD'
+        return 'PHARMACY' if any(o != 'DISPENSED' for o in outcomes) else 'READY_HOME'
+
+    def queue(self, actor, q='', status='', offset=0, limit=25, stage=''):
         """The case list with the attention fields the queue needs, scoped to the actor's workspace."""
         import json
         with self.store.lock:
             rows = self.store.conn.execute("""WITH
                 counts AS (SELECT resource,count(*) revision FROM v2_records WHERE kind='event' GROUP BY resource),
+                events AS (SELECT resource,json_extract(payload,'$.fact.kind') fact_kind,
+                    row_number() OVER (PARTITION BY resource ORDER BY sequence) n FROM v2_records WHERE kind='event'),
                 last_draft AS (SELECT json_extract(payload,'$.encounter_id') encounter,max(sequence) seq FROM v2_records WHERE kind='draft' GROUP BY encounter),
                 last_review AS (SELECT resource,max(sequence) seq FROM v2_records WHERE kind='review' GROUP BY resource),
                 cases AS (SELECT e.resource,e.payload,e.sequence,COALESCE(c.revision,0) revision,
                     CASE WHEN d.sequence IS NULL THEN 'NO_DRAFT'
-                    WHEN json_extract(d.payload,'$.case_revision')!=COALESCE(c.revision,0) THEN 'STALE'
+                    WHEN json_extract(d.payload,'$.case_revision')>COALESCE(c.revision,0) OR EXISTS(SELECT 1 FROM events v
+                        WHERE v.resource=e.resource AND v.n>json_extract(d.payload,'$.case_revision')
+                        AND v.fact_kind NOT IN ('MEDICATION_ORDER','DISPENSE','RETURN_PRECAUTION')) THEN 'STALE'
                     WHEN json_extract(r.payload,'$.action')='CONFIRM' AND json_extract(r.payload,'$.draft_revision')=json_extract(d.payload,'$.draft_revision') THEN 'CONFIRMED'
                     WHEN json_extract(r.payload,'$.action')='REJECT' THEN 'REJECTED' ELSE 'PENDING' END handoff_status
                     FROM v2_records e LEFT JOIN counts c ON c.resource=e.resource
@@ -355,7 +384,10 @@ class Service:
                     WHERE e.kind='encounter' AND COALESCE(json_extract(e.payload,'$.workspace'),'default')=?
                     AND instr(lower(e.resource),lower(?))>0)
                 SELECT * FROM cases WHERE (?='' OR handoff_status=?) ORDER BY sequence DESC LIMIT ? OFFSET ?""",
-                (actor.workspace,q,status,status,limit+1,offset)).fetchall()
+                (actor.workspace,q,status,status,-1 if stage else limit+1,0 if stage else offset)).fetchall()
+        stages={row['resource']:self.journey_stage(row['resource'],row['handoff_status']) for row in rows}
+        if stage:
+            rows=[row for row in rows if stages[row['resource']]==stage][offset:offset+limit+1]
         items=[]
         for row in rows[:limit]:
             encounter_id=row['resource']
@@ -378,7 +410,7 @@ class Service:
                 'stale_draft':handoff=='STALE',
                 'needs_attention':bool(pending or active or handoff in {'PENDING','STALE','REJECTED'})}
             items.append({**json.loads(row['payload']),'case_revision':revision,
-                'handoff_status':handoff,'attention':attention})
+                'handoff_status':handoff,'journey_stage':stages[encounter_id],'attention':attention})
         return {'items':items,
                 'next_offset':offset+limit if len(rows)>limit else None}
 
@@ -395,7 +427,7 @@ class Service:
             if current['status'] == 'SUPERSEDED':
                 raise DomainError(409, 'DRAFT_SUPERSEDED')
             self.ensure_revision(current['encounter_id'], body.expected_revision)
-            if current['case_revision'] != body.expected_revision:
+            if current['status'] == 'STALE':
                 raise DomainError(409, "STALE_DRAFT")
             if current['draft_revision'] != body.draft_revision or current['review_sequence'] != body.expected_review_sequence:
                 raise DomainError(409, "STALE_REVIEW")

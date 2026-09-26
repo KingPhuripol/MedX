@@ -4,7 +4,7 @@ import { StatusBadge } from "../../shared/ui/StatusBadge";
 import { Icon } from "../../shared/ui/Icon";
 import { Readiness } from "./system";
 
-const roleLabels: Record<Session["role"], string> = { intake: "ผู้รับข้อมูล", physician: "แพทย์ผู้ตรวจ", evaluator: "ผู้ประเมินระบบ" };
+const roleLabels: Record<Session["role"], string> = { intake: "ผู้รับข้อมูล", physician: "แพทย์ผู้ตรวจ", pharmacist: "เภสัชกร", evaluator: "ผู้ประเมินระบบ" };
 
 
 export function SettingsPage({ session, caps, logout }: { session: Session; caps: Capability | null; logout: () => void }) {

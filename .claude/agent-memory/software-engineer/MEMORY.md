@@ -1,0 +1,1 @@
+- [Worktree isolation blocks sibling worktrees](feedback_worktree_isolation.md) — briefs naming another worktree conflict with the isolation guard; work in own tree, hand off diff

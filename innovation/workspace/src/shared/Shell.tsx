@@ -18,7 +18,7 @@ import { LoginPage } from "./LoginPage";
 
 export type NavItem<P extends string> = { id: P; label: string; description: string; icon: IconName };
 
-const roleLabels: Record<Session["role"], string> = { intake: "ผู้รับข้อมูล", physician: "แพทย์ผู้ตรวจ", evaluator: "ผู้ประเมินระบบ" };
+const roleLabels: Record<Session["role"], string> = { intake: "ผู้รับข้อมูล", physician: "แพทย์ผู้ตรวจ", pharmacist: "เภสัชกร", evaluator: "ผู้ประเมินระบบ" };
 
 /** Chrome shared by both apps: navigation, safety banner, request status and the sign-in gate.
  *
