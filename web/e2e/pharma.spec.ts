@@ -65,7 +65,13 @@ test("every source list is shown as read, with not-stated fields and the uncheck
   await expect(reported.locator("caption")).toContainText("Patient-reported list as read");
   const row = reported.locator("tbody tr").filter({ has: page.getByRole("rowheader", { name: "เมทฟอร์มิน วันละ 2 ครั้ง" }) });
   await expect(row.locator("td").nth(2)).toHaveText("not stated");
-  await expect(page.locator(".notice-list")).toContainText("Not stated, so not compared");
+  // s5r: the missing dose is an issue of its own in the issue list, reviewable like the others.
+  const mf = page.locator("ol.issue-list > li > article[data-type='missing_field']");
+  await expect(mf).toHaveCount(1);
+  await expect(mf.locator("h3")).toHaveText("Dose or frequency not stated: metformin");
+  const mfRow = mf.locator("tbody tr").filter({ has: page.getByRole("rowheader", { name: "Patient-reported list" }) });
+  await expect(mfRow.locator("td").nth(3)).toHaveText("not stated");
+  await expect(mf.getByRole("button", { name: "Confirm" })).toBeVisible();
 });
 
 test("dismiss without a reason is blocked in the UI", async ({ page }) => {

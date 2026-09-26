@@ -7,24 +7,26 @@ Severity order is fixed here and cannot be changed by model output.
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 
 from .formulary import Formulary, Resolution
 
-RULES_VERSION = "s5-rules-1.1.0"
-# Not a discrepancy type: a cross-source comparison that could not be made (a notice, never silence).
-MISSING_FIELD_RULE = "missing_field@1.0.0"
+RULES_VERSION = "s5-rules-2.0.0"
 RULE_VERSIONS: dict[str, str] = {
     "allergy_direct": "1.0.0",
     "allergy_class": "1.0.0",
     "allergy_cross_reactivity": "1.0.0",
     "duplication_ingredient": "1.0.0",
     "duplication_class": "1.0.0",
-    "dose_mismatch": "1.0.0",
-    "frequency_mismatch": "1.0.0",
+    "dose_mismatch": "1.1.0",
+    "frequency_mismatch": "1.1.0",
+    # A dose or frequency not stated in an entry: a discrepancy type of its own (DECISIONS 2026-09-27).
+    "missing_field": "2.0.0",
     "omission": "1.0.0",
 }
+# Fixed by rule; model output never changes it. missing_field shares the dose/frequency tier and is
+# ranked after the two mismatch types (TYPE_ORDER) and before omission.
 SEVERITY: dict[str, tuple[int, str]] = {
     "allergy_direct": (1, "high"),
     "allergy_class": (1, "high"),
@@ -33,6 +35,7 @@ SEVERITY: dict[str, tuple[int, str]] = {
     "duplication_class": (2, "elevated"),
     "dose_mismatch": (3, "moderate"),
     "frequency_mismatch": (3, "moderate"),
+    "missing_field": (3, "moderate"),
     "omission": (4, "review"),
 }
 TYPE_ORDER = tuple(RULE_VERSIONS)
@@ -103,6 +106,7 @@ class IssueDraft:
     possible_substitution: bool = False
     notes: list[dict] = field(default_factory=list)
     detail: dict = field(default_factory=dict)
+    field: str | None = None  # missing_field only: "dose" | "frequency"
 
     @property
     def rule_id(self) -> str:
@@ -117,8 +121,11 @@ class IssueDraft:
         return SEVERITY[self.type][1]
 
     def sort_key(self) -> tuple:
-        first = self.sources[0]["evidence_ref"] if self.sources else ""
-        return (self.severity_rank, TYPE_ORDER.index(self.type), self.ingredients, first, len(self.sources))
+        first = self.sources[0] if self.sources else {}
+        return (
+            self.severity_rank, TYPE_ORDER.index(self.type), self.ingredients, first.get("evidence_ref", ""),
+            first.get("raw_span", ""), self.field or "", len(self.sources),
+        )
 
 
 def _group_by_items(ing_to_items: dict[str, list[MedItem]]) -> list[tuple[tuple[str, ...], list[MedItem]]]:
@@ -206,7 +213,24 @@ def _missing_notes(items: list[MedItem], field_name: str) -> list[dict]:
     ]
 
 
+def _frequency(item: MedItem) -> str | None:
+    return item.frequency_code
+
+
+# Compared fields: (missing_field payload name, canonical value; None means "not stated").
+COMPARED_FIELDS: tuple[tuple[str, Callable[[MedItem], object]], ...] = (
+    ("dose", _canonical_dose),
+    ("frequency", _frequency),
+)
+
+
+def _cross_source_pairs(group: list[MedItem]) -> list[tuple[MedItem, MedItem]]:
+    return [(a, b) for n, a in enumerate(group) for b in group[n + 1:] if a.source_type != b.source_type]
+
+
 def rule_dose_mismatch(items: list[MedItem], form: Formulary) -> list[IssueDraft]:
+    """Stated-vs-stated dose comparison only. An entry without a dose never produces or suppresses a
+    mismatch: it is skipped here and raised by ``rule_missing_field`` (a missing value is never agreement)."""
     out = []
     for ings, group in sorted(_comparable_groups(items).items()):
         dosed = [(i, d) for i in group if (d := _canonical_dose(i)) is not None]
@@ -218,7 +242,7 @@ def rule_dose_mismatch(items: list[MedItem], form: Formulary) -> list[IssueDraft
             if a.source_type != b.source_type and da != db
         ]
         if not pairs:
-            continue  # a missing dose is not a match either: find_unchecked_comparisons() raises a notice
+            continue
         families = {d[0] for _, d in dosed}
         out.append(
             IssueDraft(
@@ -233,6 +257,7 @@ def rule_dose_mismatch(items: list[MedItem], form: Formulary) -> list[IssueDraft
 
 
 def rule_frequency_mismatch(items: list[MedItem], form: Formulary) -> list[IssueDraft]:
+    """Stated-vs-stated frequency comparison only (see ``rule_dose_mismatch``)."""
     out = []
     for ings, group in sorted(_comparable_groups(items).items()):
         known = [i for i in group if i.frequency_code is not None]
@@ -248,42 +273,51 @@ def rule_frequency_mismatch(items: list[MedItem], form: Formulary) -> list[Issue
                     "frequency_mismatch",
                     ings,
                     [i.as_source() for i in known],
-                    notes=_missing_notes(missing, "frequency_code"),
+                    notes=_missing_notes(missing, "frequency"),
                 )
             )
     return out
 
 
-_COMPARED_FIELDS = (("dose", _canonical_dose), ("frequency_code", lambda i: i.frequency_code))
+def count_skipped_comparisons(items: list[MedItem]) -> int:
+    """Number of cross-source comparisons (per field, per pair of active entries of the same ingredient
+    set in different source types) that the mismatch rules could not make because a side is not stated.
+    Reported per run as ``unchecked_comparisons``; each null side is also a ``missing_field`` issue."""
+    skipped = 0
+    for _, group in sorted(_comparable_groups(items).items()):
+        for _, value_of in COMPARED_FIELDS:
+            skipped += sum(value_of(a) is None or value_of(b) is None for a, b in _cross_source_pairs(group))
+    return skipped
 
 
-def find_unchecked_comparisons(items: list[MedItem]) -> list[dict]:
-    """Cross-source comparisons that could not be made because a field is not stated.
-
-    For every active ingredient set present in 2 or more source types, each entry whose dose (value
-    and unit) or frequency is null yields one record. A missing value is never read as agreement;
-    the pipeline turns every record into a visible, audited ``missing_field`` notice.
-    """
+def rule_missing_field(items: list[MedItem], form: Formulary) -> list[IssueDraft]:
+    """One issue per (entry, field) for every recognised entry, in any source, whose dose (value and unit)
+    or frequency is not stated. ``conflicting_sources`` = the incomplete entry first, then every other
+    snapshot entry of the same ingredient set, then other entries sharing an ingredient (e.g. a
+    combination product). So there are >= 2 sources whenever the ingredient is in >= 2 source types."""
+    recognised = [i for i in items if i.ingredients]
     out = []
-    for ings, group in sorted(_comparable_groups(items).items()):
-        if len({i.source_type for i in group}) < 2:
-            continue
-        for field_name, value_of in _COMPARED_FIELDS:
-            known_in = sorted({i.source_type for i in group if value_of(i) is not None})
-            for item in group:
-                if value_of(item) is not None:
-                    continue
-                others = sorted({i.source_type for i in group if i.source_type != item.source_type})
-                out.append({
-                    "rule_id": MISSING_FIELD_RULE,
-                    "field": field_name,
-                    "ingredients": list(ings),
-                    "source_type": item.source_type,
-                    "evidence_ref": item.evidence_ref,
-                    "raw_span": item.raw_span,
-                    "compared_with": others,
-                    "stated_in": [s for s in known_in if s != item.source_type],
-                })
+    for item in sorted(recognised, key=lambda i: (tuple(sorted(i.ingredients)), i.key)):
+        ings = tuple(sorted(item.ingredients))
+        same = [o for o in recognised if o.key != item.key and tuple(sorted(o.ingredients)) == ings]
+        overlap = [o for o in recognised if o.key != item.key and o not in same and set(o.ingredients) & set(ings)]
+        for field_name, value_of in COMPARED_FIELDS:
+            if value_of(item) is not None:
+                continue
+            others = same + overlap
+            out.append(
+                IssueDraft(
+                    "missing_field",
+                    ings,
+                    [item.as_source()] + [o.as_source() for o in others],
+                    field=field_name,
+                    detail={
+                        "field": field_name,
+                        "incomplete_source": item.source_type,
+                        "stated_in": sorted({o.source_type for o in same if value_of(o) is not None}),
+                    },
+                )
+            )
     return out
 
 
@@ -379,6 +413,7 @@ def run_rules(
         + rule_duplication_class(items, form)
         + rule_dose_mismatch(items, form)
         + rule_frequency_mismatch(items, form)
+        + rule_missing_field(items, form)
         + rule_omission(items, form, order_sources)
     )
     return sorted(drafts, key=lambda d: d.sort_key())

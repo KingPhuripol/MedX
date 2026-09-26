@@ -16,6 +16,7 @@ export const TYPE_LABELS: Record<string, string> = {
   duplication_class: "Same-class duplication",
   dose_mismatch: "Dose differs between sources",
   frequency_mismatch: "Frequency differs between sources",
+  missing_field: "Dose or frequency not stated",
   omission: "Home medicine not in new order",
 };
 
@@ -24,7 +25,6 @@ export const NOTICE_LABELS: Record<string, string> = {
   allergy_unmapped: "Allergy not mapped",
   source_unreadable: "Source could not be read",
   source_missing: "Order source missing",
-  missing_field: "Not stated, so not compared",
 };
 
 export const NOT_STATED = "not stated";
@@ -60,6 +60,8 @@ export type Issue = {
   conflicting_sources: ConflictingSource[];
   unverifiable?: boolean;
   possible_substitution?: boolean;
+  /** missing_field only: the field the first listed source does not state. */
+  field?: "dose" | "frequency" | null;
   phrasing: { text: string; source: string; provider: string; model_version: string; fallback_reason?: string | null };
   status: "open" | "confirmed" | "dismissed";
   decision?: { decision: string; reason: string | null; reviewer_role: string; ts_utc: string } | null;
@@ -72,8 +74,6 @@ export type Notice = {
   evidence_ref?: string | null;
   raw_span?: string | null;
   detail: string;
-  field?: "dose" | "frequency_code" | null;
-  ingredients?: string[] | null;
 };
 
 export type ExtractedEntry = {
@@ -136,5 +136,5 @@ export function orNotStated(value: string | null | undefined): string {
 export function uncheckedSummary(run: Pick<Run, "unchecked_comparisons">): string {
   const n = run.unchecked_comparisons ?? 0;
   if (n === 0) return "Every dose and frequency present in two or more lists could be compared.";
-  return `${n} comparison(s) could not be checked because a dose or frequency was not stated in one list. These are not counted as matches; see the notices and the lists below.`;
+  return `${n} comparison(s) could not be checked because a dose or frequency was not stated in one list. These are not counted as matches; see the “not stated” issues and the lists below.`;
 }

@@ -102,6 +102,13 @@ def template_text(item: dict[str, Any]) -> str:
     elif kind == "frequency_mismatch":
         per = "; ".join(f"{s['label']}: {s['frequency']}" for s in present)
         text = f"Frequency differs for {drugs} between the {labels} ({per})."
+    elif kind == "missing_field":
+        field = item.get("detail", {}).get("field", "dose or frequency")
+        incomplete = item["sources"][0]["label"]
+        others = _join([lab for lab in item["source_labels"] if lab != incomplete])
+        text = f"The {field} of {drugs} is not stated in the {incomplete}"
+        text += f", so it could not be compared with the {others}." if others else "."
+        text += " A value that is not stated is not counted as a match."
     elif kind == "omission":
         listed = _join([lab for lab in item["source_labels"] if lab != "new order"])
         text = (

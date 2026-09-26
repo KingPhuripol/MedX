@@ -20,11 +20,10 @@ from .formulary import Formulary, load_formulary
 from .mock_rules import EXTRACT_TASK, MOCK_RULES_VERSION, PHRASE_TASK
 from .models import ExtractOutput, Issue, MedSnapshot, Mode, Notice
 from .phrasing import TEMPLATE_VERSION, parse_phrase_output, phrase_input, template_text, validate_text
-from .rules import NOTICE_RANK, RULES_VERSION, AllergyItem, MedItem, find_unchecked_comparisons, run_rules
+from .rules import NOTICE_RANK, RULES_VERSION, AllergyItem, MedItem, count_skipped_comparisons, run_rules
 
 Invoke = Callable[[GatewayRequest], GatewayResponse]
-PIPELINE_VERSION = "s5-pipeline-1.1.0"
-_FIELD_LABEL = {"dose": "dose", "frequency_code": "frequency"}
+PIPELINE_VERSION = "s5-pipeline-2.0.0"
 
 
 def canonical_json(data: Any) -> str:
@@ -198,19 +197,9 @@ def reconcile(
                             "evidence_ref": a.evidence_ref, "raw_span": a.text,
                             "detail": "allergen not mapped to the formulary; not checked automatically"})
 
-    # A dose or frequency that is not stated is never read as agreement: each comparison that could
-    # not be made is a visible, audited notice (CLAUDE.md data rule 6; SPEC section 3).
-    unchecked = find_unchecked_comparisons(items)
-    for u in unchecked:
-        stated = ", ".join(u["stated_in"]) or "no other source"
-        notices.append({
-            "type": "missing_field", **u,
-            "detail": (
-                f"{_FIELD_LABEL[u['field']]} not stated in {u['source_type']} for {', '.join(u['ingredients'])}; "
-                f"it could not be compared with {', '.join(u['compared_with'])} (stated in: {stated}). "
-                "Not counted as a match; please check the source."
-            ),
-        })
+    # A dose or frequency that is not stated is never read as agreement: each such entry is a
+    # missing_field issue (run_rules), and every comparison skipped because of it is counted here.
+    unchecked = count_skipped_comparisons(items)
 
     drafts = run_rules(items, allergy_items, form, readable_orders)
     issues = []
@@ -229,6 +218,7 @@ def reconcile(
             "possible_substitution": d.possible_substitution,
             "notes": d.notes,
             "detail": d.detail,
+            "field": d.field,
         })
 
     phrasings, phrase_raw = _phrase(issues, snapshot, invoke, mode, calls)
@@ -257,7 +247,7 @@ def reconcile(
         "rules_version": RULES_VERSION,
         "cross_reactivity_version": form.cross_version,
         "excluded_future_items": excluded,
-        "unchecked_comparisons": len(unchecked),
+        "unchecked_comparisons": unchecked,
         "extract_mock_version": MOCK_RULES_VERSION,
         "extraction": extraction,
         "issues": issues,
@@ -278,4 +268,5 @@ def issue_signature(issue: dict) -> tuple:
         tuple((s["source_type"], s["evidence_ref"], s["raw_span"], s.get("presence")) for s in issue["conflicting_sources"]),
         issue["severity"],
         issue["severity_rank"],
+        issue.get("field"),
     )

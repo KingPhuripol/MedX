@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import random
 from collections.abc import Callable
 from pathlib import Path
@@ -18,7 +19,9 @@ from sqlalchemy.pool import StaticPool
 from ...config import Settings
 from ...db import create_schema
 from ...gateway import GatewayRequest, build_provider, invoke_gateway
+from ..fixtures.build import MANIFEST_FILE
 from ..formulary import load_formulary
+from ..mock_rules import parse_entry
 from ..models import ISSUE_TYPES, MedSnapshot
 from ..pipeline import PIPELINE_VERSION, issue_signature, reconcile
 from ..rules import RULES_VERSION
@@ -53,11 +56,57 @@ def make_invoke() -> Callable[[GatewayRequest], object]:
 
 
 def matches(issue: dict, expected: dict) -> bool:
-    return (
+    """Same type, same ingredient set, injected source among ``conflicting_sources``; for
+    ``missing_field`` also the same field, with the injected source as the incomplete entry."""
+    if not (
         issue["type"] == expected["type"]
         and sorted(issue["ingredients"]) == sorted(expected["ingredients"])
         and set(expected["sources"]) <= {s["source_type"] for s in issue["conflicting_sources"]}
-    )
+    ):
+        return False
+    if expected["type"] == "missing_field":
+        return issue.get("field") == expected["field"] and issue["conflicting_sources"][0]["source_type"] in expected["sources"]
+    return True
+
+
+def min_sources(issue: dict, run: dict) -> int:
+    """Required ``conflicting_sources`` length: 2 for mismatch, duplication and allergy; 1 for omission;
+    for missing_field 2 when an ingredient of the issue is in 2 or more source types, else 1."""
+    if issue["type"] == "omission":
+        return 1
+    if issue["type"] != "missing_field":
+        return 2
+    ings = set(issue["ingredients"])
+    types = {
+        rec["source_type"]
+        for rec in run["extraction"]
+        if rec["status"] == "ok"
+        for e in rec["entries"]
+        if ings & set(e["ingredients"])
+    }
+    return 2 if len(types) >= 2 else 1
+
+
+def _binom_tail_ge(k: int, n: int, p: float) -> float:
+    return sum(math.comb(n, i) * p**i * (1 - p) ** (n - i) for i in range(k, n + 1))
+
+
+def clopper_pearson(k: int, n: int, alpha: float = 0.05) -> list[float | None]:
+    """Exact (Clopper-Pearson) two-sided interval for k successes in n trials, by bisection on the
+    binomial tails. Reported next to the bootstrap CI, which is degenerate ([1, 1]) at 100% recall."""
+    if n == 0:
+        return [None, None]
+
+    def solve(target: float, f) -> float:  # f increasing in p
+        lo, hi = 0.0, 1.0
+        for _ in range(200):
+            mid = (lo + hi) / 2
+            lo, hi = (mid, hi) if f(mid) < target else (lo, mid)
+        return (lo + hi) / 2
+
+    lower = 0.0 if k == 0 else solve(alpha / 2, lambda p: _binom_tail_ge(k, n, p))
+    upper = 1.0 if k == n else solve(1 - alpha / 2, lambda p: _binom_tail_ge(k + 1, n, p))
+    return [round(lower, 4), round(upper, 4)]
 
 
 def _ci(values: list[float]) -> list[float]:
@@ -85,42 +134,55 @@ def _stats(agg: dict) -> dict[str, float | None]:
     return out
 
 
+def _agg(per_patient: dict[str, dict], sample: list[str]) -> dict:
+    tot = {"clean": 0, "n_clean": 0, "extras": 0, "n_cases": 0}
+    rec = {t: [0, 0] for t in ISSUE_TYPES}
+    prec = {t: [0, 0] for t in ISSUE_TYPES}
+    for p in sample:
+        d = per_patient[p]
+        tot["clean"] += d["clean_alerts"]
+        tot["n_clean"] += 1
+        for c in d["cases"]:
+            tot["extras"] += c["extras"]
+            tot["n_cases"] += 1
+            rec[c["type"]][0] += c["matched"]
+            rec[c["type"]][1] += 1
+            for t, (n, tp) in c["predicted"].items():
+                prec[t][0] += tp
+                prec[t][1] += n
+    return {"tot": tot, "rec": rec, "prec": prec}
+
+
+def bootstrap_stats(per_patient: dict[str, dict], patients: list[str], seed: int, resamples: int = RESAMPLES) -> list[dict]:
+    """Patient-level bootstrap: the resampling unit is the patient, so a patient's clean list and all
+    of its injected cases always enter (or leave) a resample together."""
+    rng = random.Random(seed)
+    out = []
+    for _ in range(resamples):
+        sample = [patients[rng.randrange(len(patients))] for _ in patients]
+        out.append(_stats(_agg(per_patient, sample)))
+    return out
+
+
 def _mode_metrics(per_patient: dict[str, dict], patients: list[str], seed: int) -> dict:
     """per_patient[p] = {"clean_alerts": int, "cases": [{type, matched, extras, predicted: {type: (n, tp)}}]}.
 
-    95% CIs: percentile bootstrap over patients (1000 resamples, fixed seed)."""
-
-    def agg(sample: list[str]) -> dict:
-        tot = {"clean": 0, "n_clean": 0, "extras": 0, "n_cases": 0}
-        rec = {t: [0, 0] for t in ISSUE_TYPES}
-        prec = {t: [0, 0] for t in ISSUE_TYPES}
-        for p in sample:
-            d = per_patient[p]
-            tot["clean"] += d["clean_alerts"]
-            tot["n_clean"] += 1
-            for c in d["cases"]:
-                tot["extras"] += c["extras"]
-                tot["n_cases"] += 1
-                rec[c["type"]][0] += c["matched"]
-                rec[c["type"]][1] += 1
-                for t, (n, tp) in c["predicted"].items():
-                    prec[t][0] += tp
-                    prec[t][1] += n
-        return {"tot": tot, "rec": rec, "prec": prec}
-
-    rng = random.Random(seed)
+    95% CIs: percentile bootstrap over patients (1000 resamples, fixed seed); recall also gets the
+    exact Clopper-Pearson interval."""
     boots: dict[str, list[float]] = {}
-    for _ in range(RESAMPLES):
-        sample = [patients[rng.randrange(len(patients))] for _ in patients]
-        for k, v in _stats(agg(sample)).items():
+    for stats in bootstrap_stats(per_patient, patients, seed):
+        for k, v in stats.items():
             if v is not None:
                 boots.setdefault(k, []).append(v)
-    point = agg(patients)
+    point = _agg(per_patient, patients)
     tot = point["tot"]
     out: dict = {"n_patients": len(patients), "recall": {}, "precision": {}}
     for t in ISSUE_TYPES:
         hits, n = point["rec"][t]
-        out["recall"][t] = {"cases": n, "detected": hits, "recall": _ratio(hits, n), "ci95": _ci(boots.get(f"rec:{t}", []))}
+        out["recall"][t] = {
+            "cases": n, "detected": hits, "recall": _ratio(hits, n),
+            "ci95": _ci(boots.get(f"rec:{t}", [])), "ci95_exact": clopper_pearson(hits, n),
+        }
         tp, pn = point["prec"][t]
         out["precision"][t] = {
             "predicted": pn, "true_positive": tp, "precision": _ratio(tp, pn), "ci95": _ci(boots.get(f"prec:{t}", [])),
@@ -181,7 +243,7 @@ def _kinds(run: dict, matched_issue: dict | None = None) -> dict[str, int]:
 
 
 def _breakdown(rows: list[tuple[str, dict[str, int]]], split_of: dict[str, str]) -> dict:
-    """Informational: which kinds make up the A06 counts. Does not change the A06 metric or threshold."""
+    """Which issue and notice kinds make up the false-alert counts (all kinds count, incl. missing_field)."""
     out = {}
     for scope in ("test", "all"):
         picked = [k for ref, k in rows if scope == "all" or split_of[ref] == "test"]
@@ -189,15 +251,28 @@ def _breakdown(rows: list[tuple[str, dict[str, int]]], split_of: dict[str, str])
         for kinds in picked:
             for k, v in kinds.items():
                 totals[k] = totals.get(k, 0) + v
-        n = len(picked)
-        mf = totals.get("notice:missing_field", 0)
+        out[scope] = {"units": len(picked), "by_kind": dict(sorted(totals.items()))}
+    return out
+
+
+def _missing_field_coverage(cases: list[dict]) -> dict:
+    out = {}
+    for scope in ("test", "all"):
+        picked = [c for c in cases if c["type"] == "missing_field" and (scope == "all" or c["split"] == "test")]
         out[scope] = {
-            "units": n,
-            "by_kind": dict(sorted(totals.items())),
-            "missing_field_notices_per_unit": _ratio(mf, n),
-            "informational_mean_excluding_missing_field": _ratio(sum(totals.values()) - mf, n),
+            "cases": len(picked),
+            "by_field": {f: sum(c["field"] == f for c in picked) for f in ("dose", "frequency")},
+            "by_source": {s: sum(c["source"] == s for c in picked) for s in ("home_list", "patient_reported", "new_order")},
         }
     return out
+
+
+def _extraction_null_preserved(cases: list[dict]) -> dict:
+    """Mock extraction of every blanked missing_field line must give null for the blanked field."""
+    key = {"dose": ("dose_value", "dose_unit"), "frequency": ("frequency_code",)}
+    picked = [c for c in cases if c["type"] == "missing_field"]
+    fabricated = [c["case_id"] for c in picked if any(parse_entry(c["after"])[k] is not None for k in key[c["field"]])]
+    return {"cases": len(picked), "null_preserved": len(picked) - len(fabricated), "fabricated": fabricated}
 
 
 def evaluate(out_dir: Path | None = DEFAULT_OUT) -> dict:
@@ -211,6 +286,7 @@ def evaluate(out_dir: Path | None = DEFAULT_OUT) -> dict:
     sources_complete = {"issues": 0, "violations": 0}
     clean_kinds: list[tuple[str, dict[str, int]]] = []
     case_kinds: list[tuple[str, dict[str, int]]] = []
+    unchecked = {"clean_lists": 0, "injected_cases": 0}
 
     for m_index, mode in enumerate(MODES):
         per_patient = {p["patient_ref"]: {"clean_alerts": 0, "cases": []} for p in patients}
@@ -221,12 +297,14 @@ def evaluate(out_dir: Path | None = DEFAULT_OUT) -> dict:
             if mode == PRIMARY_MODE:
                 clean_runs_primary[p["patient_ref"]] = run
                 clean_kinds.append((p["patient_ref"], _kinds(run)))
+                unchecked["clean_lists"] += run["unchecked_comparisons"]
         for case in cases:
             run = reconcile(MedSnapshot.model_validate(case["snapshot"]), invoke, mode, run_id=f"eval-{case['case_id']}")
             matched_issue = next((i for i in run["issues"] if matches(i, case["expected"])), None)
             matched_one = matched_issue is not None
             if mode == PRIMARY_MODE:
                 case_kinds.append((case["patient_ref"], _kinds(run, matched_issue)))
+                unchecked["injected_cases"] += run["unchecked_comparisons"]
             predicted: dict[str, list[int]] = {}
             for i in run["issues"]:
                 slot = predicted.setdefault(i["type"], [0, 0])
@@ -235,7 +313,7 @@ def evaluate(out_dir: Path | None = DEFAULT_OUT) -> dict:
             for issue in run["issues"]:
                 sources_complete["issues"] += 1
                 srcs = issue["conflicting_sources"]
-                need = 1 if issue["type"] == "omission" else 2
+                need = min_sources(issue, run)
                 ok = len(srcs) >= need and all(
                     s.get("source_type") and s.get("evidence_ref") and s.get("available_at_time") and "raw_span" in s
                     for s in srcs
@@ -259,6 +337,7 @@ def evaluate(out_dir: Path | None = DEFAULT_OUT) -> dict:
     primary = per_mode[PRIMARY_MODE]
     form = load_formulary()
     extraction = _extraction(patients, clean_runs_primary)
+    frozen = json.loads(MANIFEST_FILE.read_text(encoding="utf-8"))
     results = {
         "label": "System Evaluation on synthetic data; not clinical performance. No expert pharmacist review yet.",
         "data_class": "synthetic",
@@ -266,12 +345,16 @@ def evaluate(out_dir: Path | None = DEFAULT_OUT) -> dict:
             "pipeline": PIPELINE_VERSION, "rules": RULES_VERSION, "formulary": form.version,
             "cross_reactivity": form.cross_version, "provider": "mock",
         },
-        "seeds": {"inject": INJECT_SEED, "bootstrap": BOOT_SEED, "resamples": RESAMPLES},
+        "test_manifest": {"sha256": frozen["sha256"], "generator_version": frozen["generator_version"]},
+        "seeds": {"inject": INJECT_SEED, "bootstrap": BOOT_SEED, "resamples": RESAMPLES, "resampling_unit": "patient"},
         "counts": {
             "patients": len(patients),
             "test_patients": sum(p["split"] == "test" for p in patients),
+            "dev_patients": sum(p["split"] == "dev" for p in patients),
             "injected_cases": len(cases),
             "cases_per_type": {t: sum(c["type"] == t for c in cases) for t in ISSUE_TYPES},
+            "test_cases_per_type": {t: sum(c["type"] == t and c["split"] == "test" for c in cases) for t in ISSUE_TYPES},
+            "missing_field_coverage": _missing_field_coverage(cases),
         },
         "primary_mode": PRIMARY_MODE,
         "recall": {t: {s: primary[s]["recall"][t] for s in ("test", "all")} for t in ISSUE_TYPES},
@@ -280,13 +363,17 @@ def evaluate(out_dir: Path | None = DEFAULT_OUT) -> dict:
         "extra_issues_per_injected_case": {s: primary[s]["extra_issues_per_injected_case"] for s in ("test", "all")},
         "alert_breakdown": {
             "note": (
-                "Informational only. A06 counts every issue and notice; whether missing_field notices "
-                "(a dose or frequency not stated in one source) count as false alerts is a pending human decision."
+                "False alerts count every issue and every notice, including missing_field (DECISIONS 2026-09-27). "
+                "Clean lists are fully specified in every source, so clean-list false alerts assume complete "
+                "sources; real lists (especially patient-reported) often omit dose or frequency, so missing_field "
+                "volume will be higher on real data and needs pharmacist review before any non-synthetic use."
             ),
             "clean_lists": _breakdown(clean_kinds, split_of),
             "injected_case_extras": _breakdown(case_kinds, split_of),
         },
         "extraction": extraction,
+        "extraction_null_preserved": _extraction_null_preserved(cases),
+        "unchecked_comparisons": unchecked,
         "modes": per_mode,
         "mode_equality": {"runs_compared": len(keys), "identical": identical, "fraction": _ratio(identical, len(keys))},
         "issue_sources_complete": sources_complete,

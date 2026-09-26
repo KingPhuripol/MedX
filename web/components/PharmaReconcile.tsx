@@ -64,6 +64,7 @@ function IssueCard({
         {issue.rule_id}
         {issue.unverifiable ? " · units not comparable" : ""}
         {issue.possible_substitution ? " · possible same-class substitution" : ""}
+        {issue.type === "missing_field" && issue.field ? ` · ${issue.field} ${NOT_STATED} in the first source listed` : ""}
       </p>
       <p className="phrasing">{issue.phrasing.text}</p>
       <p className="phrasing-label">

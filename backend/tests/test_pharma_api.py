@@ -117,9 +117,34 @@ def _decision_rows(app):
         return conn.execute(select(pharma_issue_decisions)).mappings().all()
 
 
-def test_decision_audit(app, client, login, audit_rows):
+MISSING_FIELD_SNAPSHOT = {
+    "patient_ref": "t-api-mf",
+    "as_of": "2026-06-10T10:00:00+07:00",
+    "data_class": "synthetic",
+    "sources": [
+        {"source_type": st, "evidence_ref": f"t-api-mf/{st}/1", "available_at_time": "2026-06-10T09:00:00+07:00",
+         "provenance": "synthetic: unit test", "version": "1", "entries": entries}
+        for st, entries in (
+            ("home_list", ["Metformin 500 mg bid", "Amlodipine 5 mg daily", "Simvastatin 40 mg daily"]),
+            ("new_order", ["Metformin bid", "Amlodipine 5 mg"]),
+        )
+    ],
+    "allergies": [],
+}
+
+
+@pytest.mark.parametrize("kind", ["demo", "missing_field"])
+def test_decision_audit(app, client, login, audit_rows, kind):
     login("pharmacist1")
-    run = _reconcile(client)
+    if kind == "missing_field":
+        resp = client.post("/api/pharma/reconcile", json={"snapshot": MISSING_FIELD_SNAPSHOT})
+        assert resp.status_code == 200, resp.text
+        run = resp.json()
+        # confirm one missing_field issue, dismiss the other; the omission stays open
+        assert [i["type"] for i in run["issues"]] == ["missing_field", "missing_field", "omission"]
+        assert {i["field"] for i in run["issues"][:2]} == {"dose", "frequency"}
+    else:
+        run = _reconcile(client)
     rec_audit = [r for r in audit_rows() if r["action"] == "pharma.reconcile"][-1]
     assert set(rec_audit["details"]) == {
         "run_id", "snapshot_sha256", "formulary_version", "rules_version", "mode", "issue_count", "notice_count",

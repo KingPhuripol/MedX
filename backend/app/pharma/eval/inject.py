@@ -1,7 +1,10 @@
-"""Seeded synthetic error injection: exactly one discrepancy of each of the 8 types per clean
-patient. The injector uses formulary ground truth, never the rule engine, to build cases.
+"""Seeded synthetic error injection. One case = one clean patient x one of the 9 discrepancy types,
+with exactly one injected discrepancy; at most one case per (patient, type). Every patient (and so
+every frozen test patient) is injectable for all 9 types; the injector may add an entry (an allergy
+record or a new order) to make a type applicable. It uses formulary ground truth, never the rule engine.
 
-Log line: case_id, patient_ref, split, type, source, before, after, expected{type, ingredients, sources}.
+Log line: case_id, patient_ref, split, type, source, before, after, expected{type, ingredients, sources}
+(+ ``field`` at top level and in ``expected`` for ``missing_field``).
 """
 
 from __future__ import annotations
@@ -33,6 +36,19 @@ HELDOUT_FREQ_SURFACES: dict[str, dict[str, tuple[str, ...]]] = {
     "q6h": {"en": ("four times a day", "every 6 hours", "q.i.d."), "th": ("เช้า กลางวัน เย็น ก่อนนอน", "ทุก 6 ชั่วโมง")},
     "prn": {"en": ("p.r.n.", "when needed"), "th": ("เมื่อจำเป็น",)},
 }
+
+
+# missing_field: (blanked field, source type), rotated by patient index so every split covers both
+# fields and all three source types (patient index // 3 walks each split in order).
+MISSING_FIELD_PLAN: tuple[tuple[str, str], ...] = (
+    ("dose", "home_list"), ("frequency", "patient_reported"), ("dose", "new_order"),
+    ("frequency", "home_list"), ("dose", "patient_reported"), ("frequency", "new_order"),
+)
+
+
+def missing_field_plan(patient_ref: str) -> tuple[str, str]:
+    index = int(patient_ref.rsplit("p", 1)[1]) - 1
+    return MISSING_FIELD_PLAN[(index // 3) % len(MISSING_FIELD_PLAN)]
 
 
 class InjectionError(RuntimeError):
@@ -163,6 +179,28 @@ def inject(form: Formulary, p: dict, kind: str, rng: random.Random) -> tuple[dic
         return snap, {"source": "new_order", "before": None, "after": text,
                       "expected": {"type": kind, "ingredients": sorted([ing, x]), "sources": ["new_order"]}}
 
+    if kind == "missing_field":
+        field, source_type = missing_field_plan(p["patient_ref"])
+        target = _entries(snap, source_type)
+        gold = _gold(p, source_type)
+        cands = [i for i, g in enumerate(gold) if g["ingredients"] and not target[i].get("discontinue_intent")]
+        if not cands:
+            raise InjectionError(f"{p['patient_ref']}: no {source_type} entry to blank")
+        i = rng.choice(cands)
+        g = gold[i]
+        before = target[i]["text"]
+        style = _style(before)
+        if field == "dose":
+            fc = g["frequency_code"]
+            freq_s = rng.choice(FREQ_SURFACES[fc][style] + HELDOUT_FREQ_SURFACES[fc][style])
+            after = render(g["drug_name_raw"], None, None, _route_surface(g, style), freq_s, style)
+        else:
+            after = render(g["drug_name_raw"], g["dose_value"], g["dose_unit"], _route_surface(g, style), None, style)
+        target[i] = {**target[i], "text": after}
+        return snap, {"source": source_type, "before": before, "after": after, "field": field,
+                      "expected": {"type": kind, "ingredients": g["ingredients"], "sources": [source_type],
+                                   "field": field}}
+
     if kind in ("dose_mismatch", "frequency_mismatch", "omission"):
         home = _gold(p, "home_list")
         by_ings = {tuple(g["ingredients"]): (i, g) for i, g in orders}
@@ -261,6 +299,12 @@ def build_cases(patients: list[dict] | None = None, seed: int = INJECT_SEED) -> 
     return cases
 
 
+LOG_KEYS = ("case_id", "patient_ref", "split", "type", "source", "before", "after", "expected")
+
+
 def log_lines(cases: list[dict]) -> str:
-    keys = ("case_id", "patient_ref", "split", "type", "source", "before", "after", "expected")
-    return "".join(json.dumps({k: c[k] for k in keys}, ensure_ascii=False, sort_keys=True) + "\n" for c in cases)
+    return "".join(
+        json.dumps({k: c[k] for k in LOG_KEYS + (("field",) if "field" in c else ())}, ensure_ascii=False, sort_keys=True)
+        + "\n"
+        for c in cases
+    )

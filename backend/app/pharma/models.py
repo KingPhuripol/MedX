@@ -23,9 +23,11 @@ IssueType = Literal[
     "duplication_class",
     "dose_mismatch",
     "frequency_mismatch",
+    "missing_field",
     "omission",
 ]
-NoticeType = Literal["unrecognised_drug", "allergy_unmapped", "source_unreadable", "source_missing", "missing_field"]
+NoticeType = Literal["unrecognised_drug", "allergy_unmapped", "source_unreadable", "source_missing"]
+MissingField = Literal["dose", "frequency"]
 ISSUE_TYPES: tuple[str, ...] = IssueType.__args__  # type: ignore[attr-defined]
 NOTICE_TYPES: tuple[str, ...] = NoticeType.__args__  # type: ignore[attr-defined]
 
@@ -141,7 +143,7 @@ class Phrasing(_Frozen):
 
 class IssueNote(_Frozen):
     kind: Literal["missing_field"]
-    field: str
+    field: MissingField
     source_type: str
     evidence_ref: str
 
@@ -156,6 +158,7 @@ class Issue(_Frozen):
     ingredients: tuple[str, ...]
     ingredient_rxcuis: tuple[str, ...]
     conflicting_sources: tuple[ConflictingSource, ...] = Field(min_length=1)
+    field: MissingField | None = None  # missing_field only: which field the incomplete entry does not state
     unverifiable: bool = False
     possible_substitution: bool = False
     notes: tuple[IssueNote, ...] = ()
@@ -172,12 +175,6 @@ class Notice(_Frozen):
     evidence_ref: str | None = None
     raw_span: str | None = None
     detail: str
-    # missing_field only: which comparison could not be made, and against which sources.
-    rule_id: str | None = None
-    field: Literal["dose", "frequency_code"] | None = None
-    ingredients: tuple[str, ...] | None = None
-    compared_with: tuple[str, ...] | None = None
-    stated_in: tuple[str, ...] | None = None
 
 
 class DecisionBody(BaseModel):

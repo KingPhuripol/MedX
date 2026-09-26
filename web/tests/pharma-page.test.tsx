@@ -35,6 +35,29 @@ function issue(n: number, type: string, rank: number, severity: string, status =
   };
 }
 
+// A dose not stated in the new order: an issue of its own (s5r), listed with the other issues.
+const MISSING_FIELD_ISSUE = {
+  issue_id: "run1-i03",
+  run_id: "run1",
+  type: "missing_field",
+  severity: "moderate",
+  severity_rank: 3,
+  rule_id: "missing_field@2.0.0",
+  field: "dose",
+  ingredients: ["warfarin"],
+  conflicting_sources: [
+    src({ source_type: "new_order", raw_span: "Warfarin 2 tab daily", frequency_code: "q24h" }),
+    src({ source_type: "home_list", raw_span: "Warfarin 3 mg daily", dose_value: 3, dose_unit: "mg", frequency_code: "q24h" }),
+  ],
+  phrasing: {
+    text: "The dose of warfarin is not stated in the new order, so it could not be compared with the home list. For pharmacist review.",
+    source: "model",
+    provider: "mock",
+    model_version: "mock-0.1.0",
+  },
+  status: "open",
+};
+
 // Deliberately out of order: the page must still show allergy first.
 const RUN = {
   run_id: "run1",
@@ -45,20 +68,8 @@ const RUN = {
   formulary_version: "s5-formulary-1.0.0",
   rules_version: "s5-rules-1.0.0",
   excluded_future_items: 0,
-  issues: [issue(2, "dose_mismatch", 3, "moderate"), issue(1, "allergy_class", 1, "high")],
-  notices: [
-    { notice_id: "run1-n01", type: "unrecognised_drug", detail: "not in the formulary", raw_span: "Qelvadrine" },
-    {
-      notice_id: "run1-n02",
-      type: "missing_field",
-      field: "dose",
-      ingredients: ["warfarin"],
-      source_type: "new_order",
-      evidence_ref: "demo/new_order/1",
-      detail: "dose not stated in new_order for warfarin; it could not be compared with home_list",
-      raw_span: "Warfarin 2 tab daily",
-    },
-  ],
+  issues: [issue(2, "dose_mismatch", 3, "moderate"), MISSING_FIELD_ISSUE, issue(1, "allergy_class", 1, "high")],
+  notices: [{ notice_id: "run1-n01", type: "unrecognised_drug", detail: "not in the formulary", raw_span: "Qelvadrine" }],
   unchecked_comparisons: 1,
   extraction: [
     {
@@ -145,7 +156,7 @@ describe("pharmacist reconciliation page", () => {
     expect(region).toHaveAttribute("aria-labelledby", "reconcile-title");
     for (const s of document.querySelectorAll("section")) expect(s).toHaveAttribute("aria-labelledby");
     expect(screen.getByTestId("nlm-attribution")).toHaveTextContent(NLM_ATTRIBUTION);
-    expect(screen.getByRole("status")).toHaveTextContent(/2 issue\(s\) and 2 notice\(s\)/);
+    expect(screen.getByRole("status")).toHaveTextContent(/3 issue\(s\) and 1 notice\(s\)/);
     expect(screen.getByRole("status")).toHaveTextContent(/1 comparison\(s\) could not be checked/);
     expect(window.location.search).toBe("?run=run1");
   });
@@ -156,7 +167,7 @@ describe("pharmacist reconciliation page", () => {
     const list = document.querySelector("ol.issue-list");
     expect(list).not.toBeNull();
     const articles = list!.querySelectorAll(":scope > li > article");
-    expect(articles).toHaveLength(2);
+    expect(articles).toHaveLength(3);
     expect(articles[0]).toHaveAttribute("data-type", "allergy_class");
     const table = within(articles[0] as HTMLElement).getByRole("table");
     expect(table.querySelector("caption")).toHaveTextContent(/Conflicting sources for Allergy: drug class: amoxicillin/);
@@ -181,7 +192,27 @@ describe("pharmacist reconciliation page", () => {
     expect(within(row).getAllByText("not stated").length).toBeGreaterThanOrEqual(2); // dose and route
     orders.querySelectorAll("thead th").forEach((th) => expect(th).toHaveAttribute("scope", "col"));
     expect(within(lists).getByTestId("source-2")).toHaveTextContent(/could not be read \(timeout\)/);
-    expect(screen.getByText("Not stated, so not compared")).toBeInTheDocument();
+  });
+
+  it("renders a missing_field issue in the issue list with its source shown as not stated", async () => {
+    installFetch();
+    await runCheck();
+    const articles = [...document.querySelectorAll("ol.issue-list > li > article")];
+    expect(articles.map((a) => a.getAttribute("data-type"))).toEqual(["allergy_class", "dose_mismatch", "missing_field"]);
+    const mf = within(articles[2] as HTMLElement);
+    expect(mf.getByRole("heading", { level: 3 })).toHaveTextContent("Dose or frequency not stated: warfarin");
+    expect(mf.getByText(/dose not stated in the first source listed/)).toBeInTheDocument();
+    const table = mf.getByRole("table");
+    expect(table.querySelector("caption")).toHaveTextContent(/Conflicting sources for Dose or frequency not stated/);
+    const row = within(table).getByRole("rowheader", { name: "New order" }).closest("tr")!;
+    expect(within(row).getByText("not stated")).toBeInTheDocument();
+    expect(within(table).getByText("3 mg")).toBeInTheDocument();
+    // reviewable like every other issue, and there is no control that hides issues by type
+    expect(mf.getByRole("button", { name: "Confirm" })).toBeInTheDocument();
+    expect(mf.getByLabelText("Reason for dismissing")).toBeInTheDocument();
+    expect(screen.queryByRole("checkbox")).toBeNull();
+    expect(screen.queryByLabelText(/filter|hide/i)).toBeNull();
+    expect(document.querySelector(".notice-list")).not.toHaveTextContent(/missing_field|not stated/i);
   });
 
   it("requires a labelled reason to dismiss and confirms with the keyboard", async () => {
@@ -203,7 +234,7 @@ describe("pharmacist reconciliation page", () => {
     await userEvent.keyboard("{Enter}");
     await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/Issue confirmed/));
     const statuses = screen.getAllByTestId("issue-status").map((el) => el.textContent);
-    expect(statuses).toEqual(["confirmed", "dismissed"]);
+    expect(statuses).toEqual(["confirmed", "dismissed", "open"]);
   });
 
   it("uses no colour literals or clinical-claim terms in pharma page files", () => {

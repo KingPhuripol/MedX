@@ -48,17 +48,21 @@ def test_rule_dose_mismatch():
     # units that cannot be compared -> mismatch flagged unverifiable
     [unv] = of_type(run(snapshot(home=["Lantus 10 units hs"], orders=["Lantus 10 mg hs"])), "dose_mismatch")
     assert unv["unverifiable"] is True
-    # a missing dose is not a match: no dose_mismatch issue, but a visible missing_field notice (never silence)
+    # a missing dose is not a match: no dose_mismatch from the null entry, and a missing_field issue (never silence)
     gap = run(snapshot(home=["Simvastatin 20 mg daily"], reported=["Simvastatin daily"], orders=["Simvastatin 20 mg daily"]))
-    assert of_type(gap, "dose_mismatch") == []
-    [notice] = notices(gap, "missing_field")
-    assert (notice["field"], notice["source_type"], notice["evidence_ref"]) == ("dose", "patient_reported", "t/patient_reported/1")
-    assert notice["ingredients"] == ["simvastatin"] and notice["stated_in"] == ["home_list", "new_order"]
-    assert notice["raw_span"] == "Simvastatin daily" and gap["unchecked_comparisons"] == 1
+    assert of_type(gap, "dose_mismatch") == [] and notices(gap, "missing_field") == []
+    [mf] = of_type(gap, "missing_field")
+    first = mf["conflicting_sources"][0]
+    assert (mf["field"], first["source_type"], first["evidence_ref"]) == ("dose", "patient_reported", "t/patient_reported/1")
+    assert first["dose_value"] is None and first["raw_span"] == "Simvastatin daily"
+    assert mf["ingredients"] == ["simvastatin"] and mf["detail"]["stated_in"] == ["home_list", "new_order"]
+    assert gap["unchecked_comparisons"] == 2  # reported-vs-home and reported-vs-order
+    # stated-vs-stated mismatch is still detected when a third source is null
     noted = run(snapshot(home=["Simvastatin 20 mg daily"], reported=["ซิมวาสแตติน วันละครั้ง"], orders=["Simvastatin 40 mg daily"]))
     [issue] = of_type(noted, "dose_mismatch")
     assert issue["notes"] == [{"kind": "missing_field", "field": "dose", "source_type": "patient_reported", "evidence_ref": "t/patient_reported/1"}]
     assert all(s["source_type"] != "patient_reported" for s in issue["conflicting_sources"])
+    assert [(i["field"], i["conflicting_sources"][0]["source_type"]) for i in of_type(noted, "missing_field")] == [("dose", "patient_reported")]
 
 
 def test_rule_frequency_mismatch():
@@ -70,12 +74,17 @@ def test_rule_frequency_mismatch():
     diff = run(snapshot(home=["Metformin 500 mg bid"], orders=["Metformin 500 mg tid"]))
     [issue] = of_type(diff, "frequency_mismatch")
     assert {s["frequency_code"] for s in issue["conflicting_sources"]} == {"q12h", "q8h"}
-    # a missing frequency is not a match: no frequency_mismatch issue, but a visible missing_field notice
+    # a missing frequency is not a match: no frequency_mismatch from the null entry, and a missing_field issue
     gap = run(snapshot(home=["Metformin 500 mg bid"], orders=["Metformin 500 mg"]))
     assert of_type(gap, "frequency_mismatch") == []
-    [notice] = notices(gap, "missing_field")
-    assert (notice["field"], notice["source_type"], notice["stated_in"]) == ("frequency_code", "new_order", ["home_list"])
+    [mf] = of_type(gap, "missing_field")
+    assert (mf["field"], mf["conflicting_sources"][0]["source_type"], mf["detail"]["stated_in"]) == ("frequency", "new_order", ["home_list"])
     assert gap["unchecked_comparisons"] == 1
+    # stated-vs-stated mismatch is still detected when a third source is null
+    third = run(snapshot(home=["Metformin 500 mg bid"], reported=["เมทฟอร์มิน 500 มก."], orders=["Metformin 500 mg tid"]))
+    [issue] = of_type(third, "frequency_mismatch")
+    assert {s["source_type"] for s in issue["conflicting_sources"]} == {"home_list", "new_order"}
+    assert [i["field"] for i in of_type(third, "missing_field")] == ["frequency"]
 
 
 def same_meds_clean(result: dict) -> bool:
@@ -92,8 +101,8 @@ MISSING_OR_MISREAD = {
     "warfarin_th_freq": ("Warfarin 3 mg วันละ 1 ครั้ง", "Warfarin 3 mg เช้า-เย็น", "frequency_mismatch", None),
     "warfarin_order_no_dose": ("Warfarin 3 mg daily", "Warfarin 1 tab daily", None, ("dose", "new_order")),
     "th_dose_missing": ("วาร์ฟาริน วันละ 1 ครั้ง", "Warfarin 3 mg daily", None, ("dose", "home_list")),
-    "en_freq_unreadable": ("Metformin 500 mg thrice weekly", "Metformin 500 mg daily", None, ("frequency_code", "home_list")),
-    "th_freq_unreadable": ("เมทฟอร์มิน 500 มก. สัปดาห์ละ 3 ครั้ง", "Metformin 500 mg daily", None, ("frequency_code", "home_list")),
+    "en_freq_unreadable": ("Metformin 500 mg thrice weekly", "Metformin 500 mg daily", None, ("frequency", "home_list")),
+    "th_freq_unreadable": ("เมทฟอร์มิน 500 มก. สัปดาห์ละ 3 ครั้ง", "Metformin 500 mg daily", None, ("frequency", "home_list")),
 }
 
 
@@ -106,29 +115,93 @@ def test_missing_field_is_never_silent(case, mode):
     if issue_type:
         assert [i["type"] for i in result["issues"]] == [issue_type]
     if gap:
-        [notice] = notices(result, "missing_field")
-        assert (notice["field"], notice["source_type"]) == gap
-        assert notice["evidence_ref"] and notice["raw_span"] and notice["compared_with"]
+        [mf] = of_type(result, "missing_field")
+        assert (mf["field"], mf["conflicting_sources"][0]["source_type"]) == gap
+        assert len(mf["conflicting_sources"]) == 2 and mf["conflicting_sources"][0]["raw_span"]
+        assert [i["type"] for i in result["issues"]] == ["missing_field"]
         assert result["unchecked_comparisons"] == 1
 
 
-def test_missing_field_scope():
-    # an order line with neither dose nor frequency: one notice per field
-    bare = run(snapshot(home=["Metformin 500 mg twice a day"], orders=["Metformin"]))
-    assert [(n["field"], n["source_type"]) for n in notices(bare, "missing_field")] == [
-        ("dose", "new_order"), ("frequency_code", "new_order")]
-    # ingredient in one source only: nothing to compare, so no missing_field notice (omission covers it)
-    only_home = run(snapshot(home=["Metformin"], orders=["Amlodipine 5 mg daily"]))
-    assert notices(only_home, "missing_field") == []
-    # null in every source is still unchecked (one notice per source and field)
+def test_rule_missing_field():
+    from app.pharma.models import NOTICE_TYPES
+
+    assert "missing_field" not in NOTICE_TYPES
+    stated = {"dose": "Metformin bid", "frequency": "Metformin 500 mg"}
+    for field, text in stated.items():
+        for target in ("home_list", "patient_reported", "new_order"):
+            lists = {t: ["Metformin 500 mg bid"] for t in ("home_list", "patient_reported", "new_order")}
+            lists[target] = [text]
+            result = run(snapshot(home=lists["home_list"], reported=lists["patient_reported"], orders=lists["new_order"]))
+            [mf] = result["issues"]
+            assert (mf["type"], mf["field"], mf["rule_id"]) == ("missing_field", field, "missing_field@2.0.0")
+            assert mf["conflicting_sources"][0]["source_type"] == target
+            assert {s["source_type"] for s in mf["conflicting_sources"]} == {"home_list", "patient_reported", "new_order"}
+            key = "dose_value" if field == "dose" else "frequency_code"
+            assert mf["conflicting_sources"][0][key] is None
+            assert mf["severity"] == "moderate" and mf["severity_rank"] == 3
+            for src in mf["conflicting_sources"]:
+                assert src["evidence_ref"] and src["available_at_time"] and "raw_span" in src
+    # negative: fully specified entries raise nothing
+    full = run(snapshot(home=["Metformin 500 mg bid"], reported=["เมทฟอร์มิน 500 มก. วันละ 2 ครั้ง"], orders=["Metformin 500 mg bid"]))
+    assert same_meds_clean(full)
+    # any source, even when the ingredient is in one source only (then 1 conflicting source)
+    only = run(snapshot(home=["Metformin"], orders=["Amlodipine 5 mg daily"]))
+    mfs = of_type(only, "missing_field")
+    assert [(i["field"], len(i["conflicting_sources"])) for i in mfs] == [("dose", 1), ("frequency", 1)]
+    # null in every source: one issue per (entry, field)
     both = run(snapshot(home=["Metformin"], orders=["Metformin"]))
-    assert len(notices(both, "missing_field")) == 4 and both["unchecked_comparisons"] == 4
-    # a discontinued order entry is not compared
-    ended = run(snapshot(home=["Metformin 500 mg bid"], orders=[{"text": "Metformin", "discontinue_intent": True, "reason": "synthetic"}]))
-    assert notices(ended, "missing_field") == []
-    # the missing_field note on a mismatch issue is kept, and the notice is also raised
-    both_ways = run(snapshot(home=["Simvastatin 20 mg daily"], reported=["ซิมวาสแตติน วันละครั้ง"], orders=["Simvastatin 40 mg daily"]))
-    assert of_type(both_ways, "dose_mismatch") and len(notices(both_ways, "missing_field")) == 1
+    assert len(of_type(both, "missing_field")) == 4 and both["unchecked_comparisons"] == 2
+    # a combination product shares an ingredient: the other entry is listed too (>= 2 sources)
+    combo = run(snapshot(home=["Amoxicillin 500 mg tid"], orders=["Augmentin 1 g"]))
+    [mf] = of_type(combo, "missing_field")
+    assert mf["field"] == "frequency" and len(mf["conflicting_sources"]) == 2
+    # unrecognised names are notices, never missing_field issues
+    unknown = run(snapshot(home=["Qelvadrine"], orders=["Amlodipine 5 mg daily"]))
+    assert of_type(unknown, "missing_field") == [] and notices(unknown, "unrecognised_drug")
+
+
+PAIRS = [(a, b) for a in ("home_list", "patient_reported", "new_order") for b in ("home_list", "patient_reported", "new_order") if a != b]
+STATED = "Metformin 500 mg bid"
+NULLED = {"dose": "Metformin bid", "frequency": "Metformin 500 mg"}
+
+
+@pytest.mark.parametrize("nulls", ["first", "second", "both"])
+@pytest.mark.parametrize("pair", PAIRS, ids=[f"{a}-{b}" for a, b in PAIRS])
+@pytest.mark.parametrize("field", ["dose", "frequency"])
+def test_missing_never_agreement(field, pair, nulls):
+    """S5R-A08: every comparison rule x ordered source-type pair x null pattern."""
+    first, second = pair
+    null_in = {"first": [first], "second": [second], "both": [first, second]}[nulls]
+    lists = {t: [NULLED[field] if t in null_in else STATED] for t in pair}
+    result = run(snapshot(home=lists.get("home_list"), reported=lists.get("patient_reported"), orders=lists.get("new_order")))
+    assert not same_meds_clean(result)
+    mfs = of_type(result, "missing_field")
+    assert sorted((i["field"], i["conflicting_sources"][0]["source_type"]) for i in mfs) == sorted((field, t) for t in null_in)
+    for mf in mfs:
+        assert len(mf["conflicting_sources"]) == 2  # the ingredient is in 2 source types
+    assert of_type(result, "dose_mismatch") == [] and of_type(result, "frequency_mismatch") == []
+    assert [i["type"] for i in result["issues"]] == ["missing_field"] * len(null_in)
+    assert result["unchecked_comparisons"] == 1
+    # the mismatch rule still runs for the other field, stated in both, and never fires from the null entry
+    other_differs = {"dose": ("Metformin bid", "Metformin tid"), "frequency": ("Metformin 500 mg", "Metformin 1000 mg")}[field]
+    lists = {first: [other_differs[0]], second: [other_differs[1]]}
+    diff = run(snapshot(home=lists.get("home_list"), reported=lists.get("patient_reported"), orders=lists.get("new_order")))
+    other = "frequency_mismatch" if field == "dose" else "dose_mismatch"
+    assert [i["type"] for i in diff["issues"] if i["type"].endswith("_mismatch")] == [other]
+    assert len(of_type(diff, "missing_field")) == 2
+
+
+def test_unchecked_comparisons_count():
+    result = run(snapshot(home=["Metformin 500 mg bid"], reported=["Metformin bid"], orders=["Metformin 500 mg"]))
+    # dose: home-reported, reported-order skipped; frequency: home-order, reported-order skipped
+    assert result["unchecked_comparisons"] == 4
+    assert sorted((i["field"], i["conflicting_sources"][0]["source_type"]) for i in of_type(result, "missing_field")) == [
+        ("dose", "patient_reported"), ("frequency", "new_order")]
+    # two entries in the same source type are not a cross-source comparison; discontinued entries are not compared
+    same = run(snapshot(home=["Metformin 500 mg bid", "Metformin bid"], orders=[
+        "Amlodipine 5 mg daily", {"text": "Metformin", "discontinue_intent": True, "reason": "synthetic"}]))
+    assert same["unchecked_comparisons"] == 0
+    assert all(s["unchecked_comparisons"] == 0 for s in [run(snapshot(home=[STATED], orders=[STATED]))])
 
 
 FREQ_PHRASINGS = {
@@ -217,12 +290,22 @@ def test_cross_reactivity_citations():
             assert ref["id"] in (form.classes if ref["kind"] == "class" else form.ingredients)
 
 
-def test_severity_order_is_fixed():
+def test_severity_order():
+    from app.pharma.rules import SEVERITY, TYPE_ORDER
+
     result = run(snapshot(
-        home=["Simvastatin 20 mg daily", "Metformin 500 mg bid"],
-        orders=["Simvastatin 40 mg daily", "Tylenol 500 mg prn", "Sara 500 mg prn", "Augmentin 1 g bid"],
+        home=["Simvastatin 20 mg daily", "Metformin 500 mg bid", "Amlodipine 5 mg daily"],
+        orders=["Simvastatin 40 mg daily", "Tylenol 500 mg prn", "Sara 500 mg prn", "Augmentin 1 g bid", "Amlodipine daily",
+                "Qelvadrine 5 mg daily"],
         allergies=["Penicillin"],
     ))
     ranks = [i["severity_rank"] for i in result["issues"]]
     assert ranks == sorted(ranks)
-    assert [i["type"] for i in result["issues"]] == ["allergy_class", "duplication_ingredient", "dose_mismatch", "omission"]
+    assert [i["type"] for i in result["issues"]] == [
+        "allergy_class", "duplication_ingredient", "dose_mismatch", "missing_field", "omission"]
+    assert all(n["severity_rank"] > max(ranks) for n in result["notices"]) and notices(result, "unrecognised_drug")
+    order = ["allergy_direct", "allergy_class", "allergy_cross_reactivity", "duplication_ingredient", "duplication_class",
+             "dose_mismatch", "frequency_mismatch", "missing_field", "omission"]
+    assert list(TYPE_ORDER) == order
+    assert SEVERITY["missing_field"] == SEVERITY["dose_mismatch"] == SEVERITY["frequency_mismatch"]
+    assert SEVERITY["duplication_class"][0] < SEVERITY["missing_field"][0] < SEVERITY["omission"][0]
