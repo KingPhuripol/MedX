@@ -3,6 +3,7 @@ the generator's label functions (``data_factory.generate``)."""
 
 import ast
 import json
+import unicodedata
 from datetime import datetime
 from pathlib import Path
 
@@ -34,7 +35,9 @@ RESP = ["หายใจลำบาก", "หายใจมีเสียง�
 ONSET_RULES = {"RF-FAST": FAST, "RF-ACUTE-CHEST-PAIN": CHEST, "RF-THUNDERCLAP": THUNDER}
 TEXT_RULES = (*ONSET_RULES, "RF-ANAPHYLAXIS")
 TNM_PAIR = {"TNM-CHEST-STABLE": CHEST, "TNM-HEADACHE-GRADUAL": THUNDER, "TNM-NUMB-BILATERAL": FAST,
-            "TNM-URTICARIA-ONLY": SKIN}
+            "TNM-URTICARIA-ONLY": SKIN, "TNM-DEFICIT-CHRONIC": FAST}
+ALL_CONCEPTS = [*FAST, *CHEST, *THUNDER, *SKIN, *RESP]
+ARRIVAL_QUESTION = "วันนี้มากับใครคะ"  # fixed nurse question; the next patient turn is the arrival turn
 TEMPLATES = REPO_ROOT / "data_factory" / "templates"
 
 
@@ -222,19 +225,21 @@ def test_near_miss_negatives(dataset):
             assert oracle_red_flags(c["snapshots"][row["decision_point"]]["items"]) == {}, cid
             assert row["red_flags"] == [], cid
         n_asserted += 1
-    assert n_asserted == n_tagged and len(vit) >= 20 and len(txt) >= 20
+    assert n_asserted == n_tagged and len(vit) >= 20 and len(txt) >= 30
 
 
 def test_text_near_miss_negatives(dataset):
     tagged = [(c["gold"]["scenario"]["text_near_miss"], c) for c in dataset.cases.values()
               if c["gold"]["scenario"]["text_near_miss"]]
     per = {f: sum(1 for x, _ in tagged if x == f) for f in TNM_PAIR}
-    assert len(tagged) >= 20 and all(n >= 5 for n in per.values()), per
+    assert len(tagged) >= 30 and all(n >= 6 for n in per.values()), per
     complaints = {x["id"]: x for x in json.loads((TEMPLATES / "complaints.json").read_text("utf-8"))}
+    refs = {r["ref_id"] for r in json.loads((TEMPLATES / "references.json").read_text("utf-8"))}
     with_tamtee = 0
     for fam, c in tagged:
         cc = complaints[c["gold"]["scenario"]["complaint_id"]]
         assert cc["group"] == "general" and cc["near_miss_family"] == fam
+        assert cc["near_miss_ref"] in refs and cc["near_miss_reason"]
         assert all(not r["red_flags"] for r in c["gold"]["decision_times"])
         assert all(news_aggregate(v) <= 2 for v in c["journey"]["items"] if v["data_type"] == "Vitals")
         turns = patient_turns(next(i for i in c["journey"]["items"] if i["data_type"] == "IntakeTranscript"))
@@ -264,34 +269,145 @@ def test_red_flag_paraphrase_templates(dataset):
     assert len(ONSET) >= 3 and all(len(v) >= 2 for v in ONSET_RULES.values())
 
 
-def _pr(pred: set, pos: set) -> tuple[float, float]:
-    tp = len(pred & pos)
-    return (tp / len(pred) if pred else 0.0), (tp / len(pos) if pos else 0.0)
+def _turns(items):
+    tx = next(i for i in items if i["data_type"] == "IntakeTranscript")
+    return [unicodedata.normalize("NFC", s) for s in patient_turns(tx)]
+
+
+def _any_rf(c):
+    return {f["rule_id"] for r in c["gold"]["decision_times"] for f in r["red_flags"]}
+
+
+def _text_negative(c):
+    return not _any_rf(c) & set(TEXT_RULES)
 
 
 def test_single_token_baseline_fails(dataset):
-    complaints = json.loads((TEMPLATES / "complaints.json").read_text("utf-8"))
-    text = {}
-    vocab = set(ONSET) | {w for v in ONSET_RULES.values() for w in v} | set(SKIN) | set(RESP)
-    for x in complaints:
-        if "near_miss_family" in x:
-            vocab |= set(x["th"].split())
-    for cid, c in dataset.cases.items():
-        tx = next(i for i in c["snapshots"]["T1"]["items"] if i["data_type"] == "IntakeTranscript")
-        text[cid] = " ".join(patient_turns(tx))
-        vocab |= {w for turn in tx["turns"] for w in turn["text"].split()}
+    """S1R-A08: V = every substring (length 1-30) of each T1 patient turn + whitespace tokens + lexicon terms.
+    For every s in V and every target, the rule 'predict positive iff s occurs in a patient turn' has F1 < 0.75."""
+    turns = {cid: _turns(c["snapshots"]["T1"]["items"]) for cid, c in dataset.cases.items()}
+    occ: dict[str, set] = {}
+    for cid, ts in turns.items():
+        for x in {s[i:j] for s in ts for i in range(len(s)) for j in range(i + 1, min(i + 30, len(s)) + 1)}:
+            occ.setdefault(x, set()).add(cid)
+    extra = {w for ts in turns.values() for s in ts for w in s.split()} | set(ONSET) | set(ALL_CONCEPTS)
+    for w in extra - set(occ):
+        occ[w] = {cid for cid, ts in turns.items() if any(w in s for s in ts)}
     t1 = {cid: {f["rule_id"] for f in c["gold"]["decision_times"][0]["red_flags"]} for cid, c in dataset.cases.items()}
     targets = {"any_text": {cid for cid, r in t1.items() if r & set(TEXT_RULES)}}
-    targets |= {rule: {cid for cid, r in t1.items() if rule in r} for rule in ONSET_RULES}
-    p, r = _pr({cid for cid, s in text.items() if "ทันที" in s}, targets["any_text"])
-    print(f"ทันที: precision={p:.2f} recall={r:.2f}")
+    targets |= {rule: {cid for cid, r in t1.items() if rule in r} for rule in TEXT_RULES}
+    assert len(targets["any_text"]) >= 28 and all(len(v) >= 7 for v in targets.values()), \
+        {k: len(v) for k, v in targets.items()}
+
+    def score(pred, pos):
+        tp = len(pred & pos)
+        p, r = (tp / len(pred) if pred else 0.0), tp / len(pos)
+        return (2 * p * r / (p + r) if tp else 0.0), p, r
+
+    f1, p, r = score(occ["ทันที"], targets["any_text"])
+    print(f"'ทันที' any_text: P={p:.2f} R={r:.2f} F1={f1:.2f}")
     assert p < 0.8 and r < 0.8
+    worst = {}
     for name, pos in targets.items():
-        assert len(pos) >= 5, name
-        scores = sorted(((*_pr({cid for cid, s in text.items() if w in s}, pos), w) for w in vocab),
-                        key=lambda x: min(x[0], x[1]), reverse=True)
-        print(f"{name}: best token {scores[0][2]!r} precision={scores[0][0]:.2f} recall={scores[0][1]:.2f}")
-        assert not [w for pp, rr, w in scores if pp >= 0.8 and rr >= 0.8], name
+        ranked = sorted(((*score(pred, pos), len(pred), s) for s, pred in occ.items() if pred & pos), reverse=True)
+        for f, pp, rr, support, sub in ranked[:5]:
+            print(f"{name} (n={len(pos)}): {sub!r} F1={f:.2f} P={pp:.2f} R={rr:.2f} support={support}")
+        worst[name] = ranked[0][:1] + ranked[0][4:]
+    assert all(f < 0.75 for f, _ in worst.values()), worst
+
+
+def test_minimal_pairs(dataset):
+    """S1R-A15: no single criterion term is sufficient."""
+    turns = {cid: _turns(c["journey"]["items"]) for cid, c in dataset.cases.items()}
+    neg = [cid for cid, c in dataset.cases.items() if _text_negative(c)]
+    t1 = {cid: {f["rule_id"] for f in c["gold"]["decision_times"][0]["red_flags"]} for cid, c in dataset.cases.items()}
+    counts = {}
+    for rule, concept in ONSET_RULES.items():
+        pos_turns = [s for cid, r in t1.items() if rule in r for s in turns[cid]]
+        for term in (w for w in concept if any(w in s for s in pos_turns)):
+            n = sum(any(term in s and not any(o in s for o in ONSET) for s in turns[cid]) for cid in neg)
+            counts[(rule, term)] = n
+        for term in (o for o in ONSET if any(o in s for s in pos_turns)):
+            n = sum(any(term in s and not any(w in s for w in ALL_CONCEPTS) for s in turns[cid]) for cid in neg)
+            counts[(rule, term)] = n
+    pos_turns = [s for cid, r in t1.items() if "RF-ANAPHYLAXIS" in r for s in turns[cid]]
+    for term in (w for w in SKIN if any(w in s for s in pos_turns)):
+        counts[("RF-ANAPHYLAXIS", term)] = sum(any(term in s for s in turns[cid])
+                                               and not any(w in s for s in turns[cid] for w in RESP) for cid in neg)
+    print(counts)
+    assert len(counts) >= 3 * 4 and all(n >= 3 for n in counts.values()), counts
+    assert not [cid for cid in neg if any(w in s for s in turns[cid] for w in RESP)]
+    upper_airway = [s for cid in neg for s in turns[cid] if "หายใจ" in s]
+    assert upper_airway and all("จมูก" in s for s in upper_airway), upper_airway
+
+
+def _stratum(c):
+    sc = c["gold"]["scenario"]
+    if sc["red_flag"]:
+        return "text_rf" if sc["red_flag"]["rule_id"] in TEXT_RULES else "vitals_rf"
+    return "vitals_nm" if sc["near_miss"] else "text_nm" if sc["text_near_miss"] else "ordinary"
+
+
+def _arrival_turn(c):
+    turns = next(i for i in c["journey"]["items"] if i["data_type"] == "IntakeTranscript")["turns"]
+    k = next(k for k, t_ in enumerate(turns) if t_["speaker"] == "nurse" and t_["text"] == ARRIVAL_QUESTION)
+    assert turns[k + 1]["speaker"] == "patient"
+    return turns[k + 1]["text"]
+
+
+def test_arrival_turn_label_independent(dataset):
+    by: dict[str, list] = {}
+    for c in dataset.cases.values():
+        by.setdefault(_stratum(c), []).append("ทันที" in _arrival_turn(c))
+    share = {k: sum(v) / len(v) for k, v in by.items()}
+    print({k: f"{sum(v)}/{len(v)}" for k, v in by.items()})
+    assert set(share) == {"text_rf", "vitals_rf", "vitals_nm", "text_nm", "ordinary"}
+    assert all(abs(x - 1 / 3) <= 0.05 for x in share.values()), share
+    assert sum(by["text_nm"]) >= 5 and sum(by["ordinary"]) >= 5
+
+
+def test_duration_unit_not_a_cue(dataset):
+    units: dict[str, list] = {}
+    benign = 0
+    for c in dataset.cases.values():
+        d = c["gold"]["decision_times"][0]["required_fields"]["duration"]
+        sc = c["gold"]["scenario"]
+        if d == "MISSING":
+            continue
+        assert d["th_text"].split()[1] == {"minute": "นาที", "hour": "ชั่วโมง", "day": "วัน", "week": "สัปดาห์",
+                                           "month": "เดือน", "year": "ปี"}[d["unit"]]
+        if sc["red_flag"] and sc["red_flag"]["rule_id"] in TEXT_RULES:
+            units.setdefault(sc["red_flag"]["rule_id"], []).append(d["unit"])
+        elif not _any_rf(c) and d["unit"] in ("minute", "hour"):
+            benign += 1
+    print(units, "benign minute/hour:", benign)
+    for rule in TEXT_RULES:
+        u = units[rule]
+        assert set(u) == {"minute", "hour"}, rule
+        assert max(u.count(x) for x in set(u)) / len(u) <= 0.70, (rule, u)
+    assert benign >= 15
+
+
+def test_nurse_script_fixed(dataset):
+    scripts = {tuple(t_["text"] for t_ in next(i for i in c["journey"]["items"]
+                                              if i["data_type"] == "IntakeTranscript")["turns"] if t_["speaker"] == "nurse")
+               for c in dataset.cases.values()}
+    assert len(scripts) == 1
+
+
+def test_template_balance(dataset):
+    per_rule: dict[str, list] = {}
+    per_fam: dict[str, list] = {}
+    for c in dataset.cases.values():
+        cc = c["gold"]["scenario"]["complaint_id"]
+        for rule in {f["rule_id"] for f in c["gold"]["decision_times"][0]["red_flags"]} & set(TEXT_RULES):
+            per_rule.setdefault(rule, []).append(cc)
+        if c["gold"]["scenario"]["text_near_miss"]:
+            per_fam.setdefault(c["gold"]["scenario"]["text_near_miss"], []).append(cc)
+    share = lambda v: max(v.count(x) for x in set(v)) / len(v)  # noqa: E731
+    print({k: round(share(v), 2) for k, v in (per_rule | per_fam).items()})
+    assert set(per_rule) == set(TEXT_RULES) and all(share(v) <= 0.40 for v in per_rule.values())
+    assert set(per_fam) == set(TNM_PAIR) and all(share(v) <= 0.60 for v in per_fam.values())
 
 
 def test_medication_oracle_agrees(dataset):

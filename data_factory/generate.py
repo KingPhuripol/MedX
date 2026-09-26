@@ -17,7 +17,7 @@ from pathlib import Path
 
 from casegraph import evidence_adapter
 
-GENERATOR_VERSION = "1.1.0"
+GENERATOR_VERSION = "1.1.1"
 PKG_DIR = Path(__file__).resolve().parent
 TEMPLATES = PKG_DIR / "templates"
 TZ = timezone(timedelta(hours=7))
@@ -29,29 +29,33 @@ REVISIT_SPLIT = {"train": 12, "dev": 4, "test": 4}  # stratify revisit patients 
 
 # Scenario quotas (fractions, spread evenly over each split's shuffled case order). Not used by the split.
 QUOTAS = {
-    "red_flag": "1/4",
+    "red_flag": "3/10",
     "missing_info": "1/5",
     "no_medication": "1/10",
     "late_items": "7/20",
     "near_miss_of_non_red_flag": "1/5",
-    "text_near_miss_of_plain": "1/4",
-    "arrival_tamtee": "1/6",
+    "text_near_miss_of_plain": "1/3",
+    "arrival_tamtee_per_stratum": "1/3",
     "injected_of_medication": "3/5",
 }
 RULE_CYCLE = ("RF-QSOFA", "RF-NEWS-SINGLE3", "RF-FAST", "RF-ACUTE-CHEST-PAIN", "RF-THUNDERCLAP", "RF-ANAPHYLAXIS",
               "RF-NEWS-AGG5")
 VITALS_RULES = ("RF-QSOFA", "RF-NEWS-SINGLE3", "RF-NEWS-AGG5")
-TNM_CYCLE = ("TNM-CHEST-STABLE", "TNM-HEADACHE-GRADUAL", "TNM-NUMB-BILATERAL", "TNM-URTICARIA-ONLY")
+TNM_CYCLE = ("TNM-CHEST-STABLE", "TNM-HEADACHE-GRADUAL", "TNM-NUMB-BILATERAL", "TNM-URTICARIA-ONLY",
+             "TNM-DEFICIT-CHRONIC")
+# Strata for the arrival-turn quota: the ทันที arrival variant is assigned at the same rate in every stratum.
+STRATA = ("text_rf", "vitals_rf", "vitals_nm", "text_nm", "ordinary")
 # Answers to the fixed nurse question about arrival. The TAMTEE ones use ทันที only in a travel/arrival sense.
 ARRIVAL_PLAIN = ("มาคนเดียว", "ลูกพามา", "เพื่อนขับรถมาส่ง")
 ARRIVAL_TAMTEE = ("ลูกพามาทันทีหลังเลิกงาน", "นั่งรถมาทันทีหลังเลิกงาน")
 MODEL_INPUTS_GLOB = "inputs/*/*/snapshot_T*.json"
 AUDIT_ONLY_GLOBS = ["inputs/*/*/journey.json", "gold/**"]
+MISSING_CC_RF_EVERY = 3  # every 3rd missing-chief-complaint case (0, 3, 6, ...) carries a vitals red flag (D4)
 MISSING_CYCLE = (("chief_complaint",), ("duration",), ("allergy_status",), ("duration", "allergy_status"))
 ISSUE_TYPES = ("duplicate_therapy", "dose_mismatch", "frequency_mismatch", "omission", "allergy_conflict")
 FREQ_TH = {"OD": "วันละ 1 ครั้ง", "BID": "วันละ 2 ครั้ง", "TID": "วันละ 3 ครั้ง", "QID": "วันละ 4 ครั้ง", "HS": "ก่อนนอน"}
 UNIT_TH = {"mg": "มิลลิกรัม", "mcg": "ไมโครกรัม"}
-DURATION_TH = {"hour": "ชั่วโมง", "day": "วัน", "week": "สัปดาห์", "month": "เดือน"}
+DURATION_TH = {"minute": "นาที", "hour": "ชั่วโมง", "day": "วัน", "week": "สัปดาห์", "month": "เดือน", "year": "ปี"}
 VITAL_PARAMS = ("sbp", "dbp", "hr", "rr", "temp_c", "spo2", "consciousness", "on_oxygen")
 
 
@@ -155,8 +159,10 @@ def plan_cases(main: random.Random, roster: list[dict], splits: dict[str, str], 
     near = tpl["vitals_bands"]["near_miss_variants"]
     patients = {p["patient_ref"]: p for p in roster}
     ctr = dict.fromkeys(("rf", "vit", "swap", "miss", "host", "gen", "ob", "gyn", "yf", "of", "near", "inj",
-                         "var_q", "var_n", "var_a", "tnm"), 0)
+                         "var_q", "var_n", "var_a", "tnm", "ccm", "ccm_vit"), 0)
     ctr_rule = dict.fromkeys(RULE_CYCLE, 0)
+    ctr_unit = dict.fromkeys(RULE_CYCLE, 0)
+    ctr_arr = dict.fromkeys(STRATA, 0)
     ctr_tnm = dict.fromkeys(TNM_CYCLE, 0)
     plans = []
     for split in SPLITS:
@@ -169,20 +175,30 @@ def plan_cases(main: random.Random, roster: list[dict], splits: dict[str, str], 
             plan = {"case_id": case_id, "patient_ref": ref, "split": split, "red_flag": None, "near_miss": None,
                     "text_near_miss": None, "missing": [], "injections": [],
                     "has_meds": not _hit(i, q["no_medication"]), "late": _hit(i, q["late_items"]),
-                    "arrival_tamtee": _hit(i, q["arrival_tamtee"])}
+                    "arrival_tamtee": False, "duration_idx": 0}
             if _hit(i, q["missing_info"]):
                 plan["missing"] = list(MISSING_CYCLE[ctr["miss"] % len(MISSING_CYCLE)])
                 ctr["miss"] += 1
-            if _hit(i, q["red_flag"]):
-                rule = RULE_CYCLE[ctr["rf"] % len(RULE_CYCLE)]
-                ctr["rf"] += 1
-                if "chief_complaint" in plan["missing"] and rule not in VITALS_RULES:
-                    rule = VITALS_RULES[ctr["swap"] % len(VITALS_RULES)]  # a text red flag needs the complaint stated
+            cc_missing = "chief_complaint" in plan["missing"]
+            if cc_missing:
+                # D4 path: a fixed share of missing-complaint cases carry a vitals red flag (a text red flag needs
+                # the complaint stated), with onset alternating T1/T2; the others carry none.
+                rf_hit = ctr["ccm"] % MISSING_CC_RF_EVERY == 0
+                ctr["ccm"] += 1
+            else:
+                rf_hit = _hit(i, q["red_flag"])
+            if rf_hit:
+                if cc_missing:
+                    rule = VITALS_RULES[ctr["swap"] % len(VITALS_RULES)]
                     ctr["swap"] += 1
+                else:
+                    rule = RULE_CYCLE[ctr["rf"] % len(RULE_CYCLE)]
+                    ctr["rf"] += 1
                 rf = {"rule_id": rule, "onset": "T1", "variant": None}
                 if rule in VITALS_RULES:
-                    rf["onset"] = "T2" if ctr["vit"] % 2 else "T1"
-                    ctr["vit"] += 1
+                    key = "ccm_vit" if cc_missing else "vit"
+                    rf["onset"] = "T2" if ctr[key] % 2 else "T1"
+                    ctr[key] += 1
                     key = {"RF-QSOFA": "var_q", "RF-NEWS-SINGLE3": "var_n", "RF-NEWS-AGG5": "var_a"}[rule]
                     rf["variant"] = variants[rule][ctr[key] % len(variants[rule])]["variant_id"]
                     ctr[key] += 1
@@ -194,16 +210,22 @@ def plan_cases(main: random.Random, roster: list[dict], splits: dict[str, str], 
                 elif "chief_complaint" not in plan["missing"]:  # a text near-miss needs the complaint stated
                     if _hit(n_plain, q["text_near_miss_of_plain"]):
                         plan["text_near_miss"] = TNM_CYCLE[ctr["tnm"] % len(TNM_CYCLE)]
-                        plan["arrival_tamtee"] = ctr["tnm"] % 2 == 0
                         ctr["tnm"] += 1
                     n_plain += 1
                 n_nonrf += 1
-            # complaint template
             rf = plan["red_flag"]
+            stratum = ("text_rf" if rf and rf["rule_id"] not in VITALS_RULES else "vitals_rf" if rf else
+                       "vitals_nm" if plan["near_miss"] else "text_nm" if plan["text_near_miss"] else "ordinary")
+            plan["arrival_tamtee"] = _hit(ctr_arr[stratum], q["arrival_tamtee_per_stratum"])
+            ctr_arr[stratum] += 1
+            # complaint template
             if rf and rf["rule_id"] not in VITALS_RULES:
                 pool = text_cc[rf["rule_id"]]
                 cc = pool[ctr_rule[rf["rule_id"]] % len(pool)]
                 ctr_rule[rf["rule_id"]] += 1
+                if "duration" not in plan["missing"]:  # alternate minutes/hours within each text rule
+                    plan["duration_idx"] = ctr_unit[rf["rule_id"]] % len(cc["durations"])
+                    ctr_unit[rf["rule_id"]] += 1
             elif plan["text_near_miss"]:
                 pool = tnm_cc[plan["text_near_miss"]]
                 cc = pool[ctr_tnm[plan["text_near_miss"]] % len(pool)]
@@ -214,7 +236,7 @@ def plan_cases(main: random.Random, roster: list[dict], splits: dict[str, str], 
             else:
                 group = "general"
                 if pat["sex"] == "female" and pat["age"] <= 45:
-                    group = ("obstetric", "gynecologic", "general")[ctr["yf"] % 3]
+                    group = ("obstetric", "gynecologic", "obstetric", "general")[ctr["yf"] % 4]
                     ctr["yf"] += 1
                 elif pat["sex"] == "female":
                     group = "gynecologic" if ctr["of"] % 4 == 0 else "general"
@@ -339,7 +361,8 @@ class _Case:
              "temp_c": self._band("temp_c_fever" if fever else "temp_c"), "spo2": self._band("spo2"),
              "consciousness": "A", "on_oxygen": False}
         if self.cc.get("red_flag_rule") == "RF-ANAPHYLAXIS":
-            variant_set = {**self.tpl["vitals_bands"]["anaphylaxis_host"]["set"], **(variant_set or {})}
+            variant_set = {**self.tpl["vitals_bands"]["anaphylaxis_host"]["set"], **self.cc.get("vitals_set", {}),
+                           **(variant_set or {})}
         for k, val in (variant_set or {}).items():
             if isinstance(val, str):
                 v[k] = val
@@ -421,9 +444,12 @@ class _Case:
         self.item("VS1", "Vitals", "synthetic-triage", A + 5 * m, A + 6 * m, A + 7 * m, **vs1)
 
         # Thai nurse-patient intake dialogue
-        lo, hi = self.cc["duration_range"]
+        if "durations" in self.cc:
+            dur_unit, lo, hi = self.cc["durations"][plan["duration_idx"]]
+        else:
+            dur_unit, (lo, hi) = self.cc["duration_unit"], self.cc["duration_range"]
         dur_value = rng.randint(lo, hi)
-        dur_th = f"{dur_value} {DURATION_TH[self.cc['duration_unit']]}"
+        dur_th = f"{dur_value} {DURATION_TH[dur_unit]}"
         allergy_th = f"แพ้ยา{allergy_class['th']}" if allergy == "known" else "ไม่เคยแพ้ยา"
         arrival = ARRIVAL_TAMTEE if plan["arrival_tamtee"] else ARRIVAL_PLAIN
         # the nurse script is identical for every case; missing fields are unanswered, not unasked
@@ -485,7 +511,7 @@ class _Case:
             "chief_complaint": "MISSING" if "chief_complaint" in missing else
             {"code": self.cc["id"], "icd10cm": self.cc["icd10cm"], "th_text": self.cc["th"]},
             "duration": "MISSING" if "duration" in missing else
-            {"value": dur_value, "unit": self.cc["duration_unit"], "th_text": dur_th},
+            {"value": dur_value, "unit": dur_unit, "th_text": dur_th},
             "allergy_status": "MISSING" if "allergy_status" in missing else {"value": allergy, "th_text": allergy_th},
         }
         return journey, injections
@@ -698,6 +724,10 @@ def datacard(seed: int, counts: dict) -> str:
   aggregate >= 5, RCP 2012 Chart 1; FAST PMID 12511753; acute chest pain PMID 34709879; thunderclap PMID 24065011;
   anaphylaxis PMID 16461139), evaluated over the snapshot at each decision time. Text rules need a concept term and
   a sudden-onset term in the same patient turn. "No red flag" means no registry rule fires, not clinically safe.
+- Negatives: vitals near-miss cases (every NEWS input present, aggregate <= 4, no parameter scoring 3, qSOFA <= 1)
+  and five text near-miss families (stable chest pain, gradual headache, bilateral numbness, urticaria/lip swelling
+  only, chronic unchanged post-stroke deficit) that reuse the concept terms without a sudden-onset term. The arrival
+  answer uses `ทันที` (travel sense) in 1/3 of every stratum; the nurse script is identical for every case.
 - `target_department`: SIL-TH cs-chi-clinic v0.1.2 code; `12` whenever a red flag is present, else the complaint
   template's department (synthetic map pending expert review); `NOT_EVALUABLE` when the chief complaint is missing.
 - {DEPT_EVALUABLE}

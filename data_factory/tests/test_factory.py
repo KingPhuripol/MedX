@@ -246,6 +246,21 @@ def test_audit_detects_planted(kind, dataset, tmp_path):
         assert [e for e in rep["errors"] if "snapshot_T1.json" in e and planted in e], rep["errors"]
 
 
+def test_make_audit_runs_all_steps(dataset, tmp_path):
+    """`make audit` runs the leakage script and the factory audit without short-circuiting (S1R-A10b)."""
+    root = tmp_path / "ds"
+    shutil.copytree(dataset.root, root)
+    ok = subprocess.run(["make", "audit", f"OUT={root}"], cwd=REPO_ROOT, capture_output=True, text=True, timeout=300)
+    assert ok.returncode == 0 and "STEP leakage: PASS" in ok.stdout and "STEP factory: PASS" in ok.stdout, ok.stdout
+    _plant("snapshot_after_T", root)
+    planted = load(sorted((root / "inputs" / "test").iterdir())[0] / "journey.json")["items"][-1]["item_id"]
+    r = subprocess.run(["make", "audit", f"OUT={root}"], cwd=REPO_ROOT, capture_output=True, text=True, timeout=300)
+    out = r.stdout + r.stderr
+    assert r.returncode != 0
+    assert "STEP leakage: FAIL" in out and "STEP factory: FAIL" in out  # both steps ran
+    assert "snapshot_items_after_T" in out and planted in out
+
+
 def test_audit_legacy_as_of_mode(dataset):
     cid, c = next((k, v) for k, v in dataset.cases.items() if any(i["item_id"].endswith("-LATE") for i in v["journey"]["items"]))
     path = dataset.root / "inputs" / c["split"] / cid
@@ -344,7 +359,7 @@ def test_missing_info_really_missing(dataset):
         if rf["chief_complaint"] == "MISSING":
             assert not any(cc in text for cc in complaints), cid
         if rf["duration"] == "MISSING":
-            assert not re.search(r"\d+\s*(ชั่วโมง|วัน|สัปดาห์|เดือน)", text), cid
+            assert not re.search(r"\d+\s*(นาที|ชั่วโมง|วัน|สัปดาห์|เดือน|ปี)", text), cid
         if rf["allergy_status"] == "MISSING":
             assert "แพ้" not in text, cid
             statuses = {i["status"] for i in items if i["data_type"] == "AllergyList"}
@@ -370,6 +385,25 @@ def test_missing_cc_department_not_evaluable(dataset):
         assert r["expected_action"] == ("escalate" if r["red_flags"] else "abstain"), cid
     for cid, r in rest:
         assert r["department_evaluable"] is True and r["target_department"] in DEPT_CODES, cid
+
+
+def test_missing_cc_red_flag_escalates(dataset):
+    """D4 path is exercised: missing complaint + red flag -> escalate, department NOT_EVALUABLE (S1R-A09)."""
+    miss = {cid: c["gold"]["decision_times"] for cid, c in dataset.cases.items()
+            if c["gold"]["decision_times"][0]["required_fields"]["chief_complaint"] == "MISSING"}
+    with_rf = {cid: rows for cid, rows in miss.items() if any(r["red_flags"] for r in rows)}
+    rf_rows = [r for rows in with_rf.values() for r in rows if r["red_flags"]]
+    t1 = [cid for cid, rows in with_rf.items() if rows[0]["red_flags"]]
+    t2 = [cid for cid, rows in with_rf.items() if not rows[0]["red_flags"] and rows[1]["red_flags"]]
+    assert len(with_rf) >= 3 and len(rf_rows) >= 4 and t1 and t2, (list(with_rf), t1, t2)
+    assert len(miss) - len(with_rf) >= 5
+    for r in rf_rows:
+        assert r["expected_action"] == "escalate" and r["target_department"] == "NOT_EVALUABLE"
+        assert r["department_evaluable"] is False
+    for cid in t2:
+        rows = with_rf[cid]
+        assert [r["expected_action"] for r in rows] == ["abstain", "escalate"], cid
+        assert [r["target_department"] for r in rows] == ["NOT_EVALUABLE", "NOT_EVALUABLE"], cid
 
 
 def test_pregnancy_no_ras_or_statin(dataset):
@@ -536,7 +570,7 @@ def test_templates_have_source_ref():
     unresolved = [r for r in records if r.get("source_ref") not in refs]
     unresolved += [r for r in load(TEMPLATES / "complaints.json") if r.get("department_source_ref") not in refs]
     tnm = [r for r in load(TEMPLATES / "complaints.json") if "near_miss_family" in r]
-    assert len(tnm) >= 4 and all(r["near_miss_reason"] for r in tnm)
+    assert len(tnm) >= 10 and all(r["near_miss_reason"] for r in tnm)
     unresolved += [r for r in tnm if r["near_miss_ref"] not in refs]
     agg = next(r for r in load(TEMPLATES / "red_flags.json") if r["rule_id"] == "RF-NEWS-AGG5")
     assert refs[agg["chart_ref"]]["url"] and refs[agg["source_ref"]]["pmid"]
@@ -580,7 +614,7 @@ def test_manifest_model_inputs(dataset, tmp_path):
     m = dataset.manifest
     assert m["model_inputs_glob"] == "inputs/*/*/snapshot_T*.json"
     assert m["audit_only_globs"] == ["inputs/*/*/journey.json", "gold/**"]
-    assert m["generator_version"] == "1.1.0"
+    assert m["generator_version"] == "1.1.1"
     assert len(list(dataset.root.glob(m["model_inputs_glob"]))) == 400
     rep = audit.run_audit(dataset.root, write_report=False)
     assert rep["status"] == "PASS" and rep["steps"]["snapshot_items_after_T"] == "PASS"

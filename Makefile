@@ -54,9 +54,12 @@ data: $(VENV)/.installed
 	$(PY) -m data_factory generate --seed $(SEED) --out "$(OUT)" --replace
 
 ## Leakage audit + schema + gold separation + identifier scan + manifest hashes + snapshot_items_after_T over OUT.
+## Both steps always run; a STEP line is printed per step; exit is non-zero if either failed.
 audit: $(VENV)/.installed
-	$(PY) scripts/temporal_leakage_audit.py --dataset $(OUT)
-	$(PY) -m data_factory audit --dataset $(OUT)
+	@rc=0; \
+	if $(PY) scripts/temporal_leakage_audit.py --dataset "$(OUT)"; then echo "STEP leakage: PASS"; else echo "STEP leakage: FAIL"; rc=1; fi; \
+	if $(PY) -m data_factory audit --dataset "$(OUT)"; then echo "STEP factory: PASS"; else echo "STEP factory: FAIL"; rc=1; fi; \
+	exit $$rc
 
 clean:
 	rm -rf $(VENV) web/node_modules web/.next backend/dev.db
