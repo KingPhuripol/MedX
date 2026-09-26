@@ -18,9 +18,10 @@ HERE = Path(__file__).resolve().parent
 PATIENTS_FILE = HERE / "patients.json"
 MANIFEST_FILE = HERE / "test_manifest.json"
 DEMO_FILE = HERE / "demo.json"
-GENERATOR_VERSION = "s5-fixtures-1.0.0"
+GENERATOR_VERSION = "s5-fixtures-2.0.0"
 SEED = 20260926
-N_PATIENTS = 32
+FROZEN_ON = "2026-09-26"  # manifest v2 frozen before any v1.1 test-split evaluation
+N_PATIENTS = 96  # >= 60 dev and >= 30 test (s5r); refs s5-p01..s5-p96
 PROVENANCE = "synthetic: s5 fixture generator (no real patient data)"
 
 # (ingredient key or product id, {surface kind: name}, dose, unit, frequency_code)
@@ -167,7 +168,8 @@ def build_patient(form: Formulary, index: int) -> dict:
     chronic_keys = [rng.choice(s) for s in slots]
     chronic = [c for c in CHRONIC if c[0] in chronic_keys]
     acute = [ACUTE[index % len(ACUTE)]]
-    discontinue = index % 6 == 0  # >= 5 patients with documented intentional discontinuation
+    # >= 15 patients with documented intentional discontinuation, >= 5 of them in test (index % 3 == 2).
+    discontinue = index % 6 == 0 or index % 12 == 5
 
     home_style = "en"
     pr_style = "th" if thai else "en"
@@ -177,11 +179,10 @@ def build_patient(form: Formulary, index: int) -> dict:
     ended_key = chronic[-1][0] if discontinue else None
     for key, names, dose, unit, freq in chronic:
         home.append(make_entry(form, rng, key, _surface(names, home_style, rng), dose, unit, freq, home_style))
-        if rng.random() < 0.7:
-            reported.append(
-                make_entry(form, rng, key, _surface(names, pr_style, rng), dose, unit, freq, pr_style,
-                           keep_dose=rng.random() < 0.6, keep_freq=rng.random() < 0.85)
-            )
+        # Clean lists are fully specified in every source (DECISIONS 2026-09-27): incompleteness exists
+        # only as an injected missing_field case.
+        if rng.random() < 0.7 or (key == chronic[-1][0] and not reported):
+            reported.append(make_entry(form, rng, key, _surface(names, pr_style, rng), dose, unit, freq, pr_style))
         entry = make_entry(form, rng, key, _surface(names, order_style, rng), dose, unit, freq, order_style)
         if key == ended_key:
             entry["discontinue_intent"] = True
@@ -219,11 +220,8 @@ def build_patient(form: Formulary, index: int) -> dict:
             "entries": out_entries,
         }
 
-    sources = [src("home_list", home, timedelta(days=30))]
-    gold = {"home_list": [e["gold"] for e in home]}
-    if reported:
-        sources.append(src("patient_reported", reported, timedelta(hours=1)))
-        gold["patient_reported"] = [e["gold"] for e in reported]
+    sources = [src("home_list", home, timedelta(days=30)), src("patient_reported", reported, timedelta(hours=1))]
+    gold = {"home_list": [e["gold"] for e in home], "patient_reported": [e["gold"] for e in reported]}
     sources.append(src("new_order", orders, timedelta(minutes=10)))
     gold["new_order"] = [e["gold"] for e in orders]
     uses_thai = any(
@@ -268,7 +266,8 @@ def frozen_split_sha256(patients: list[dict]) -> str:
 def manifest(patients: list[dict]) -> dict:
     return {
         "split": "test",
-        "frozen_on": "2026-09-26",
+        "frozen_on": FROZEN_ON,
+        "decision": "docs/DECISIONS.md 2026-09-27 — S5 Pharma evaluation definitions",
         "generator_version": GENERATOR_VERSION,
         "patient_refs": [p["patient_ref"] for p in patients if p["split"] == "test"],
         "sha256": frozen_split_sha256(patients),

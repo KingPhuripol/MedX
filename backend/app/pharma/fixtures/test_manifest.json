@@ -1,6 +1,7 @@
 {
+ "decision": "docs/DECISIONS.md 2026-09-27 — S5 Pharma evaluation definitions",
  "frozen_on": "2026-09-26",
- "generator_version": "s5-fixtures-1.0.0",
+ "generator_version": "s5-fixtures-2.0.0",
  "note": "Frozen test split. Do not tune rules or the mock against these patients.",
  "patient_refs": [
   "s5-p03",
@@ -12,8 +13,30 @@
   "s5-p21",
   "s5-p24",
   "s5-p27",
-  "s5-p30"
+  "s5-p30",
+  "s5-p33",
+  "s5-p36",
+  "s5-p39",
+  "s5-p42",
+  "s5-p45",
+  "s5-p48",
+  "s5-p51",
+  "s5-p54",
+  "s5-p57",
+  "s5-p60",
+  "s5-p63",
+  "s5-p66",
+  "s5-p69",
+  "s5-p72",
+  "s5-p75",
+  "s5-p78",
+  "s5-p81",
+  "s5-p84",
+  "s5-p87",
+  "s5-p90",
+  "s5-p93",
+  "s5-p96"
  ],
- "sha256": "7757da82d7b30f49fed5edd7b0c9adb5fac98bd089a527b446175788e620d65e",
+ "sha256": "313e44b314097bf8980d353b3d28f739223fb848c5fe8f9cabdf9b307771dad9",
  "split": "test"
 }
