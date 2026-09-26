@@ -41,13 +41,13 @@ const REVIEW = { type: 'object', properties: {
   required: ['verdict', 'blockers', 'conditions', 'summary'] }
 
 phase('Think')
-const think = (feedback) => agent(`${CTX}
+const think = (feedback) => agent(`${role(A.planner).pre}${CTX}
 ROLE: PLANNER (you plan; you do not implement). Goal of this slice:
 ${A.goal}
 Proposal-derived acceptance to include (make each measurable, add more if the proposal requires): ${A.acceptance}
 ${feedback ? 'The checker reported the previous spec was ambiguous or unmeasurable; fix it:\n' + feedback : ''}
 Write ${WT}/slices/${A.id}/SPEC.md (short: scope, out of scope, acceptance table with id/criterion/threshold/how measured, required test cases, clinical risks, run commands). Commit it on the branch. Return the acceptance list.`,
-  { label: `plan:${A.planner}`, phase: 'Think', agentType: A.planner, schema: SPEC })
+  { label: `plan:${A.planner}`, phase: 'Think', agentType: role(A.planner).agentType, schema: SPEC })
 
 let spec = await think('')
 if (!spec) return { error: 'planner failed' }
