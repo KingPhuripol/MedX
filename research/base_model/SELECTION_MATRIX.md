@@ -145,7 +145,7 @@ Numbers are grouped by `comparable_group` (same source, harness and setting). Th
 |---|---|---|---|---|---|---|
 | MedGemma 27B multimodal (google/medgemma-27b-it) | MIMIC-CXR | not stated on card | macro F1, top 5 conditions | 90.0 | card imaging table | <https://huggingface.co/google/medgemma-27b-it> (2026-09-26) |
 | MedGemma 27B multimodal (google/medgemma-27b-it) | SLAKE (radiology) | not stated on card | tokenized F1 | 70.0 | card imaging table | <https://huggingface.co/google/medgemma-27b-it> (2026-09-26) |
-| MedGemma 27B multimodal (google/medgemma-27b-it) | VQA-RAD (radiology) | not stated on card | tokenized F1 | 46.7 | card imaging table | <https://huggingface.co/google/medgemma-27b-it> (2026-09-26) |
+| MedGemma 27B multimodal (google/medgemma-27b-it) | VQA-RAD (radiology) | balanced split (Yang 2024, arXiv 2405.03162, per card footnote on the VQA-RAD row) | tokenized F1 | 46.7 | card imaging table | <https://huggingface.co/google/medgemma-27b-it> (2026-09-26) |
 
 ### Group: MedGemma model card, text benchmarks (27B multimodal column; card: test-time scaling used for all 27B results)
 

@@ -156,3 +156,14 @@ def test_license_and_overlap_cells_present():
     assert "conditions" in mg["cells"]["redistribution"]["value"].lower()
     assert "medgemma-27b-it" in decisions["medgemma-release-terms"]["candidates"]
     assert "lingshu-32b" in decisions["lingshu-true-scale"]["candidates"]
+
+
+def test_medgemma_vqa_rad_split_matches_card():
+    # S9-A02 regression: the card footnote on the VQA-RAD row names the "balanced split" of Yang (2024,
+    # arXiv 2405.03162); the split is stated, so it must not be recorded as "not stated on card".
+    m = R.load_matrix()
+    mg = next(r for r in m["rows"] if r["candidate_id"] == "medgemma-27b-it")
+    vqa = [e for e in mg["cells"]["medical_benchmarks"]["value"] if e["benchmark"].startswith("VQA-RAD")]
+    assert len(vqa) == 1
+    assert vqa[0]["value"] == 46.7
+    assert "balanced split" in vqa[0]["split"] and "2405.03162" in vqa[0]["split"]

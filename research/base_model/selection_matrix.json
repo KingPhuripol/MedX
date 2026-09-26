@@ -269,7 +269,7 @@
             },
             {
               "benchmark": "VQA-RAD (radiology)",
-              "split": "not stated on card",
+              "split": "balanced split (Yang 2024, arXiv 2405.03162, per card footnote on the VQA-RAD row)",
               "metric": "tokenized F1",
               "value": 46.7,
               "setting": "card imaging table",
