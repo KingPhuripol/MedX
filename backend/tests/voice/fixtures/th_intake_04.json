@@ -1,0 +1,177 @@
+{
+  "dialogue_id": "th_intake_04",
+  "synthetic": true,
+  "author": "s3-builder (hand-written synthetic script; no real patient)",
+  "scenario_tags": [
+    "correction",
+    "allergy_refused",
+    "thai_number_words",
+    "dev"
+  ],
+  "patient_ref": "SYN-S3-04",
+  "turns": [
+    {
+      "turn_id": "t01",
+      "speaker": "agent",
+      "text": "วันนี้มีอาการอะไรมาคะ",
+      "started_at": "2026-01-08T02:00:00Z",
+      "ended_at": "2026-01-08T02:00:03Z"
+    },
+    {
+      "turn_id": "t02",
+      "speaker": "patient",
+      "text": "ปวดหัวครับ ปวดตุ้บๆ ที่ขมับ",
+      "started_at": "2026-01-08T02:00:05Z",
+      "ended_at": "2026-01-08T02:00:10Z"
+    },
+    {
+      "turn_id": "t03",
+      "speaker": "agent",
+      "text": "มีอาการนี้มานานเท่าไรแล้วคะ",
+      "started_at": "2026-01-08T02:00:12Z",
+      "ended_at": "2026-01-08T02:00:15Z"
+    },
+    {
+      "turn_id": "t04",
+      "speaker": "patient",
+      "text": "ปวดมาสามวันแล้วครับ",
+      "started_at": "2026-01-08T02:00:17Z",
+      "ended_at": "2026-01-08T02:00:22Z"
+    },
+    {
+      "turn_id": "t05",
+      "speaker": "agent",
+      "text": "ถ้าให้คะแนนความรุนแรง 0 ถึง 10 ตอนนี้ประมาณเท่าไรคะ",
+      "started_at": "2026-01-08T02:00:24Z",
+      "ended_at": "2026-01-08T02:00:27Z"
+    },
+    {
+      "turn_id": "t06",
+      "speaker": "patient",
+      "text": "เอ๊ะ เดี๋ยวครับ ไม่ใช่สามวัน สี่วันแล้วครับ นับผิด ส่วนความปวดให้ 8 เต็ม 10",
+      "started_at": "2026-01-08T02:00:29Z",
+      "ended_at": "2026-01-08T02:00:38Z"
+    },
+    {
+      "turn_id": "t07",
+      "speaker": "agent",
+      "text": "เคยแพ้ยาอะไรไหมคะ",
+      "started_at": "2026-01-08T02:00:40Z",
+      "ended_at": "2026-01-08T02:00:43Z"
+    },
+    {
+      "turn_id": "t08",
+      "speaker": "patient",
+      "text": "เรื่องนี้ไม่ขอตอบครับ",
+      "started_at": "2026-01-08T02:00:45Z",
+      "ended_at": "2026-01-08T02:00:50Z"
+    },
+    {
+      "turn_id": "t09",
+      "speaker": "agent",
+      "text": "ตอนนี้ใช้ยาอะไรอยู่บ้างไหมคะ",
+      "started_at": "2026-01-08T02:00:52Z",
+      "ended_at": "2026-01-08T02:00:55Z"
+    },
+    {
+      "turn_id": "t10",
+      "speaker": "patient",
+      "text": "กินพาราเซตามอลครับ",
+      "started_at": "2026-01-08T02:00:57Z",
+      "ended_at": "2026-01-08T02:01:02Z"
+    },
+    {
+      "turn_id": "t11",
+      "speaker": "agent",
+      "text": "มีโรคประจำตัวหรือเคยเจ็บป่วยอะไรมาก่อนไหมคะ",
+      "started_at": "2026-01-08T02:01:04Z",
+      "ended_at": "2026-01-08T02:01:07Z"
+    },
+    {
+      "turn_id": "t12",
+      "speaker": "patient",
+      "text": "ไม่มีครับ",
+      "started_at": "2026-01-08T02:01:09Z",
+      "ended_at": "2026-01-08T02:01:13Z"
+    }
+  ],
+  "gold_facts": [
+    {
+      "field": "chief_complaint",
+      "state": "KNOWN",
+      "value": "headache",
+      "items": null,
+      "span_turn_ids": [
+        "t02"
+      ]
+    },
+    {
+      "field": "onset_duration",
+      "state": "KNOWN",
+      "value": "P4D",
+      "items": null,
+      "span_turn_ids": [
+        "t06"
+      ]
+    },
+    {
+      "field": "severity",
+      "state": "KNOWN",
+      "value": 8,
+      "items": null,
+      "span_turn_ids": [
+        "t06"
+      ]
+    },
+    {
+      "field": "allergy_status",
+      "state": "REFUSED",
+      "value": null,
+      "items": null,
+      "span_turn_ids": [
+        "t08"
+      ]
+    },
+    {
+      "field": "current_medications",
+      "state": "KNOWN",
+      "value": null,
+      "items": [
+        "พาราเซตามอล"
+      ],
+      "span_turn_ids": [
+        "t10"
+      ]
+    },
+    {
+      "field": "relevant_history",
+      "state": "KNOWN",
+      "value": null,
+      "items": [],
+      "span_turn_ids": [
+        "t12"
+      ]
+    }
+  ],
+  "answers_by_field": {
+    "chief_complaint": [
+      "t02"
+    ],
+    "onset_duration": [
+      "t04"
+    ],
+    "severity": [
+      "t06"
+    ],
+    "allergy_status": [
+      "t08"
+    ],
+    "current_medications": [
+      "t10"
+    ],
+    "relevant_history": [
+      "t12"
+    ]
+  },
+  "gold_nurse_attention": false
+}

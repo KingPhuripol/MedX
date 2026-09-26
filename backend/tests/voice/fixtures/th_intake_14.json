@@ -1,0 +1,183 @@
+{
+  "dialogue_id": "th_intake_14",
+  "synthetic": true,
+  "author": "s3-builder (hand-written synthetic script; no real patient)",
+  "scenario_tags": [
+    "relative_speaker",
+    "correction",
+    "allergy_refused",
+    "meds_multi_codeswitch",
+    "thai_number_words",
+    "heldout"
+  ],
+  "patient_ref": "SYN-S3-14",
+  "turns": [
+    {
+      "turn_id": "t01",
+      "speaker": "agent",
+      "text": "วันนี้มีอาการอะไรมาคะ",
+      "started_at": "2026-01-18T02:00:00Z",
+      "ended_at": "2026-01-18T02:00:03Z"
+    },
+    {
+      "turn_id": "t02",
+      "speaker": "relative",
+      "text": "พ่ออาเจียนค่ะ กินอะไรไม่ได้เลย",
+      "started_at": "2026-01-18T02:00:05Z",
+      "ended_at": "2026-01-18T02:00:11Z"
+    },
+    {
+      "turn_id": "t03",
+      "speaker": "agent",
+      "text": "มีอาการนี้มานานเท่าไรแล้วคะ",
+      "started_at": "2026-01-18T02:00:13Z",
+      "ended_at": "2026-01-18T02:00:16Z"
+    },
+    {
+      "turn_id": "t04",
+      "speaker": "relative",
+      "text": "อาเจียนมา 2 วันค่ะ",
+      "started_at": "2026-01-18T02:00:18Z",
+      "ended_at": "2026-01-18T02:00:23Z"
+    },
+    {
+      "turn_id": "t05",
+      "speaker": "agent",
+      "text": "ถ้าให้คะแนนความรุนแรง 0 ถึง 10 ตอนนี้ประมาณเท่าไรคะ",
+      "started_at": "2026-01-18T02:00:25Z",
+      "ended_at": "2026-01-18T02:00:28Z"
+    },
+    {
+      "turn_id": "t06",
+      "speaker": "relative",
+      "text": "อ้อ ขอโทษค่ะ ไม่ใช่ 2 วัน สามวันแล้วค่ะ อาการหนักมาก",
+      "started_at": "2026-01-18T02:00:30Z",
+      "ended_at": "2026-01-18T02:00:37Z"
+    },
+    {
+      "turn_id": "t07",
+      "speaker": "agent",
+      "text": "เคยแพ้ยาอะไรไหมคะ",
+      "started_at": "2026-01-18T02:00:39Z",
+      "ended_at": "2026-01-18T02:00:42Z"
+    },
+    {
+      "turn_id": "t08",
+      "speaker": "relative",
+      "text": "พ่อไม่อยากบอกค่ะ",
+      "started_at": "2026-01-18T02:00:44Z",
+      "ended_at": "2026-01-18T02:00:49Z"
+    },
+    {
+      "turn_id": "t09",
+      "speaker": "agent",
+      "text": "ตอนนี้ใช้ยาอะไรอยู่บ้างไหมคะ",
+      "started_at": "2026-01-18T02:00:51Z",
+      "ended_at": "2026-01-18T02:00:54Z"
+    },
+    {
+      "turn_id": "t10",
+      "speaker": "relative",
+      "text": "กิน metformin กับ losartan ค่ะ",
+      "started_at": "2026-01-18T02:00:56Z",
+      "ended_at": "2026-01-18T02:01:02Z"
+    },
+    {
+      "turn_id": "t11",
+      "speaker": "agent",
+      "text": "มีโรคประจำตัวหรือเคยเจ็บป่วยอะไรมาก่อนไหมคะ",
+      "started_at": "2026-01-18T02:01:04Z",
+      "ended_at": "2026-01-18T02:01:07Z"
+    },
+    {
+      "turn_id": "t12",
+      "speaker": "relative",
+      "text": "เบาหวานกับความดันค่ะ",
+      "started_at": "2026-01-18T02:01:09Z",
+      "ended_at": "2026-01-18T02:01:14Z"
+    }
+  ],
+  "gold_facts": [
+    {
+      "field": "chief_complaint",
+      "state": "KNOWN",
+      "value": "nausea_vomiting",
+      "items": null,
+      "span_turn_ids": [
+        "t02"
+      ]
+    },
+    {
+      "field": "onset_duration",
+      "state": "KNOWN",
+      "value": "P3D",
+      "items": null,
+      "span_turn_ids": [
+        "t06"
+      ]
+    },
+    {
+      "field": "severity",
+      "state": "KNOWN",
+      "value": "severe",
+      "items": null,
+      "span_turn_ids": [
+        "t06"
+      ]
+    },
+    {
+      "field": "allergy_status",
+      "state": "REFUSED",
+      "value": null,
+      "items": null,
+      "span_turn_ids": [
+        "t08"
+      ]
+    },
+    {
+      "field": "current_medications",
+      "state": "KNOWN",
+      "value": null,
+      "items": [
+        "metformin",
+        "losartan"
+      ],
+      "span_turn_ids": [
+        "t10"
+      ]
+    },
+    {
+      "field": "relevant_history",
+      "state": "KNOWN",
+      "value": null,
+      "items": [
+        "เบาหวาน",
+        "ความดัน"
+      ],
+      "span_turn_ids": [
+        "t12"
+      ]
+    }
+  ],
+  "answers_by_field": {
+    "chief_complaint": [
+      "t02"
+    ],
+    "onset_duration": [
+      "t04"
+    ],
+    "severity": [
+      "t06"
+    ],
+    "allergy_status": [
+      "t08"
+    ],
+    "current_medications": [
+      "t10"
+    ],
+    "relevant_history": [
+      "t12"
+    ]
+  },
+  "gold_nurse_attention": false
+}
