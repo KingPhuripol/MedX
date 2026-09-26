@@ -1,0 +1,77 @@
+{
+  "schema_version": "2.0.0",
+  "experiment_id": "dryrun-s3",
+  "owner": "ธนาพล",
+  "slice": "s9",
+  "research_question": "Does the stage3_lora pipeline wire end to end on CPU with a tiny synthetic model (frozen parts stay frozen, checkpoints resume bit-identically)?",
+  "hypothesis": "Loss is finite for every step, only the intended trainable parameters change, and resuming from the step-2 checkpoint reproduces the uninterrupted losses exactly.",
+  "measurement_goals": [
+    "finite loss for max_steps",
+    "trainable vs frozen parameter change",
+    "checkpoint round-trip and resume bit-identity"
+  ],
+  "status": "planned",
+  "run_tier": 0,
+  "created_at": "2026-09-26",
+  "code": {
+    "revision": "UNPINNED",
+    "config_path": "research/configs/stage3_lora.yaml",
+    "config_sha256": "99362431f550a2892111ef663f0dfd9d25569319c567fa9ba49a800acc0e6903"
+  },
+  "model": {
+    "candidate": "tiny-synthetic (llama config, random init)",
+    "hf_repo_id": null,
+    "hub_revision": null,
+    "parameter_count": 1657744,
+    "license": "n/a (randomly initialised, no weights downloaded)",
+    "stage": "stage3_lora"
+  },
+  "data": {
+    "data_class": "synthetic",
+    "locality": "local_only",
+    "external_api": false,
+    "datasets": [
+      {
+        "name": "synthetic-ct-report",
+        "dataset_version": "synthetic-v1",
+        "split_version": "synthetic-v1"
+      }
+    ]
+  },
+  "training": {
+    "seed": 1234,
+    "precision": "fp32",
+    "micro_batch": 2,
+    "grad_accum": 1,
+    "seq_len": 24,
+    "max_steps": 4,
+    "lora_rank": 1
+  },
+  "resources": {
+    "devices": "cpu",
+    "gpu_count": 0,
+    "max_minutes": 5,
+    "budget": {
+      "gpu_hours": 0,
+      "cost_usd_max": 0,
+      "storage_gb_max": 0.1
+    }
+  },
+  "metrics": [
+    "loss per step",
+    "trainable parameter count",
+    "checkpoint sha256"
+  ],
+  "stop_rules": [
+    "non-finite loss",
+    "any frozen parameter changes",
+    "checkpoint checksum or base-fingerprint mismatch"
+  ],
+  "artifacts": {
+    "root": "research/train/outputs/",
+    "logs": "research/train/outputs/<run>/run.json",
+    "checkpoints": "research/train/outputs/<run>/checkpoints/",
+    "retention": "local only, gitignored; deleted by the developer after inspection"
+  },
+  "approval_note": "Tier-3/4 runs (beyond 1 GPU or 60 min, including any 8x B200 or ~27B full run) require explicit human approval recorded in docs/DECISIONS.md before launch."
+}

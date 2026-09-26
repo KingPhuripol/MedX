@@ -8,3 +8,12 @@ psycopg[binary]>=3.2,<4
 # Test
 pytest>=8,<9
 pytest-socket>=0.7,<1
+# Research (slice s9): CPU-only training skeleton + manifest validator.
+# torch is the CPU wheel: PyPI's macOS wheel is CPU/MPS-only; elsewhere the +cpu build from the PyTorch
+# CPU page (no CUDA/nvidia-* packages). deepspeed is deliberately absent.
+torch==2.14.0 ; sys_platform == 'darwin'
+torch==2.14.0+cpu ; sys_platform != 'darwin'
+transformers==5.17.0
+peft==0.21.0
+pyyaml>=6,<7
+jsonschema>=4.23,<5

@@ -6,7 +6,7 @@ PY := $(VENV)/bin/python
 PG_URL = postgresql+psycopg://frontdoor:$${POSTGRES_PASSWORD:-frontdoor_dev_only}@127.0.0.1:55432/frontdoor
 export PYTHONPATH := $(CURDIR)/backend:$(CURDIR)
 
-.PHONY: install test dev e2e test-pg clean
+.PHONY: install test dev e2e test-pg research-dry-run clean
 
 install: $(VENV)/.installed web/node_modules/.installed
 
@@ -24,6 +24,12 @@ web/node_modules/.installed: web/package-lock.json web/package.json
 test: install
 	$(PY) -m pytest -q -rs
 	cd web && npm test
+
+## Research (s9): validate manifests + both Tier-0 CPU dry runs (synthetic, offline). No GPU, no downloads.
+research-dry-run: install
+	$(PY) scripts/validate_manifest.py research/manifests/*.json
+	$(PY) -m research.train --config research/configs/stage2_connector.yaml --manifest research/manifests/dryrun-s2.json --dry-run
+	$(PY) -m research.train --config research/configs/stage3_lora.yaml --manifest research/manifests/dryrun-s3.json --dry-run
 
 ## API on 127.0.0.1:8000, web on 127.0.0.1:3000 (dev seed applied; loads .env if present).
 dev: install

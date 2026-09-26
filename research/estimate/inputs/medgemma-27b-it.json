@@ -1,0 +1,65 @@
+{
+  "candidate_id": "medgemma-27b-it",
+  "hf_repo_id": "google/medgemma-27b-it",
+  "display_name": "MedGemma 27B multimodal",
+  "inputs": {
+    "P_total": {
+      "value": 27432406640,
+      "source": "https://huggingface.co/api/models/google/medgemma-27b-it?expand[]=safetensors",
+      "note": "HF safetensors BF16 parameter count (see selection matrix note on the listed 'total')."
+    },
+    "hidden_size": {
+      "value": 5376,
+      "source": "https://github.com/google-deepmind/gemma/blob/main/gemma/gm/nn/_gemma.py",
+      "note": "config.json is gated behind the HAI-DEF click-through and was not fetched; values from the official Gemma reference implementation (Gemma3_27B), the architecture MedGemma 27B is built on."
+    },
+    "num_layers": {
+      "value": 62,
+      "source": "https://github.com/google-deepmind/gemma/blob/main/gemma/gm/nn/_gemma.py"
+    },
+    "attention_heads": {
+      "value": 32,
+      "source": "https://github.com/google-deepmind/gemma/blob/main/gemma/gm/nn/_gemma.py"
+    },
+    "kv_heads": {
+      "value": 16,
+      "source": "https://github.com/google-deepmind/gemma/blob/main/gemma/gm/nn/_gemma.py"
+    },
+    "head_dim": {
+      "value": 128,
+      "source": "https://github.com/google-deepmind/gemma/blob/main/gemma/gm/nn/_gemma.py"
+    },
+    "ffn_intermediate": {
+      "value": 21504,
+      "source": "https://github.com/google-deepmind/gemma/blob/main/gemma/gm/nn/_gemma.py",
+      "note": "hidden_dim = 5376 * 8 // 2"
+    },
+    "vocab_size": {
+      "value": 262144,
+      "source": "https://github.com/google-deepmind/gemma/blob/main/gemma/gm/nn/_gemma.py",
+      "note": "num_embed"
+    },
+    "layer_types": {
+      "value": {
+        "sliding": 52,
+        "full": 10
+      },
+      "source": "https://arxiv.org/abs/2503.19786",
+      "note": "Derived: 5 local : 1 global, starting with a local layer; over 62 layers this gives 10 global and 52 local."
+    },
+    "sliding_window": {
+      "value": 1024,
+      "source": "https://github.com/google-deepmind/gemma/blob/main/gemma/gm/nn/_gemma.py"
+    },
+    "attn_output_gate": {
+      "value": false,
+      "source": "https://github.com/google-deepmind/gemma/blob/main/gemma/gm/nn/_gemma.py",
+      "note": "standard attention, no output gate"
+    },
+    "bf16_checkpoint_bytes": {
+      "value": 54864980440,
+      "source": "https://huggingface.co/api/models/google/medgemma-27b-it/tree/main",
+      "note": "sum of *.safetensors sizes"
+    }
+  }
+}
