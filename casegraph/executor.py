@@ -20,7 +20,7 @@ from typing import Any
 
 from app.gateway.contract import DataClass, GatewayRequest
 
-from .compiler import ValidatedGraph
+from .compiler import ValidatedGraph, validate
 from .data import (
     Alerts,
     CareSuggestion,
@@ -125,6 +125,9 @@ class Executor:
             raise TypeError("Executor accepts only a ValidatedGraph issued by casegraph.compiler.validate")
         if graph.snapshot is None:
             raise ValueError("graph carries no snapshot payload; use casegraph.store.replay")
+        # Re-check the exact (spec, snapshot) pair about to run, so a token can never vouch for a
+        # graph other than the one validated. Raises GraphValidationError before any side effect.
+        validate(graph.spec, graph.snapshot)
         spec, items = graph.spec, {i.item_id: i for i in graph.snapshot.items}
         self.state.save_graph(spec, graph.snapshot.items)  # insert-only: versions are immutable
         t0 = time.perf_counter()

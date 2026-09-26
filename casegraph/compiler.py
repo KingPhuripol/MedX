@@ -184,16 +184,27 @@ _TOKEN = object()
 
 
 class ValidatedGraph:
-    """Proof that a graph passed validation. Only :func:`validate` can create one."""
+    """Proof that a graph passed validation. Only :func:`validate` can create one.
+
+    Immutable after creation: a token issued for one (spec, snapshot) pair cannot be re-pointed at
+    another. The Executor additionally re-validates the carried pair before running (defence in
+    depth against ``object.__setattr__`` bypasses).
+    """
 
     __slots__ = ("spec", "snapshot", "_token")
 
     def __init__(self, spec: GraphSpec, snapshot: Snapshot | None, *, _token: object) -> None:
         if _token is not _TOKEN:
             raise TypeError("ValidatedGraph is issued only by casegraph.compiler.validate")
-        self.spec = spec
-        self.snapshot = snapshot
-        self._token = _token
+        object.__setattr__(self, "spec", spec)
+        object.__setattr__(self, "snapshot", snapshot)
+        object.__setattr__(self, "_token", _token)
+
+    def __setattr__(self, name: str, value: object) -> None:
+        raise AttributeError("ValidatedGraph is immutable; compile or validate a new graph instead")
+
+    def __delattr__(self, name: str) -> None:
+        raise AttributeError("ValidatedGraph is immutable; compile or validate a new graph instead")
 
     @property
     def is_authentic(self) -> bool:

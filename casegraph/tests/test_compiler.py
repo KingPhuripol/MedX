@@ -226,6 +226,47 @@ def test_executor_requires_validated_graph(env):
     assert sum(ex.node_executions.values()) == 0 and env.calls == 0
 
 
+@pytest.mark.parametrize("attr", ["spec", "snapshot", "_token"])
+def test_validated_graph_is_immutable(attr):
+    """Scope 3 (S2-SCOPE3-TOKEN): a token issued for one graph cannot be re-pointed or stripped."""
+    spec, snap = _spec()
+    vg = validate(spec, snap)
+    with pytest.raises(AttributeError):
+        setattr(vg, attr, None)
+    with pytest.raises(AttributeError):
+        delattr(vg, attr)
+    assert vg.spec is spec and vg.snapshot is snap and vg.is_authentic
+
+
+def test_executor_revalidates_repointed_spec(env):
+    """Even an ``object.__setattr__`` bypass cannot run a spec without Red-flag / Human Checkpoint."""
+    spec, snap = _spec()
+    vg = validate(spec, snap)
+    object.__setattr__(vg, "spec", build_draft(snap, exclude=[N.RED_FLAG, N.HUMAN_CHECKPOINT]))
+    state = MemoryStateStore()
+    ex = Executor(env.gateways, OutputStore(), state)
+    with pytest.raises(GraphValidationError) as exc:
+        ex.run_sync(vg)
+    assert exc.value.code == "missing_mandatory"
+    assert sum(ex.node_executions.values()) == 0 and env.calls == 0
+    assert state.latest_version(spec.patient_ref) is None  # nothing persisted
+
+
+def test_executor_revalidates_repointed_snapshot(env):
+    """Swapping in a later snapshot must not run nor persist its (future-to-T) items."""
+    spec, snap = _spec("F1", F1_T1)
+    later = build_snapshot(FIXTURES["F1"](), F1_T2)
+    assert later.snapshot_id != snap.snapshot_id
+    vg = validate(spec, snap)
+    object.__setattr__(vg, "snapshot", later)
+    state = MemoryStateStore()
+    ex = Executor(env.gateways, OutputStore(), state)
+    with pytest.raises(GraphValidationError) as exc:
+        ex.run_sync(vg)
+    assert exc.value.code == "foreign_evidence"
+    assert env.calls == 0 and state.latest_version(spec.patient_ref) is None
+
+
 # ------------------------------------------------------------------------------------ A10
 
 
