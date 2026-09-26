@@ -64,5 +64,7 @@ class FakeProvider:
             return ProviderResult(status=mode, model_version=self.model_version, output=None, reason=f"fake_{mode}")
         if mode == "schema_invalid":
             return ProviderResult(status="ok", model_version=self.model_version, output={"unexpected": 1})
-        return ProviderResult(status="ok", model_version=self.model_version,
-                              output={"text": f"fake {self.model_version} {request_sha256[:12]}"})
+        output = {"text": f"fake {self.model_version} {request_sha256[:12]}"}
+        if request.task == "reasoning":  # s2r: absent department/care keys are schema_invalid; state them explicitly
+            output.update(department=None, care=[])
+        return ProviderResult(status="ok", model_version=self.model_version, output=output)

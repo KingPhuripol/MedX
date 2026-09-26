@@ -121,10 +121,15 @@ F5_T = DAY + 12 * H
 
 
 def f5():
+    """Full-input Red-flag case: all four placeholder rule keys present.
+
+    s2r: ``temp_c=37.0`` added (the only fixture change allowed by slices/s2r/SPEC.md). Without it F5
+    is correctly ``partially_evaluated`` (RF-PH-004 needs ``Vitals.temp_c``).
+    """
     p = "SYN-F5"
     return [
         text(p, "f5-text", DAY + 9 * H, DAY + 9 * H),
-        vitals(p, "f5-vitals", DAY + 9 * H, DAY + 9 * H + M, hr=118.0, sbp=84.0, spo2=86.0),
+        vitals(p, "f5-vitals", DAY + 9 * H, DAY + 9 * H + M, hr=118.0, sbp=84.0, spo2=86.0, temp_c=37.0),
     ]
 
 

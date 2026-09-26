@@ -1,0 +1,45 @@
+# Verbatim copy of the edf8182 (S2) Red-flag code paths, kept as a MUTATION fixture for
+# casegraph/tests/test_static_guards.py (S2R-A09). Not imported, not executed.
+
+# (rule_id, vital key, comparison, threshold, severity)
+_RED_FLAG_RULES: tuple[tuple[str, str, str, float, str], ...] = (
+    ("RF-PH-001", "spo2", "<", 90.0, "urgent"),
+    ("RF-PH-002", "sbp", "<", 90.0, "urgent"),
+    ("RF-PH-003", "hr", ">", 130.0, "urgent"),
+    ("RF-PH-004", "temp_c", ">=", 39.5, "warning"),
+)
+
+
+def red_flag_rules(vitals: list[Vitals]) -> tuple[Alert, ...]:
+    """Placeholder threshold rules over vitals. Pure; version ``placeholder-redflag-0.1``."""
+    alerts: list[Alert] = []
+    for item in sorted(vitals, key=lambda i: i.item_id):
+        for rule_id, key, op, threshold, severity in _RED_FLAG_RULES:
+            if key not in item.values:
+                continue
+            v = item.values[key]
+            hit = v < threshold if op == "<" else v > threshold if op == ">" else v >= threshold
+            if hit:
+                alerts.append(
+                    Alert(
+                        rule_id=rule_id, severity=severity,  # type: ignore[arg-type]
+                        message=f"{PLACEHOLDER_LABEL}: {key}={v:g} {op} {threshold:g} ({item.item_id})",
+                    )
+                )
+    return tuple(alerts)
+
+
+class _Edf8182Executor:
+    def _red_flag(self, ctx: _Ctx) -> _Result:
+        vitals = [i for i in ctx.evidence if isinstance(i, Vitals)]
+        findings = [u for u in ctx.upstream if u.edge.data_type == "Findings" and u.ok]
+        errored = tuple(sorted(u.node.id for u in ctx.upstream if u.node.status == "error"))
+        missing = tuple(name for name, have in (("Findings", findings), ("Vitals", vitals)) if not have)
+        version = RULES_VERSIONS[NodeType.RED_FLAG]
+        if not vitals and not findings:
+            alerts = Alerts(**self._derived(ctx), status="not_evaluated", alerts=(), missing_inputs=missing,
+                            rule_set_version=version)
+        else:
+            alerts = Alerts(**self._derived(ctx), status="evaluated", alerts=red_flag_rules(vitals),
+                            missing_inputs=missing, rule_set_version=version)
+        return _Result("ok", _dump(alerts), missing_inputs=missing, errored_inputs=errored)

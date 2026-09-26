@@ -116,8 +116,8 @@ class ProviderAssignment(BaseModel):
 
 RULES_VERSIONS = {
     NodeType.READER_VITALS_LABS: "placeholder-vitals-reader-0.1",
-    NodeType.RED_FLAG: "placeholder-redflag-0.1",
-    NodeType.PHARMA_AGENT: "placeholder-pharma-0.1",
+    NodeType.RED_FLAG: "placeholder-redflag-0.2",  # s2r: per-rule required inputs
+    NodeType.PHARMA_AGENT: "placeholder-pharma-0.2",  # s2r: check_results + status
 }
 
 

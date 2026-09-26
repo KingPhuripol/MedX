@@ -3,6 +3,9 @@
 The exported graph *is* the executed structure: nodes (type, provider, version, params, cache key,
 status, timing, gateway calls, output + hash), typed edges, evidence references and totals.
 Import followed by export is byte-identical.
+
+s2r (``casegraph-export/0.2``): a required graph-level ``red_flag_screening`` summary. Importing any
+other schema version raises :class:`ExportVersionError`; a missing summary is never defaulted.
 """
 
 from __future__ import annotations
@@ -10,11 +13,16 @@ from __future__ import annotations
 import json
 from typing import Any, Literal
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
+from .data import RedFlagScreening
 from .types import NodeType
 
-SCHEMA_VERSION = "casegraph-export/0.1"
+SCHEMA_VERSION = "casegraph-export/0.2"
+
+
+class ExportVersionError(ValueError):
+    """An export with a schema version other than :data:`SCHEMA_VERSION` (never migrated silently)."""
 
 NodeStatus = Literal["ok", "error", "abstained", "pending_confirmation", "confirmed", "edited", "rejected"]
 
@@ -93,7 +101,19 @@ class Totals(_Frozen):
 
 class ExportedGraph(GraphSpec):
     nodes: tuple[ExportedNode, ...]  # type: ignore[assignment]
+    red_flag_screening: RedFlagScreening  # required, no default (s2r)
     totals: Totals | None = None
+
+    @model_validator(mode="after")
+    def _screening_matches_red_flag(self) -> "ExportedGraph":
+        if self.schema_version != SCHEMA_VERSION:
+            raise ExportVersionError(f"unsupported export schema {self.schema_version!r}; expected {SCHEMA_VERSION}")
+        rf = self.by_type(NodeType.RED_FLAG)
+        alerts = (rf.output or {}).get("Alerts") if rf is not None and rf.status == "ok" else None
+        expected = "unavailable" if alerts is None else alerts.get("status")
+        if self.red_flag_screening.status != expected:
+            raise ValueError(f"red_flag_screening.status {self.red_flag_screening.status!r} != red_flag node {expected!r}")
+        return self
 
     def node(self, node_id: str) -> ExportedNode:  # type: ignore[override]
         return next(n for n in self.nodes if n.id == node_id)
@@ -102,7 +122,7 @@ class ExportedGraph(GraphSpec):
         return next((n for n in self.nodes if n.type == node_type), None)
 
     def spec(self) -> GraphSpec:
-        data = self.model_dump(mode="json", exclude={"totals"})
+        data = self.model_dump(mode="json", exclude={"totals", "red_flag_screening"})
         run_fields = set(ExportedNode.model_fields) - set(NodeSpec.model_fields)
         data["nodes"] = [{k: v for k, v in n.items() if k not in run_fields} for n in data["nodes"]]
         return GraphSpec.model_validate(data)
@@ -113,6 +133,10 @@ def to_json(model: BaseModel) -> str:
 
 
 def import_graph(text: str | bytes) -> ExportedGraph:
+    data = json.loads(text)
+    version = data.get("schema_version") if isinstance(data, dict) else None
+    if version != SCHEMA_VERSION:
+        raise ExportVersionError(f"unsupported export schema {version!r}; expected {SCHEMA_VERSION}")
     return ExportedGraph.model_validate_json(text)
 
 
@@ -121,9 +145,15 @@ def inspect_lines(graph: ExportedGraph) -> list[str]:
         f"graph {graph.graph_id} patient={graph.patient_ref} T={graph.T.isoformat()} "
         f"version={graph.version} parent={graph.parent_version} snapshot={graph.snapshot_id[:12]}"
     ]
+    rfs = graph.red_flag_screening
+    if rfs.status == "partially_evaluated":
+        lines.append(f"!! {rfs.banner} not_evaluated={list(rfs.rules_not_evaluated)} missing={list(rfs.missing_inputs)}")
+    elif not rfs.performed:
+        lines.append(f"!! {rfs.banner} missing={list(rfs.missing_inputs)}")
     for n in graph.nodes:
+        screening = f" screening={rfs.status}" if n.type is NodeType.RED_FLAG else ""
         extra = f" missing={list(n.missing_inputs)}" if n.missing_inputs else ""
-        lines.append(f"node {n.id} type={n.type.value} provider={n.provider} status={n.status}{extra}")
+        lines.append(f"node {n.id} type={n.type.value} provider={n.provider} status={n.status}{screening}{extra}")
     for e in graph.edges:
         lines.append(f"edge {e.src} -> {e.dst} [{e.data_type}]")
     if graph.totals:

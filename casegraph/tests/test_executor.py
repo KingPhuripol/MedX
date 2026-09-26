@@ -1,4 +1,4 @@
-"""Executor: S2-A12..A15, A18, A19."""
+"""Executor: S2-A12..A15, A18, A19; S2R-A11."""
 
 from __future__ import annotations
 
@@ -70,7 +70,8 @@ def test_reasoning_abstains_with_missing_list(env):
     assert r.gateway_calls == 0 and r.output is None
     assert env.gateways["project_model"].calls == 1  # reader_text only
     payload = graph.node("human_checkpoint").output[PENDING_KEY]
-    assert payload["alerts"] is not None and payload["alerts"]["status"] == "evaluated"
+    # s2r: F3 has no Vitals, so the Red-flag screen was NOT performed (was "evaluated" at edf8182: the defect).
+    assert payload["alerts"] is not None and payload["alerts"]["status"] == "not_evaluated"
     assert payload["abstained"] == {"reasoning": ["Findings<-Vitals"]}
     outputs = [n.output for n in graph.nodes if n.output] + [payload["for_review"]]
     produced = {k for o in outputs for k in o} | {k for o in payload["for_review"].values() for k in o}
@@ -161,7 +162,8 @@ def test_red_flag_not_evaluated_without_inputs(env):
     graph = env.executor().run_sync(compile_graph(build_snapshot(items, DAY + 9 * H)))
     alerts = _alerts(graph)
     assert alerts["status"] == "not_evaluated" and alerts["alerts"] == []
-    assert alerts["missing_inputs"] == ["Findings", "Vitals"]
+    # s2r: plus each rule's declared Vitals.<key> (was ["Findings", "Vitals"] at edf8182)
+    assert alerts["missing_inputs"] == ["Findings", "Vitals", "Vitals.hr", "Vitals.sbp", "Vitals.spo2", "Vitals.temp_c"]
     payload = graph.node("human_checkpoint").output[PENDING_KEY]
     assert payload["escalation"] is True and payload["escalation_reasons"] == ["red_flag_not_evaluated"]
     # also when the only Findings producer failed
@@ -206,3 +208,82 @@ def test_f1_t2_executes_all_seven_nodes(env):
     assert {i["kind"] for i in issues} == {"duplicate", "dose_mismatch"}
     assert graph.node("reader_cxr").output["ImageTokens"]["encoder_provider"] == "encoder_2d"
     assert len(f1()) == 4
+
+
+# ------------------------------------------------------------------------ S2R-A11 (s2r)
+
+
+class _ReasoningOutput(FakeProvider):
+    """Reasoning returns ``output`` verbatim; other tasks behave like FakeProvider(mode="ok")."""
+
+    def __init__(self, output, **kw):
+        super().__init__(model_version="proj-mock-0.1", **kw)
+        self.output = output
+
+    def invoke(self, request, request_sha256):
+        from app.gateway.provider import ProviderResult
+
+        if request.task == "reasoning":
+            return ProviderResult(status="ok", model_version=self.model_version, output=self.output)
+        return super().invoke(request, request_sha256)
+
+
+@pytest.mark.parametrize("absent", ["care", "department"])
+def test_reasoning_missing_keys_schema_invalid(env, absent):
+    full = {"text": "synthetic summary", "department": None, "care": ["synthetic item"]}
+    env.gateways["project_model"] = LocalGateway(_ReasoningOutput({k: v for k, v in full.items() if k != absent}))
+    r = env.executor().run_sync(compile_case("F1", F1_T1)).node("reasoning")
+    assert (r.status, r.reason, r.output) == ("error", "schema_invalid", None)
+    # an explicit null department is accepted: "no department proposed"
+    env2 = Env(env.root / "explicit")
+    env2.gateways["project_model"] = LocalGateway(_ReasoningOutput(full))
+    ok = env2.executor().run_sync(compile_case("F1", F1_T1)).node("reasoning")
+    assert ok.status == "ok" and ok.output["DepartmentSuggestion"]["department"] is None
+    assert ok.output["CareSuggestion"]["items"] == ["synthetic item"]
+
+
+def _meds(pid, iid, *meds):
+    from casegraph.data import Medication, MedicationList
+
+    return MedicationList(item_id=iid, patient_ref=pid, event_time=DAY + 8 * H, available_at_time=DAY + 8 * H,
+                          source="synthetic-fixture", provenance="casegraph/tests", version="1",
+                          data_class="synthetic", medications=tuple(Medication(**m) for m in meds))
+
+
+def test_pharma_missing_dose_not_evaluated(env):
+    pid = "SYN-PH1"
+    items = [_meds(pid, "ph-a", {"name": "Paracetamol", "dose": "500 mg"}, {"name": "Amlodipine", "dose": "5 mg"}),
+             _meds(pid, "ph-b", {"name": "paracetamol"})]  # second entry has no dose
+    graph = env.executor().run_sync(compile_graph(build_snapshot(items, DAY + 9 * H)))
+    mi = graph.node("pharma_agent").output["MedicationIssues"]
+    gaps = [(c["medication"], c["check"], c["missing_inputs"]) for c in mi["checks_not_evaluated"]]
+    assert gaps == [("paracetamol", "dose_mismatch", ["MedicationList.dose@ph-b"])]
+    assert mi["status"] == "partially_evaluated" and mi["status"] != "evaluated"
+    assert mi["missing_inputs"] == ["MedicationList.dose@ph-b"]
+    assert {i["kind"] for i in mi["issues"]} == {"duplicate"}  # no mismatch claimed, none silently cleared
+    assert mi["rule_set_version"] == "placeholder-pharma-0.2"
+
+
+def test_pharma_model_path_not_evaluated(env):
+    cfg = ProviderConfig().with_assignment(
+        N.PHARMA_AGENT, ProviderAssignment(provider="project_model", model_version="proj-mock-0.1"))
+    graph = env.executor().run_sync(compile_case("F1", F1_T1.replace(hour=10), cfg))
+    pa = graph.node("pharma_agent")
+    assert pa.status == "ok" and pa.gateway_calls == 1
+    mi = pa.output["MedicationIssues"]
+    assert mi["status"] == "not_evaluated" and mi["issues"] == [] and mi["check_results"] == []
+    assert mi["missing_inputs"] == ["structured_rule_checks"] and mi["summary"]
+
+
+def test_reasoning_without_declared_required_inputs_fails_safe(env):
+    """s2r sweep: a Reasoning node whose params lack ``required_inputs`` errors; it never runs unguarded."""
+    from casegraph.compiler import validate
+
+    graph = compile_case("F3", F3_T)
+    spec = graph.spec.model_copy(update={"nodes": tuple(
+        n.model_copy(update={"params": {k: v for k, v in n.params.items() if k != "required_inputs"}})
+        if n.type is N.REASONING else n for n in graph.spec.nodes)})
+    out = env.executor().run_sync(validate(spec, graph.snapshot))
+    r = out.node("reasoning")
+    assert (r.status, r.reason, r.output, r.gateway_calls) == ("error", "required_inputs_undeclared", None, 0)
+    assert "reasoning" in out.node("human_checkpoint").output[PENDING_KEY]["errored"]

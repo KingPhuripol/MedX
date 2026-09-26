@@ -5,6 +5,9 @@ Topological order via ``graphlib.TopologicalSorter``; independent ready nodes ru
 Output Store. Execution halts at the Human Checkpoint with ``pending_confirmation`` persisted in a
 StateStore; ``resume`` records the reviewer decision. Failures are fail-safe: ``error`` with
 ``output=null``; Reasoning abstains when required inputs are missing or errored.
+
+s2r: Red-flag reports per-rule ``evaluated``/``not_evaluated``; a screen that was not fully
+performed escalates at the Human Checkpoint and is carried on every downstream suggestion.
 """
 
 from __future__ import annotations
@@ -33,13 +36,15 @@ from .data import (
     ImageTokens,
     MedicationIssues,
     MedicationList,
+    RedFlagScreening,
     Vitals,
     dump_evidence,
+    screening_status,
     sha256_json,
 )
 from .export import EdgeSpec, ExportedGraph, ExportedNode, GraphSpec, NodeSpec, Totals, import_graph, to_json
 from .library import MODEL_PROVIDERS, RULES_VERSIONS, output_types
-from .providers import GatewayClient, pharma_rules, red_flag_rules, vitals_reader_rules
+from .providers import RED_FLAG_RULE_IDS, GatewayClient, pharma_rules, red_flag_rules, vitals_reader_rules
 from .store import OutputStore, StateStore, StoreEntry, cache_key
 from .types import NodeType
 
@@ -100,6 +105,16 @@ class _SchemaInvalid(Exception):
     pass
 
 
+def _alerts_of(nodes: list[ExportedNode] | tuple[ExportedNode, ...]) -> dict[str, Any] | None:
+    """The Alerts output of an ok Red-flag node, else None (absent or errored -> ``unavailable``)."""
+    rf = next((n for n in nodes if n.type is NodeType.RED_FLAG), None)
+    return rf.output.get("Alerts") if rf is not None and rf.status == "ok" and rf.output is not None else None
+
+
+def red_flag_screening(nodes: list[ExportedNode] | tuple[ExportedNode, ...]) -> RedFlagScreening:
+    return RedFlagScreening.from_alerts(_alerts_of(nodes), RED_FLAG_RULE_IDS)
+
+
 class Executor:
     def __init__(
         self,
@@ -150,6 +165,7 @@ class Executor:
         exported = ExportedGraph(
             **spec.model_dump(exclude={"nodes"}),
             nodes=nodes,
+            red_flag_screening=red_flag_screening(nodes),
             totals=Totals(
                 gateway_calls=sum(n.gateway_calls for n in nodes),
                 node_executions=sum(not n.cached for n in nodes),
@@ -273,24 +289,36 @@ class Executor:
 
     def _red_flag(self, ctx: _Ctx) -> _Result:
         vitals = [i for i in ctx.evidence if isinstance(i, Vitals)]
-        findings = [u for u in ctx.upstream if u.edge.data_type == "Findings" and u.ok]
+        findings = [u for u in ctx.upstream if u.edge.data_type == "Findings"]
         errored = tuple(sorted(u.node.id for u in ctx.upstream if u.node.status == "error"))
-        missing = tuple(name for name, have in (("Findings", findings), ("Vitals", vitals)) if not have)
-        version = RULES_VERSIONS[NodeType.RED_FLAG]
-        if not vitals and not findings:
-            alerts = Alerts(**self._derived(ctx), status="not_evaluated", alerts=(), missing_inputs=missing,
-                            rule_set_version=version)
-        else:
-            alerts = Alerts(**self._derived(ctx), status="evaluated", alerts=red_flag_rules(vitals),
-                            missing_inputs=missing, rule_set_version=version)
-        return _Result("ok", _dump(alerts), missing_inputs=missing, errored_inputs=errored)
+        # An input type is missing when absent or when any of its producers errored (s2r).
+        absent = {
+            "Findings": not any(u.ok for u in findings) or any(u.node.status == "error" for u in findings),
+            "Vitals": not vitals,
+        }
+        rule_results, alerts = red_flag_rules(vitals)
+        missing = tuple(sorted({t for t, gone in absent.items() if gone}
+                               | {m for r in rule_results for m in r.missing_inputs}))
+        output = Alerts(
+            **self._derived(ctx), status=screening_status(rule_results, missing), alerts=alerts,
+            rule_results=rule_results,
+            rules_evaluated=tuple(sorted(r.rule_id for r in rule_results if not r.missing_inputs)),
+            rules_not_evaluated=tuple(sorted(r.rule_id for r in rule_results if r.missing_inputs)),
+            missing_inputs=missing, rule_set_version=RULES_VERSIONS[NodeType.RED_FLAG],
+        )
+        return _Result("ok", _dump(output), missing_inputs=missing, errored_inputs=errored)
 
     def _pharma(self, ctx: _Ctx) -> _Result:
         lists = [i for i in ctx.evidence if isinstance(i, MedicationList)]
         if ctx.node.provider == "rules":
-            issues = MedicationIssues(**self._derived(ctx), issues=pharma_rules(lists),
-                                      rule_set_version=RULES_VERSIONS[NodeType.PHARMA_AGENT])
-            return _Result("ok", _dump(issues))
+            checks, issues = pharma_rules(lists)
+            missing = tuple(sorted({m for c in checks for m in c.missing_inputs}))
+            output = MedicationIssues(
+                **self._derived(ctx), status=screening_status(checks, missing), issues=issues, check_results=checks,
+                checks_not_evaluated=tuple(c for c in checks if c.missing_inputs), missing_inputs=missing,
+                rule_set_version=RULES_VERSIONS[NodeType.PHARMA_AGENT],
+            )
+            return _Result("ok", _dump(output))
         upstream = {u.node.id: u.node.output for u in ctx.upstream if u.ok}
         output, _, err = self._call(ctx, {"evidence": dump_evidence(lists), "upstream": upstream})
         if err:
@@ -299,12 +327,19 @@ class Executor:
             text = self._text(output)  # type: ignore[arg-type]
         except _SchemaInvalid:
             return _Result("error", reason="schema_invalid")
-        return _Result("ok", _dump(MedicationIssues(**self._derived(ctx), issues=(), summary=text)))
+        # The model path runs no structured rule check: it is explicitly not_evaluated (s2r).
+        missing = ("structured_rule_checks",)
+        return _Result("ok", _dump(MedicationIssues(
+            **self._derived(ctx), status=screening_status((), missing), issues=(), check_results=(),
+            checks_not_evaluated=(), missing_inputs=missing, summary=text)))
 
     def _reasoning(self, ctx: _Ctx) -> _Result:
         errored = tuple(sorted(u.node.id for u in ctx.upstream if u.node.status == "error"))
         missing = []
-        for req in ctx.node.params.get("required_inputs", []):
+        if not isinstance(ctx.node.params.get("required_inputs"), list):
+            # s2r sweep: an undeclared requirement list must not read as "nothing required"
+            return _Result("error", reason="required_inputs_undeclared", errored_inputs=errored)
+        for req in ctx.node.params["required_inputs"]:
             data_type, _, source = req.partition("<-")
             satisfied = any(
                 u.ok and u.edge.data_type == data_type
@@ -321,8 +356,10 @@ class Executor:
             return _Result("error", reason=err, errored_inputs=errored)
         try:
             text = self._text(output)  # type: ignore[arg-type]
-            department = output.get("department")  # type: ignore[union-attr]
-            care = output.get("care", [])  # type: ignore[union-attr]
+            # s2r: an absent key is schema_invalid, never "no department" / "no care"; explicit null is.
+            if "department" not in output or "care" not in output:  # type: ignore[operator]
+                raise _SchemaInvalid("department and care keys are required")
+            department, care = output["department"], output["care"]  # type: ignore[index]
             if department is not None and not isinstance(department, str):
                 raise _SchemaInvalid("department")
             if not isinstance(care, list) or not all(isinstance(c, str) for c in care):
@@ -330,30 +367,38 @@ class Executor:
         except _SchemaInvalid:
             return _Result("error", reason="schema_invalid", errored_inputs=errored)
         d = self._derived(ctx)
+        rfs = red_flag_screening([u.node for u in ctx.upstream]).status
         return _Result(
             "ok",
-            _dump(CaseSummary(**d, text=text), DepartmentSuggestion(**d, department=department),
-                  CareSuggestion(**d, items=tuple(care))),
+            _dump(CaseSummary(**d, text=text, red_flag_screening=rfs),
+                  DepartmentSuggestion(**d, department=department, red_flag_screening=rfs),
+                  CareSuggestion(**d, items=tuple(care), red_flag_screening=rfs)),
             errored_inputs=errored,
         )
 
     def _checkpoint(self, ctx: _Ctx) -> _Result:
-        rf = next((u for u in ctx.upstream if u.edge.data_type == "Alerts"), None)
-        alerts = rf.node.output.get("Alerts") if rf is not None and rf.ok else None
-        reasons = []
-        if alerts is None:
+        upstream_nodes = [u.node for u in ctx.upstream if u.edge.data_type == "Alerts"]
+        alerts = _alerts_of(upstream_nodes)
+        screening = red_flag_screening(upstream_nodes)
+        reasons = []  # accumulates: every applicable reason is recorded
+        if screening.status == "unavailable":
             reasons.append("red_flag_unavailable")
-        elif alerts["status"] == "not_evaluated":
+        if screening.status == "not_evaluated":
             reasons.append("red_flag_not_evaluated")
-        elif any(a["severity"] == "urgent" for a in alerts["alerts"]):
+        if screening.status == "partially_evaluated":
+            reasons.append("red_flag_partially_evaluated")
+        if alerts is not None and any(a["severity"] == "urgent" for a in alerts["alerts"]):
             reasons.append("urgent_red_flag")
         by_node: dict[str, ExportedNode] = {u.node.id: u.node for u in ctx.upstream}
         payload = {
             "required_role": ctx.node.provider.split(":", 1)[1],
             "escalation": bool(reasons),
             "escalation_reasons": reasons,
+            "red_flag_screening": screening.model_dump(mode="json"),
             "alerts": alerts,
-            "for_review": {nid: n.output for nid, n in sorted(by_node.items()) if n.status == "ok" and nid != "red_flag"},
+            # each entry carries the screening status so a suggestion never reads as "screening passed"
+            "for_review": {nid: {**n.output, "red_flag_screening": screening.status} for nid, n in sorted(by_node.items())
+                           if n.status == "ok" and n.output is not None and n.type is not NodeType.RED_FLAG},
             "abstained": {nid: list(n.missing_inputs) for nid, n in sorted(by_node.items()) if n.status == "abstained"},
             # direct upstream failures plus failures that upstream nodes reported from further up
             "errored": sorted({nid for nid, n in by_node.items() if n.status == "error"}
