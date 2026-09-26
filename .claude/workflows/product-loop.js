@@ -11,6 +11,11 @@ export const meta = {
 }
 
 const A = args
+// Agents created after the session started are not registered yet: run them as
+// general-purpose with their definition inlined (args.inline = {name: body}).
+const role = (name) => (A.inline && A.inline[name])
+  ? { agentType: 'general-purpose', pre: `You are acting as the "${name}" agent. Your definition:\n${A.inline[name]}\n\n` }
+  : { agentType: name, pre: '' }
 const WT = A.worktree
 const CTX = `Work ONLY inside the git worktree at ${WT} (branch factory/${A.id}); cd there first and use absolute paths under it. Do not touch any other checkout. Source of truth: ${WT}/docs/PROPOSAL.md. Slice ${A.id}: ${A.title}. Gantt owner: ${A.owner}.`
 
@@ -51,15 +56,15 @@ log(`SPEC: ${spec.acceptance.length} acceptance criteria`)
 let findings = '', build = null, checks = [], reviews = [], rounds = 0, done = false
 while (rounds < 3 && !done) {
   rounds++
-  build = await agent(`${CTX}
+  build = await agent(`${role(A.builder).pre}${CTX}
 ROLE: BUILDER. Implement exactly ${WT}/slices/${A.id}/SPEC.md with your own unit tests. Keep it minimal and runnable. Commit on the branch when tests pass.
 ${findings ? 'Fix these findings from the independent checker/reviewers first:\n' + findings : ''}`,
-    { label: `build:${A.builder}#${rounds}`, phase: 'Build', agentType: A.builder, schema: BUILD })
+    { label: `build:${A.builder}#${rounds}`, phase: 'Build', agentType: role(A.builder).agentType, schema: BUILD })
   if (!build || build.status === 'BLOCKED') { log('builder blocked'); break }
 
-  checks = (await parallel(A.checkers.map(c => () => agent(`${CTX}
+  checks = (await parallel(A.checkers.map(c => () => agent(`${role(c).pre}${CTX}
 ROLE: CHECKER (independent; you did not build this; never edit product code). Check commit ${build.commit} against ${WT}/slices/${A.id}/SPEC.md: run the full test suite, start the real system and exercise it as the spec's users would, measure every acceptance criterion. Write ${WT}/artifacts/factory/${A.id}/check-${c}.json. Report SPEC_PROBLEM if a criterion is not measurable.`,
-    { label: `check:${c}#${rounds}`, phase: 'Check', agentType: c, schema: CHECK })))).filter(Boolean)
+    { label: `check:${c}#${rounds}`, phase: 'Check', agentType: role(c).agentType, schema: CHECK })))).filter(Boolean)
 
   const specProblems = checks.filter(c => c.verdict === 'SPEC_PROBLEM').flatMap(c => c.spec_problems || [])
   if (specProblems.length) { spec = await think(specProblems.join('\n')) || spec; findings = ''; continue }
