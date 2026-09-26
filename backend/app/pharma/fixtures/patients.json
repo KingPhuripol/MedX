@@ -1,0 +1,8283 @@
+{
+ "generator_version": "s5-fixtures-1.0.0",
+ "patients": [
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 25.0,
+      "drug_name_raw": "HCTZ",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "5487"
+      ],
+      "ingredients": [
+       "hydrochlorothiazide"
+      ],
+      "product": "hydrochlorothiazide",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Miracid",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Allopurinol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": null
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 25.0,
+      "drug_name_raw": "ไฮโดรคลอโรไทอะไซด์",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "5487"
+      ],
+      "ingredients": [
+       "hydrochlorothiazide"
+      ],
+      "product": "hydrochlorothiazide",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Miracid",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "อัลโลพูรินอล",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 400.0,
+      "drug_name_raw": "ไอบูโพรเฟน",
+      "frequency_code": "q8h",
+      "ingredient_rxcuis": [
+       "5640"
+      ],
+      "ingredients": [
+       "ibuprofen"
+      ],
+      "product": "ibuprofen",
+      "route": null
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "HCTZ",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "5487"
+      ],
+      "ingredients": [
+       "hydrochlorothiazide"
+      ],
+      "product": "hydrochlorothiazide",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "อัลโลพูรินอล",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": "oral"
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": true,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p01",
+   "snapshot": {
+    "allergies": [],
+    "as_of": "2026-06-01T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p01",
+    "sources": [
+     {
+      "available_at_time": "2026-05-02T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "HCTZ 25 mg once daily"
+       },
+       {
+        "text": "Miracid 20 mg PO OD"
+       },
+       {
+        "text": "Allopurinol 100 mg OD"
+       }
+      ],
+      "evidence_ref": "s5-p01/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-01T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "HCTZ รับประทาน วันละ 1 ครั้ง"
+       },
+       {
+        "text": "อัลโลพูรินอล 100 มก. รับประทาน วันละครั้ง"
+       }
+      ],
+      "evidence_ref": "s5-p01/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-01T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "ไฮโดรคลอโรไทอะไซด์ 25 มก. รับประทาน วันละครั้ง"
+       },
+       {
+        "text": "Miracid 20 มก. วันละครั้ง"
+       },
+       {
+        "discontinue_intent": true,
+        "reason": "synthetic: held by team plan after low glucose readings",
+        "text": "อัลโลพูรินอล 100 มก. 1x1 หลังอาหารเช้า"
+       },
+       {
+        "text": "ไอบูโพรเฟน 400 มก. วันละ 3 ครั้ง"
+       }
+      ],
+      "evidence_ref": "s5-p01/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "dev"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Atenolol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Zocor",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "36567"
+      ],
+      "ingredients": [
+       "simvastatin"
+      ],
+      "product": "simvastatin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 75.0,
+      "drug_name_raw": "Clopidogrel",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "32968"
+      ],
+      "ingredients": [
+       "clopidogrel"
+      ],
+      "product": "clopidogrel",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Sara",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": null
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Atenolol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Simvastatin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "36567"
+      ],
+      "ingredients": [
+       "simvastatin"
+      ],
+      "product": "simvastatin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 75.0,
+      "drug_name_raw": "Clopidogrel",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "32968"
+      ],
+      "ingredients": [
+       "clopidogrel"
+      ],
+      "product": "clopidogrel",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Paracetamol",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 250.0,
+      "drug_name_raw": "Naproxen",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "7258"
+      ],
+      "ingredients": [
+       "naproxen"
+      ],
+      "product": "naproxen",
+      "route": "oral"
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Atenolol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Simvastatin",
+      "frequency_code": null,
+      "ingredient_rxcuis": [
+       "36567"
+      ],
+      "ingredients": [
+       "simvastatin"
+      ],
+      "product": "simvastatin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 75.0,
+      "drug_name_raw": "Clopidogrel",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "32968"
+      ],
+      "ingredients": [
+       "clopidogrel"
+      ],
+      "product": "clopidogrel",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Paracetamol",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": null
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p02",
+   "snapshot": {
+    "allergies": [
+     {
+      "available_at_time": "2025-11-14T09:00:00+07:00",
+      "evidence_ref": "s5-p02/allergy/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "text": "Ciprofloxacin (rash)",
+      "version": "1"
+     }
+    ],
+    "as_of": "2026-06-02T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p02",
+    "sources": [
+     {
+      "available_at_time": "2026-05-03T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Atenolol 50 mg once daily"
+       },
+       {
+        "text": "Zocor 20 mg oral 1x1"
+       },
+       {
+        "text": "Clopidogrel 75 mg 1x1"
+       },
+       {
+        "text": "Sara 500 mg prn"
+       }
+      ],
+      "evidence_ref": "s5-p02/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-02T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "Atenolol 50 mg once daily"
+       },
+       {
+        "text": "Simvastatin 20 mg"
+       },
+       {
+        "text": "Clopidogrel 75 mg daily"
+       },
+       {
+        "text": "Paracetamol 500 mg prn"
+       }
+      ],
+      "evidence_ref": "s5-p02/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-02T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "Atenolol 50 mg daily"
+       },
+       {
+        "text": "Simvastatin 20 mg daily"
+       },
+       {
+        "text": "Clopidogrel 75 mg daily"
+       },
+       {
+        "text": "Paracetamol 500 mg oral as needed"
+       },
+       {
+        "text": "Naproxen 250 mg oral bid"
+       }
+      ],
+      "evidence_ref": "s5-p02/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "dev"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Losartan",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "52175"
+      ],
+      "ingredients": [
+       "losartan"
+      ],
+      "product": "losartan",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Glucophage",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": null
+     },
+     {
+      "dose_unit": "mcg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Levothyroxine",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "10582"
+      ],
+      "ingredients": [
+       "levothyroxine"
+      ],
+      "product": "levothyroxine",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Allopurinol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Sara",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": "oral"
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "ลอซาร์แทน",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "52175"
+      ],
+      "ingredients": [
+       "losartan"
+      ],
+      "product": "losartan",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "เมทฟอร์มิน",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mcg",
+      "dose_value": 50.0,
+      "drug_name_raw": "เลโวไทร็อกซีน",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "10582"
+      ],
+      "ingredients": [
+       "levothyroxine"
+      ],
+      "product": "levothyroxine",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "อัลโลพูรินอล",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "ซาร่า",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 25.0,
+      "drug_name_raw": "Voltaren",
+      "frequency_code": "q8h",
+      "ingredient_rxcuis": [
+       "3355"
+      ],
+      "ingredients": [
+       "diclofenac"
+      ],
+      "product": "diclofenac",
+      "route": null
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "ลอซาร์แทน",
+      "frequency_code": null,
+      "ingredient_rxcuis": [
+       "52175"
+      ],
+      "ingredients": [
+       "losartan"
+      ],
+      "product": "losartan",
+      "route": null
+     },
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "เมทฟอร์มิน",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": null
+     },
+     {
+      "dose_unit": "mcg",
+      "dose_value": 50.0,
+      "drug_name_raw": "เลโวไทร็อกซีน",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "10582"
+      ],
+      "ingredients": [
+       "levothyroxine"
+      ],
+      "product": "levothyroxine",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "ซาร่า",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": null
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p03",
+   "snapshot": {
+    "allergies": [],
+    "as_of": "2026-06-03T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p03",
+    "sources": [
+     {
+      "available_at_time": "2026-05-04T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Losartan 50 mg 1x1"
+       },
+       {
+        "text": "Glucophage 500 mg twice daily"
+       },
+       {
+        "text": "Levothyroxine 50 mcg PO daily"
+       },
+       {
+        "text": "Allopurinol 100 mg PO daily"
+       },
+       {
+        "text": "Sara 500 mg PO prn"
+       }
+      ],
+      "evidence_ref": "s5-p03/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-03T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "ลอซาร์แทน 50 มก."
+       },
+       {
+        "text": "เมทฟอร์มิน วันละ 2 ครั้ง"
+       },
+       {
+        "text": "เลโวไทร็อกซีน 50 mcg รับประทาน วันละครั้ง"
+       },
+       {
+        "text": "ซาร่า 500 มก. เมื่อมีอาการ"
+       }
+      ],
+      "evidence_ref": "s5-p03/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-03T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "ลอซาร์แทน 50 มก. รับประทาน วันละครั้ง"
+       },
+       {
+        "text": "เมทฟอร์มิน 500 มก. รับประทาน 1x2 หลังอาหาร"
+       },
+       {
+        "text": "เลโวไทร็อกซีน 50 mcg รับประทาน วันละ 1 ครั้ง"
+       },
+       {
+        "text": "อัลโลพูรินอล 100 มก. 1x1 หลังอาหารเช้า"
+       },
+       {
+        "text": "ซาร่า 500 มก. เมื่อมีอาการ"
+       },
+       {
+        "text": "Voltaren 25 มก. วันละ 3 ครั้ง"
+       }
+      ],
+      "evidence_ref": "s5-p03/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Metformin",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Glipizide",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "4821"
+      ],
+      "ingredients": [
+       "glipizide"
+      ],
+      "product": "glipizide",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 75.0,
+      "drug_name_raw": "Clopidogrel",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "32968"
+      ],
+      "ingredients": [
+       "clopidogrel"
+      ],
+      "product": "clopidogrel",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Zyloric",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": null
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Metformin",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Glipizide",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "4821"
+      ],
+      "ingredients": [
+       "glipizide"
+      ],
+      "product": "glipizide",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 75.0,
+      "drug_name_raw": "Clopidogrel",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "32968"
+      ],
+      "ingredients": [
+       "clopidogrel"
+      ],
+      "product": "clopidogrel",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Zyloric",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Keflex",
+      "frequency_code": "q6h",
+      "ingredient_rxcuis": [
+       "2231"
+      ],
+      "ingredients": [
+       "cephalexin"
+      ],
+      "product": "cephalexin",
+      "route": null
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "เมทฟอร์มิน",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": null
+     },
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "Minidiab",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "4821"
+      ],
+      "ingredients": [
+       "glipizide"
+      ],
+      "product": "glipizide",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "อัลโลพูรินอล",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": "oral"
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p04",
+   "snapshot": {
+    "allergies": [],
+    "as_of": "2026-06-04T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p04",
+    "sources": [
+     {
+      "available_at_time": "2026-05-05T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Metformin 500 mg BID"
+       },
+       {
+        "text": "Glipizide 5 mg OD"
+       },
+       {
+        "text": "Clopidogrel 75 mg daily"
+       },
+       {
+        "text": "Zyloric 100 mg daily"
+       }
+      ],
+      "evidence_ref": "s5-p04/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-04T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "เมทฟอร์มิน 1x2 หลังอาหาร"
+       },
+       {
+        "text": "Minidiab รับประทาน วันละครั้ง"
+       },
+       {
+        "text": "อัลโลพูรินอล 100 มก. รับประทาน 1x1 หลังอาหารเช้า"
+       }
+      ],
+      "evidence_ref": "s5-p04/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-04T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "Metformin 500 mg bid"
+       },
+       {
+        "text": "Glipizide 5 mg PO 1x1"
+       },
+       {
+        "text": "Clopidogrel 75 mg once daily"
+       },
+       {
+        "text": "Zyloric 100 mg daily"
+       },
+       {
+        "text": "Keflex 500 mg four times daily"
+       }
+      ],
+      "evidence_ref": "s5-p04/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "dev"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Losartan",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "52175"
+      ],
+      "ingredients": [
+       "losartan"
+      ],
+      "product": "losartan",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Tenormin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 75.0,
+      "drug_name_raw": "Clopidogrel",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "32968"
+      ],
+      "ingredients": [
+       "clopidogrel"
+      ],
+      "product": "clopidogrel",
+      "route": "oral"
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Losartan",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "52175"
+      ],
+      "ingredients": [
+       "losartan"
+      ],
+      "product": "losartan",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Atenolol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 75.0,
+      "drug_name_raw": "Clopidogrel",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "32968"
+      ],
+      "ingredients": [
+       "clopidogrel"
+      ],
+      "product": "clopidogrel",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 250.0,
+      "drug_name_raw": "Zinnat",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "2194"
+      ],
+      "ingredients": [
+       "cefuroxime"
+      ],
+      "product": "cefuroxime",
+      "route": null
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Tenormin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": "oral"
+     },
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "Plavix",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "32968"
+      ],
+      "ingredients": [
+       "clopidogrel"
+      ],
+      "product": "clopidogrel",
+      "route": null
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": false
+   },
+   "patient_ref": "s5-p05",
+   "snapshot": {
+    "allergies": [
+     {
+      "available_at_time": "2025-11-17T09:00:00+07:00",
+      "evidence_ref": "s5-p05/allergy/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "text": "Sulfa drugs (rash)",
+      "version": "1"
+     }
+    ],
+    "as_of": "2026-06-05T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p05",
+    "sources": [
+     {
+      "available_at_time": "2026-05-06T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Losartan 50 mg OD"
+       },
+       {
+        "text": "Tenormin 50 mg oral 1x1"
+       },
+       {
+        "text": "Clopidogrel 75 mg PO once daily"
+       }
+      ],
+      "evidence_ref": "s5-p05/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-05T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "Tenormin 50 mg PO OD"
+       },
+       {
+        "text": "Plavix OD"
+       }
+      ],
+      "evidence_ref": "s5-p05/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-05T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "Losartan 50 mg oral 1x1"
+       },
+       {
+        "text": "Atenolol 50 mg once daily"
+       },
+       {
+        "text": "Clopidogrel 75 mg oral daily"
+       },
+       {
+        "text": "Zinnat 250 mg twice daily"
+       }
+      ],
+      "evidence_ref": "s5-p05/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "dev"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Amlodipine",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Minidiab",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "4821"
+      ],
+      "ingredients": [
+       "glipizide"
+      ],
+      "product": "glipizide",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 300.0,
+      "drug_name_raw": "Berlontin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": "oral"
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Amlodipine",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Glipizide",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "4821"
+      ],
+      "ingredients": [
+       "glipizide"
+      ],
+      "product": "glipizide",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 300.0,
+      "drug_name_raw": "Gabapentin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Amoxil",
+      "frequency_code": "q8h",
+      "ingredient_rxcuis": [
+       "723"
+      ],
+      "ingredients": [
+       "amoxicillin"
+      ],
+      "product": "amoxicillin",
+      "route": "oral"
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "กลิพิไซด์",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "4821"
+      ],
+      "ingredients": [
+       "glipizide"
+      ],
+      "product": "glipizide",
+      "route": "oral"
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p06",
+   "snapshot": {
+    "allergies": [
+     {
+      "available_at_time": "2025-11-18T09:00:00+07:00",
+      "evidence_ref": "s5-p06/allergy/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "text": "Ciprofloxacin (rash)",
+      "version": "1"
+     }
+    ],
+    "as_of": "2026-06-06T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p06",
+    "sources": [
+     {
+      "available_at_time": "2026-05-07T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Amlodipine 5 mg OD"
+       },
+       {
+        "text": "Minidiab 5 mg oral 1x1"
+       },
+       {
+        "text": "Berlontin 300 mg PO daily"
+       }
+      ],
+      "evidence_ref": "s5-p06/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-06T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "กลิพิไซด์ 5 มก. รับประทาน วันละ 1 ครั้ง"
+       }
+      ],
+      "evidence_ref": "s5-p06/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-06T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "Amlodipine 5 mg oral daily"
+       },
+       {
+        "text": "Glipizide 5 mg 1x1"
+       },
+       {
+        "text": "Gabapentin 300 mg once daily"
+       },
+       {
+        "text": "Amoxil 500 mg oral 1x3 pc"
+       }
+      ],
+      "evidence_ref": "s5-p06/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Simvastatin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "36567"
+      ],
+      "ingredients": [
+       "simvastatin"
+      ],
+      "product": "simvastatin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Metformin",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 3.0,
+      "drug_name_raw": "Orfarin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "11289"
+      ],
+      "ingredients": [
+       "warfarin"
+      ],
+      "product": "warfarin",
+      "route": "oral"
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "ซิมวาสแตติน",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "36567"
+      ],
+      "ingredients": [
+       "simvastatin"
+      ],
+      "product": "simvastatin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Glucophage",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 3.0,
+      "drug_name_raw": "วาร์ฟาริน",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "11289"
+      ],
+      "ingredients": [
+       "warfarin"
+      ],
+      "product": "warfarin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "g",
+      "dose_value": 1.0,
+      "drug_name_raw": "ออกเมนติน",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "723",
+       "48203"
+      ],
+      "ingredients": [
+       "amoxicillin",
+       "clavulanate"
+      ],
+      "product": "amoxicillin_clavulanate",
+      "route": null
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "Zocor",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "36567"
+      ],
+      "ingredients": [
+       "simvastatin"
+      ],
+      "product": "simvastatin",
+      "route": null
+     },
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "วาร์ฟาริน",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "11289"
+      ],
+      "ingredients": [
+       "warfarin"
+      ],
+      "product": "warfarin",
+      "route": null
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": true,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p07",
+   "snapshot": {
+    "allergies": [
+     {
+      "available_at_time": "2025-11-19T09:00:00+07:00",
+      "evidence_ref": "s5-p07/allergy/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "text": "แพ้ยาซัลฟา (ผื่น)",
+      "version": "1"
+     }
+    ],
+    "as_of": "2026-06-07T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p07",
+    "sources": [
+     {
+      "available_at_time": "2026-05-08T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Simvastatin 20 mg once daily"
+       },
+       {
+        "text": "Metformin 500 mg BID"
+       },
+       {
+        "text": "Orfarin 3 mg oral OD"
+       }
+      ],
+      "evidence_ref": "s5-p07/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-07T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "Zocor วันละ 1 ครั้ง"
+       },
+       {
+        "text": "วาร์ฟาริน วันละ 1 ครั้ง"
+       }
+      ],
+      "evidence_ref": "s5-p07/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-07T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "ซิมวาสแตติน 20 มก. วันละครั้ง"
+       },
+       {
+        "text": "Glucophage 500 มก. รับประทาน วันละ 2 ครั้ง"
+       },
+       {
+        "discontinue_intent": true,
+        "reason": "synthetic: course completed",
+        "text": "วาร์ฟาริน 3 มก. รับประทาน 1x1 หลังอาหารเช้า"
+       },
+       {
+        "text": "ออกเมนติน 1 กรัม วันละ 2 ครั้ง"
+       }
+      ],
+      "evidence_ref": "s5-p07/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "dev"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Norvasc",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Renitec",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "3827"
+      ],
+      "ingredients": [
+       "enalapril"
+      ],
+      "product": "enalapril",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Zocor",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "36567"
+      ],
+      "ingredients": [
+       "simvastatin"
+      ],
+      "product": "simvastatin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Metformin",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Allopurinol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": "oral"
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Amlodipine",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Enalapril",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "3827"
+      ],
+      "ingredients": [
+       "enalapril"
+      ],
+      "product": "enalapril",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Simvastatin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "36567"
+      ],
+      "ingredients": [
+       "simvastatin"
+      ],
+      "product": "simvastatin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Metformin",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Allopurinol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 250.0,
+      "drug_name_raw": "Dicloxacillin",
+      "frequency_code": "q6h",
+      "ingredient_rxcuis": [
+       "3356"
+      ],
+      "ingredients": [
+       "dicloxacillin"
+      ],
+      "product": "dicloxacillin",
+      "route": "oral"
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Amlodipine",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Renitec",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "3827"
+      ],
+      "ingredients": [
+       "enalapril"
+      ],
+      "product": "enalapril",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Simvastatin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "36567"
+      ],
+      "ingredients": [
+       "simvastatin"
+      ],
+      "product": "simvastatin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "Allopurinol",
+      "frequency_code": null,
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": null
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": false
+   },
+   "patient_ref": "s5-p08",
+   "snapshot": {
+    "allergies": [
+     {
+      "available_at_time": "2025-11-20T09:00:00+07:00",
+      "evidence_ref": "s5-p08/allergy/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "text": "แพ้ยาซัลฟา (ผื่น)",
+      "version": "1"
+     }
+    ],
+    "as_of": "2026-06-08T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p08",
+    "sources": [
+     {
+      "available_at_time": "2026-05-09T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Norvasc 5 mg PO daily"
+       },
+       {
+        "text": "Renitec 5 mg twice daily"
+       },
+       {
+        "text": "Zocor 20 mg OD"
+       },
+       {
+        "text": "Metformin 500 mg PO BID"
+       },
+       {
+        "text": "Allopurinol 100 mg oral OD"
+       }
+      ],
+      "evidence_ref": "s5-p08/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-08T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "Amlodipine 5 mg oral OD"
+       },
+       {
+        "text": "Renitec 5 mg oral BID"
+       },
+       {
+        "text": "Simvastatin 20 mg oral daily"
+       },
+       {
+        "text": "Allopurinol"
+       }
+      ],
+      "evidence_ref": "s5-p08/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-08T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "Amlodipine 5 mg 1x1"
+       },
+       {
+        "text": "Enalapril 5 mg 1x2 pc"
+       },
+       {
+        "text": "Simvastatin 20 mg PO OD"
+       },
+       {
+        "text": "Metformin 500 mg twice daily"
+       },
+       {
+        "text": "Allopurinol 100 mg PO once daily"
+       },
+       {
+        "text": "Dicloxacillin 250 mg PO four times daily"
+       }
+      ],
+      "evidence_ref": "s5-p08/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "dev"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 25.0,
+      "drug_name_raw": "HCTZ",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "5487"
+      ],
+      "ingredients": [
+       "hydrochlorothiazide"
+      ],
+      "product": "hydrochlorothiazide",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Metformin",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 3.0,
+      "drug_name_raw": "Warfarin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "11289"
+      ],
+      "ingredients": [
+       "warfarin"
+      ],
+      "product": "warfarin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Paracetamol",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 300.0,
+      "drug_name_raw": "Gabapentin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": "oral"
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 25.0,
+      "drug_name_raw": "ไฮโดรคลอโรไทอะไซด์",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "5487"
+      ],
+      "ingredients": [
+       "hydrochlorothiazide"
+      ],
+      "product": "hydrochlorothiazide",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "เมทฟอร์มิน",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 3.0,
+      "drug_name_raw": "วาร์ฟาริน",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "11289"
+      ],
+      "ingredients": [
+       "warfarin"
+      ],
+      "product": "warfarin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Sara",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 300.0,
+      "drug_name_raw": "Neurontin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 400.0,
+      "drug_name_raw": "Brufen",
+      "frequency_code": "q8h",
+      "ingredient_rxcuis": [
+       "5640"
+      ],
+      "ingredients": [
+       "ibuprofen"
+      ],
+      "product": "ibuprofen",
+      "route": "oral"
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Glucophage",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 3.0,
+      "drug_name_raw": "วาร์ฟาริน",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "11289"
+      ],
+      "ingredients": [
+       "warfarin"
+      ],
+      "product": "warfarin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Sara",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": "oral"
+     },
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "Berlontin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": "oral"
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p09",
+   "snapshot": {
+    "allergies": [
+     {
+      "available_at_time": "2025-11-21T09:00:00+07:00",
+      "evidence_ref": "s5-p09/allergy/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "text": "Clarithromycin - rash",
+      "version": "1"
+     }
+    ],
+    "as_of": "2026-06-09T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p09",
+    "sources": [
+     {
+      "available_at_time": "2026-05-10T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "HCTZ 25 mg OD"
+       },
+       {
+        "text": "Metformin 500 mg PO 1x2 pc"
+       },
+       {
+        "text": "Warfarin 3 mg PO daily"
+       },
+       {
+        "text": "Paracetamol 500 mg oral prn"
+       },
+       {
+        "text": "Gabapentin 300 mg oral once daily"
+       }
+      ],
+      "evidence_ref": "s5-p09/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-09T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "Glucophage 500 มก. 1x2 หลังอาหาร"
+       },
+       {
+        "text": "วาร์ฟาริน 3 มก. วันละ 1 ครั้ง"
+       },
+       {
+        "text": "Sara 500 มก. รับประทาน เวลาปวด"
+       },
+       {
+        "text": "Berlontin รับประทาน วันละ 1 ครั้ง"
+       }
+      ],
+      "evidence_ref": "s5-p09/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-09T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "ไฮโดรคลอโรไทอะไซด์ 25 มก. 1x1 หลังอาหารเช้า"
+       },
+       {
+        "text": "เมทฟอร์มิน 500 มก. 1x2 หลังอาหาร"
+       },
+       {
+        "text": "วาร์ฟาริน 3 มก. 1x1 หลังอาหารเช้า"
+       },
+       {
+        "text": "Sara 500 มก. รับประทาน เมื่อมีอาการ"
+       },
+       {
+        "text": "Neurontin 300 มก. 1x1 หลังอาหารเช้า"
+       },
+       {
+        "text": "Brufen 400 มก. รับประทาน วันละ 3 ครั้ง"
+       }
+      ],
+      "evidence_ref": "s5-p09/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Losartan",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "52175"
+      ],
+      "ingredients": [
+       "losartan"
+      ],
+      "product": "losartan",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Atenolol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 300.0,
+      "drug_name_raw": "Gabapentin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": null
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Losartan",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "52175"
+      ],
+      "ingredients": [
+       "losartan"
+      ],
+      "product": "losartan",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Atenolol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 300.0,
+      "drug_name_raw": "Berlontin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 250.0,
+      "drug_name_raw": "Naproxen",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "7258"
+      ],
+      "ingredients": [
+       "naproxen"
+      ],
+      "product": "naproxen",
+      "route": "oral"
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Tenormin",
+      "frequency_code": null,
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": "oral"
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p10",
+   "snapshot": {
+    "allergies": [],
+    "as_of": "2026-06-10T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p10",
+    "sources": [
+     {
+      "available_at_time": "2026-05-11T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Losartan 50 mg PO 1x1"
+       },
+       {
+        "text": "Atenolol 50 mg oral daily"
+       },
+       {
+        "text": "Gabapentin 300 mg daily"
+       }
+      ],
+      "evidence_ref": "s5-p10/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-10T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "Tenormin 50 มก. รับประทาน"
+       }
+      ],
+      "evidence_ref": "s5-p10/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-10T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "Losartan 50 mg oral 1x1"
+       },
+       {
+        "text": "Atenolol 50 mg OD"
+       },
+       {
+        "text": "Berlontin 300 mg oral OD"
+       },
+       {
+        "text": "Naproxen 250 mg PO BID"
+       }
+      ],
+      "evidence_ref": "s5-p10/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "dev"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Losartan",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "52175"
+      ],
+      "ingredients": [
+       "losartan"
+      ],
+      "product": "losartan",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Glucophage",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Glipizide",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "4821"
+      ],
+      "ingredients": [
+       "glipizide"
+      ],
+      "product": "glipizide",
+      "route": null
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Cozaar",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "52175"
+      ],
+      "ingredients": [
+       "losartan"
+      ],
+      "product": "losartan",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Metformin",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Glipizide",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "4821"
+      ],
+      "ingredients": [
+       "glipizide"
+      ],
+      "product": "glipizide",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 25.0,
+      "drug_name_raw": "Diclofenac",
+      "frequency_code": "q8h",
+      "ingredient_rxcuis": [
+       "3355"
+      ],
+      "ingredients": [
+       "diclofenac"
+      ],
+      "product": "diclofenac",
+      "route": "oral"
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Minidiab",
+      "frequency_code": null,
+      "ingredient_rxcuis": [
+       "4821"
+      ],
+      "ingredients": [
+       "glipizide"
+      ],
+      "product": "glipizide",
+      "route": "oral"
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": false
+   },
+   "patient_ref": "s5-p11",
+   "snapshot": {
+    "allergies": [],
+    "as_of": "2026-06-11T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p11",
+    "sources": [
+     {
+      "available_at_time": "2026-05-12T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Losartan 50 mg 1x1"
+       },
+       {
+        "text": "Glucophage 500 mg BID"
+       },
+       {
+        "text": "Glipizide 5 mg daily"
+       }
+      ],
+      "evidence_ref": "s5-p11/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-11T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "Minidiab 5 mg PO"
+       }
+      ],
+      "evidence_ref": "s5-p11/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-11T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "Cozaar 50 mg daily"
+       },
+       {
+        "text": "Metformin 500 mg bid"
+       },
+       {
+        "text": "Glipizide 5 mg PO 1x1"
+       },
+       {
+        "text": "Diclofenac 25 mg oral tid"
+       }
+      ],
+      "evidence_ref": "s5-p11/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "dev"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Metformin",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Omeprazole",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mcg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Levothyroxine",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "10582"
+      ],
+      "ingredients": [
+       "levothyroxine"
+      ],
+      "product": "levothyroxine",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "Furosemide",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "4603"
+      ],
+      "ingredients": [
+       "furosemide"
+      ],
+      "product": "furosemide",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Paracetamol",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": null
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Glucophage",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Miracid",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mcg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Levothyroxine",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "10582"
+      ],
+      "ingredients": [
+       "levothyroxine"
+      ],
+      "product": "levothyroxine",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "Furosemide",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "4603"
+      ],
+      "ingredients": [
+       "furosemide"
+      ],
+      "product": "furosemide",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Sara",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Cephalexin",
+      "frequency_code": "q6h",
+      "ingredient_rxcuis": [
+       "2231"
+      ],
+      "ingredients": [
+       "cephalexin"
+      ],
+      "product": "cephalexin",
+      "route": "oral"
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "โอเมพราโซล",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": null
+     },
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "ฟูโรซีไมด์",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "4603"
+      ],
+      "ingredients": [
+       "furosemide"
+      ],
+      "product": "furosemide",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "ซาร่า",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": null
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p12",
+   "snapshot": {
+    "allergies": [
+     {
+      "available_at_time": "2025-11-24T09:00:00+07:00",
+      "evidence_ref": "s5-p12/allergy/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "text": "Clarithromycin - rash",
+      "version": "1"
+     }
+    ],
+    "as_of": "2026-06-12T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p12",
+    "sources": [
+     {
+      "available_at_time": "2026-05-13T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Metformin 500 mg oral 1x2 pc"
+       },
+       {
+        "text": "Omeprazole 20 mg PO 1x1"
+       },
+       {
+        "text": "Levothyroxine 50 mcg daily"
+       },
+       {
+        "text": "Furosemide 40 mg PO daily"
+       },
+       {
+        "text": "Paracetamol 500 mg prn"
+       }
+      ],
+      "evidence_ref": "s5-p12/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-12T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "โอเมพราโซล 20 มก. วันละ 1 ครั้ง"
+       },
+       {
+        "text": "ฟูโรซีไมด์ รับประทาน วันละครั้ง"
+       },
+       {
+        "text": "ซาร่า 500 มก. เมื่อมีอาการ"
+       }
+      ],
+      "evidence_ref": "s5-p12/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-12T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "Glucophage 500 mg PO bid"
+       },
+       {
+        "text": "Miracid 20 mg PO OD"
+       },
+       {
+        "text": "Levothyroxine 50 mcg once daily"
+       },
+       {
+        "text": "Furosemide 40 mg 1x1"
+       },
+       {
+        "text": "Sara 500 mg as needed"
+       },
+       {
+        "text": "Cephalexin 500 mg PO qid"
+       }
+      ],
+      "evidence_ref": "s5-p12/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Cozaar",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "52175"
+      ],
+      "ingredients": [
+       "losartan"
+      ],
+      "product": "losartan",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "Atorvastatin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "83367"
+      ],
+      "ingredients": [
+       "atorvastatin"
+      ],
+      "product": "atorvastatin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mcg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Levothyroxine",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "10582"
+      ],
+      "ingredients": [
+       "levothyroxine"
+      ],
+      "product": "levothyroxine",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 300.0,
+      "drug_name_raw": "Berlontin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": null
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "ลอซาร์แทน",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "52175"
+      ],
+      "ingredients": [
+       "losartan"
+      ],
+      "product": "losartan",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "Lipitor",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "83367"
+      ],
+      "ingredients": [
+       "atorvastatin"
+      ],
+      "product": "atorvastatin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mcg",
+      "dose_value": 50.0,
+      "drug_name_raw": "เลโวไทร็อกซีน",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "10582"
+      ],
+      "ingredients": [
+       "levothyroxine"
+      ],
+      "product": "levothyroxine",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 300.0,
+      "drug_name_raw": "Neurontin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 250.0,
+      "drug_name_raw": "Zinnat",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "2194"
+      ],
+      "ingredients": [
+       "cefuroxime"
+      ],
+      "product": "cefuroxime",
+      "route": "oral"
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "Cozaar",
+      "frequency_code": null,
+      "ingredient_rxcuis": [
+       "52175"
+      ],
+      "ingredients": [
+       "losartan"
+      ],
+      "product": "losartan",
+      "route": null
+     },
+     {
+      "dose_unit": "mcg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Euthyrox",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "10582"
+      ],
+      "ingredients": [
+       "levothyroxine"
+      ],
+      "product": "levothyroxine",
+      "route": null
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": true,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p13",
+   "snapshot": {
+    "allergies": [
+     {
+      "available_at_time": "2025-11-25T09:00:00+07:00",
+      "evidence_ref": "s5-p13/allergy/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "text": "Sulfa drugs (rash)",
+      "version": "1"
+     }
+    ],
+    "as_of": "2026-06-13T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p13",
+    "sources": [
+     {
+      "available_at_time": "2026-05-14T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Cozaar 50 mg PO daily"
+       },
+       {
+        "text": "Atorvastatin 40 mg oral OD"
+       },
+       {
+        "text": "Levothyroxine 50 mcg once daily"
+       },
+       {
+        "text": "Berlontin 300 mg OD"
+       }
+      ],
+      "evidence_ref": "s5-p13/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-13T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "Cozaar"
+       },
+       {
+        "text": "Euthyrox 50 mcg วันละครั้ง"
+       }
+      ],
+      "evidence_ref": "s5-p13/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-13T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "ลอซาร์แทน 50 มก. รับประทาน 1x1 หลังอาหารเช้า"
+       },
+       {
+        "text": "Lipitor 40 มก. รับประทาน วันละ 1 ครั้ง"
+       },
+       {
+        "text": "เลโวไทร็อกซีน 50 mcg วันละ 1 ครั้ง"
+       },
+       {
+        "discontinue_intent": true,
+        "reason": "synthetic: held by team plan after low glucose readings",
+        "text": "Neurontin 300 มก. 1x1 หลังอาหารเช้า"
+       },
+       {
+        "text": "Zinnat 250 มก. รับประทาน วันละ 2 ครั้ง"
+       }
+      ],
+      "evidence_ref": "s5-p13/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "dev"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Amlodipine",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Enalapril",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "3827"
+      ],
+      "ingredients": [
+       "enalapril"
+      ],
+      "product": "enalapril",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 25.0,
+      "drug_name_raw": "HCTZ",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "5487"
+      ],
+      "ingredients": [
+       "hydrochlorothiazide"
+      ],
+      "product": "hydrochlorothiazide",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Tenormin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": null
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Amlodipine",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Enalapril",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "3827"
+      ],
+      "ingredients": [
+       "enalapril"
+      ],
+      "product": "enalapril",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 25.0,
+      "drug_name_raw": "Hydrochlorothiazide",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "5487"
+      ],
+      "ingredients": [
+       "hydrochlorothiazide"
+      ],
+      "product": "hydrochlorothiazide",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Atenolol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Amoxil",
+      "frequency_code": "q8h",
+      "ingredient_rxcuis": [
+       "723"
+      ],
+      "ingredients": [
+       "amoxicillin"
+      ],
+      "product": "amoxicillin",
+      "route": null
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "Amlodipine",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": "oral"
+     },
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "Renitec",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "3827"
+      ],
+      "ingredients": [
+       "enalapril"
+      ],
+      "product": "enalapril",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 25.0,
+      "drug_name_raw": "Hydrochlorothiazide",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "5487"
+      ],
+      "ingredients": [
+       "hydrochlorothiazide"
+      ],
+      "product": "hydrochlorothiazide",
+      "route": null
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": false
+   },
+   "patient_ref": "s5-p14",
+   "snapshot": {
+    "allergies": [
+     {
+      "available_at_time": "2025-11-26T09:00:00+07:00",
+      "evidence_ref": "s5-p14/allergy/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "text": "Sulfa drugs (rash)",
+      "version": "1"
+     }
+    ],
+    "as_of": "2026-06-14T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p14",
+    "sources": [
+     {
+      "available_at_time": "2026-05-15T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Amlodipine 5 mg oral once daily"
+       },
+       {
+        "text": "Enalapril 5 mg PO BID"
+       },
+       {
+        "text": "HCTZ 25 mg PO once daily"
+       },
+       {
+        "text": "Tenormin 50 mg daily"
+       }
+      ],
+      "evidence_ref": "s5-p14/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-14T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "Amlodipine PO 1x1"
+       },
+       {
+        "text": "Renitec oral BID"
+       },
+       {
+        "text": "Hydrochlorothiazide 25 mg 1x1"
+       }
+      ],
+      "evidence_ref": "s5-p14/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-14T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "Amlodipine 5 mg oral daily"
+       },
+       {
+        "text": "Enalapril 5 mg BID"
+       },
+       {
+        "text": "Hydrochlorothiazide 25 mg 1x1"
+       },
+       {
+        "text": "Atenolol 50 mg daily"
+       },
+       {
+        "text": "Amoxil 500 mg three times daily"
+       }
+      ],
+      "evidence_ref": "s5-p14/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "dev"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 3.0,
+      "drug_name_raw": "Warfarin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "11289"
+      ],
+      "ingredients": [
+       "warfarin"
+      ],
+      "product": "warfarin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "Furosemide",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "4603"
+      ],
+      "ingredients": [
+       "furosemide"
+      ],
+      "product": "furosemide",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 300.0,
+      "drug_name_raw": "Berlontin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Sitagliptin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "593411"
+      ],
+      "ingredients": [
+       "sitagliptin"
+      ],
+      "product": "sitagliptin",
+      "route": null
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 3.0,
+      "drug_name_raw": "วาร์ฟาริน",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "11289"
+      ],
+      "ingredients": [
+       "warfarin"
+      ],
+      "product": "warfarin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "ฟูโรซีไมด์",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "4603"
+      ],
+      "ingredients": [
+       "furosemide"
+      ],
+      "product": "furosemide",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 300.0,
+      "drug_name_raw": "Neurontin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Januvia",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "593411"
+      ],
+      "ingredients": [
+       "sitagliptin"
+      ],
+      "product": "sitagliptin",
+      "route": null
+     },
+     {
+      "dose_unit": "g",
+      "dose_value": 1.0,
+      "drug_name_raw": "ออกเมนติน",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "723",
+       "48203"
+      ],
+      "ingredients": [
+       "amoxicillin",
+       "clavulanate"
+      ],
+      "product": "amoxicillin_clavulanate",
+      "route": "oral"
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 3.0,
+      "drug_name_raw": "วาร์ฟาริน",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "11289"
+      ],
+      "ingredients": [
+       "warfarin"
+      ],
+      "product": "warfarin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "Neurontin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": null
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p15",
+   "snapshot": {
+    "allergies": [
+     {
+      "available_at_time": "2025-11-27T09:00:00+07:00",
+      "evidence_ref": "s5-p15/allergy/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "text": "Clarithromycin - rash",
+      "version": "1"
+     }
+    ],
+    "as_of": "2026-06-15T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p15",
+    "sources": [
+     {
+      "available_at_time": "2026-05-16T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Warfarin 3 mg PO once daily"
+       },
+       {
+        "text": "Furosemide 40 mg oral daily"
+       },
+       {
+        "text": "Berlontin 300 mg once daily"
+       },
+       {
+        "text": "Sitagliptin 100 mg once daily"
+       }
+      ],
+      "evidence_ref": "s5-p15/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-15T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "วาร์ฟาริน 3 มก. รับประทาน วันละ 1 ครั้ง"
+       },
+       {
+        "text": "Neurontin วันละ 1 ครั้ง"
+       }
+      ],
+      "evidence_ref": "s5-p15/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-15T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "วาร์ฟาริน 3 มก. วันละครั้ง"
+       },
+       {
+        "text": "ฟูโรซีไมด์ 40 มก. รับประทาน 1x1 หลังอาหารเช้า"
+       },
+       {
+        "text": "Neurontin 300 มก. รับประทาน 1x1 หลังอาหารเช้า"
+       },
+       {
+        "text": "Januvia 100 มก. วันละครั้ง"
+       },
+       {
+        "text": "ออกเมนติน 1 กรัม รับประทาน 1x2 หลังอาหาร"
+       }
+      ],
+      "evidence_ref": "s5-p15/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Atenolol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Metformin",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Omeprazole",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "Lasix",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "4603"
+      ],
+      "ingredients": [
+       "furosemide"
+      ],
+      "product": "furosemide",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Paracetamol",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": null
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Atenolol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Metformin",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Omeprazole",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "Furosemide",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "4603"
+      ],
+      "ingredients": [
+       "furosemide"
+      ],
+      "product": "furosemide",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Paracetamol",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 250.0,
+      "drug_name_raw": "Dicloxacillin",
+      "frequency_code": "q6h",
+      "ingredient_rxcuis": [
+       "3356"
+      ],
+      "ingredients": [
+       "dicloxacillin"
+      ],
+      "product": "dicloxacillin",
+      "route": "oral"
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "เมทฟอร์มิน",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "ฟูโรซีไมด์",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "4603"
+      ],
+      "ingredients": [
+       "furosemide"
+      ],
+      "product": "furosemide",
+      "route": null
+     },
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "ซาร่า",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": null
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p16",
+   "snapshot": {
+    "allergies": [
+     {
+      "available_at_time": "2025-11-28T09:00:00+07:00",
+      "evidence_ref": "s5-p16/allergy/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "text": "แพ้ยาซัลฟา (ผื่น)",
+      "version": "1"
+     }
+    ],
+    "as_of": "2026-06-16T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p16",
+    "sources": [
+     {
+      "available_at_time": "2026-05-17T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Atenolol 50 mg PO once daily"
+       },
+       {
+        "text": "Metformin 500 mg oral BID"
+       },
+       {
+        "text": "Omeprazole 20 mg PO 1x1"
+       },
+       {
+        "text": "Lasix 40 mg PO once daily"
+       },
+       {
+        "text": "Paracetamol 500 mg as needed"
+       }
+      ],
+      "evidence_ref": "s5-p16/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-16T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "เมทฟอร์มิน รับประทาน วันละ 2 ครั้ง"
+       },
+       {
+        "text": "ฟูโรซีไมด์ 40 มก. วันละ 1 ครั้ง"
+       },
+       {
+        "text": "ซาร่า เวลาปวด"
+       }
+      ],
+      "evidence_ref": "s5-p16/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-16T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "Atenolol 50 mg 1x1"
+       },
+       {
+        "text": "Metformin 500 mg oral 1x2 pc"
+       },
+       {
+        "text": "Omeprazole 20 mg once daily"
+       },
+       {
+        "text": "Furosemide 40 mg oral OD"
+       },
+       {
+        "text": "Paracetamol 500 mg oral as needed"
+       },
+       {
+        "text": "Dicloxacillin 250 mg PO q6h"
+       }
+      ],
+      "evidence_ref": "s5-p16/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "dev"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Glucophage",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mcg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Euthyrox",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "10582"
+      ],
+      "ingredients": [
+       "levothyroxine"
+      ],
+      "product": "levothyroxine",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Zyloric",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": "oral"
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Glucophage",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": null
+     },
+     {
+      "dose_unit": "mcg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Euthyrox",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "10582"
+      ],
+      "ingredients": [
+       "levothyroxine"
+      ],
+      "product": "levothyroxine",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Allopurinol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 400.0,
+      "drug_name_raw": "Brufen",
+      "frequency_code": "q8h",
+      "ingredient_rxcuis": [
+       "5640"
+      ],
+      "ingredients": [
+       "ibuprofen"
+      ],
+      "product": "ibuprofen",
+      "route": "oral"
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Glucophage",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "Levothyroxine",
+      "frequency_code": null,
+      "ingredient_rxcuis": [
+       "10582"
+      ],
+      "ingredients": [
+       "levothyroxine"
+      ],
+      "product": "levothyroxine",
+      "route": null
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": false
+   },
+   "patient_ref": "s5-p17",
+   "snapshot": {
+    "allergies": [],
+    "as_of": "2026-06-17T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p17",
+    "sources": [
+     {
+      "available_at_time": "2026-05-18T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Glucophage 500 mg PO BID"
+       },
+       {
+        "text": "Euthyrox 50 mcg OD"
+       },
+       {
+        "text": "Zyloric 100 mg oral daily"
+       }
+      ],
+      "evidence_ref": "s5-p17/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-17T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "Glucophage 500 mg PO twice daily"
+       },
+       {
+        "text": "Levothyroxine"
+       }
+      ],
+      "evidence_ref": "s5-p17/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-17T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "Glucophage 500 mg bid"
+       },
+       {
+        "text": "Euthyrox 50 mcg daily"
+       },
+       {
+        "text": "Allopurinol 100 mg 1x1"
+       },
+       {
+        "text": "Brufen 400 mg oral tid"
+       }
+      ],
+      "evidence_ref": "s5-p17/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "dev"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 25.0,
+      "drug_name_raw": "Hydrochlorothiazide",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "5487"
+      ],
+      "ingredients": [
+       "hydrochlorothiazide"
+      ],
+      "product": "hydrochlorothiazide",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "Atorvastatin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "83367"
+      ],
+      "ingredients": [
+       "atorvastatin"
+      ],
+      "product": "atorvastatin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Metformin",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Omeprazole",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Sara",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": "oral"
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 25.0,
+      "drug_name_raw": "Hydrochlorothiazide",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "5487"
+      ],
+      "ingredients": [
+       "hydrochlorothiazide"
+      ],
+      "product": "hydrochlorothiazide",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "Atorvastatin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "83367"
+      ],
+      "ingredients": [
+       "atorvastatin"
+      ],
+      "product": "atorvastatin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Glucophage",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Omeprazole",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Paracetamol",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 250.0,
+      "drug_name_raw": "Naprosyn",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "7258"
+      ],
+      "ingredients": [
+       "naproxen"
+      ],
+      "product": "naproxen",
+      "route": "oral"
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 25.0,
+      "drug_name_raw": "ไฮโดรคลอโรไทอะไซด์",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "5487"
+      ],
+      "ingredients": [
+       "hydrochlorothiazide"
+      ],
+      "product": "hydrochlorothiazide",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "Lipitor",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "83367"
+      ],
+      "ingredients": [
+       "atorvastatin"
+      ],
+      "product": "atorvastatin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "เมทฟอร์มิน",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "โอเมพราโซล",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "ซาร่า",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": "oral"
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p18",
+   "snapshot": {
+    "allergies": [
+     {
+      "available_at_time": "2025-11-30T09:00:00+07:00",
+      "evidence_ref": "s5-p18/allergy/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "text": "แพ้ยาซัลฟา (ผื่น)",
+      "version": "1"
+     }
+    ],
+    "as_of": "2026-06-18T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p18",
+    "sources": [
+     {
+      "available_at_time": "2026-05-19T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Hydrochlorothiazide 25 mg PO OD"
+       },
+       {
+        "text": "Atorvastatin 40 mg oral once daily"
+       },
+       {
+        "text": "Metformin 500 mg 1x2 pc"
+       },
+       {
+        "text": "Omeprazole 20 mg PO 1x1"
+       },
+       {
+        "text": "Sara 500 mg oral as needed"
+       }
+      ],
+      "evidence_ref": "s5-p18/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-18T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "ไฮโดรคลอโรไทอะไซด์ 25 มก. วันละครั้ง"
+       },
+       {
+        "text": "Lipitor 40 มก. รับประทาน วันละครั้ง"
+       },
+       {
+        "text": "เมทฟอร์มิน 500 มก. วันละ 2 ครั้ง"
+       },
+       {
+        "text": "โอเมพราโซล 20 มก. รับประทาน วันละ 1 ครั้ง"
+       },
+       {
+        "text": "ซาร่า 500 มก. รับประทาน เมื่อมีอาการ"
+       }
+      ],
+      "evidence_ref": "s5-p18/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-18T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "Hydrochlorothiazide 25 mg 1x1"
+       },
+       {
+        "text": "Atorvastatin 40 mg oral once daily"
+       },
+       {
+        "text": "Glucophage 500 mg PO twice daily"
+       },
+       {
+        "text": "Omeprazole 20 mg daily"
+       },
+       {
+        "text": "Paracetamol 500 mg prn"
+       },
+       {
+        "text": "Naprosyn 250 mg PO bid"
+       }
+      ],
+      "evidence_ref": "s5-p18/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Atenolol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Metformin",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Zyloric",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Paracetamol",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": null
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "อะทีโนลอล",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Glucophage",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "อัลโลพูรินอล",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "ซาร่า",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 25.0,
+      "drug_name_raw": "Voltaren",
+      "frequency_code": "q8h",
+      "ingredient_rxcuis": [
+       "3355"
+      ],
+      "ingredients": [
+       "diclofenac"
+      ],
+      "product": "diclofenac",
+      "route": null
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "Glucophage",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": null
+     },
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "อัลโลพูรินอล",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Sara",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": "oral"
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": true,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p19",
+   "snapshot": {
+    "allergies": [
+     {
+      "available_at_time": "2025-12-01T09:00:00+07:00",
+      "evidence_ref": "s5-p19/allergy/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "text": "แพ้ยาซัลฟา (ผื่น)",
+      "version": "1"
+     }
+    ],
+    "as_of": "2026-06-19T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p19",
+    "sources": [
+     {
+      "available_at_time": "2026-05-20T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Atenolol 50 mg daily"
+       },
+       {
+        "text": "Metformin 500 mg oral bid"
+       },
+       {
+        "text": "Zyloric 100 mg daily"
+       },
+       {
+        "text": "Paracetamol 500 mg as needed"
+       }
+      ],
+      "evidence_ref": "s5-p19/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-19T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "Glucophage วันละ 2 ครั้ง"
+       },
+       {
+        "text": "อัลโลพูรินอล รับประทาน วันละครั้ง"
+       },
+       {
+        "text": "Sara 500 มก. รับประทาน เมื่อมีอาการ"
+       }
+      ],
+      "evidence_ref": "s5-p19/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-19T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "อะทีโนลอล 50 มก. วันละ 1 ครั้ง"
+       },
+       {
+        "text": "Glucophage 500 มก. รับประทาน วันละ 2 ครั้ง"
+       },
+       {
+        "text": "อัลโลพูรินอล 100 มก. วันละครั้ง"
+       },
+       {
+        "discontinue_intent": true,
+        "reason": "synthetic: course completed",
+        "text": "ซาร่า 500 มก. เวลาปวด"
+       },
+       {
+        "text": "Voltaren 25 มก. 1x3 หลังอาหาร"
+       }
+      ],
+      "evidence_ref": "s5-p19/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "dev"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "Lipitor",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "83367"
+      ],
+      "ingredients": [
+       "atorvastatin"
+      ],
+      "product": "atorvastatin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Minidiab",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "4821"
+      ],
+      "ingredients": [
+       "glipizide"
+      ],
+      "product": "glipizide",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 3.0,
+      "drug_name_raw": "Orfarin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "11289"
+      ],
+      "ingredients": [
+       "warfarin"
+      ],
+      "product": "warfarin",
+      "route": null
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "Atorvastatin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "83367"
+      ],
+      "ingredients": [
+       "atorvastatin"
+      ],
+      "product": "atorvastatin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Minidiab",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "4821"
+      ],
+      "ingredients": [
+       "glipizide"
+      ],
+      "product": "glipizide",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 3.0,
+      "drug_name_raw": "Warfarin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "11289"
+      ],
+      "ingredients": [
+       "warfarin"
+      ],
+      "product": "warfarin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Cephalexin",
+      "frequency_code": "q6h",
+      "ingredient_rxcuis": [
+       "2231"
+      ],
+      "ingredients": [
+       "cephalexin"
+      ],
+      "product": "cephalexin",
+      "route": "oral"
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "Glipizide",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "4821"
+      ],
+      "ingredients": [
+       "glipizide"
+      ],
+      "product": "glipizide",
+      "route": null
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p20",
+   "snapshot": {
+    "allergies": [
+     {
+      "available_at_time": "2025-12-02T09:00:00+07:00",
+      "evidence_ref": "s5-p20/allergy/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "text": "Ciprofloxacin (rash)",
+      "version": "1"
+     }
+    ],
+    "as_of": "2026-06-20T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p20",
+    "sources": [
+     {
+      "available_at_time": "2026-05-21T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Lipitor 40 mg oral daily"
+       },
+       {
+        "text": "Minidiab 5 mg once daily"
+       },
+       {
+        "text": "Orfarin 3 mg 1x1"
+       }
+      ],
+      "evidence_ref": "s5-p20/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-20T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "Glipizide daily"
+       }
+      ],
+      "evidence_ref": "s5-p20/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-20T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "Atorvastatin 40 mg PO once daily"
+       },
+       {
+        "text": "Minidiab 5 mg PO once daily"
+       },
+       {
+        "text": "Warfarin 3 mg oral 1x1"
+       },
+       {
+        "text": "Cephalexin 500 mg oral four times daily"
+       }
+      ],
+      "evidence_ref": "s5-p20/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "dev"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Amlodipine",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Tenormin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Glucophage",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Miracid",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": null
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "แอมโลดิพีน",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "อะทีโนลอล",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "เมทฟอร์มิน",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "โอเมพราโซล",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 250.0,
+      "drug_name_raw": "Zinnat",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "2194"
+      ],
+      "ingredients": [
+       "cefuroxime"
+      ],
+      "product": "cefuroxime",
+      "route": "oral"
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Norvasc",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "อะทีโนลอล",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Glucophage",
+      "frequency_code": null,
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": null
+     },
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "โอเมพราโซล",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": null
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p21",
+   "snapshot": {
+    "allergies": [
+     {
+      "available_at_time": "2025-12-03T09:00:00+07:00",
+      "evidence_ref": "s5-p21/allergy/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "text": "Aspirin (angioedema)",
+      "version": "1"
+     }
+    ],
+    "as_of": "2026-06-21T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p21",
+    "sources": [
+     {
+      "available_at_time": "2026-05-22T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Amlodipine 5 mg oral once daily"
+       },
+       {
+        "text": "Tenormin 50 mg oral once daily"
+       },
+       {
+        "text": "Glucophage 500 mg PO bid"
+       },
+       {
+        "text": "Miracid 20 mg 1x1"
+       }
+      ],
+      "evidence_ref": "s5-p21/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-21T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "Norvasc 5 มก. วันละ 1 ครั้ง"
+       },
+       {
+        "text": "อะทีโนลอล 50 มก. วันละครั้ง"
+       },
+       {
+        "text": "Glucophage 500 มก."
+       },
+       {
+        "text": "โอเมพราโซล วันละครั้ง"
+       }
+      ],
+      "evidence_ref": "s5-p21/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-21T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "แอมโลดิพีน 5 มก. รับประทาน วันละครั้ง"
+       },
+       {
+        "text": "อะทีโนลอล 50 มก. วันละ 1 ครั้ง"
+       },
+       {
+        "text": "เมทฟอร์มิน 500 มก. 1x2 หลังอาหาร"
+       },
+       {
+        "text": "โอเมพราโซล 20 มก. วันละ 1 ครั้ง"
+       },
+       {
+        "text": "Zinnat 250 มก. รับประทาน วันละ 2 ครั้ง"
+       }
+      ],
+      "evidence_ref": "s5-p21/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 25.0,
+      "drug_name_raw": "HCTZ",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "5487"
+      ],
+      "ingredients": [
+       "hydrochlorothiazide"
+      ],
+      "product": "hydrochlorothiazide",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "Lipitor",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "83367"
+      ],
+      "ingredients": [
+       "atorvastatin"
+      ],
+      "product": "atorvastatin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Omeprazole",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 300.0,
+      "drug_name_raw": "Gabapentin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Sitagliptin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "593411"
+      ],
+      "ingredients": [
+       "sitagliptin"
+      ],
+      "product": "sitagliptin",
+      "route": null
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 25.0,
+      "drug_name_raw": "Hydrochlorothiazide",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "5487"
+      ],
+      "ingredients": [
+       "hydrochlorothiazide"
+      ],
+      "product": "hydrochlorothiazide",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "Atorvastatin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "83367"
+      ],
+      "ingredients": [
+       "atorvastatin"
+      ],
+      "product": "atorvastatin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Omeprazole",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 300.0,
+      "drug_name_raw": "Berlontin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Januvia",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "593411"
+      ],
+      "ingredients": [
+       "sitagliptin"
+      ],
+      "product": "sitagliptin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Amoxicillin",
+      "frequency_code": "q8h",
+      "ingredient_rxcuis": [
+       "723"
+      ],
+      "ingredients": [
+       "amoxicillin"
+      ],
+      "product": "amoxicillin",
+      "route": null
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "อะทอร์วาสแตติน",
+      "frequency_code": null,
+      "ingredient_rxcuis": [
+       "83367"
+      ],
+      "ingredients": [
+       "atorvastatin"
+      ],
+      "product": "atorvastatin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 300.0,
+      "drug_name_raw": "Berlontin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": null
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p22",
+   "snapshot": {
+    "allergies": [],
+    "as_of": "2026-06-22T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p22",
+    "sources": [
+     {
+      "available_at_time": "2026-05-23T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "HCTZ 25 mg once daily"
+       },
+       {
+        "text": "Lipitor 40 mg daily"
+       },
+       {
+        "text": "Omeprazole 20 mg PO once daily"
+       },
+       {
+        "text": "Gabapentin 300 mg 1x1"
+       },
+       {
+        "text": "Sitagliptin 100 mg once daily"
+       }
+      ],
+      "evidence_ref": "s5-p22/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-22T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "อะทอร์วาสแตติน"
+       },
+       {
+        "text": "Berlontin 300 มก. วันละ 1 ครั้ง"
+       }
+      ],
+      "evidence_ref": "s5-p22/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-22T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "Hydrochlorothiazide 25 mg OD"
+       },
+       {
+        "text": "Atorvastatin 40 mg oral OD"
+       },
+       {
+        "text": "Omeprazole 20 mg oral daily"
+       },
+       {
+        "text": "Berlontin 300 mg once daily"
+       },
+       {
+        "text": "Januvia 100 mg 1x1"
+       },
+       {
+        "text": "Amoxicillin 500 mg tid"
+       }
+      ],
+      "evidence_ref": "s5-p22/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "dev"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Norvasc",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Enalapril",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "3827"
+      ],
+      "ingredients": [
+       "enalapril"
+      ],
+      "product": "enalapril",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Tenormin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mcg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Levothyroxine",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "10582"
+      ],
+      "ingredients": [
+       "levothyroxine"
+      ],
+      "product": "levothyroxine",
+      "route": null
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Amlodipine",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Enalapril",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "3827"
+      ],
+      "ingredients": [
+       "enalapril"
+      ],
+      "product": "enalapril",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Tenormin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": null
+     },
+     {
+      "dose_unit": "mcg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Euthyrox",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "10582"
+      ],
+      "ingredients": [
+       "levothyroxine"
+      ],
+      "product": "levothyroxine",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "g",
+      "dose_value": 1.0,
+      "drug_name_raw": "Augmentin",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "723",
+       "48203"
+      ],
+      "ingredients": [
+       "amoxicillin",
+       "clavulanate"
+      ],
+      "product": "amoxicillin_clavulanate",
+      "route": null
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Norvasc",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Enalapril",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "3827"
+      ],
+      "ingredients": [
+       "enalapril"
+      ],
+      "product": "enalapril",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Tenormin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": null
+     },
+     {
+      "dose_unit": "mcg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Euthyrox",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "10582"
+      ],
+      "ingredients": [
+       "levothyroxine"
+      ],
+      "product": "levothyroxine",
+      "route": null
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": false
+   },
+   "patient_ref": "s5-p23",
+   "snapshot": {
+    "allergies": [],
+    "as_of": "2026-06-23T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p23",
+    "sources": [
+     {
+      "available_at_time": "2026-05-24T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Norvasc 5 mg oral 1x1"
+       },
+       {
+        "text": "Enalapril 5 mg PO twice daily"
+       },
+       {
+        "text": "Tenormin 50 mg oral daily"
+       },
+       {
+        "text": "Levothyroxine 50 mcg 1x1"
+       }
+      ],
+      "evidence_ref": "s5-p23/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-23T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "Norvasc 5 mg oral OD"
+       },
+       {
+        "text": "Enalapril 5 mg twice daily"
+       },
+       {
+        "text": "Tenormin 50 mg 1x1"
+       },
+       {
+        "text": "Euthyrox 50 mcg OD"
+       }
+      ],
+      "evidence_ref": "s5-p23/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-23T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "Amlodipine 5 mg 1x1"
+       },
+       {
+        "text": "Enalapril 5 mg PO 1x2 pc"
+       },
+       {
+        "text": "Tenormin 50 mg once daily"
+       },
+       {
+        "text": "Euthyrox 50 mcg PO OD"
+       },
+       {
+        "text": "Augmentin 1 g twice daily"
+       }
+      ],
+      "evidence_ref": "s5-p23/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "dev"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Tenormin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 3.0,
+      "drug_name_raw": "Warfarin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "11289"
+      ],
+      "ingredients": [
+       "warfarin"
+      ],
+      "product": "warfarin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Sara",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 300.0,
+      "drug_name_raw": "Berlontin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": "oral"
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Atenolol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 3.0,
+      "drug_name_raw": "Warfarin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "11289"
+      ],
+      "ingredients": [
+       "warfarin"
+      ],
+      "product": "warfarin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Sara",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 300.0,
+      "drug_name_raw": "Berlontin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 250.0,
+      "drug_name_raw": "Dicloxacillin",
+      "frequency_code": "q6h",
+      "ingredient_rxcuis": [
+       "3356"
+      ],
+      "ingredients": [
+       "dicloxacillin"
+      ],
+      "product": "dicloxacillin",
+      "route": null
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Tenormin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": "oral"
+     },
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "ซาร่า",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": "oral"
+     },
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "Neurontin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": null
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p24",
+   "snapshot": {
+    "allergies": [],
+    "as_of": "2026-06-24T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p24",
+    "sources": [
+     {
+      "available_at_time": "2026-05-25T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Tenormin 50 mg daily"
+       },
+       {
+        "text": "Warfarin 3 mg PO 1x1"
+       },
+       {
+        "text": "Sara 500 mg oral prn"
+       },
+       {
+        "text": "Berlontin 300 mg oral once daily"
+       }
+      ],
+      "evidence_ref": "s5-p24/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-24T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "Tenormin 50 มก. รับประทาน วันละ 1 ครั้ง"
+       },
+       {
+        "text": "ซาร่า รับประทาน เมื่อมีอาการ"
+       },
+       {
+        "text": "Neurontin วันละ 1 ครั้ง"
+       }
+      ],
+      "evidence_ref": "s5-p24/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-24T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "Atenolol 50 mg OD"
+       },
+       {
+        "text": "Warfarin 3 mg once daily"
+       },
+       {
+        "text": "Sara 500 mg prn"
+       },
+       {
+        "text": "Berlontin 300 mg PO 1x1"
+       },
+       {
+        "text": "Dicloxacillin 250 mg qid"
+       }
+      ],
+      "evidence_ref": "s5-p24/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Norvasc",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "Atorvastatin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "83367"
+      ],
+      "ingredients": [
+       "atorvastatin"
+      ],
+      "product": "atorvastatin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Metformin",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Allopurinol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Sitagliptin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "593411"
+      ],
+      "ingredients": [
+       "sitagliptin"
+      ],
+      "product": "sitagliptin",
+      "route": null
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Norvasc",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "Lipitor",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "83367"
+      ],
+      "ingredients": [
+       "atorvastatin"
+      ],
+      "product": "atorvastatin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "เมทฟอร์มิน",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "อัลโลพูรินอล",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Januvia",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "593411"
+      ],
+      "ingredients": [
+       "sitagliptin"
+      ],
+      "product": "sitagliptin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 400.0,
+      "drug_name_raw": "ไอบูโพรเฟน",
+      "frequency_code": "q8h",
+      "ingredient_rxcuis": [
+       "5640"
+      ],
+      "ingredients": [
+       "ibuprofen"
+      ],
+      "product": "ibuprofen",
+      "route": null
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "Glucophage",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "อัลโลพูรินอล",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Januvia",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "593411"
+      ],
+      "ingredients": [
+       "sitagliptin"
+      ],
+      "product": "sitagliptin",
+      "route": null
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": true,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p25",
+   "snapshot": {
+    "allergies": [],
+    "as_of": "2026-06-25T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p25",
+    "sources": [
+     {
+      "available_at_time": "2026-05-26T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Norvasc 5 mg daily"
+       },
+       {
+        "text": "Atorvastatin 40 mg once daily"
+       },
+       {
+        "text": "Metformin 500 mg BID"
+       },
+       {
+        "text": "Allopurinol 100 mg once daily"
+       },
+       {
+        "text": "Sitagliptin 100 mg OD"
+       }
+      ],
+      "evidence_ref": "s5-p25/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-25T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "Glucophage วันละ 2 ครั้ง"
+       },
+       {
+        "text": "อัลโลพูรินอล 100 มก. รับประทาน 1x1 หลังอาหารเช้า"
+       },
+       {
+        "text": "Januvia 100 มก. วันละ 1 ครั้ง"
+       }
+      ],
+      "evidence_ref": "s5-p25/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-25T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "Norvasc 5 มก. รับประทาน 1x1 หลังอาหารเช้า"
+       },
+       {
+        "text": "Lipitor 40 มก. รับประทาน วันละครั้ง"
+       },
+       {
+        "text": "เมทฟอร์มิน 500 มก. รับประทาน 1x2 หลังอาหาร"
+       },
+       {
+        "text": "อัลโลพูรินอล 100 มก. 1x1 หลังอาหารเช้า"
+       },
+       {
+        "discontinue_intent": true,
+        "reason": "synthetic: held by team plan after low glucose readings",
+        "text": "Januvia 100 มก. วันละ 1 ครั้ง"
+       },
+       {
+        "text": "ไอบูโพรเฟน 400 มก. 1x3 หลังอาหาร"
+       }
+      ],
+      "evidence_ref": "s5-p25/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "dev"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Atenolol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Metformin",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 3.0,
+      "drug_name_raw": "Warfarin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "11289"
+      ],
+      "ingredients": [
+       "warfarin"
+      ],
+      "product": "warfarin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Zyloric",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 300.0,
+      "drug_name_raw": "Berlontin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": null
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Atenolol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Metformin",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 3.0,
+      "drug_name_raw": "Warfarin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "11289"
+      ],
+      "ingredients": [
+       "warfarin"
+      ],
+      "product": "warfarin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Allopurinol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 300.0,
+      "drug_name_raw": "Gabapentin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 250.0,
+      "drug_name_raw": "Naproxen",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "7258"
+      ],
+      "ingredients": [
+       "naproxen"
+      ],
+      "product": "naproxen",
+      "route": null
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Atenolol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": "oral"
+     },
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "Glucophage",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": null
+     },
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "Allopurinol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 300.0,
+      "drug_name_raw": "Berlontin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": null
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p26",
+   "snapshot": {
+    "allergies": [
+     {
+      "available_at_time": "2025-12-08T09:00:00+07:00",
+      "evidence_ref": "s5-p26/allergy/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "text": "Clarithromycin - rash",
+      "version": "1"
+     }
+    ],
+    "as_of": "2026-06-26T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p26",
+    "sources": [
+     {
+      "available_at_time": "2026-05-27T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Atenolol 50 mg OD"
+       },
+       {
+        "text": "Metformin 500 mg 1x2 pc"
+       },
+       {
+        "text": "Warfarin 3 mg 1x1"
+       },
+       {
+        "text": "Zyloric 100 mg oral 1x1"
+       },
+       {
+        "text": "Berlontin 300 mg once daily"
+       }
+      ],
+      "evidence_ref": "s5-p26/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-26T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "Atenolol 50 mg oral OD"
+       },
+       {
+        "text": "Glucophage twice daily"
+       },
+       {
+        "text": "Allopurinol PO daily"
+       },
+       {
+        "text": "Berlontin 300 mg once daily"
+       }
+      ],
+      "evidence_ref": "s5-p26/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-26T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "Atenolol 50 mg oral daily"
+       },
+       {
+        "text": "Metformin 500 mg PO twice daily"
+       },
+       {
+        "text": "Warfarin 3 mg once daily"
+       },
+       {
+        "text": "Allopurinol 100 mg oral daily"
+       },
+       {
+        "text": "Gabapentin 300 mg oral daily"
+       },
+       {
+        "text": "Naproxen 250 mg BID"
+       }
+      ],
+      "evidence_ref": "s5-p26/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "dev"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Amlodipine",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Omeprazole",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Allopurinol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Paracetamol",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": "oral"
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "แอมโลดิพีน",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "โอเมพราโซล",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "อัลโลพูรินอล",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Sara",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 25.0,
+      "drug_name_raw": "ไดโคลฟีแนค",
+      "frequency_code": "q8h",
+      "ingredient_rxcuis": [
+       "3355"
+      ],
+      "ingredients": [
+       "diclofenac"
+      ],
+      "product": "diclofenac",
+      "route": null
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "โอเมพราโซล",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "อัลโลพูรินอล",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": null
+     },
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "Sara",
+      "frequency_code": "prn",
+      "ingredient_rxcuis": [
+       "161"
+      ],
+      "ingredients": [
+       "acetaminophen"
+      ],
+      "product": "acetaminophen",
+      "route": "oral"
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p27",
+   "snapshot": {
+    "allergies": [],
+    "as_of": "2026-06-27T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p27",
+    "sources": [
+     {
+      "available_at_time": "2026-05-28T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Amlodipine 5 mg PO 1x1"
+       },
+       {
+        "text": "Omeprazole 20 mg daily"
+       },
+       {
+        "text": "Allopurinol 100 mg oral daily"
+       },
+       {
+        "text": "Paracetamol 500 mg oral prn"
+       }
+      ],
+      "evidence_ref": "s5-p27/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-27T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "โอเมพราโซล วันละ 1 ครั้ง"
+       },
+       {
+        "text": "อัลโลพูรินอล 100 มก. วันละครั้ง"
+       },
+       {
+        "text": "Sara รับประทาน เมื่อมีอาการ"
+       }
+      ],
+      "evidence_ref": "s5-p27/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-27T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "แอมโลดิพีน 5 มก. 1x1 หลังอาหารเช้า"
+       },
+       {
+        "text": "โอเมพราโซล 20 มก. 1x1 หลังอาหารเช้า"
+       },
+       {
+        "text": "อัลโลพูรินอล 100 มก. 1x1 หลังอาหารเช้า"
+       },
+       {
+        "text": "Sara 500 มก. เวลาปวด"
+       },
+       {
+        "text": "ไดโคลฟีแนค 25 มก. 1x3 หลังอาหาร"
+       }
+      ],
+      "evidence_ref": "s5-p27/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Amlodipine",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Atenolol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Metformin",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": null
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Amlodipine",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Tenormin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Glucophage",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Keflex",
+      "frequency_code": "q6h",
+      "ingredient_rxcuis": [
+       "2231"
+      ],
+      "ingredients": [
+       "cephalexin"
+      ],
+      "product": "cephalexin",
+      "route": "oral"
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Tenormin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "เมทฟอร์มิน",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "6809"
+      ],
+      "ingredients": [
+       "metformin"
+      ],
+      "product": "metformin",
+      "route": null
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p28",
+   "snapshot": {
+    "allergies": [],
+    "as_of": "2026-06-28T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p28",
+    "sources": [
+     {
+      "available_at_time": "2026-05-29T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Amlodipine 5 mg once daily"
+       },
+       {
+        "text": "Atenolol 50 mg once daily"
+       },
+       {
+        "text": "Metformin 500 mg 1x2 pc"
+       }
+      ],
+      "evidence_ref": "s5-p28/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-28T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "Tenormin 50 มก. รับประทาน 1x1 หลังอาหารเช้า"
+       },
+       {
+        "text": "เมทฟอร์มิน 500 มก. 1x2 หลังอาหาร"
+       }
+      ],
+      "evidence_ref": "s5-p28/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-28T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "Amlodipine 5 mg 1x1"
+       },
+       {
+        "text": "Tenormin 50 mg 1x1"
+       },
+       {
+        "text": "Glucophage 500 mg PO bid"
+       },
+       {
+        "text": "Keflex 500 mg PO four times daily"
+       }
+      ],
+      "evidence_ref": "s5-p28/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "dev"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Amlodipine",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Miracid",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Zyloric",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 300.0,
+      "drug_name_raw": "Berlontin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Januvia",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "593411"
+      ],
+      "ingredients": [
+       "sitagliptin"
+      ],
+      "product": "sitagliptin",
+      "route": "oral"
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Amlodipine",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Omeprazole",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Allopurinol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 300.0,
+      "drug_name_raw": "Gabapentin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Sitagliptin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "593411"
+      ],
+      "ingredients": [
+       "sitagliptin"
+      ],
+      "product": "sitagliptin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 250.0,
+      "drug_name_raw": "Cefuroxime",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "2194"
+      ],
+      "ingredients": [
+       "cefuroxime"
+      ],
+      "product": "cefuroxime",
+      "route": "oral"
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Norvasc",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": "oral"
+     },
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "Omeprazole",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Allopurinol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": "oral"
+     },
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "Berlontin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": "oral"
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p29",
+   "snapshot": {
+    "allergies": [
+     {
+      "available_at_time": "2025-12-11T09:00:00+07:00",
+      "evidence_ref": "s5-p29/allergy/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "text": "แพ้ยาซัลฟา (ผื่น)",
+      "version": "1"
+     }
+    ],
+    "as_of": "2026-06-29T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p29",
+    "sources": [
+     {
+      "available_at_time": "2026-05-30T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Amlodipine 5 mg PO daily"
+       },
+       {
+        "text": "Miracid 20 mg 1x1"
+       },
+       {
+        "text": "Zyloric 100 mg oral 1x1"
+       },
+       {
+        "text": "Berlontin 300 mg oral 1x1"
+       },
+       {
+        "text": "Januvia 100 mg oral daily"
+       }
+      ],
+      "evidence_ref": "s5-p29/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-29T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "Norvasc 5 mg oral OD"
+       },
+       {
+        "text": "Omeprazole OD"
+       },
+       {
+        "text": "Allopurinol 100 mg oral OD"
+       },
+       {
+        "text": "Berlontin PO daily"
+       }
+      ],
+      "evidence_ref": "s5-p29/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-29T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "Amlodipine 5 mg oral once daily"
+       },
+       {
+        "text": "Omeprazole 20 mg once daily"
+       },
+       {
+        "text": "Allopurinol 100 mg oral daily"
+       },
+       {
+        "text": "Gabapentin 300 mg OD"
+       },
+       {
+        "text": "Sitagliptin 100 mg OD"
+       },
+       {
+        "text": "Cefuroxime 250 mg oral bid"
+       }
+      ],
+      "evidence_ref": "s5-p29/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "dev"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Norvasc",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Tenormin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Simvastatin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "36567"
+      ],
+      "ingredients": [
+       "simvastatin"
+      ],
+      "product": "simvastatin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Miracid",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": "oral"
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "Amlodipine",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Atenolol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Simvastatin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "36567"
+      ],
+      "ingredients": [
+       "simvastatin"
+      ],
+      "product": "simvastatin",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Omeprazole",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 500.0,
+      "drug_name_raw": "Amoxicillin",
+      "frequency_code": "q8h",
+      "ingredient_rxcuis": [
+       "723"
+      ],
+      "ingredients": [
+       "amoxicillin"
+      ],
+      "product": "amoxicillin",
+      "route": null
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 5.0,
+      "drug_name_raw": "แอมโลดิพีน",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "17767"
+      ],
+      "ingredients": [
+       "amlodipine"
+      ],
+      "product": "amlodipine",
+      "route": null
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p30",
+   "snapshot": {
+    "allergies": [
+     {
+      "available_at_time": "2025-12-12T09:00:00+07:00",
+      "evidence_ref": "s5-p30/allergy/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "text": "Sulfa drugs (rash)",
+      "version": "1"
+     }
+    ],
+    "as_of": "2026-06-30T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p30",
+    "sources": [
+     {
+      "available_at_time": "2026-05-31T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Norvasc 5 mg OD"
+       },
+       {
+        "text": "Tenormin 50 mg oral once daily"
+       },
+       {
+        "text": "Simvastatin 20 mg PO once daily"
+       },
+       {
+        "text": "Miracid 20 mg PO OD"
+       }
+      ],
+      "evidence_ref": "s5-p30/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-30T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "แอมโลดิพีน 5 มก. 1x1 หลังอาหารเช้า"
+       }
+      ],
+      "evidence_ref": "s5-p30/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-06-30T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "Amlodipine 5 mg daily"
+       },
+       {
+        "text": "Atenolol 50 mg oral daily"
+       },
+       {
+        "text": "Simvastatin 20 mg 1x1"
+       },
+       {
+        "text": "Omeprazole 20 mg PO OD"
+       },
+       {
+        "text": "Amoxicillin 500 mg three times daily"
+       }
+      ],
+      "evidence_ref": "s5-p30/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "Atorvastatin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "83367"
+      ],
+      "ingredients": [
+       "atorvastatin"
+      ],
+      "product": "atorvastatin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "Omeprazole",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "Allopurinol",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "Furosemide",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "4603"
+      ],
+      "ingredients": [
+       "furosemide"
+      ],
+      "product": "furosemide",
+      "route": null
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "อะทอร์วาสแตติน",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "83367"
+      ],
+      "ingredients": [
+       "atorvastatin"
+      ],
+      "product": "atorvastatin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 20.0,
+      "drug_name_raw": "โอเมพราโซล",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "7646"
+      ],
+      "ingredients": [
+       "omeprazole"
+      ],
+      "product": "omeprazole",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 100.0,
+      "drug_name_raw": "อัลโลพูรินอล",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "ฟูโรซีไมด์",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "4603"
+      ],
+      "ingredients": [
+       "furosemide"
+      ],
+      "product": "furosemide",
+      "route": null
+     },
+     {
+      "dose_unit": "g",
+      "dose_value": 1.0,
+      "drug_name_raw": "ออกเมนติน",
+      "frequency_code": "q12h",
+      "ingredient_rxcuis": [
+       "723",
+       "48203"
+      ],
+      "ingredients": [
+       "amoxicillin",
+       "clavulanate"
+      ],
+      "product": "amoxicillin_clavulanate",
+      "route": "oral"
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": null,
+      "dose_value": null,
+      "drug_name_raw": "อัลโลพูรินอล",
+      "frequency_code": null,
+      "ingredient_rxcuis": [
+       "519"
+      ],
+      "ingredients": [
+       "allopurinol"
+      ],
+      "product": "allopurinol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "ฟูโรซีไมด์",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "4603"
+      ],
+      "ingredients": [
+       "furosemide"
+      ],
+      "product": "furosemide",
+      "route": null
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": true,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": true
+   },
+   "patient_ref": "s5-p31",
+   "snapshot": {
+    "allergies": [
+     {
+      "available_at_time": "2025-12-13T09:00:00+07:00",
+      "evidence_ref": "s5-p31/allergy/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "text": "Clarithromycin - rash",
+      "version": "1"
+     }
+    ],
+    "as_of": "2026-07-01T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p31",
+    "sources": [
+     {
+      "available_at_time": "2026-06-01T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Atorvastatin 40 mg PO daily"
+       },
+       {
+        "text": "Omeprazole 20 mg once daily"
+       },
+       {
+        "text": "Allopurinol 100 mg 1x1"
+       },
+       {
+        "text": "Furosemide 40 mg once daily"
+       }
+      ],
+      "evidence_ref": "s5-p31/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-07-01T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "อัลโลพูรินอล"
+       },
+       {
+        "text": "ฟูโรซีไมด์ 40 มก. วันละครั้ง"
+       }
+      ],
+      "evidence_ref": "s5-p31/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-07-01T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "อะทอร์วาสแตติน 40 มก. รับประทาน 1x1 หลังอาหารเช้า"
+       },
+       {
+        "text": "โอเมพราโซล 20 มก. รับประทาน 1x1 หลังอาหารเช้า"
+       },
+       {
+        "text": "อัลโลพูรินอล 100 มก. วันละครั้ง"
+       },
+       {
+        "discontinue_intent": true,
+        "reason": "synthetic: course completed",
+        "text": "ฟูโรซีไมด์ 40 มก. วันละครั้ง"
+       },
+       {
+        "text": "ออกเมนติน 1 กรัม รับประทาน 1x2 หลังอาหาร"
+       }
+      ],
+      "evidence_ref": "s5-p31/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "dev"
+  },
+  {
+   "data_class": "synthetic",
+   "gold": {
+    "home_list": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Cozaar",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "52175"
+      ],
+      "ingredients": [
+       "losartan"
+      ],
+      "product": "losartan",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Tenormin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "Furosemide",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "4603"
+      ],
+      "ingredients": [
+       "furosemide"
+      ],
+      "product": "furosemide",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 300.0,
+      "drug_name_raw": "Gabapentin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": "oral"
+     }
+    ],
+    "new_order": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Losartan",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "52175"
+      ],
+      "ingredients": [
+       "losartan"
+      ],
+      "product": "losartan",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Tenormin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 40.0,
+      "drug_name_raw": "Lasix",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "4603"
+      ],
+      "ingredients": [
+       "furosemide"
+      ],
+      "product": "furosemide",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 300.0,
+      "drug_name_raw": "Gabapentin",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": "oral"
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 250.0,
+      "drug_name_raw": "Dicloxacillin",
+      "frequency_code": "q6h",
+      "ingredient_rxcuis": [
+       "3356"
+      ],
+      "ingredients": [
+       "dicloxacillin"
+      ],
+      "product": "dicloxacillin",
+      "route": null
+     }
+    ],
+    "patient_reported": [
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Cozaar",
+      "frequency_code": "q24h",
+      "ingredient_rxcuis": [
+       "52175"
+      ],
+      "ingredients": [
+       "losartan"
+      ],
+      "product": "losartan",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 50.0,
+      "drug_name_raw": "Atenolol",
+      "frequency_code": null,
+      "ingredient_rxcuis": [
+       "1202"
+      ],
+      "ingredients": [
+       "atenolol"
+      ],
+      "product": "atenolol",
+      "route": null
+     },
+     {
+      "dose_unit": "mg",
+      "dose_value": 300.0,
+      "drug_name_raw": "Gabapentin",
+      "frequency_code": null,
+      "ingredient_rxcuis": [
+       "25480"
+      ],
+      "ingredients": [
+       "gabapentin"
+      ],
+      "product": "gabapentin",
+      "route": "oral"
+     }
+    ]
+   },
+   "meta": {
+    "documented_discontinuation": false,
+    "generator_version": "s5-fixtures-1.0.0",
+    "uses_thai_mentions": false
+   },
+   "patient_ref": "s5-p32",
+   "snapshot": {
+    "allergies": [],
+    "as_of": "2026-07-02T09:00:00+07:00",
+    "data_class": "synthetic",
+    "patient_ref": "s5-p32",
+    "sources": [
+     {
+      "available_at_time": "2026-06-02T09:00:00+07:00",
+      "entries": [
+       {
+        "text": "Cozaar 50 mg PO 1x1"
+       },
+       {
+        "text": "Tenormin 50 mg once daily"
+       },
+       {
+        "text": "Furosemide 40 mg daily"
+       },
+       {
+        "text": "Gabapentin 300 mg PO 1x1"
+       }
+      ],
+      "evidence_ref": "s5-p32/home_list/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "home_list",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-07-02T08:00:00+07:00",
+      "entries": [
+       {
+        "text": "Cozaar 50 mg daily"
+       },
+       {
+        "text": "Atenolol 50 mg"
+       },
+       {
+        "text": "Gabapentin 300 mg oral"
+       }
+      ],
+      "evidence_ref": "s5-p32/patient_reported/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "patient_reported",
+      "version": "1"
+     },
+     {
+      "available_at_time": "2026-07-02T08:50:00+07:00",
+      "entries": [
+       {
+        "text": "Losartan 50 mg daily"
+       },
+       {
+        "text": "Tenormin 50 mg 1x1"
+       },
+       {
+        "text": "Lasix 40 mg oral 1x1"
+       },
+       {
+        "text": "Gabapentin 300 mg PO 1x1"
+       },
+       {
+        "text": "Dicloxacillin 250 mg qid"
+       }
+      ],
+      "evidence_ref": "s5-p32/new_order/1",
+      "provenance": "synthetic: s5 fixture generator (no real patient data)",
+      "source_type": "new_order",
+      "version": "1"
+     }
+    ]
+   },
+   "split": "dev"
+  }
+ ],
+ "seed": 20260926
+}

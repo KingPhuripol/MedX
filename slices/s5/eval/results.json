@@ -1,0 +1,1123 @@
+{
+ "clean_false_alerts": {
+  "all": {
+   "alerts": 0,
+   "ci95": [
+    0.0,
+    0.0
+   ],
+   "lists": 32,
+   "mean_per_list": 0.0
+  },
+  "test": {
+   "alerts": 0,
+   "ci95": [
+    0.0,
+    0.0
+   ],
+   "lists": 10,
+   "mean_per_list": 0.0
+  }
+ },
+ "counts": {
+  "cases_per_type": {
+   "allergy_class": 32,
+   "allergy_cross_reactivity": 32,
+   "allergy_direct": 32,
+   "dose_mismatch": 32,
+   "duplication_class": 32,
+   "duplication_ingredient": 32,
+   "frequency_mismatch": 32,
+   "omission": 32
+  },
+  "injected_cases": 256,
+  "patients": 32,
+  "test_patients": 10
+ },
+ "data_class": "synthetic",
+ "extra_issues_per_injected_case": {
+  "all": {
+   "cases": 256,
+   "ci95": [
+    0.0,
+    0.0
+   ],
+   "extra": 0,
+   "mean_per_case": 0.0
+  },
+  "test": {
+   "cases": 80,
+   "ci95": [
+    0.0,
+    0.0
+   ],
+   "extra": 0,
+   "mean_per_case": 0.0
+  }
+ },
+ "extraction": {
+  "all": {
+   "entries": 377,
+   "fabricated_values": 0,
+   "failed_sources": 0,
+   "field_accuracy": {
+    "dose_unit": 1.0,
+    "dose_value": 1.0,
+    "drug_name_raw": 1.0,
+    "frequency_code": 1.0,
+    "route": 1.0
+   },
+   "overall_accuracy": 1.0
+  },
+  "test": {
+   "entries": 126,
+   "fabricated_values": 0,
+   "failed_sources": 0,
+   "field_accuracy": {
+    "dose_unit": 1.0,
+    "dose_value": 1.0,
+    "drug_name_raw": 1.0,
+    "frequency_code": 1.0,
+    "route": 1.0
+   },
+   "overall_accuracy": 1.0
+  }
+ },
+ "issue_sources_complete": {
+  "issues": 512,
+  "violations": 0
+ },
+ "label": "System Evaluation on synthetic data; not clinical performance. No expert pharmacist review yet.",
+ "mode_equality": {
+  "fraction": 1.0,
+  "identical": 288,
+  "runs_compared": 288
+ },
+ "modes": {
+  "rules_only": {
+   "all": {
+    "clean_false_alerts": {
+     "alerts": 0,
+     "ci95": [
+      0.0,
+      0.0
+     ],
+     "lists": 32,
+     "mean_per_list": 0.0
+    },
+    "extra_issues_per_injected_case": {
+     "cases": 256,
+     "ci95": [
+      0.0,
+      0.0
+     ],
+     "extra": 0,
+     "mean_per_case": 0.0
+    },
+    "n_patients": 32,
+    "precision": {
+     "allergy_class": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 32,
+      "true_positive": 32
+     },
+     "allergy_cross_reactivity": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 32,
+      "true_positive": 32
+     },
+     "allergy_direct": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 32,
+      "true_positive": 32
+     },
+     "dose_mismatch": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 32,
+      "true_positive": 32
+     },
+     "duplication_class": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 32,
+      "true_positive": 32
+     },
+     "duplication_ingredient": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 32,
+      "true_positive": 32
+     },
+     "frequency_mismatch": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 32,
+      "true_positive": 32
+     },
+     "omission": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 32,
+      "true_positive": 32
+     }
+    },
+    "recall": {
+     "allergy_class": {
+      "cases": 32,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 32,
+      "recall": 1.0
+     },
+     "allergy_cross_reactivity": {
+      "cases": 32,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 32,
+      "recall": 1.0
+     },
+     "allergy_direct": {
+      "cases": 32,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 32,
+      "recall": 1.0
+     },
+     "dose_mismatch": {
+      "cases": 32,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 32,
+      "recall": 1.0
+     },
+     "duplication_class": {
+      "cases": 32,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 32,
+      "recall": 1.0
+     },
+     "duplication_ingredient": {
+      "cases": 32,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 32,
+      "recall": 1.0
+     },
+     "frequency_mismatch": {
+      "cases": 32,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 32,
+      "recall": 1.0
+     },
+     "omission": {
+      "cases": 32,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 32,
+      "recall": 1.0
+     }
+    }
+   },
+   "test": {
+    "clean_false_alerts": {
+     "alerts": 0,
+     "ci95": [
+      0.0,
+      0.0
+     ],
+     "lists": 10,
+     "mean_per_list": 0.0
+    },
+    "extra_issues_per_injected_case": {
+     "cases": 80,
+     "ci95": [
+      0.0,
+      0.0
+     ],
+     "extra": 0,
+     "mean_per_case": 0.0
+    },
+    "n_patients": 10,
+    "precision": {
+     "allergy_class": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 10,
+      "true_positive": 10
+     },
+     "allergy_cross_reactivity": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 10,
+      "true_positive": 10
+     },
+     "allergy_direct": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 10,
+      "true_positive": 10
+     },
+     "dose_mismatch": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 10,
+      "true_positive": 10
+     },
+     "duplication_class": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 10,
+      "true_positive": 10
+     },
+     "duplication_ingredient": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 10,
+      "true_positive": 10
+     },
+     "frequency_mismatch": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 10,
+      "true_positive": 10
+     },
+     "omission": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 10,
+      "true_positive": 10
+     }
+    },
+    "recall": {
+     "allergy_class": {
+      "cases": 10,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 10,
+      "recall": 1.0
+     },
+     "allergy_cross_reactivity": {
+      "cases": 10,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 10,
+      "recall": 1.0
+     },
+     "allergy_direct": {
+      "cases": 10,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 10,
+      "recall": 1.0
+     },
+     "dose_mismatch": {
+      "cases": 10,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 10,
+      "recall": 1.0
+     },
+     "duplication_class": {
+      "cases": 10,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 10,
+      "recall": 1.0
+     },
+     "duplication_ingredient": {
+      "cases": 10,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 10,
+      "recall": 1.0
+     },
+     "frequency_mismatch": {
+      "cases": 10,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 10,
+      "recall": 1.0
+     },
+     "omission": {
+      "cases": 10,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 10,
+      "recall": 1.0
+     }
+    }
+   }
+  },
+  "rules_plus_model": {
+   "all": {
+    "clean_false_alerts": {
+     "alerts": 0,
+     "ci95": [
+      0.0,
+      0.0
+     ],
+     "lists": 32,
+     "mean_per_list": 0.0
+    },
+    "extra_issues_per_injected_case": {
+     "cases": 256,
+     "ci95": [
+      0.0,
+      0.0
+     ],
+     "extra": 0,
+     "mean_per_case": 0.0
+    },
+    "n_patients": 32,
+    "precision": {
+     "allergy_class": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 32,
+      "true_positive": 32
+     },
+     "allergy_cross_reactivity": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 32,
+      "true_positive": 32
+     },
+     "allergy_direct": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 32,
+      "true_positive": 32
+     },
+     "dose_mismatch": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 32,
+      "true_positive": 32
+     },
+     "duplication_class": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 32,
+      "true_positive": 32
+     },
+     "duplication_ingredient": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 32,
+      "true_positive": 32
+     },
+     "frequency_mismatch": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 32,
+      "true_positive": 32
+     },
+     "omission": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 32,
+      "true_positive": 32
+     }
+    },
+    "recall": {
+     "allergy_class": {
+      "cases": 32,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 32,
+      "recall": 1.0
+     },
+     "allergy_cross_reactivity": {
+      "cases": 32,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 32,
+      "recall": 1.0
+     },
+     "allergy_direct": {
+      "cases": 32,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 32,
+      "recall": 1.0
+     },
+     "dose_mismatch": {
+      "cases": 32,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 32,
+      "recall": 1.0
+     },
+     "duplication_class": {
+      "cases": 32,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 32,
+      "recall": 1.0
+     },
+     "duplication_ingredient": {
+      "cases": 32,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 32,
+      "recall": 1.0
+     },
+     "frequency_mismatch": {
+      "cases": 32,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 32,
+      "recall": 1.0
+     },
+     "omission": {
+      "cases": 32,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 32,
+      "recall": 1.0
+     }
+    }
+   },
+   "test": {
+    "clean_false_alerts": {
+     "alerts": 0,
+     "ci95": [
+      0.0,
+      0.0
+     ],
+     "lists": 10,
+     "mean_per_list": 0.0
+    },
+    "extra_issues_per_injected_case": {
+     "cases": 80,
+     "ci95": [
+      0.0,
+      0.0
+     ],
+     "extra": 0,
+     "mean_per_case": 0.0
+    },
+    "n_patients": 10,
+    "precision": {
+     "allergy_class": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 10,
+      "true_positive": 10
+     },
+     "allergy_cross_reactivity": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 10,
+      "true_positive": 10
+     },
+     "allergy_direct": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 10,
+      "true_positive": 10
+     },
+     "dose_mismatch": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 10,
+      "true_positive": 10
+     },
+     "duplication_class": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 10,
+      "true_positive": 10
+     },
+     "duplication_ingredient": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 10,
+      "true_positive": 10
+     },
+     "frequency_mismatch": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 10,
+      "true_positive": 10
+     },
+     "omission": {
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "precision": 1.0,
+      "predicted": 10,
+      "true_positive": 10
+     }
+    },
+    "recall": {
+     "allergy_class": {
+      "cases": 10,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 10,
+      "recall": 1.0
+     },
+     "allergy_cross_reactivity": {
+      "cases": 10,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 10,
+      "recall": 1.0
+     },
+     "allergy_direct": {
+      "cases": 10,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 10,
+      "recall": 1.0
+     },
+     "dose_mismatch": {
+      "cases": 10,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 10,
+      "recall": 1.0
+     },
+     "duplication_class": {
+      "cases": 10,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 10,
+      "recall": 1.0
+     },
+     "duplication_ingredient": {
+      "cases": 10,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 10,
+      "recall": 1.0
+     },
+     "frequency_mismatch": {
+      "cases": 10,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 10,
+      "recall": 1.0
+     },
+     "omission": {
+      "cases": 10,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "detected": 10,
+      "recall": 1.0
+     }
+    }
+   }
+  }
+ },
+ "precision": {
+  "allergy_class": {
+   "all": {
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "precision": 1.0,
+    "predicted": 32,
+    "true_positive": 32
+   },
+   "test": {
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "precision": 1.0,
+    "predicted": 10,
+    "true_positive": 10
+   }
+  },
+  "allergy_cross_reactivity": {
+   "all": {
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "precision": 1.0,
+    "predicted": 32,
+    "true_positive": 32
+   },
+   "test": {
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "precision": 1.0,
+    "predicted": 10,
+    "true_positive": 10
+   }
+  },
+  "allergy_direct": {
+   "all": {
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "precision": 1.0,
+    "predicted": 32,
+    "true_positive": 32
+   },
+   "test": {
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "precision": 1.0,
+    "predicted": 10,
+    "true_positive": 10
+   }
+  },
+  "dose_mismatch": {
+   "all": {
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "precision": 1.0,
+    "predicted": 32,
+    "true_positive": 32
+   },
+   "test": {
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "precision": 1.0,
+    "predicted": 10,
+    "true_positive": 10
+   }
+  },
+  "duplication_class": {
+   "all": {
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "precision": 1.0,
+    "predicted": 32,
+    "true_positive": 32
+   },
+   "test": {
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "precision": 1.0,
+    "predicted": 10,
+    "true_positive": 10
+   }
+  },
+  "duplication_ingredient": {
+   "all": {
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "precision": 1.0,
+    "predicted": 32,
+    "true_positive": 32
+   },
+   "test": {
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "precision": 1.0,
+    "predicted": 10,
+    "true_positive": 10
+   }
+  },
+  "frequency_mismatch": {
+   "all": {
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "precision": 1.0,
+    "predicted": 32,
+    "true_positive": 32
+   },
+   "test": {
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "precision": 1.0,
+    "predicted": 10,
+    "true_positive": 10
+   }
+  },
+  "omission": {
+   "all": {
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "precision": 1.0,
+    "predicted": 32,
+    "true_positive": 32
+   },
+   "test": {
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "precision": 1.0,
+    "predicted": 10,
+    "true_positive": 10
+   }
+  }
+ },
+ "primary_mode": "rules_plus_model",
+ "recall": {
+  "allergy_class": {
+   "all": {
+    "cases": 32,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "detected": 32,
+    "recall": 1.0
+   },
+   "test": {
+    "cases": 10,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "detected": 10,
+    "recall": 1.0
+   }
+  },
+  "allergy_cross_reactivity": {
+   "all": {
+    "cases": 32,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "detected": 32,
+    "recall": 1.0
+   },
+   "test": {
+    "cases": 10,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "detected": 10,
+    "recall": 1.0
+   }
+  },
+  "allergy_direct": {
+   "all": {
+    "cases": 32,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "detected": 32,
+    "recall": 1.0
+   },
+   "test": {
+    "cases": 10,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "detected": 10,
+    "recall": 1.0
+   }
+  },
+  "dose_mismatch": {
+   "all": {
+    "cases": 32,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "detected": 32,
+    "recall": 1.0
+   },
+   "test": {
+    "cases": 10,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "detected": 10,
+    "recall": 1.0
+   }
+  },
+  "duplication_class": {
+   "all": {
+    "cases": 32,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "detected": 32,
+    "recall": 1.0
+   },
+   "test": {
+    "cases": 10,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "detected": 10,
+    "recall": 1.0
+   }
+  },
+  "duplication_ingredient": {
+   "all": {
+    "cases": 32,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "detected": 32,
+    "recall": 1.0
+   },
+   "test": {
+    "cases": 10,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "detected": 10,
+    "recall": 1.0
+   }
+  },
+  "frequency_mismatch": {
+   "all": {
+    "cases": 32,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "detected": 32,
+    "recall": 1.0
+   },
+   "test": {
+    "cases": 10,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "detected": 10,
+    "recall": 1.0
+   }
+  },
+  "omission": {
+   "all": {
+    "cases": 32,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "detected": 32,
+    "recall": 1.0
+   },
+   "test": {
+    "cases": 10,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "detected": 10,
+    "recall": 1.0
+   }
+  }
+ },
+ "seeds": {
+  "bootstrap": 20260926,
+  "inject": 7,
+  "resamples": 1000
+ },
+ "thresholds": {
+  "clean_false_alerts_max": 0.1,
+  "extra_issues_per_case_max": 0.1,
+  "extraction_accuracy_min": 0.98,
+  "min_cases_per_type": 30,
+  "mode_equality": 1.0,
+  "recall_min_per_type": 0.95
+ },
+ "versions": {
+  "cross_reactivity": "s5-cross-reactivity-1.0.0",
+  "formulary": "s5-formulary-1.0.0",
+  "pipeline": "s5-pipeline-1.0.0",
+  "provider": "mock",
+  "rules": "s5-rules-1.0.0"
+ }
+}

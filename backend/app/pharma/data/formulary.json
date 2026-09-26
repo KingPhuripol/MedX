@@ -1,0 +1,2090 @@
+{
+ "metadata": {
+  "formulary_version": "s5-formulary-1.0.0",
+  "verified_on": "2026-09-26",
+  "data_class": "synthetic-support reference data (no patient content)",
+  "attribution": "This product uses publicly available data from the U.S. National Library of Medicine (NLM), National Institutes of Health, Department of Health and Human Services; NLM is not responsible for the product and does not endorse or recommend this or any other product.",
+  "field_sources": {
+   "ingredients.name": "RxNorm IN name, NLM-created content (SAB=RXNORM), public domain",
+   "ingredients.rxcui": "RxNorm RXCUI (SAB=RXNORM), verified via RxNav /REST/rxcui.json on verified_on",
+   "ingredients.class_source": "per-ingredient record of how class membership was assigned",
+   "ingredients.tmt_id": "reserved; always null (TMT not licensed for redistribution)",
+   "classes.name": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "classes.duplication_relevant": "team-authored; pending pharmacist clinical review",
+   "classes.allergy_group": "team-authored; pending pharmacist clinical review",
+   "products.aliases": "team-authored; per-alias alias_source recorded",
+   "allergen_groups": "team-authored allergen phrase -> class mapping"
+  },
+  "excluded_sources": [
+   "WHO ATC/DDD (no ATC codes committed)",
+   "Thai Medicines Terminology (no TMT codes or release content)",
+   "SNOMED CT-derived RxClass content",
+   "non-RXNORM SAB strings"
+  ],
+  "notes": [
+   "aspirin is mapped only to Platelet Aggregation Inhibitor here so aspirin-NSAID hypersensitivity is represented by cross_reactivity.json, not by class membership.",
+   "MED-RT not used for class names; the MED-RT UMLS restriction-level page returned HTTP 502 on 2026-09-26 and must be re-checked by the curator before any MED-RT use."
+  ],
+  "clinical_review_status": "pending_pharmacist"
+ },
+ "classes": {
+  "dhp_ccb": {
+   "name": "Dihydropyridine Calcium Channel Blocker",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": false
+  },
+  "acei": {
+   "name": "Angiotensin Converting Enzyme Inhibitor",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": true
+  },
+  "arb": {
+   "name": "Angiotensin 2 Receptor Blocker",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": false
+  },
+  "thiazide": {
+   "name": "Thiazide Diuretic",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": false
+  },
+  "beta_blocker": {
+   "name": "beta-Adrenergic Blocker",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": false
+  },
+  "statin": {
+   "name": "HMG-CoA Reductase Inhibitor",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": false
+  },
+  "biguanide": {
+   "name": "Biguanide",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": false
+  },
+  "sulfonylurea": {
+   "name": "Sulfonylurea",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": false
+  },
+  "dpp4": {
+   "name": "Dipeptidyl Peptidase 4 Inhibitor",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": false
+  },
+  "insulin_analog": {
+   "name": "Insulin Analog",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": false
+  },
+  "ppi": {
+   "name": "Proton Pump Inhibitor",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": false
+  },
+  "nsaid": {
+   "name": "Nonsteroidal Anti-inflammatory Drug",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": true
+  },
+  "platelet_aggregation_inhibitor": {
+   "name": "Platelet Aggregation Inhibitor",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": false,
+   "allergy_group": false
+  },
+  "p2y12": {
+   "name": "P2Y12 Platelet Inhibitor",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": false
+  },
+  "penicillin": {
+   "name": "Penicillin-class Antibacterial",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": true
+  },
+  "beta_lactamase_inhibitor": {
+   "name": "beta Lactamase Inhibitor",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": false,
+   "allergy_group": false
+  },
+  "cephalosporin": {
+   "name": "Cephalosporin Antibacterial",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": true
+  },
+  "sulfonamide_antibacterial": {
+   "name": "Sulfonamide Antimicrobial",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": true
+  },
+  "dhfr_antibacterial": {
+   "name": "Dihydrofolate Reductase Inhibitor Antibacterial",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": false,
+   "allergy_group": false
+  },
+  "macrolide": {
+   "name": "Macrolide Antimicrobial",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": true
+  },
+  "fluoroquinolone": {
+   "name": "Fluoroquinolone Antibacterial",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": true
+  },
+  "tetracycline": {
+   "name": "Tetracycline-class Drug",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": false
+  },
+  "vka": {
+   "name": "Vitamin K Antagonist",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": false
+  },
+  "factor_xa": {
+   "name": "Factor Xa Inhibitor",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": false
+  },
+  "anticoagulant_group": {
+   "name": "Anticoagulant (team grouping of Vitamin K Antagonist and Factor Xa Inhibitor)",
+   "source": "team-authored grouping of FDA EPC classes",
+   "duplication_relevant": true,
+   "allergy_group": false
+  },
+  "thyroxine": {
+   "name": "l-Thyroxine",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": false
+  },
+  "loop_diuretic": {
+   "name": "Loop Diuretic",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": false
+  },
+  "aldosterone_antagonist": {
+   "name": "Aldosterone Antagonist",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": false
+  },
+  "xanthine_oxidase_inhibitor": {
+   "name": "Xanthine Oxidase Inhibitor",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": false
+  },
+  "alkaloid": {
+   "name": "Alkaloid",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": false,
+   "allergy_group": false
+  },
+  "anti_epileptic": {
+   "name": "Anti-epileptic Agent",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": false,
+   "allergy_group": false
+  },
+  "opioid_agonist": {
+   "name": "Opioid Agonist",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": false
+  },
+  "corticosteroid": {
+   "name": "Corticosteroid",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": false
+  },
+  "h1_antagonist": {
+   "name": "Histamine-1 Receptor Antagonist",
+   "source": "FDA Established Pharmacologic Class (EPC) name, US federal work",
+   "duplication_relevant": true,
+   "allergy_group": false
+  }
+ },
+ "ingredients": {
+  "amlodipine": {
+   "name": "amlodipine",
+   "rxcui": "17767",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "dhp_ccb"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26 (generic Calcium Channel Blocker omitted)"
+  },
+  "nifedipine": {
+   "name": "nifedipine",
+   "rxcui": "7417",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "dhp_ccb"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "lisinopril": {
+   "name": "lisinopril",
+   "rxcui": "29046",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "acei"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "enalapril": {
+   "name": "enalapril",
+   "rxcui": "3827",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "acei"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "losartan": {
+   "name": "losartan",
+   "rxcui": "52175",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "arb"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "valsartan": {
+   "name": "valsartan",
+   "rxcui": "69749",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "arb"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "hydrochlorothiazide": {
+   "name": "hydrochlorothiazide",
+   "rxcui": "5487",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "thiazide"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "atenolol": {
+   "name": "atenolol",
+   "rxcui": "1202",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "beta_blocker"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "metoprolol": {
+   "name": "metoprolol",
+   "rxcui": "6918",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "beta_blocker"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "bisoprolol": {
+   "name": "bisoprolol",
+   "rxcui": "19484",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "beta_blocker"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "carvedilol": {
+   "name": "carvedilol",
+   "rxcui": "20352",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "beta_blocker"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26 (alpha-Adrenergic Blocker omitted)"
+  },
+  "simvastatin": {
+   "name": "simvastatin",
+   "rxcui": "36567",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "statin"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "atorvastatin": {
+   "name": "atorvastatin",
+   "rxcui": "83367",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "statin"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "rosuvastatin": {
+   "name": "rosuvastatin",
+   "rxcui": "301542",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "statin"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "metformin": {
+   "name": "metformin",
+   "rxcui": "6809",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "biguanide"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "glipizide": {
+   "name": "glipizide",
+   "rxcui": "4821",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "sulfonylurea"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "gliclazide": {
+   "name": "gliclazide",
+   "rxcui": "4816",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "sulfonylurea"
+   ],
+   "class_source": "team-assigned: RxClass returned no FDA EPC on 2026-09-26 (not US-marketed)"
+  },
+  "sitagliptin": {
+   "name": "sitagliptin",
+   "rxcui": "593411",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "dpp4"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "insulin glargine": {
+   "name": "insulin glargine",
+   "rxcui": "274783",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "insulin_analog"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "omeprazole": {
+   "name": "omeprazole",
+   "rxcui": "7646",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "ppi"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "pantoprazole": {
+   "name": "pantoprazole",
+   "rxcui": "40790",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "ppi"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "esomeprazole": {
+   "name": "esomeprazole",
+   "rxcui": "283742",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "ppi"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "lansoprazole": {
+   "name": "lansoprazole",
+   "rxcui": "17128",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "ppi"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "ibuprofen": {
+   "name": "ibuprofen",
+   "rxcui": "5640",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "nsaid"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "naproxen": {
+   "name": "naproxen",
+   "rxcui": "7258",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "nsaid"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "diclofenac": {
+   "name": "diclofenac",
+   "rxcui": "3355",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "nsaid"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "celecoxib": {
+   "name": "celecoxib",
+   "rxcui": "140587",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "nsaid"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "aspirin": {
+   "name": "aspirin",
+   "rxcui": "1191",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "platelet_aggregation_inhibitor"
+   ],
+   "class_source": "RxClass FDA EPC lists NSAID and Platelet Aggregation Inhibitor; NSAID deliberately omitted (see metadata.notes)"
+  },
+  "acetaminophen": {
+   "name": "acetaminophen",
+   "rxcui": "161",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "amoxicillin": {
+   "name": "amoxicillin",
+   "rxcui": "723",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "penicillin"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "clavulanate": {
+   "name": "clavulanate",
+   "rxcui": "48203",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "beta_lactamase_inhibitor"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "dicloxacillin": {
+   "name": "dicloxacillin",
+   "rxcui": "3356",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "penicillin"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "cephalexin": {
+   "name": "cephalexin",
+   "rxcui": "2231",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "cephalosporin"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "cefuroxime": {
+   "name": "cefuroxime",
+   "rxcui": "2194",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "cephalosporin"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "sulfamethoxazole": {
+   "name": "sulfamethoxazole",
+   "rxcui": "10180",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "sulfonamide_antibacterial"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "trimethoprim": {
+   "name": "trimethoprim",
+   "rxcui": "10829",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "dhfr_antibacterial"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "azithromycin": {
+   "name": "azithromycin",
+   "rxcui": "18631",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "macrolide"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "clarithromycin": {
+   "name": "clarithromycin",
+   "rxcui": "21212",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "macrolide"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "ciprofloxacin": {
+   "name": "ciprofloxacin",
+   "rxcui": "2551",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "fluoroquinolone"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "levofloxacin": {
+   "name": "levofloxacin",
+   "rxcui": "82122",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "fluoroquinolone"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "doxycycline": {
+   "name": "doxycycline",
+   "rxcui": "3640",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "tetracycline"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "warfarin": {
+   "name": "warfarin",
+   "rxcui": "11289",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "vka",
+    "anticoagulant_group"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26; plus team anticoagulant_group"
+  },
+  "apixaban": {
+   "name": "apixaban",
+   "rxcui": "1364430",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "factor_xa",
+    "anticoagulant_group"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26; plus team anticoagulant_group"
+  },
+  "rivaroxaban": {
+   "name": "rivaroxaban",
+   "rxcui": "1114195",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "factor_xa",
+    "anticoagulant_group"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26; plus team anticoagulant_group"
+  },
+  "clopidogrel": {
+   "name": "clopidogrel",
+   "rxcui": "32968",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "p2y12"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "levothyroxine": {
+   "name": "levothyroxine",
+   "rxcui": "10582",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "thyroxine"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "furosemide": {
+   "name": "furosemide",
+   "rxcui": "4603",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "loop_diuretic"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "spironolactone": {
+   "name": "spironolactone",
+   "rxcui": "9997",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "aldosterone_antagonist"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "allopurinol": {
+   "name": "allopurinol",
+   "rxcui": "519",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "xanthine_oxidase_inhibitor"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "colchicine": {
+   "name": "colchicine",
+   "rxcui": "2683",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "alkaloid"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "gabapentin": {
+   "name": "gabapentin",
+   "rxcui": "25480",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "anti_epileptic"
+   ],
+   "class_source": "team-assigned: RxClass returned no FDA EPC on 2026-09-26"
+  },
+  "tramadol": {
+   "name": "tramadol",
+   "rxcui": "10689",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "opioid_agonist"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "prednisolone": {
+   "name": "prednisolone",
+   "rxcui": "8638",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "corticosteroid"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  },
+  "cetirizine": {
+   "name": "cetirizine",
+   "rxcui": "20610",
+   "verified_on": "2026-09-26",
+   "tmt_id": null,
+   "classes": [
+    "h1_antagonist"
+   ],
+   "class_source": "RxClass FDASPL has_epc, checked 2026-09-26"
+  }
+ },
+ "products": [
+  {
+   "product_id": "amlodipine",
+   "ingredients": [
+    "amlodipine"
+   ],
+   "aliases": [
+    {
+     "text": "amlodipine",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Norvasc",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "แอมโลดิพีน",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    },
+    {
+     "text": "นอร์วาสก์",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "nifedipine",
+   "ingredients": [
+    "nifedipine"
+   ],
+   "aliases": [
+    {
+     "text": "nifedipine",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Adalat",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "นิเฟดิพีน",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "lisinopril",
+   "ingredients": [
+    "lisinopril"
+   ],
+   "aliases": [
+    {
+     "text": "lisinopril",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Zestril",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    }
+   ]
+  },
+  {
+   "product_id": "enalapril",
+   "ingredients": [
+    "enalapril"
+   ],
+   "aliases": [
+    {
+     "text": "enalapril",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Renitec",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "เอนาลาพริล",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "losartan",
+   "ingredients": [
+    "losartan"
+   ],
+   "aliases": [
+    {
+     "text": "losartan",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Cozaar",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "ลอซาร์แทน",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "valsartan",
+   "ingredients": [
+    "valsartan"
+   ],
+   "aliases": [
+    {
+     "text": "valsartan",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Diovan",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    }
+   ]
+  },
+  {
+   "product_id": "hydrochlorothiazide",
+   "ingredients": [
+    "hydrochlorothiazide"
+   ],
+   "aliases": [
+    {
+     "text": "hydrochlorothiazide",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "HCTZ",
+     "kind": "abbreviation",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "ไฮโดรคลอโรไทอะไซด์",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "atenolol",
+   "ingredients": [
+    "atenolol"
+   ],
+   "aliases": [
+    {
+     "text": "atenolol",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Tenormin",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "อะทีโนลอล",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "metoprolol",
+   "ingredients": [
+    "metoprolol"
+   ],
+   "aliases": [
+    {
+     "text": "metoprolol",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Betaloc",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    }
+   ]
+  },
+  {
+   "product_id": "bisoprolol",
+   "ingredients": [
+    "bisoprolol"
+   ],
+   "aliases": [
+    {
+     "text": "bisoprolol",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Concor",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    }
+   ]
+  },
+  {
+   "product_id": "carvedilol",
+   "ingredients": [
+    "carvedilol"
+   ],
+   "aliases": [
+    {
+     "text": "carvedilol",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Dilatrend",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    }
+   ]
+  },
+  {
+   "product_id": "simvastatin",
+   "ingredients": [
+    "simvastatin"
+   ],
+   "aliases": [
+    {
+     "text": "simvastatin",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Zocor",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "ซิมวาสแตติน",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "atorvastatin",
+   "ingredients": [
+    "atorvastatin"
+   ],
+   "aliases": [
+    {
+     "text": "atorvastatin",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Lipitor",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "อะทอร์วาสแตติน",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    },
+    {
+     "text": "ลิพิทอร์",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "rosuvastatin",
+   "ingredients": [
+    "rosuvastatin"
+   ],
+   "aliases": [
+    {
+     "text": "rosuvastatin",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Crestor",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    }
+   ]
+  },
+  {
+   "product_id": "metformin",
+   "ingredients": [
+    "metformin"
+   ],
+   "aliases": [
+    {
+     "text": "metformin",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Glucophage",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "เมทฟอร์มิน",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "glipizide",
+   "ingredients": [
+    "glipizide"
+   ],
+   "aliases": [
+    {
+     "text": "glipizide",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Minidiab",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "กลิพิไซด์",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "gliclazide",
+   "ingredients": [
+    "gliclazide"
+   ],
+   "aliases": [
+    {
+     "text": "gliclazide",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Diamicron",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    }
+   ]
+  },
+  {
+   "product_id": "sitagliptin",
+   "ingredients": [
+    "sitagliptin"
+   ],
+   "aliases": [
+    {
+     "text": "sitagliptin",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Januvia",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    }
+   ]
+  },
+  {
+   "product_id": "insulin_glargine",
+   "ingredients": [
+    "insulin glargine"
+   ],
+   "aliases": [
+    {
+     "text": "insulin glargine",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Lantus",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    }
+   ]
+  },
+  {
+   "product_id": "omeprazole",
+   "ingredients": [
+    "omeprazole"
+   ],
+   "aliases": [
+    {
+     "text": "omeprazole",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Losec",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "Miracid",
+     "kind": "th_brand",
+     "alias_source": "team-authored from public product labelling; not from TMT; brand owner not verified"
+    },
+    {
+     "text": "โอเมพราโซล",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    },
+    {
+     "text": "มิราซิด",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "pantoprazole",
+   "ingredients": [
+    "pantoprazole"
+   ],
+   "aliases": [
+    {
+     "text": "pantoprazole",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Controloc",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    }
+   ]
+  },
+  {
+   "product_id": "esomeprazole",
+   "ingredients": [
+    "esomeprazole"
+   ],
+   "aliases": [
+    {
+     "text": "esomeprazole",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Nexium",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    }
+   ]
+  },
+  {
+   "product_id": "lansoprazole",
+   "ingredients": [
+    "lansoprazole"
+   ],
+   "aliases": [
+    {
+     "text": "lansoprazole",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Prevacid",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    }
+   ]
+  },
+  {
+   "product_id": "ibuprofen",
+   "ingredients": [
+    "ibuprofen"
+   ],
+   "aliases": [
+    {
+     "text": "ibuprofen",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Brufen",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "ไอบูโพรเฟน",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    },
+    {
+     "text": "บรูเฟน",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "naproxen",
+   "ingredients": [
+    "naproxen"
+   ],
+   "aliases": [
+    {
+     "text": "naproxen",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Naprosyn",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "นาพรอกเซน",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "diclofenac",
+   "ingredients": [
+    "diclofenac"
+   ],
+   "aliases": [
+    {
+     "text": "diclofenac",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Voltaren",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "ไดโคลฟีแนค",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "celecoxib",
+   "ingredients": [
+    "celecoxib"
+   ],
+   "aliases": [
+    {
+     "text": "celecoxib",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Celebrex",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    }
+   ]
+  },
+  {
+   "product_id": "aspirin",
+   "ingredients": [
+    "aspirin"
+   ],
+   "aliases": [
+    {
+     "text": "aspirin",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "ASA",
+     "kind": "abbreviation",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "แอสไพริน",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "acetaminophen",
+   "ingredients": [
+    "acetaminophen"
+   ],
+   "aliases": [
+    {
+     "text": "acetaminophen",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "paracetamol",
+     "kind": "generic_inn",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "Tylenol",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "Sara",
+     "kind": "th_brand",
+     "alias_source": "team-authored from public product labelling; not from TMT; brand owner not verified"
+    },
+    {
+     "text": "Tempra",
+     "kind": "th_brand",
+     "alias_source": "team-authored from public product labelling; not from TMT; brand owner not verified"
+    },
+    {
+     "text": "ซาร่า",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    },
+    {
+     "text": "พาราเซตามอล",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    },
+    {
+     "text": "ไทลินอล",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "amoxicillin",
+   "ingredients": [
+    "amoxicillin"
+   ],
+   "aliases": [
+    {
+     "text": "amoxicillin",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Amoxil",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "อะม็อกซีซิลลิน",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "clavulanate",
+   "ingredients": [
+    "clavulanate"
+   ],
+   "aliases": [
+    {
+     "text": "clavulanate",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    }
+   ]
+  },
+  {
+   "product_id": "dicloxacillin",
+   "ingredients": [
+    "dicloxacillin"
+   ],
+   "aliases": [
+    {
+     "text": "dicloxacillin",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "ไดคล็อกซาซิลลิน",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "cephalexin",
+   "ingredients": [
+    "cephalexin"
+   ],
+   "aliases": [
+    {
+     "text": "cephalexin",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Keflex",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "cefalexin",
+     "kind": "generic_inn",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "เซฟาเลกซิน",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "cefuroxime",
+   "ingredients": [
+    "cefuroxime"
+   ],
+   "aliases": [
+    {
+     "text": "cefuroxime",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Zinnat",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    }
+   ]
+  },
+  {
+   "product_id": "sulfamethoxazole",
+   "ingredients": [
+    "sulfamethoxazole"
+   ],
+   "aliases": [
+    {
+     "text": "sulfamethoxazole",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    }
+   ]
+  },
+  {
+   "product_id": "trimethoprim",
+   "ingredients": [
+    "trimethoprim"
+   ],
+   "aliases": [
+    {
+     "text": "trimethoprim",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    }
+   ]
+  },
+  {
+   "product_id": "azithromycin",
+   "ingredients": [
+    "azithromycin"
+   ],
+   "aliases": [
+    {
+     "text": "azithromycin",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Zithromax",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "อะซิโทรมัยซิน",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "clarithromycin",
+   "ingredients": [
+    "clarithromycin"
+   ],
+   "aliases": [
+    {
+     "text": "clarithromycin",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Klacid",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    }
+   ]
+  },
+  {
+   "product_id": "ciprofloxacin",
+   "ingredients": [
+    "ciprofloxacin"
+   ],
+   "aliases": [
+    {
+     "text": "ciprofloxacin",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Ciprobay",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "ซิโปรฟลอกซาซิน",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "levofloxacin",
+   "ingredients": [
+    "levofloxacin"
+   ],
+   "aliases": [
+    {
+     "text": "levofloxacin",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Cravit",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    }
+   ]
+  },
+  {
+   "product_id": "doxycycline",
+   "ingredients": [
+    "doxycycline"
+   ],
+   "aliases": [
+    {
+     "text": "doxycycline",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Vibramycin",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    }
+   ]
+  },
+  {
+   "product_id": "warfarin",
+   "ingredients": [
+    "warfarin"
+   ],
+   "aliases": [
+    {
+     "text": "warfarin",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Coumadin",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "Orfarin",
+     "kind": "th_brand",
+     "alias_source": "team-authored from public product labelling; not from TMT; brand owner not verified"
+    },
+    {
+     "text": "วาร์ฟาริน",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "apixaban",
+   "ingredients": [
+    "apixaban"
+   ],
+   "aliases": [
+    {
+     "text": "apixaban",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Eliquis",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    }
+   ]
+  },
+  {
+   "product_id": "rivaroxaban",
+   "ingredients": [
+    "rivaroxaban"
+   ],
+   "aliases": [
+    {
+     "text": "rivaroxaban",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Xarelto",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    }
+   ]
+  },
+  {
+   "product_id": "clopidogrel",
+   "ingredients": [
+    "clopidogrel"
+   ],
+   "aliases": [
+    {
+     "text": "clopidogrel",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Plavix",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "โคลพิโดเกรล",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "levothyroxine",
+   "ingredients": [
+    "levothyroxine"
+   ],
+   "aliases": [
+    {
+     "text": "levothyroxine",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Euthyrox",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "เลโวไทร็อกซีน",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "furosemide",
+   "ingredients": [
+    "furosemide"
+   ],
+   "aliases": [
+    {
+     "text": "furosemide",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Lasix",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "ฟูโรซีไมด์",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "spironolactone",
+   "ingredients": [
+    "spironolactone"
+   ],
+   "aliases": [
+    {
+     "text": "spironolactone",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Aldactone",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    }
+   ]
+  },
+  {
+   "product_id": "allopurinol",
+   "ingredients": [
+    "allopurinol"
+   ],
+   "aliases": [
+    {
+     "text": "allopurinol",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Zyloric",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "อัลโลพูรินอล",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "colchicine",
+   "ingredients": [
+    "colchicine"
+   ],
+   "aliases": [
+    {
+     "text": "colchicine",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    }
+   ]
+  },
+  {
+   "product_id": "gabapentin",
+   "ingredients": [
+    "gabapentin"
+   ],
+   "aliases": [
+    {
+     "text": "gabapentin",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Neurontin",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "Berlontin",
+     "kind": "th_brand",
+     "alias_source": "team-authored from public product labelling; not from TMT; brand owner not verified"
+    }
+   ]
+  },
+  {
+   "product_id": "tramadol",
+   "ingredients": [
+    "tramadol"
+   ],
+   "aliases": [
+    {
+     "text": "tramadol",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Tramal",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    }
+   ]
+  },
+  {
+   "product_id": "prednisolone",
+   "ingredients": [
+    "prednisolone"
+   ],
+   "aliases": [
+    {
+     "text": "prednisolone",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "เพรดนิโซโลน",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "cetirizine",
+   "ingredients": [
+    "cetirizine"
+   ],
+   "aliases": [
+    {
+     "text": "cetirizine",
+     "kind": "generic",
+     "alias_source": "RxNorm IN name (NLM, SAB=RXNORM)"
+    },
+    {
+     "text": "Zyrtec",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    }
+   ]
+  },
+  {
+   "product_id": "amoxicillin_clavulanate",
+   "ingredients": [
+    "amoxicillin",
+    "clavulanate"
+   ],
+   "aliases": [
+    {
+     "text": "Augmentin",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "amoxicillin/clavulanate",
+     "kind": "generic",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "co-amoxiclav",
+     "kind": "generic_inn",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "ออกเมนติน",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "sulfamethoxazole_trimethoprim",
+   "ingredients": [
+    "sulfamethoxazole",
+    "trimethoprim"
+   ],
+   "aliases": [
+    {
+     "text": "Bactrim",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "Bactrim DS",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "co-trimoxazole",
+     "kind": "generic_inn",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "sulfamethoxazole/trimethoprim",
+     "kind": "generic",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "แบคทริม",
+     "kind": "th_script",
+     "alias_source": "team-authored Thai transliteration of the RxNorm ingredient name"
+    }
+   ]
+  },
+  {
+   "product_id": "losartan_hydrochlorothiazide",
+   "ingredients": [
+    "losartan",
+    "hydrochlorothiazide"
+   ],
+   "aliases": [
+    {
+     "text": "Hyzaar",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "losartan/HCTZ",
+     "kind": "generic",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    }
+   ]
+  },
+  {
+   "product_id": "amlodipine_valsartan",
+   "ingredients": [
+    "amlodipine",
+    "valsartan"
+   ],
+   "aliases": [
+    {
+     "text": "Exforge",
+     "kind": "en_brand",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    },
+    {
+     "text": "amlodipine/valsartan",
+     "kind": "generic",
+     "alias_source": "team-authored common name/brand from public US/TH product labelling"
+    }
+   ]
+  }
+ ],
+ "allergen_groups": [
+  {
+   "class_id": "penicillin",
+   "phrases": [
+    "penicillin",
+    "penicillins",
+    "penicillin allergy",
+    "เพนิซิลลิน"
+   ],
+   "alias_source": "team-authored"
+  },
+  {
+   "class_id": "cephalosporin",
+   "phrases": [
+    "cephalosporin",
+    "cephalosporins",
+    "เซฟาโลสปอริน"
+   ],
+   "alias_source": "team-authored"
+  },
+  {
+   "class_id": "sulfonamide_antibacterial",
+   "phrases": [
+    "sulfa",
+    "sulfa drugs",
+    "sulfonamide antibiotic",
+    "sulfonamide antibiotics",
+    "ซัลฟา"
+   ],
+   "alias_source": "team-authored"
+  },
+  {
+   "class_id": "nsaid",
+   "phrases": [
+    "nsaid",
+    "nsaids",
+    "เอ็นเสด"
+   ],
+   "alias_source": "team-authored"
+  },
+  {
+   "class_id": "macrolide",
+   "phrases": [
+    "macrolide",
+    "macrolides"
+   ],
+   "alias_source": "team-authored"
+  },
+  {
+   "class_id": "fluoroquinolone",
+   "phrases": [
+    "fluoroquinolone",
+    "fluoroquinolones",
+    "quinolones"
+   ],
+   "alias_source": "team-authored"
+  },
+  {
+   "class_id": "acei",
+   "phrases": [
+    "ace inhibitor",
+    "ace inhibitors"
+   ],
+   "alias_source": "team-authored"
+  }
+ ]
+}

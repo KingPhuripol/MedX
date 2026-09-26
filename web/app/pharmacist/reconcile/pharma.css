@@ -1,0 +1,38 @@
+/* Pharma page styles. Colours come only from theme tokens (web/app/theme.css when it lands),
+   falling back to the neutral tokens defined in globals.css. No colour literals here. */
+.pharma { max-width: 60rem; }
+main:has(.pharma) { max-width: 64rem; }
+.pharma-form { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
+.pharma-form .field { margin-bottom: 0; }
+.pharma select, .pharma textarea {
+  font: inherit;
+  padding: 0.4rem;
+  color: var(--medx-fg, var(--fg));
+  background: var(--medx-surface, var(--bg));
+  border: 1px solid var(--medx-border, var(--fg));
+  border-radius: 4px;
+}
+.pharma-status { min-height: 1.5rem; font-weight: 600; }
+.pharma-attribution { font-size: 0.85rem; }
+.issue-list { padding-left: 1.25rem; }
+.issue-list > li { margin-bottom: 1.25rem; }
+.issue {
+  border: 1px solid var(--medx-border, var(--fg));
+  border-left: 6px solid var(--medx-accent, var(--accent));
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  background: var(--medx-surface, var(--bg));
+}
+.issue[data-severity="high"] { border-left-color: var(--medx-danger, var(--error)); }
+.issue[data-severity="elevated"] { border-left-color: var(--medx-warning, var(--warn-border)); }
+.issue h3 { margin: 0 0 0.25rem; font-size: 1.1rem; }
+.issue-meta { margin: 0.25rem 0; font-size: 0.9rem; }
+.phrasing { margin: 0.5rem 0 0.25rem; }
+.phrasing-label { margin: 0 0 0.5rem; font-size: 0.8rem; font-style: italic; }
+.sources { border-collapse: collapse; width: 100%; font-size: 0.9rem; margin: 0.5rem 0; }
+.sources caption { text-align: left; font-weight: 600; padding-bottom: 0.25rem; }
+.sources th, .sources td { border: 1px solid var(--medx-border, var(--fg)); padding: 0.3rem 0.4rem; text-align: left; vertical-align: top; }
+.decision { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: flex-end; margin-top: 0.5rem; }
+.decision .field { margin-bottom: 0; flex: 1 1 16rem; }
+.decision-recorded { font-weight: 600; }
+.notice-list li { margin-bottom: 0.25rem; }

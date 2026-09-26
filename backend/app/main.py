@@ -11,12 +11,15 @@ from .config import Settings
 from .db import create_schema, make_engine
 from .gateway import build_provider
 from .gateway import router as gateway_router
+from .pharma import router as pharma_router
+from .pharma.db import create_pharma_schema
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings.from_env()
     engine = make_engine(settings.database_url)
     create_schema(engine)
+    create_pharma_schema(engine)
 
     app = FastAPI(title="Clinical Front Door (research prototype)", version="0.1.0")
     app.state.settings = settings
@@ -36,4 +39,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.include_router(auth.router)
     app.include_router(gateway_router.router)
+    app.include_router(pharma_router.router)
     return app
