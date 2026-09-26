@@ -25,6 +25,19 @@ for (const role of ROLES) {
   });
 }
 
+test("triage list and review pages have no serious/critical axe violations", async ({ page }) => {
+  await login(page, "nurse");
+  await page.goto("/nurse/triage");
+  await expect(page.getByTestId("case-list")).toBeVisible();
+  expect(await seriousViolations(page)).toEqual([]);
+  for (const caseRef of ["SYN-S4-002", "SYN-S4-023"]) {
+    await page.goto("/nurse/triage");
+    await page.getByRole("button", { name: `Assess ${caseRef}` }).click();
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(caseRef);
+    expect(await seriousViolations(page)).toEqual([]);
+  }
+});
+
 test("login and logout work with the keyboard alone", async ({ page }) => {
   await page.goto("/login");
   await page.getByLabel("Username").focus();

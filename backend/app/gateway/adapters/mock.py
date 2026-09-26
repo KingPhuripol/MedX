@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .. import mock_tasks
 from ..contract import GatewayRequest
 from ..provider import ProviderResult
 
@@ -13,6 +14,14 @@ class MockProvider:
     model_version = "mock-0.1.0"
 
     def invoke(self, request: GatewayRequest, request_sha256: str) -> ProviderResult:
+        registered = mock_tasks.lookup(request.task)
+        if registered is not None:
+            fn, version = registered
+            return ProviderResult(
+                status="ok",
+                model_version=f"{self.model_version}+{version}",
+                output=fn(dict(request.inputs)),
+            )
         # Output is a pure function of the canonical request hash.
         return ProviderResult(
             status="ok",

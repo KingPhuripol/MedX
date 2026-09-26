@@ -1,0 +1,171 @@
+{
+ "version": "rf-1.0.0",
+ "status": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+ "population": "adult",
+ "semantics": "Three-valued: a leaf is true, false, or unknown (input missing or symptom recorded as unknown). any = true if any leaf true; all = false if any leaf false; at_least k = true if >= k true. A rule that ends unknown is listed as not_evaluable and is never read as negative.",
+ "rules": [
+  {
+   "id": "RF-SPO2", "name_en": "Low oxygen saturation", "name_th": "ออกซิเจนในเลือดต่ำ",
+   "condition": {"vital": "spo2", "op": "<=", "value": 91},
+   "severity": "escalate",
+   "message_en": "SpO2 at or below 91%. Escalate to a clinician now.",
+   "message_th": "SpO2 ไม่เกิน 91% ส่งต่อแพทย์ทันที",
+   "rationale": "NEWS2 SpO2 Scale 1 single-parameter score 3 (<=91%). Scale 2 (hypercapnic patients) is not modelled.",
+   "source": {"citation": "Royal College of Physicians. National Early Warning Score (NEWS) 2, Chart 1: The NEWS scoring system. London: RCP, 2017.", "url": "https://www.rcp.ac.uk/media/alxev00t/news2-chart-1_the-news-scoring-system_0_0.pdf", "accessed": "2026-09-26"}
+  },
+  {
+   "id": "RF-RR", "name_en": "Abnormal respiratory rate", "name_th": "อัตราการหายใจผิดปกติ",
+   "condition": {"any": [{"vital": "rr", "op": "<=", "value": 8}, {"vital": "rr", "op": ">=", "value": 25}]},
+   "severity": "escalate",
+   "message_en": "Respiratory rate at or below 8 or at or above 25 per minute. Escalate to a clinician now.",
+   "message_th": "อัตราการหายใจไม่เกิน 8 หรือตั้งแต่ 25 ครั้งต่อนาที ส่งต่อแพทย์ทันที",
+   "rationale": "NEWS2 respiration rate single-parameter score 3 (<=8 or >=25).",
+   "source": {"citation": "Royal College of Physicians. National Early Warning Score (NEWS) 2, Chart 1: The NEWS scoring system. London: RCP, 2017.", "url": "https://www.rcp.ac.uk/media/alxev00t/news2-chart-1_the-news-scoring-system_0_0.pdf", "accessed": "2026-09-26"}
+  },
+  {
+   "id": "RF-SBP", "name_en": "Abnormal systolic blood pressure", "name_th": "ความดันซิสโตลิกผิดปกติ",
+   "condition": {"any": [{"vital": "sbp", "op": "<=", "value": 90}, {"vital": "sbp", "op": ">=", "value": 220}]},
+   "severity": "escalate",
+   "message_en": "Systolic blood pressure at or below 90 or at or above 220 mmHg. Escalate to a clinician now.",
+   "message_th": "ความดันซิสโตลิกไม่เกิน 90 หรือตั้งแต่ 220 mmHg ส่งต่อแพทย์ทันที",
+   "rationale": "NEWS2 systolic blood pressure single-parameter score 3 (<=90 or >=220).",
+   "source": {"citation": "Royal College of Physicians. National Early Warning Score (NEWS) 2, Chart 1: The NEWS scoring system. London: RCP, 2017.", "url": "https://www.rcp.ac.uk/media/alxev00t/news2-chart-1_the-news-scoring-system_0_0.pdf", "accessed": "2026-09-26"}
+  },
+  {
+   "id": "RF-HR", "name_en": "Abnormal pulse", "name_th": "ชีพจรผิดปกติ",
+   "condition": {"any": [{"vital": "hr", "op": "<=", "value": 40}, {"vital": "hr", "op": ">=", "value": 131}]},
+   "severity": "escalate",
+   "message_en": "Pulse at or below 40 or at or above 131 per minute. Escalate to a clinician now.",
+   "message_th": "ชีพจรไม่เกิน 40 หรือตั้งแต่ 131 ครั้งต่อนาที ส่งต่อแพทย์ทันที",
+   "rationale": "NEWS2 pulse single-parameter score 3 (<=40 or >=131).",
+   "source": {"citation": "Royal College of Physicians. National Early Warning Score (NEWS) 2, Chart 1: The NEWS scoring system. London: RCP, 2017.", "url": "https://www.rcp.ac.uk/media/alxev00t/news2-chart-1_the-news-scoring-system_0_0.pdf", "accessed": "2026-09-26"}
+  },
+  {
+   "id": "RF-CONSC", "name_en": "Reduced consciousness or new confusion", "name_th": "ระดับความรู้สึกตัวลดลงหรือสับสนเฉียบพลัน",
+   "condition": {"any": [{"vital": "avpu", "op": "!=", "value": "A"}, {"vital": "new_confusion", "op": "==", "value": true}]},
+   "severity": "escalate",
+   "message_en": "Not fully alert (AVPU not A) or new confusion. Escalate to a clinician now.",
+   "message_th": "ไม่รู้สึกตัวดี (AVPU ไม่ใช่ A) หรือสับสนเฉียบพลัน ส่งต่อแพทย์ทันที",
+   "rationale": "NEWS2 consciousness: new confusion, V, P or U (CVPU) scores 3.",
+   "source": {"citation": "Royal College of Physicians. National Early Warning Score (NEWS) 2, Chart 1: The NEWS scoring system. London: RCP, 2017.", "url": "https://www.rcp.ac.uk/media/alxev00t/news2-chart-1_the-news-scoring-system_0_0.pdf", "accessed": "2026-09-26"}
+  },
+  {
+   "id": "RF-TEMP", "name_en": "Low body temperature", "name_th": "อุณหภูมิกายต่ำ",
+   "condition": {"vital": "temp_c", "op": "<=", "value": 35.0},
+   "severity": "escalate",
+   "message_en": "Temperature at or below 35.0 °C. Escalate to a clinician now.",
+   "message_th": "อุณหภูมิไม่เกิน 35.0 °C ส่งต่อแพทย์ทันที",
+   "rationale": "NEWS2 temperature single-parameter score 3 (<=35.0 °C).",
+   "source": {"citation": "Royal College of Physicians. National Early Warning Score (NEWS) 2, Chart 1: The NEWS scoring system. London: RCP, 2017.", "url": "https://www.rcp.ac.uk/media/alxev00t/news2-chart-1_the-news-scoring-system_0_0.pdf", "accessed": "2026-09-26"}
+  },
+  {
+   "id": "RF-QSOFA", "name_en": "qSOFA 2 or more", "name_th": "qSOFA ตั้งแต่ 2 ข้อ",
+   "condition": {"at_least": 2, "of": [
+     {"vital": "rr", "op": ">=", "value": 22},
+     {"vital": "sbp", "op": "<=", "value": 100},
+     {"any": [{"vital": "avpu", "op": "!=", "value": "A"}, {"vital": "new_confusion", "op": "==", "value": true}]}
+   ]},
+   "severity": "escalate",
+   "message_en": "Two or more of: respiratory rate 22 or more, systolic 100 or less, altered mentation. Escalate to a clinician now.",
+   "message_th": "พบตั้งแต่ 2 ข้อ: หายใจตั้งแต่ 22 ครั้งต่อนาที ความดันซิสโตลิกไม่เกิน 100 ความรู้สึกตัวเปลี่ยนแปลง ส่งต่อแพทย์ทันที",
+   "rationale": "qSOFA criteria (Sepsis-3): RR >=22/min, altered mentation, SBP <=100 mmHg; >=2 identifies higher risk. Altered mentation is proxied by AVPU not A or new confusion (no GCS in intake).",
+   "source": {"citation": "Seymour CW, et al. Assessment of Clinical Criteria for Sepsis: For the Third International Consensus Definitions for Sepsis and Septic Shock (Sepsis-3). JAMA. 2016;315(8):762-774.", "pmid": "26903335", "accessed": "2026-09-26"}
+  },
+  {
+   "id": "RF-CHEST", "name_en": "Acute chest pain", "name_th": "เจ็บหน้าอกเฉียบพลัน",
+   "condition": {"symptom": "acute_chest_pain"},
+   "severity": "escalate",
+   "message_en": "Acute chest pain. Escalate to a clinician now; the guideline target is an ECG within 10 minutes of arrival.",
+   "message_th": "เจ็บหน้าอกเฉียบพลัน ส่งต่อแพทย์ทันที แนวทางกำหนดให้ตรวจคลื่นไฟฟ้าหัวใจภายใน 10 นาทีหลังมาถึง",
+   "rationale": "AHA/ACC 2021: for acute chest pain, an ECG should be acquired and reviewed within 10 minutes of arrival.",
+   "source": {"citation": "Gulati M, et al. 2021 AHA/ACC/ASE/CHEST/SAEM/SCCT/SCMR Guideline for the Evaluation and Diagnosis of Chest Pain. Circulation. 2021;144(22):e368-e454.", "pmid": "34709879", "accessed": "2026-09-26"}
+  },
+  {
+   "id": "RF-STROKE", "name_en": "Possible acute stroke signs", "name_th": "อาการที่อาจเป็นโรคหลอดเลือดสมองเฉียบพลัน",
+   "condition": {"any": [
+     {"symptom": "sudden_facial_droop"}, {"symptom": "sudden_limb_weakness"},
+     {"symptom": "sudden_speech_disturbance"}, {"symptom": "sudden_vision_disturbance"}
+   ]},
+   "severity": "escalate",
+   "message_en": "Sudden facial droop, limb weakness, speech or vision disturbance. Escalate to a clinician now.",
+   "message_th": "หน้าเบี้ยว แขนขาอ่อนแรง พูดหรือมองเห็นผิดปกติอย่างเฉียบพลัน ส่งต่อแพทย์ทันที",
+   "rationale": "AHA/ASA 2019 early management: suspected acute stroke needs immediate evaluation; sudden focal deficits are warning signs.",
+   "source": {"citation": "Powers WJ, et al. Guidelines for the Early Management of Patients With Acute Ischemic Stroke: 2019 Update to the 2018 Guidelines. Stroke. 2019;50(12):e344-e418.", "pmid": "31662037", "accessed": "2026-09-26"}
+  },
+  {
+   "id": "RF-THUNDER", "name_en": "Thunderclap headache", "name_th": "ปวดศีรษะรุนแรงเฉียบพลัน",
+   "condition": {"symptom": "thunderclap_headache"},
+   "severity": "escalate",
+   "message_en": "Sudden severe headache peaking within 1 hour. Escalate to a clinician now.",
+   "message_th": "ปวดศีรษะรุนแรงที่สุดเกิดขึ้นทันทีและถึงจุดสูงสุดภายใน 1 ชั่วโมง ส่งต่อแพทย์ทันที",
+   "rationale": "Ottawa SAH rule population: acute non-traumatic headache reaching maximum intensity within 1 hour needs evaluation for subarachnoid haemorrhage.",
+   "source": {"citation": "Perry JJ, et al. Clinical decision rules to rule out subarachnoid hemorrhage for acute headache. JAMA. 2013;310(12):1248-1255.", "pmid": "24065011", "accessed": "2026-09-26"}
+  },
+  {
+   "id": "RF-ANAPH", "name_en": "Possible anaphylaxis", "name_th": "อาจเป็นภาวะแพ้รุนแรง",
+   "condition": {"all": [
+     {"symptom": "allergen_exposure"},
+     {"any": [{"symptom": "airway_breathing_compromise"}, {"vital": "sbp", "op": "<", "value": 90}]}
+   ]},
+   "severity": "escalate",
+   "message_en": "Allergen exposure with airway or breathing compromise or systolic below 90 mmHg. Escalate to a clinician now.",
+   "message_th": "สัมผัสสารก่อภูมิแพ้ ร่วมกับทางเดินหายใจหรือการหายใจผิดปกติ หรือความดันซิสโตลิกต่ำกว่า 90 mmHg ส่งต่อแพทย์ทันที",
+   "rationale": "WAO 2020 anaphylaxis criteria: after exposure to a known or probable allergen, respiratory compromise or reduced blood pressure (adult SBP <90 mmHg).",
+   "source": {"citation": "Cardona V, et al. World Allergy Organization anaphylaxis guidance 2020. World Allergy Organ J. 2020;13(10):100472.", "pmid": "33204386", "accessed": "2026-09-26"}
+  },
+  {
+   "id": "RF-SUICIDE", "name_en": "Suicidal ideation or self-harm", "name_th": "มีความคิดฆ่าตัวตายหรือทำร้ายตนเอง",
+   "condition": {"any": [{"symptom": "suicidal_ideation"}, {"symptom": "self_harm"}]},
+   "severity": "escalate",
+   "message_en": "Suicidal ideation or self-harm reported. Escalate to a clinician now and keep the person safe.",
+   "message_th": "มีความคิดฆ่าตัวตายหรือทำร้ายตนเอง ส่งต่อแพทย์ทันทีและดูแลความปลอดภัย",
+   "rationale": "ED-SAFE: universal suicide risk screening in the emergency department detects risk that needs clinician assessment. The Joint Commission NPSG 15.01.01 also requires screening and assessment (publisher page blocked automated lookup; to be checked manually).",
+   "source": {"citation": "Boudreaux ED, et al. Improving Suicide Risk Screening and Detection in the Emergency Department. Am J Prev Med. 2016;50(4):445-453.", "pmid": "26654691", "accessed": "2026-09-26"}
+  },
+  {
+   "id": "RF-GIBLEED", "name_en": "Possible upper GI bleeding", "name_th": "อาจมีเลือดออกในทางเดินอาหาร",
+   "condition": {"any": [{"symptom": "hematemesis"}, {"symptom": "melena"}]},
+   "severity": "escalate",
+   "message_en": "Vomiting blood or black tarry stool. Escalate to a clinician now.",
+   "message_th": "อาเจียนเป็นเลือดหรืออุจจาระดำ ส่งต่อแพทย์ทันที",
+   "rationale": "ACG 2021: hematemesis and melena are presenting features of upper GI bleeding needing prompt risk assessment.",
+   "source": {"citation": "Laine L, et al. ACG Clinical Guideline: Upper Gastrointestinal and Ulcer Bleeding. Am J Gastroenterol. 2021;116(5):899-917.", "pmid": "33929377", "accessed": "2026-09-26"}
+  },
+  {
+   "id": "RF-ECTOPIC", "name_en": "Possible ectopic pregnancy", "name_th": "อาจเป็นการตั้งครรภ์นอกมดลูก",
+   "condition": {"all": [
+     {"field": "sex", "op": "==", "value": "female"},
+     {"field": "age", "op": ">=", "value": 15},
+     {"field": "age", "op": "<=", "value": 50},
+     {"any": [{"symptom": "abdominal_pain"}, {"symptom": "vaginal_bleeding"}]},
+     {"field": "pregnancy_status", "op": "in", "value": ["positive", "unknown"], "missing_as": "unknown"}
+   ]},
+   "severity": "escalate",
+   "message_en": "Female aged 15 to 50 with abdominal pain or vaginal bleeding, pregnancy positive or not known. Escalate to a clinician now.",
+   "message_th": "หญิงอายุ 15 ถึง 50 ปี ปวดท้องหรือมีเลือดออกทางช่องคลอด และตั้งครรภ์หรือยังไม่ทราบ ส่งต่อแพทย์ทันที",
+   "rationale": "ACOG PB 193: ectopic pregnancy should be considered in any reproductive-age patient with abdominal pain or vaginal bleeding; unknown pregnancy status is treated as possible.",
+   "source": {"citation": "ACOG Practice Bulletin No. 193: Tubal Ectopic Pregnancy. Obstet Gynecol. 2018;131(3):e91-e103.", "pmid": "29470343", "accessed": "2026-09-26"}
+  },
+  {
+   "id": "RF-MENING", "name_en": "Possible meningitis", "name_th": "อาจเป็นเยื่อหุ้มสมองอักเสบ",
+   "condition": {"all": [
+     {"symptom": "fever"},
+     {"any": [{"symptom": "neck_stiffness"}, {"symptom": "non_blanching_rash"}]}
+   ]},
+   "severity": "escalate",
+   "message_en": "Fever with neck stiffness or a non-blanching rash. Escalate to a clinician now.",
+   "message_th": "ไข้ร่วมกับคอแข็งหรือผื่นจ้ำเลือดที่กดไม่จาง ส่งต่อแพทย์ทันที",
+   "rationale": "ESCMID 2016: fever, neck stiffness and rash are key presenting signs of acute bacterial meningitis requiring urgent evaluation.",
+   "source": {"citation": "van de Beek D, et al. ESCMID guideline: diagnosis and treatment of acute bacterial meningitis. Clin Microbiol Infect. 2016;22 Suppl 3:S37-62.", "pmid": "27062097", "accessed": "2026-09-26"}
+  },
+  {
+   "id": "RF-HYPOGLY", "name_en": "Level 2 hypoglycaemia", "name_th": "น้ำตาลในเลือดต่ำระดับ 2",
+   "condition": {"vital": "capillary_glucose_mg_dl", "op": "<", "value": 54},
+   "severity": "escalate",
+   "message_en": "Capillary glucose below 54 mg/dL. Escalate to a clinician now.",
+   "message_th": "น้ำตาลปลายนิ้วต่ำกว่า 54 mg/dL ส่งต่อแพทย์ทันที",
+   "rationale": "ADA Standards of Care: level 2 hypoglycaemia is glucose <54 mg/dL (3.0 mmol/L).",
+   "source": {"citation": "American Diabetes Association Professional Practice Committee. 6. Glycemic Goals and Hypoglycemia: Standards of Care in Diabetes-2024. Diabetes Care. 2024;47(Suppl 1):S111-S125.", "pmid": "38078586", "accessed": "2026-09-26"}
+  }
+ ]
+}

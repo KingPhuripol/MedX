@@ -1,11 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import type { ReactNode } from "react";
 
 import RoleGuard from "@/components/RoleGuard";
 import { ROLE_LABELS, type Role } from "@/lib/copy";
 
-export default function RoleHome({ role }: { role: Role }) {
+export default function RoleHome({ role, children }: { role: Role; children?: ReactNode }) {
   const router = useRouter();
 
   async function logout() {
@@ -18,6 +19,7 @@ export default function RoleHome({ role }: { role: Role }) {
       <section aria-labelledby="home-title">
         <h1 id="home-title">{ROLE_LABELS[role]} home</h1>
         <p>Signed in as role: {role}. Placeholder: features arrive in later slices.</p>
+        {children}
         <button type="button" onClick={logout}>
           Sign out
         </button>
