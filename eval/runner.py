@@ -78,6 +78,11 @@ def load_jsonl(path: str | os.PathLike[str]) -> tuple[list[dict[str, Any]], str]
     return rows, sha256_bytes(raw)
 
 
+def _examples(items: Sequence[Any], m: Mapping[str, Any]) -> str:
+    """Up to 3 example IDs/keys for an error message - only for synthetic data (never real patient IDs)."""
+    return f", e.g. {list(items)[:3]}" if m["dataset"]["data_class"] == "synthetic" else ""
+
+
 def _key(r: Mapping[str, Any]) -> tuple[str, str]:
     return (r["patient_id"], r["decision_point_id"])
 
@@ -112,7 +117,7 @@ def _refusal_checks(m: dict[str, Any], digest: str, rows, cmp_rows, pred_sha: st
         allowed = set(plist)
         foreign = sorted({r["patient_id"] for r in list(rows) + list(cmp_rows)} - allowed)
         if foreign:
-            raise RunRefused(f"{len(foreign)} patient(s) not in split_patient_list, e.g. {foreign[:3]}")
+            raise RunRefused(f"{len(foreign)} patient(s) not in split_patient_list{_examples(foreign, m)}")
     if m["split"] == "test":
         for e in ledger.runs(m["evaluation_id"]):
             if (e["predictions_sha256"], e.get("comparator_sha256")) != (pred_sha, cmp_sha):
@@ -280,7 +285,8 @@ def evaluate(m: dict[str, Any], rows: list[dict[str, Any]], cmp_rows: list[dict[
                 extra_k = sorted(set(cmp_keys) - set(sys_keys))
                 raise MissingPredictionError(
                     f"comparator {name!r} task {task!r} does not cover the same decision points "
-                    f"(missing {missing[:3]}, extra {extra_k[:3]}); rows are never dropped"
+                    f"({len(missing)} missing{_examples(missing, m)}; {len(extra_k)} extra{_examples(extra_k, m)}); "
+                    "rows are never dropped"
                 )
             cmp_groups[(name, task)] = rs
 

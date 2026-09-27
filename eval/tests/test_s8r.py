@@ -803,3 +803,27 @@ def test_byte_reproducible_with_frozen_entry_hash(tmp_path, ledger):
     res = json.loads((tmp_path / "a" / "results.json").read_text())
     assert res["frozen_entry_hash"] == entry["entry_hash"]
     assert entry["entry_hash"] in (tmp_path / "a" / "results.md").read_text()
+
+
+def test_refusal_messages_hide_real_patient_ids(tmp_path, ledger, capsys):
+    """Refusal/error messages show example patient IDs only for synthetic data (clinical-risk row, s8r)."""
+    mimic = {"name": "toy-as-mimic", "version": "1", "data_class": "mimic"}
+    m = write_manifest(tmp_path, "mimic_dev", n_boot=20, split="dev", evaluation_id="s8r-mimic-dev", dataset=mimic)
+    foreign = write_jsonl(tmp_path / "foreign.jsonl", SYS_ROWS + [dict(SYS_ROWS[0], patient_id="SYN-X999")])
+    missing = write_jsonl(tmp_path / "missing.jsonl", drop(SYS_ROWS, lambda r: r["patient_id"] == "SYN-P005"))
+    # one decision point of a multi-DP patient removed from the comparator only: key mismatch (exit 3)
+    dp = next(r for r in CMP_ROWS if r["task"] == "care_pathway" and r["patient_id"] == "SYN-P001")
+    cmp_gap = write_jsonl(tmp_path / "cmp_gap.jsonl", [r for r in CMP_ROWS if r is not dp])
+    cases = ((foreign, CMP, 2, "not in split_patient_list"), (missing, CMP, 2, "n_missing=1"),
+             (PREDS, cmp_gap, 3, "does not cover the same decision points"))
+    for i, (preds, cmp_, code, expect) in enumerate(cases):
+        capsys.readouterr()
+        rc = run_cli(ledger, m, tmp_path / f"o{i}", preds, cmp_)
+        err = capsys.readouterr().err
+        assert rc == code and expect in err, (i, rc, err)
+        assert "SYN-" not in err, (i, err)
+    # synthetic data still shows examples
+    syn = write_manifest(tmp_path, "syn_dev", n_boot=20, split="dev", evaluation_id="s8r-syn-dev")
+    capsys.readouterr()
+    assert run_cli(ledger, syn, tmp_path / "osyn", foreign) == 2
+    assert "SYN-X999" in capsys.readouterr().err
