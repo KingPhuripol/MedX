@@ -8,9 +8,12 @@ import re
 import shutil
 import subprocess
 
+import pytest
+
 from app.care import evaluate
 
 from .conftest import run
+from .test_api import physician  # noqa: F401  (fixture)
 
 REPO = evaluate.REPO_ROOT
 S6 = evaluate.EVAL_DIR
@@ -180,3 +183,61 @@ def test_dev_improvement_without_regression():
     assert a["pathway_top1"]["point"] >= b["pathway_top1"]["point"]
     assert a["ordered_proxy_hit3"]["point"] >= b["ordered_proxy_hit3"]["point"]
     assert a["coverage"] == b["coverage"]
+
+
+# ---------------------------------------------------------------- held-out s6-care-test-0002 (S6R-A09, A10, A11)
+
+HELDOUT_SEED = 20260927
+TEST_0002 = evaluate.paths("test", "s6-care-test-0002")
+
+
+@pytest.fixture(scope="session")
+def heldout_root(tmp_path_factory):
+    from data_factory.generate import generate
+
+    out = tmp_path_factory.mktemp("care_heldout") / "s6r-heldout"
+    generate(HELDOUT_SEED, out, heldout=True)
+    return out
+
+
+def test_manifest_0002_matches_s6_metric_set(heldout_root, monkeypatch):
+    old = json.loads((S6 / "manifest_test.json").read_text("utf-8"))
+    new = json.loads(TEST_0002["manifest"].read_text("utf-8"))
+    for k in ("metrics", "comparators", "thresholds", "bootstrap", "expert_review", "split", "slice",
+              "manifest_version"):
+        assert new[k] == old[k], k
+    meta = json.loads((heldout_root / "manifest.json").read_text("utf-8"))
+    assert new["evaluation_id"] == "s6-care-test-0002"
+    assert new["dataset"]["version"] == meta["tree_sha256"] and meta["heldout"] is True
+    assert f"(seed {HELDOUT_SEED})" in new["split_version"]
+    assert len(new["split_patient_list"]) == 72 and all(re.fullmatch(r"SYNH-\d{4}", p)
+                                                         for p in new["split_patient_list"])
+    monkeypatch.setenv("CARE_DATASET", str(heldout_root))
+    assert evaluate.manifest("test", "s6-care-test-0002") == new  # from gold, reproducible
+
+
+def test_results_0002_complete():
+    p = TEST_0002["results"] / "results.json"
+    if not p.is_file():
+        pytest.skip("s6-care-test-0002 not run yet: freeze + single run pending decision D-s6r-2")
+    res = json.loads(p.read_text("utf-8"))
+    assert res["evaluation_id"] == "s6-care-test-0002" and res["frozen"] is True
+    assert "System Evaluation" in json.dumps(res["labels"])
+    assert all(c["missing_policy"] in ("complete", "counted_as_abstain") for c in res["split_coverage"])
+    for row in res["rows"]:
+        for f in ("point", "ci_low", "ci_high", "n_patients", "n_decision_points"):
+            assert f in row
+        if row["point"] is not None and (row["ci_low"] == row["ci_high"] or row["unstable"]):
+            assert "exact_ci" in row
+    summ = json.loads(TEST_0002["summary"].read_text("utf-8"))
+    assert summ["underpowered"] == (summ["n_answered_evaluable"] < 30)
+    runs = [e for e in _ledger_runs("s6-care-test-0002")]
+    assert len(runs) == 1 and runs[0]["frozen"] is True
+
+
+def test_cases_never_serve_heldout(physician, heldout_root, monkeypatch):
+    served = {c["case_id"] for c in physician.get("/api/care/cases").json()["cases"]}
+    assert served and not any(c.startswith("SYNH") for c in served)
+    monkeypatch.setenv("CARE_DATASET", str(heldout_root))  # held-out has no dev split: nothing is served
+    assert physician.get("/api/care/cases").status_code == 503
+    assert physician.post("/api/care/cases/SYNHE-0001/assess", json={"decision_point": "T1"}).status_code in (404, 503)
