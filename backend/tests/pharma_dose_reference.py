@@ -32,6 +32,10 @@ LINKS = ("to", "or", "and", "ถึง", "หรือ", "และ")
 RANGE_LINKS = ("-", "–", "—", "~") + LINKS
 S3_JOINERS = ("+", ",", "&", "and", "และ")
 TIMES_OF_DAY = {"1": 1, "2": 2, "3": 3, "4": 4}
+# rev 3 QF: what may follow a Q4b "ครึ่ง" (besides the end, a T1 start and an F1-F3 start).
+AFTER_HALF_THAI = ("ก่อน", "หลัง", "พร้อม", "เช้า", "กลางวัน", "เที่ยง", "เย็น", "ค่ำ", "ตอน", "เวลา", "เมื่อ", "วันละ", "ทุก")
+AFTER_HALF_LATIN = ("od", "bd", "bid", "tid", "qid", "qd", "hs", "prn", "po", "ac", "pc", "daily", "once", "twice", "thrice",
+                    "every", "before", "after", "with")
 TAIL_OK = " .,;:()[]+&"  # rev 3 R1 (c): the only characters an anchor's tail may hold
 PERIODS_AFTER_A = ("day", "week", "month")  # rev 3 R1 (b): "a day", "a week", "a month"
 HALF = "ครึ่ง"
@@ -259,8 +263,8 @@ class _Walk:
     # -- quantity forms usable after ครั้งละ / วันละ: returns (value, length)
     def small_quantity(self, i: int) -> tuple[Fraction, int] | None:
         w = self.whole(i)
-        # N เม็ดครึ่ง (a ครึ่ง followed by a time word is kind "H" and never completes this)
-        if w is not None and self.t(i + 1) in TH_QW and self.k(i + 2) == "T" and self.t(i + 2) == HALF:
+        # N เม็ดครึ่ง, only when the ครึ่ง has an allowed follower (rev 3 QF)
+        if w is not None and self.t(i + 1) in TH_QW and self.t(i + 2) == HALF and self.half_followed(i + 2):
             return (w + Fraction(1, 2), 3) if self.within(w + Fraction(1, 2)) else None
         # mixed number
         if w is not None:
@@ -277,6 +281,53 @@ class _Walk:
         if fr and self.t(i + fr[1]) in QW:
             return fr[0], fr[1] + 1
         return None
+
+    def half_followed(self, h: int) -> bool:
+        """rev 3 QF, on the characters after the ครึ่ง at pair ``h`` (one optional space skipped)."""
+        pos = self.ends[h]
+        if self.s[pos:pos + 1] == " ":
+            pos += 1
+        rest = self.s[pos:]
+        if not rest:
+            return True
+        if rest.startswith(HALF) and _time_follows(self.s, pos + len(HALF)):
+            return True
+        if any(rest.startswith(w) for w in AFTER_HALF_THAI):
+            return True
+        if _latin_run(self.s, pos) in AFTER_HALF_LATIN:
+            return True
+        return self.freq_len(h + 1) > 0  # the next pair starts at ``pos``
+
+    def freq_len(self, i: int) -> int:
+        """F1 / F2 / F3 starting at pair ``i``: its length, else 0."""
+        t = self.t(i)
+        if t in ("วันละ", "สัปดาห์ละ", "อาทิตย์ละ", "เดือนละ"):
+            j = i + 1 + (1 if self.whole(i + 1) is not None else 0)
+            if self.t(j) == "ครั้ง":
+                return j - i + 1
+        hours = ("h", "hr", "hrs", "hour", "hours")
+        if t in ("q", "every") and self.whole(i + 1) is not None and self.t(i + 2) in hours:
+            return 3
+        if t == "ทุก" and self.whole(i + 1) is not None and self.t(i + 2) in ("ชั่วโมง", "ชม."):
+            return 3
+        periods = ("day", "daily", "week", "weekly", "month", "monthly")
+        j = None
+        if t in ("once", "twice", "thrice"):
+            j = i + 1
+        elif (self.whole(i) is not None or t in ("one", "two", "three", "four")) and self.t(i + 1) in ("time", "times"):
+            j = i + 2
+        if j is not None:
+            if self.t(j) in ("a", "per"):
+                j += 1
+            if self.t(j) in periods:
+                return j - i + 1
+        return 0
+
+    def check_half_followers(self) -> None:
+        for j in range(len(self.p)):
+            if self.whole(j) is not None and self.t(j + 1) in TH_QW and self.t(j + 2) == HALF:
+                if not self.half_followed(j + 2):
+                    self.half_conflict = True
 
     def liquid_len(self, i: int) -> int:
         """L1: NUM MASS / NUM? VOL (NUM VOL)?; returns its length or 0."""
@@ -308,8 +359,6 @@ class _Walk:
     def step(self, i: int) -> int:
         t, k = self.t(i), self.k(i)
         if k == "H":  # T1: half an hour / half a minute is a time, never a quantity
-            if self.t(i - 1) in TH_QW and self.whole(i - 2) is not None:
-                self.half_conflict = True
             return self.take(i, 1)
         if k == "N":
             n_liquid = self.liquid_len(i)
@@ -367,28 +416,9 @@ class _Walk:
                     self.quantities.add(q[0])
                 self.anchors.append(i + q[1])
                 return self.take(i, 1 + q[1])
-        if t in ("วันละ", "สัปดาห์ละ", "อาทิตย์ละ", "เดือนละ"):
-            j = i + 1 + (1 if self.whole(i + 1) is not None else 0)
-            if self.t(j) == "ครั้ง":
-                return self.take(i, j - i + 1)
-        # F1
-        hours = ("h", "hr", "hrs", "hour", "hours")
-        if t in ("q", "every") and self.whole(i + 1) is not None and self.t(i + 2) in hours:
-            return self.take(i, 3)
-        if t == "ทุก" and self.whole(i + 1) is not None and self.t(i + 2) in ("ชั่วโมง", "ชม."):
-            return self.take(i, 3)
-        # F2
-        periods = ("day", "daily", "week", "weekly", "month", "monthly")
-        j = None
-        if t in ("once", "twice", "thrice"):
-            j = i + 1
-        elif (self.whole(i) is not None or t in ("one", "two", "three", "four")) and self.t(i + 1) in ("time", "times"):
-            j = i + 2
-        if j is not None:
-            if self.t(j) in ("a", "per"):
-                j += 1
-            if self.t(j) in periods:
-                return self.take(i, j - i + 1)
+        n_freq = self.freq_len(i)  # F3, F1, F2
+        if n_freq:
+            return self.take(i, n_freq)
         return i + 1
 
     def numberlike(self, i: int) -> bool:
@@ -421,6 +451,7 @@ def _walk(text: str) -> tuple[list[tuple[str, str]], _Walk]:
     while i < len(pairs):
         i = walk.step(i)
     walk.check_tails()
+    walk.check_half_followers()
     return pairs, walk
 
 

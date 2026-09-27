@@ -64,6 +64,13 @@ _A_PERIODS = ("day", "week", "month")
 # T1: text directly after "ครึ่ง" that starts with one of these is a time ("half an hour"), never a half tablet.
 _TW_TH_PREFIXES = ("ชั่วโมง", "ชม", "ช.ม.", "นาที")
 _TW_EN = frozenset({"h", "hr", "hrs", "hour", "hours", "min", "mins", "minute", "minutes"})
+# QF (rev 3, closed): after a Q4b "ครึ่ง" (+ ␣?) the next thing must be the end of the entry, a T1 or F1-F3 start,
+# Thai text beginning with one of "th", or one of the Latin words "en". Anything else is ambiguous_quantity.
+QF = {
+    "th": ("ก่อน", "หลัง", "พร้อม", "เช้า", "กลางวัน", "เที่ยง", "เย็น", "ค่ำ", "ตอน", "เวลา", "เมื่อ", "วันละ", "ทุก"),
+    "en": frozenset({"od", "bd", "bid", "tid", "qid", "qd", "hs", "prn", "po", "ac", "pc", "daily", "once", "twice",
+                     "thrice", "every", "before", "after", "with"}),
+}
 _UFRACTIONS = {"½": Fraction(1, 2), "¼": Fraction(1, 4), "¾": Fraction(3, 4)}
 _SLASH_FRACTIONS = {("1", "2"): Fraction(1, 2), ("1", "4"): Fraction(1, 4), ("3", "4"): Fraction(3, 4)}
 _NUM_TOKEN = re.compile(r"[0-9]+(?:\.[0-9]+)?")
@@ -190,7 +197,6 @@ class Match:
     broken: bool = False  # R1 (c): a non-NEUTRAL character in the anchor's TAIL
     freq_code: str | None = None  # Q5 only
     daily_total: bool = False  # Q7 with a value > 1
-    conflict: bool = False  # T1 whose "ครึ่ง" could also complete "INT เม็ด ครึ่ง" (Q4b)
 
 
 def _text(toks: list[Token], i: int) -> str | None:
@@ -293,10 +299,24 @@ def _q4(toks: list[Token], i: int) -> Match | None:
     if _text(toks, i) == "ครึ่ง" and _text(toks, i + 1) in _QW_TH:
         return Match("Q4", i, i + 2, quantity=Fraction(1, 2), anchor=i, last=i + 1)
     whole = _int(toks, i)
-    if whole is None or _text(toks, i + 1) not in _QW_TH or _text(toks, i + 2) != "ครึ่ง" or _is_tw(toks, i + 3):
+    if not _half_shape(toks, i) or not _qf(toks, i + 3):
         return None
     got = _bounded(whole + Fraction(1, 2), i + 3)
     return Match("Q4", i, got[1], quantity=got[0], anchor=i, last=i + 2) if got else None
+
+
+def _half_shape(toks: list[Token], i: int) -> bool:
+    """The Q4b shape "INT ␣? (เม็ด|แคปซูล) ␣? ครึ่ง" at token ``i`` (standalone or inside Q6/Q7, any total)."""
+    return _int(toks, i) is not None and _text(toks, i + 1) in _QW_TH and _text(toks, i + 2) == "ครึ่ง"
+
+
+def _qf(toks: list[Token], j: int) -> bool:
+    """QF: the token ``j`` right after a Q4b "ครึ่ง" (whitespace ignored) is an allowed follower."""
+    if j >= len(toks) or any(fn(toks, j) for fn in (_t1, _f1, _f2, _f3)):
+        return True
+    if toks[j].kind == "WORD":
+        return toks[j].text in QF["en"]
+    return _surface(toks).startswith(QF["th"], toks[j].start)
 
 
 def _is_tw(toks: list[Token], i: int) -> bool:
@@ -382,11 +402,10 @@ def _r1(toks: list[Token], i: int) -> Match | None:
 
 
 def _t1(toks: list[Token], i: int) -> Match | None:
-    """T1: "ครึ่ง" + TW is a time; it conflicts with Q4b when "INT เม็ด|แคปซูล" comes right before it."""
+    """T1: "ครึ่ง" + TW is a time, never a quantity (right after "INT เม็ด" the QF rule makes it ambiguous)."""
     if _text(toks, i) != "ครึ่ง" or not _is_tw(toks, i + 1):
         return None
-    conflict = _text(toks, i - 1) in _QW_TH and _int(toks, i - 2) is not None
-    return Match("T1", i, i + 2, anchor=i, conflict=conflict)
+    return Match("T1", i, i + 2, anchor=i)
 
 
 _HOURS = ("h", "hr", "hrs", "hour", "hours")
@@ -477,6 +496,8 @@ def read_dose(raw: str) -> DoseParse:
     # R1 is checked on every anchor of the productions that fired; it flags and consumes nothing.
     tails = [r for m in matches if m.last is not None and (r := _r1(toks, m.last))]
     per_unit = [r for r in tails if not r.broken]
+    # Q4b shape whose "ครึ่ง" is not followed by a QF item: half a tablet or not, so no value is chosen.
+    half_unfollowed = any(_half_shape(toks, k) and not _qf(toks, k + 3) for k in range(len(toks)))
     numeric = numeric_ish(toks)
     left = [k for k in range(len(toks)) if numeric[k] and k not in consumed]
     strengths = {s for m in matches for s in m.strengths}
@@ -494,7 +515,7 @@ def read_dose(raw: str) -> DoseParse:
     elif any(toks[k].text in _RANGE_CONNECTORS and 0 < k < len(toks) - 1 and numeric[k - 1] and numeric[k + 1]
              for k in left):
         reason = "range"
-    elif len(quantities) > 1 or any(m.daily_total or m.conflict for m in matches):
+    elif len(quantities) > 1 or half_unfollowed or any(m.daily_total for m in matches):
         reason = "ambiguous_quantity"
     elif left or tails:  # an unconsumed numeric-ish token, or a broken anchor (R1 c)
         reason = "unparsed_token"
