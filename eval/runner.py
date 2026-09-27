@@ -301,6 +301,15 @@ def exact_interval(spec: dict[str, Any], stat: Any, ids: Sequence[str], res: dic
     }
 
 
+def scored_counts(stat: Any, ids: Sequence[str]) -> dict[str, int]:
+    """Patients / decision points that enter the metric denominator (den > 0; answered rows for abstention-aware
+    metrics). ``n_patients`` / ``n_decision_points`` stay the population denominators (s6, additive)."""
+    if not isinstance(stat, RatioStat):
+        return {}
+    keep = [p for p, d in zip(ids, stat.den) if d > 0]
+    return {"n_patients_scored": len(set(keep)), "n_decision_points_scored": len(keep)}
+
+
 def evaluate(m: dict[str, Any], rows: list[dict[str, Any]], cmp_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     tasks = {x["task"] for x in m["metrics"]}
     sys_by_task = _by_task(rows, "predictions")
@@ -345,7 +354,8 @@ def evaluate(m: dict[str, Any], rows: list[dict[str, Any]], cmp_rows: list[dict[
         prep = prepare(spec["name"], task_rows, spec["params"])
         res = cluster_bootstrap(ids, prep.stat, **bkw).to_dict()
         row = {"metric_id": spec["id"], "item": spec["item"], "task": spec["task"], "metric": spec["name"],
-               "params": spec["params"], "primary": spec["primary"], **res, "details": prep.details}
+               "params": spec["params"], "primary": spec["primary"], **res,
+               **scored_counts(prep.stat, ids), "details": prep.details}
         exact = exact_interval(spec, prep.stat, ids, res, b["ci_level"])
         if exact is not None:
             row["exact_ci"] = exact
@@ -358,19 +368,29 @@ def evaluate(m: dict[str, Any], rows: list[dict[str, Any]], cmp_rows: list[dict[
                 comps.append({"comparator": name, "status": "not provided", "comparator_point": None, "diff": None})
                 continue
             crs = restrict(spec, crs)
+            cids = [r["patient_id"] for r in crs]
             cprep = prepare(spec["name"], crs, spec["params"])
-            cres = cluster_bootstrap([r["patient_id"] for r in crs], cprep.stat, **bkw).to_dict()
-            diff = paired_cluster_bootstrap(ids, prep.stat, [r["patient_id"] for r in crs], cprep.stat, **bkw)
+            cres = cluster_bootstrap(cids, cprep.stat, **bkw).to_dict()
+            diff = paired_cluster_bootstrap(ids, prep.stat, cids, cprep.stat, **bkw)
             d = diff.to_dict()
-            comps.append({
+            comp = {
                 "comparator": name,
                 "status": "computed",
                 "comparator_point": cres["point"],
                 "comparator_ci_low": cres["ci_low"],
                 "comparator_ci_high": cres["ci_high"],
                 "comparator_reason": cres["reason"],
+                "comparator_unstable": cres["unstable"],
+                "comparator_n_degenerate": cres["n_degenerate"],
+                "comparator_n_patients": cres["n_patients"],
+                "comparator_n_decision_points": cres["n_decision_points"],
+                **{f"comparator_{k}": v for k, v in scored_counts(cprep.stat, cids).items()},
                 "diff": {k: d[k] for k in ("point", "ci_low", "ci_high", "n_degenerate", "unstable", "reason")},
-            })
+            }
+            cexact = exact_interval(spec, cprep.stat, cids, cres, b["ci_level"])
+            if cexact is not None:
+                comp["comparator_exact_ci"] = cexact
+            comps.append(comp)
         row["comparisons"] = comps
         row["thresholds"] = [_threshold(row, t) for t in m["thresholds"] if t["metric"] == spec["id"]]
         out.append(row)

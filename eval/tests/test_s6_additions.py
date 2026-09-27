@@ -114,3 +114,41 @@ def test_exact_interval_patient_all_success_is_conservative():
     res = {"point": 2 / 3, "ci_low": 0.5, "ci_high": 0.5, "unstable": False}
     ex = exact_interval(_spec(exact_ci="patient_all_success"), stat, ids, res, 0.95)
     assert (ex["x"], ex["n"]) == (1, 2)
+
+
+def test_comparator_rows_carry_own_n_scored_n_and_exact_interval():
+    """S6-A10: every comparator reports its own n, the scored (answered) subset, and a Clopper-Pearson interval
+    when its bootstrap CI has zero width; the system row reports its scored subset next to the population."""
+    from eval.report import table_rows
+    from eval.runner import evaluate
+
+    # 4 patients x 2 decision points; the system abstains on p4 entirely and on p1/T2.
+    pts = [(f"p{i}", dp) for i in range(1, 5) for dp in ("T1", "T2")]
+    gold = ["a"]
+    sys_rows = [{"patient_id": p, "decision_point_id": dp, "task": "t", "ordered": gold,
+                 "suggested": None if p == "p4" or (p, dp) == ("p1", "T2") else ["a"]} for p, dp in pts]
+    always = [{**r, "comparator": "always_answer", "suggested": ["a"]} for r in sys_rows]
+    paired = [{**r, "comparator": "on_answered"} for r in sys_rows]
+    m = {"dataset": {"data_class": "synthetic"}, "thresholds": [],
+         "bootstrap": {"n_boot": 200, "seed": 1, "ci_level": 0.95, "method": "percentile"},
+         "metrics": [{"id": "sel", "item": "Abstention", "task": "t", "name": "selective_hit_at_k",
+                      "params": {"k": 3, "exact_ci": "patient_all_success"}, "primary": True}],
+         "comparators": [{"name": "always_answer", "tasks": ["t"]}, {"name": "on_answered", "tasks": ["t"]}]}
+    (row,) = evaluate(m, sys_rows, always + paired)
+    assert (row["n_patients"], row["n_decision_points"]) == (4, 8)
+    assert (row["n_patients_scored"], row["n_decision_points_scored"]) == (3, 5)
+    assert row["exact_ci"]["n"] == 3
+    by = {c["comparator"]: c for c in row["comparisons"]}
+    aa, oa = by["always_answer"], by["on_answered"]
+    assert (aa["comparator_n_patients_scored"], aa["comparator_n_decision_points_scored"]) == (4, 8)
+    assert (oa["comparator_n_patients_scored"], oa["comparator_n_decision_points_scored"]) == (3, 5)
+    for c in (aa, oa):
+        assert (c["comparator_n_patients"], c["comparator_n_decision_points"]) == (4, 8)
+        assert c["comparator_ci_low"] == c["comparator_ci_high"] == 1.0
+        ex = c["comparator_exact_ci"]
+        assert ex["method"] == "clopper_pearson" and ex["x"] == ex["n"] and ex["ci_low"] < 1.0
+    assert aa["comparator_exact_ci"]["n"] == 4 and oa["comparator_exact_ci"]["n"] == 3
+    cells = [" | ".join(r) for r in table_rows({"rows": [row]})]
+    assert "4 / 8 (scored 3 / 5)" in cells[0]
+    assert "always_answer" in cells[0] and "exact (Clopper-Pearson, patient-level 4/4)" in cells[0]
+    assert "n 4 / 8 (scored 3 / 5)" in cells[1]

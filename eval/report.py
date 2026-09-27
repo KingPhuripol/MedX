@@ -54,6 +54,15 @@ def _thresholds(r: dict[str, Any]) -> str:
     return "; ".join(f"{t['op']} {t['value']} on {t['rule']}: {t['status']}" for t in r["thresholds"])
 
 
+def _n_cell(r: dict[str, Any], prefix: str) -> str:
+    """patients / decision points; plus the scored (answered) subset when it differs from the population."""
+    n = f"{r[prefix + 'n_patients']} / {r[prefix + 'n_decision_points']}"
+    sp, sd = r.get(prefix + "n_patients_scored"), r.get(prefix + "n_decision_points_scored")
+    if sp is not None and (sp, sd) != (r[prefix + "n_patients"], r[prefix + "n_decision_points"]):
+        n += f" (scored {sp} / {sd})"
+    return n
+
+
 def table_rows(results: dict[str, Any]) -> list[list[str]]:
     out = []
     for r in results["rows"]:
@@ -62,7 +71,7 @@ def table_rows(results: dict[str, Any]) -> list[list[str]]:
         if ex:
             ci += f"; exact (Clopper-Pearson, patient-level {ex['x']}/{ex['n']}) {_ci(ex['ci_low'], ex['ci_high'], False)}"
         base = [r["item"], _metric_label(r), _point(r), ci]
-        n = f"{r['n_patients']} / {r['n_decision_points']}"
+        n = _n_cell(r, "")
         th = _thresholds(r)
         comps = r["comparisons"] or [None]
         for i, c in enumerate(comps):
@@ -74,6 +83,13 @@ def table_rows(results: dict[str, Any]) -> list[list[str]]:
                 cp = _num(c["comparator_point"]) if c["comparator_point"] is not None else f"null ({c['comparator_reason']})"
                 d = c["diff"]
                 cmp_cell = f"{c['comparator']}: {cp}"
+                if "comparator_n_patients" in c:  # s6: comparator CI, exact interval and its own n
+                    cmp_cell += f" {_ci(c['comparator_ci_low'], c['comparator_ci_high'], c['comparator_unstable'])}"
+                    cex = c.get("comparator_exact_ci")
+                    if cex:
+                        cmp_cell += (f"; exact (Clopper-Pearson, patient-level {cex['x']}/{cex['n']}) "
+                                     f"{_ci(cex['ci_low'], cex['ci_high'], False)}")
+                    cmp_cell += f"; n {_n_cell(c, 'comparator_')}"
                 diff_cell = (f"{_num(d['point'])} {_ci(d['ci_low'], d['ci_high'], d['unstable'])}"
                              if d["point"] is not None else f"null ({d['reason']})")
             first = base if i == 0 else ["", "", "", ""]
