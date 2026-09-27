@@ -19,6 +19,7 @@ Scored-record fields (one JSONL row per decision point; gold label + system outp
 | topk_accuracy | y_true | ranked |
 | per_issue_type_pr | population, gold | flagged |
 | coverage, selective_accuracy (abstention-aware) | y_true | y_pred (null or absent = abstain) |
+| selective_hit_at_k (abstention-aware, s6) | ordered | suggested (null or absent = abstain) |
 
 NaN / +-inf anywhere in a row or in params raises ``NonFiniteValueError`` (s8r); NaN is never abstain.
 Rows imputed by the runner for a listed-but-missing patient (``imputed_missing: true``, ``y_pred: null``)
@@ -150,6 +151,18 @@ def _hit_at_k(rows, params):
     s, o = pred(rows, "suggested", "hit_at_k"), gold(rows, "ordered", "hit_at_k")
     hits = np.array([M._hit(a, b, k) for a, b in zip(s, o)], float)
     return Prepared(RatioStat(hits, _ones(len(rows)), "no decision points"), {"k": k})
+
+
+def _selective_hit_at_k(rows, params):
+    k = int(params["k"])
+    for r in rows:
+        if r.get("imputed_missing") and r.get("suggested") is not None:
+            raise ValueError(f"selective_hit_at_k: {_where(r)} is imputed as missing but has a prediction")
+    ans = np.array([r.get("suggested") is not None for r in rows], float)
+    gold([r for r, a in zip(rows, ans) if a], "ordered", "selective_hit_at_k")
+    hits = np.array([bool(a) and M._hit(r["suggested"], r["ordered"], k) for r, a in zip(rows, ans)], float)
+    return Prepared(RatioStat(hits, ans, "coverage is 0; selective hit@k is undefined"),
+                    {"k": k, "abstain": "suggested null or absent"})
 
 
 def _set_prf(rows, params):
@@ -331,13 +344,20 @@ REGISTRY: dict[str, Callable[[Sequence[Row], Mapping[str, Any]], Prepared]] = {
     k: _finite_guard(k, v) for k, v in _ADAPTERS.items()
 }
 
-ABSTENTION_AWARE = frozenset({"coverage", "selective_accuracy"})
+# Additive metrics from later slices. Kept out of ``REGISTRY`` (the frozen s8 set of 20) so the s8 tests
+# stay unchanged; ``METRICS`` is what manifests and ``prepare`` resolve against. s6 tests cover these.
+EXTENSIONS: dict[str, Callable[[Sequence[Row], Mapping[str, Any]], Prepared]] = {
+    "selective_hit_at_k": _finite_guard("selective_hit_at_k", _selective_hit_at_k),  # s6
+}
+METRICS = {**REGISTRY, **EXTENSIONS}
+
+ABSTENTION_AWARE = frozenset({"coverage", "selective_accuracy", "selective_hit_at_k"})
 
 
 def prepare(name: str, rows: Sequence[Row], params: Mapping[str, Any]) -> Prepared:
-    if name not in REGISTRY:
+    if name not in METRICS:
         raise ValueError(f"unknown metric {name!r}")
-    return REGISTRY[name](rows, params or {})
+    return METRICS[name](rows, params or {})
 
 
 def population_for(name: str, params: Mapping[str, Any]) -> tuple[str | None, set[str]]:

@@ -57,7 +57,11 @@ def _thresholds(r: dict[str, Any]) -> str:
 def table_rows(results: dict[str, Any]) -> list[list[str]]:
     out = []
     for r in results["rows"]:
-        base = [r["item"], _metric_label(r), _point(r), _ci(r["ci_low"], r["ci_high"], r["unstable"])]
+        ci = _ci(r["ci_low"], r["ci_high"], r["unstable"])
+        ex = r.get("exact_ci")  # s6: exact patient-level interval next to a zero-width / unstable bootstrap CI
+        if ex:
+            ci += f"; exact (Clopper-Pearson, patient-level {ex['x']}/{ex['n']}) {_ci(ex['ci_low'], ex['ci_high'], False)}"
+        base = [r["item"], _metric_label(r), _point(r), ci]
         n = f"{r['n_patients']} / {r['n_decision_points']}"
         th = _thresholds(r)
         comps = r["comparisons"] or [None]

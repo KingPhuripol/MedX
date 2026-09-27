@@ -21,7 +21,7 @@ from typing import Any
 import numpy as np
 
 from . import __version__
-from .bootstrap import cluster_bootstrap, paired_cluster_bootstrap
+from .bootstrap import RatioStat, cluster_bootstrap, paired_cluster_bootstrap
 from .jsonschema_lite import validate
 from .errors import LedgerIntegrityError, RunRefused
 from .jsonio import loads_strict
@@ -36,7 +36,7 @@ from .manifest import (
     sha256_bytes,
     utc_now,
 )
-from .metrics import MissingPredictionError
+from .metrics import MissingPredictionError, Undefined, exact_binomial_ci
 from .registry import ABSTENTION_AWARE, population_for, prepare
 from .report import labels_for, render_html, render_md
 
@@ -264,6 +264,43 @@ def _threshold(row: dict[str, Any], th: dict[str, Any]) -> dict[str, Any]:
     return {"op": th["op"], "value": th["value"], "rule": th["rule"], "compared_value": v, "status": status}
 
 
+EXACT_CI_RULE = "patient_all_success"
+
+
+def exact_interval(spec: dict[str, Any], stat: Any, ids: Sequence[str], res: dict[str, Any],
+                   ci_level: float) -> dict[str, Any] | None:
+    """Clopper-Pearson interval next to a zero-width or unstable bootstrap CI (slice s6, opt-in).
+
+    Declared per metric with ``params.exact_ci = "patient_all_success"``: computed at patient level, where a
+    patient succeeds only if every eligible decision point (den > 0) succeeds. Conservative; labelled so.
+    """
+    if spec["params"].get("exact_ci") != EXACT_CI_RULE or not isinstance(stat, RatioStat) or res["point"] is None:
+        return None
+    zero_width = res["ci_low"] is not None and res["ci_low"] == res["ci_high"]
+    if not (zero_width or res["unstable"]):
+        return None
+    num: dict[str, float] = {}
+    den: dict[str, float] = {}
+    for pid, a, b in zip(ids, stat.num, stat.den):
+        if not (0 <= a <= b <= 1):
+            raise ValueError(f"{spec['id']}: exact_ci needs binary per-decision-point outcomes")
+        num[pid] = num.get(pid, 0.0) + float(a)
+        den[pid] = den.get(pid, 0.0) + float(b)
+    eligible = [p for p in den if den[p] > 0]
+    x = sum(1 for p in eligible if num[p] == den[p])
+    ci = exact_binomial_ci(x, len(eligible), ci_level)
+    return {
+        "method": "clopper_pearson",
+        "unit": "patient (success only if all eligible decision points succeed; conservative)",
+        "trigger": "bootstrap CI has zero width" if zero_width else "bootstrap CI unstable (>1% degenerate)",
+        "x": x,
+        "n": len(eligible),
+        "ci_level": ci_level,
+        "ci_low": None if isinstance(ci, Undefined) else ci[0],
+        "ci_high": None if isinstance(ci, Undefined) else ci[1],
+    }
+
+
 def evaluate(m: dict[str, Any], rows: list[dict[str, Any]], cmp_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     tasks = {x["task"] for x in m["metrics"]}
     sys_by_task = _by_task(rows, "predictions")
@@ -309,6 +346,9 @@ def evaluate(m: dict[str, Any], rows: list[dict[str, Any]], cmp_rows: list[dict[
         res = cluster_bootstrap(ids, prep.stat, **bkw).to_dict()
         row = {"metric_id": spec["id"], "item": spec["item"], "task": spec["task"], "metric": spec["name"],
                "params": spec["params"], "primary": spec["primary"], **res, "details": prep.details}
+        exact = exact_interval(spec, prep.stat, ids, res, b["ci_level"])
+        if exact is not None:
+            row["exact_ci"] = exact
         comps = []
         for name, ctasks in declared.items():
             if spec["task"] not in ctasks:
