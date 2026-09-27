@@ -16,7 +16,7 @@
   "code": {
     "revision": "UNPINNED",
     "config_path": "research/configs/stage3_lora.yaml",
-    "config_sha256": "99362431f550a2892111ef663f0dfd9d25569319c567fa9ba49a800acc0e6903"
+    "config_sha256": "ca8513a89beefb72522219fb06a6c0607d3cb9c4fd2fe00efbf41ac14a15a2e5"
   },
   "model": {
     "candidate": "tiny-synthetic (llama config, random init)",

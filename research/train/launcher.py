@@ -5,10 +5,13 @@ Order of operations (each step exits non-zero before the next one on failure):
 2. check the manifest references this config (path + sha256 already verified) and stage;
 3. enforce the tier: --dry-run needs a Tier-0 manifest, runs on CPU only and builds a tiny model
    (<= 2M parameters) from config; a Tier-0 manifest never runs on CUDA;
-4. only then build the model, train, checkpoint, and write run metadata.
+4. only then create a unique run directory, write `run.json` with status `running`, build the model,
+   train, checkpoint, and finalize `run.json`. Any exception after the run directory exists ends as
+   status `failed` (error type, message, traceback tail, steps completed; exit 3); Ctrl-C ends as
+   `stopped` (exit 130). All `run.json` writes are atomic.
 
 Slice s9 implements the dry run only. Tier >= 1 execution is out of scope; Tier 3/4 additionally
-needs a dated human approval in docs/DECISIONS.md (checked by the validator).
+needs an explicit, scope-bound approval record in docs/DECISIONS.md (checked by the validator).
 """
 
 from __future__ import annotations
@@ -19,7 +22,9 @@ import os
 import platform
 import subprocess
 import sys
+import tempfile
 import time
+import traceback
 from pathlib import Path
 from typing import Any
 
@@ -85,7 +90,18 @@ def unique_run_dir(output_root: Path, experiment_id: str) -> Path:
 
 
 def _write_json(path: Path, obj: dict[str, Any]) -> None:
-    path.write_text(json.dumps(obj, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    """Atomic write: temp file in the same directory, then os.replace (a crash never leaves half a file)."""
+    path = Path(path)
+    fd, tmp = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(json.dumps(obj, indent=2, ensure_ascii=False, default=str) + "\n")
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.replace(tmp, path)
+    except BaseException:
+        Path(tmp).unlink(missing_ok=True)
+        raise
 
 
 def preflight(config_path: Path, manifest_path: Path, dry_run: bool) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -112,14 +128,12 @@ def preflight(config_path: Path, manifest_path: Path, dry_run: bool) -> tuple[di
     return manifest, cfg
 
 
-def run_dry(cfg: dict[str, Any], manifest: dict[str, Any], config_path: Path, run_dir: Path, argv: list[str]) -> int:
-    import torch
-
+def run_dry(cfg: dict[str, Any], manifest: dict[str, Any], config_path: Path, run_dir: Path, meta: dict[str, Any]) -> int:
+    """Tier-0 dry run. Updates `meta` in place (so the caller can record a failure with the progress so far)."""
     from research.manifest_validation import sha256_file
     from research.train import models
     from research.train.data import Collator, SyntheticCaseDataset
-    from research.train.trainer import (CheckpointError, NonFiniteLossError, make_optimizer, policy_from_config,
-                                        save_checkpoint, train_steps, trainable_named)
+    from research.train.trainer import make_optimizer, policy_from_config, save_checkpoint, train_steps, trainable_named
 
     device = select_device(manifest["run_tier"], cfg.get("device", "cpu"))
     model = models.build_model(cfg, dry_run=True).to(device)
@@ -134,18 +148,17 @@ def run_dry(cfg: dict[str, Any], manifest: dict[str, Any], config_path: Path, ru
     collator = Collator(policy_from_config(cfg), tr["seq_len"])
     optimizer = make_optimizer(model, tr["lr"])
     config_sha = sha256_file(config_path)
-    meta: dict[str, Any] = {
-        "experiment_id": manifest["experiment_id"], "run_tier": 0, "stage": cfg["stage"], "data_class": dataset.data_class,
-        "command": [sys.executable, "-m", "research.train", *argv], "config_path": str(config_path),
-        "config_sha256": config_sha, "seed": cfg["seed"], "environment": environment(),
+    meta.update({
+        "stage": cfg["stage"], "data_class": dataset.data_class, "config_sha256": config_sha, "seed": cfg["seed"],
         "parameters_total": n_params, "parameters_trainable": sum(p.numel() for _, p in trainable_named(model)),
         "max_steps": tr["max_steps"], "micro_batch": tr["micro_batch"], "seq_len": tr["seq_len"],
-        "losses": [], "checkpoints": [], "status": "running",
-        "note": "Synthetic Tier-0 dry run. Not a measurement of any candidate model. Research prototype, not for clinical use.",
-    }
+        "losses": [], "checkpoints": [],
+    })
+    meta["environment"] = environment()
     if _git("status", "--porcelain").strip():
         (run_dir / "code.diff").write_text(_git("diff", "HEAD"), encoding="utf-8")
         meta["code_dirty"] = True
+    _write_json(run_dir / "run.json", meta)
     ckpt_root = run_dir / "checkpoints"
     step, rc = 0, 0
     try:
@@ -153,26 +166,36 @@ def run_dry(cfg: dict[str, Any], manifest: dict[str, Any], config_path: Path, ru
             meta["losses"] += train_steps(model, optimizer, dataset, collator, seed=cfg["seed"], start_step=step,
                                           end_step=step + 1, micro_batch=tr["micro_batch"])
             step += 1
+            meta["steps_completed"] = step
             if step % tr["ckpt_every"] == 0 or step == tr["max_steps"]:
                 path = save_checkpoint(model, optimizer, step, ckpt_root / f"step-{step:06d}", config_sha256=config_sha)
                 meta["checkpoints"].append({"step": step, "path": str(path),
                                             "sha256": json.loads((path / "meta.json").read_text())["sha256"]})
         meta["status"] = "completed"
-    except NonFiniteLossError as exc:
-        meta.update(status="failed", error=str(exc))
-        rc = EXIT_FAILED
-    except CheckpointError as exc:
-        meta.update(status="failed", error=str(exc))
-        rc = EXIT_FAILED
     except KeyboardInterrupt:
         path = save_checkpoint(model, optimizer, step, ckpt_root / f"interrupted-step-{step:06d}", config_sha256=config_sha)
         meta["checkpoints"].append({"step": step, "path": str(path), "interrupted": True})
         meta["status"] = "stopped"
         rc = EXIT_INTERRUPTED
+    finally:
+        meta["substitution_events"] = dict(collator.events)
     meta["steps_completed"] = step
     _write_json(run_dir / "run.json", meta)
     print(json.dumps({"status": meta["status"], "run_dir": str(run_dir), "losses": meta["losses"]}))
     return rc
+
+
+def _record_failure(run_dir: Path, meta: dict[str, Any], exc: BaseException, status: str) -> None:
+    tb = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+    print(tb, file=sys.stderr, end="")
+    meta.update(status=status, error_type=type(exc).__name__, error=str(exc) or repr(exc),
+                traceback_tail=tb.rstrip().splitlines()[-20:])
+    meta.setdefault("steps_completed", 0)
+    try:
+        _write_json(run_dir / "run.json", meta)
+    except Exception as write_exc:  # the original failure is still reported on stderr and by the exit code
+        print(f"could not write {run_dir / 'run.json'}: {write_exc}", file=sys.stderr)
+    print(json.dumps({"status": status, "run_dir": str(run_dir), "error_type": meta["error_type"]}))
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -199,7 +222,23 @@ def main(argv: list[str] | None = None) -> int:
         select_device(manifest["run_tier"], cfg.get("device", "cpu"))  # refuse before any output or model
         _offline_cpu_env()
         run_dir = unique_run_dir(args.output_root, manifest["experiment_id"])
-        return run_dry(cfg, manifest, args.config, run_dir, argv)
     except LaunchRefused as exc:
         print(f"REFUSED: {exc}", file=sys.stderr)
         return EXIT_INVALID
+    # From here on the run directory exists: every outcome leaves a run.json (never a silent failed run).
+    meta: dict[str, Any] = {
+        "experiment_id": manifest["experiment_id"], "run_tier": manifest["run_tier"], "status": "running",
+        "started_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "command": [sys.executable, "-m", "research.train", *argv], "config_path": str(args.config),
+        "steps_completed": 0,
+        "note": "Synthetic Tier-0 dry run. Not a measurement of any candidate model. Research prototype, not for clinical use.",
+    }
+    try:
+        _write_json(run_dir / "run.json", meta)
+        return run_dry(cfg, manifest, args.config, run_dir, meta)
+    except KeyboardInterrupt as exc:
+        _record_failure(run_dir, meta, exc, "stopped")
+        return EXIT_INTERRUPTED
+    except Exception as exc:
+        _record_failure(run_dir, meta, exc, "failed")
+        return EXIT_FAILED

@@ -27,8 +27,16 @@ real_run:
     ranks: [8, 16, 64]
     alpha_over_r: 2
     dropout: 0.05
-    target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
-    scope: language model only (2D vision tower and Gated DeltaNet projections are not adapted)
+    # One anchored regex per candidate (PEFT full-match mode). Bare leaf names would also wrap the
+    # vision tower (Gemma3 SigLIP q/k/v_proj, Qwen2.5-VL visual mlp gate/up/down_proj); these match
+    # only model.language_model.layers.N.{self_attn.{q,k,v,o}_proj, mlp.{gate,up,down}_proj}.
+    # Architectures: medgemma-27b-it Gemma3ForConditionalGeneration, lingshu-32b
+    # Qwen2_5_VLForConditionalGeneration, qwen3.8-27b Qwen3_5ForConditionalGeneration.
+    target_modules:
+      medgemma-27b-it: '^model\.language_model\.layers\.\d+\.(self_attn\.(q|k|v|o)_proj|mlp\.(gate|up|down)_proj)$'
+      lingshu-32b: '^model\.language_model\.layers\.\d+\.(self_attn\.(q|k|v|o)_proj|mlp\.(gate|up|down)_proj)$'
+      qwen3.8-27b: '^model\.language_model\.layers\.\d+\.(self_attn\.(q|k|v|o)_proj|mlp\.(gate|up|down)_proj)$'
+    scope: language model only (2D vision tower, connector/projector and Gated DeltaNet linear_attn projections are not adapted)
   encoder3d: {name: CT-CLIP CTViT (frozen), volume_shape_hwd: [480, 480, 240], patch_hw: 20, patch_d: 10, out_dim: 512}
   connector: {d_model: 1024, n_query: 256, n_layers: 2, n_heads: 8}
   external_api: false
@@ -46,5 +54,9 @@ dry_run:
   encoder3d: {out_dim: 16, patch: [4, 8, 8]}
   volume_shape: [8, 32, 32]
   connector: {d_model: 16, n_query: 4, n_layers: 1, n_heads: 2}
-  lora: {r: 1, alpha: 2, target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]}
+  lora:
+    r: 1
+    alpha: 2
+    # Applied to the tiny backbone only (LlamaForCausalLM paths); never the 3D encoder or connector.
+    target_modules: '^model\.layers\.\d+\.(self_attn\.(q|k|v|o)_proj|mlp\.(gate|up|down)_proj)$'
   dataset: {n: 64, prompt_len: 4, report_len: 6, target_len: 6, modalities: [ct, cxr]}

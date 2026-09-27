@@ -4,11 +4,18 @@ Proposal 3.3: stage 3 randomly drops modalities and creates samples in which an 
 the text report of the same image, *only* for tasks whose label does not come from that report.
 Proposal 3.4: a report is never an input when it is the label source. The rule is enforced here, in
 the collator (`decide_modalities` + `ReportLeakageError`), not by convention.
+
+Slice s9r: references are compared by canonical (dataset, study) identity, not by string, so
+`MIMIC-CXR/s50414267` and `mimic-cxr:files/p10/p10000032/s50414267.txt` are the same report. If either
+reference cannot be canonicalized, substitution fails closed (treated as forbidden) and is counted.
 """
 
 from __future__ import annotations
 
 import random
+import re
+import unicodedata
+from collections import Counter
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -22,18 +29,125 @@ class ReportLeakageError(RuntimeError):
     """A report that is the sample's label source was about to be used as model input."""
 
 
+class SourceIdError(ValueError):
+    """A report or label-source reference cannot be parsed or names an unknown dataset."""
+
+
+STRUCTURED = "structured"
+REPORT_DATASETS = {"mimic-cxr", "ct-rate", "synthetic"}
+# Keys are lower-case with '-', '_', '.' and spaces removed. MIMIC-CXR-JPG reuses the MIMIC-CXR reports.
+DATASET_ALIASES = {
+    "mimiccxr": "mimic-cxr", "mimiccxrjpg": "mimic-cxr",
+    "ctrate": "ct-rate",
+    "synthetic": "synthetic",
+    "structured": STRUCTURED,
+}
+_CT_RATE_STUDY = re.compile(r"((?:train|valid)_\d+_[a-z]+)(?:_\d+)?")  # split_patient_scan[_reconstruction]
+
+
+def _study_id(dataset: str, stem: str) -> str | None:
+    """Dataset-specific study identity; None if the stem is not a valid id for that dataset."""
+    if dataset == "mimic-cxr":
+        m = re.fullmatch(r"s?(\d+)", stem)
+        return m.group(1) if m else None
+    if dataset == "ct-rate":  # every reconstruction of a scan shares the scan's report
+        m = _CT_RATE_STUDY.fullmatch(stem)
+        return m.group(1) if m else None
+    if dataset == "synthetic":
+        if not re.fullmatch(r"[a-z0-9][a-z0-9_.-]*", stem):
+            return None
+        m = re.fullmatch(r"s?(\d+)", stem)
+        return m.group(1) if m else stem
+    return stem or None  # structured
+
+
+_SUFFIXES = (".nii.gz", ".nii", ".txt")
+
+
+def _dataset_alias(name: str) -> str | None:
+    return DATASET_ALIASES.get(re.sub(r"[-_.\s]", "", name))
+
+
+def canonical_source_id(ref: Any) -> tuple[str, str]:
+    """(dataset, study_id) of a report / label-source reference. Raises SourceIdError if unparseable.
+
+    Order: NFKC + casefold, trim, drop `file://`, `\\` -> `/`, collapse `//`, dataset from a `name:`
+    prefix or a path directory (alias table), directories and `.txt` stripped, study-id normalized
+    (`s50414267` == `50414267`). Two different datasets named in one reference is unparseable.
+    """
+    if not isinstance(ref, str):
+        raise SourceIdError(f"reference {ref!r} is not a string")
+    text = unicodedata.normalize("NFKC", ref).casefold().strip()
+    if text.startswith("file://"):
+        text = text[len("file://"):]
+    text = re.sub(r"/{2,}", "/", text.replace("\\", "/"))
+    datasets: set[str] = set()
+    if (m := re.match(r"^([^/:]{2,}):(.*)$", text)) is not None:  # `dataset:rest` (a 1-letter prefix is a drive)
+        prefix, text = m.group(1), m.group(2)
+        if (alias := _dataset_alias(prefix)) is None:
+            raise SourceIdError(f"unknown dataset {prefix!r} in {ref!r}")
+        datasets.add(alias)
+        if alias == STRUCTURED:
+            return STRUCTURED, _require(_study_id(STRUCTURED, text.strip("/").strip()), ref)
+    parts = [p for p in text.split("/") if p]
+    if not parts:
+        raise SourceIdError(f"no study id in {ref!r}")
+    datasets |= {a for p in parts[:-1] if (a := _dataset_alias(p)) is not None}
+    if len(datasets) != 1:
+        raise SourceIdError(f"reference {ref!r} names {'no known dataset' if not datasets else sorted(datasets)}")
+    dataset = datasets.pop()
+    if dataset == STRUCTURED:
+        raise SourceIdError(f"structured source must be written `structured:<field>`: {ref!r}")
+    stem = parts[-1]
+    for suffix in _SUFFIXES:
+        if stem.endswith(suffix):
+            stem = stem[: -len(suffix)]
+            break
+    return dataset, _require(_study_id(dataset, stem), ref)
+
+
+def _require(study: str | None, ref: Any) -> str:
+    if not study:
+        raise SourceIdError(f"cannot parse a study id from {ref!r}")
+    return study
+
+
+ALLOWED, SAME_SOURCE, UNVERIFIABLE = "allowed", "same_source", "unverifiable"
+
+
+def report_provenance(report_ref: Any, label_source: Any) -> str:
+    """May this report replace its image as input? ALLOWED, SAME_SOURCE (it is the label) or UNVERIFIABLE.
+
+    Fail closed: an unparseable/unknown report or label reference is UNVERIFIABLE (substitution forbidden).
+    A structured, non-report label (`structured:service`) cannot be a report, so it never blocks.
+    """
+    try:
+        report = canonical_source_id(report_ref)
+        label = canonical_source_id(label_source)
+    except SourceIdError:
+        return UNVERIFIABLE
+    if report[0] not in REPORT_DATASETS:
+        return UNVERIFIABLE
+    if label[0] == STRUCTURED:
+        return ALLOWED
+    return SAME_SOURCE if report == label else ALLOWED
+
+
 @dataclass(frozen=True)
 class ModalityPolicy:
     dropout_p: dict[str, float] = field(default_factory=dict)  # per-modality image dropout probability
     report_substitution: bool = False  # replace a dropped image by its own report when provenance allows
 
 
-def decide_modalities(sample: dict[str, Any], policy: ModalityPolicy, rng: random.Random) -> dict[str, str]:
+def decide_modalities(sample: dict[str, Any], policy: ModalityPolicy, rng: random.Random,
+                      events: Counter | None = None) -> dict[str, str]:
     """Per modality: IMAGE (kept), REPORT (image replaced by its report) or DROPPED.
 
     - dropout fires with probability p[m];
     - a dropped image becomes its report only if substitution is enabled, the report exists and the
-      report is NOT the sample's label source;
+      report is NOT the sample's label source by canonical (dataset, study) identity;
+    - if either reference cannot be canonicalized, substitution fails closed (counted in
+      `events["fail_closed"]`); a blocked label-source report is counted in `events["blocked_label_source"]`;
     - a required modality is never left with neither image nor report: if substitution is not
       allowed, the dropout is vetoed and the image is kept.
     """
@@ -44,10 +158,12 @@ def decide_modalities(sample: dict[str, Any], policy: ModalityPolicy, rng: rando
             decisions[modality] = IMAGE
             continue
         report_ref = info.get("report_ref")
-        can_substitute = (
-            policy.report_substitution and report_ref is not None and info.get("report_ids") is not None
-            and sample["label_source"] != report_ref
-        )
+        can_substitute = False
+        if policy.report_substitution and report_ref is not None and info.get("report_ids") is not None:
+            verdict = report_provenance(report_ref, sample.get("label_source"))
+            can_substitute = verdict == ALLOWED
+            if events is not None and not can_substitute:
+                events["fail_closed" if verdict == UNVERIFIABLE else "blocked_label_source"] += 1
         if can_substitute:
             decisions[modality] = REPORT
         elif modality in sample["required_modalities"]:
@@ -78,7 +194,8 @@ class SyntheticCaseDataset:
         g = torch.Generator().manual_seed(self.seed * 1_000_003 + i)
         tok = lambda k: torch.randint(3, self.vocab_size, (k,), generator=g).tolist()  # noqa: E731
         images = {
-            m: {"ref": f"{m}-{i:05d}", "report_ref": f"{m}-{i:05d}-report", "report_ids": tok(self.report_len)}
+            m: {"ref": f"synthetic:{m}-{i:05d}", "report_ref": f"synthetic:{m}-{i:05d}-report",
+                "report_ids": tok(self.report_len)}
             for m in self.modalities
         }
         first = self.modalities[0]
@@ -101,19 +218,22 @@ class Collator:
 
     def __init__(self, policy: ModalityPolicy, seq_len: int, pad_id: int = 0, volume_modality: str = "ct"):
         self.policy, self.seq_len, self.pad_id, self.volume_modality = policy, seq_len, pad_id, volume_modality
+        self.events: Counter = Counter()  # fail_closed / blocked_label_source substitution events
 
     def __call__(self, samples: list[dict[str, Any]], rng: random.Random) -> dict[str, Any]:
         ids, labels, masks, image_mask, decisions = [], [], [], [], []
         for s in samples:
             if s.get("data_class") != DATA_CLASS:
                 raise ValueError("the dry-run collator accepts only synthetic samples")
-            d = decide_modalities(s, self.policy, rng)
+            d = decide_modalities(s, self.policy, rng, self.events)
             context = list(s["prompt_ids"])
             for modality, choice in d.items():
                 if choice == REPORT:
                     info = s["images"][modality]
-                    if info["report_ref"] == s["label_source"]:  # defence in depth: never feed the label
-                        raise ReportLeakageError(f"{s['sample_id']}: {info['report_ref']} is the label source")
+                    verdict = report_provenance(info.get("report_ref"), s.get("label_source"))
+                    if verdict != ALLOWED:  # defence in depth: never feed the label (canonical identity, fail closed)
+                        raise ReportLeakageError(f"{s['sample_id']}: report {info.get('report_ref')!r} vs label "
+                                                 f"{s.get('label_source')!r}: {verdict}")
                     context += info["report_ids"]
             seq = (context + list(s["target_ids"]))[: self.seq_len]
             lab = ([-100] * len(context) + list(s["target_ids"]))[: self.seq_len]
