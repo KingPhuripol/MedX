@@ -12,7 +12,7 @@ API_PORT ?= 8000
 WEB_PORT ?= 3000
 export API_PORT WEB_PORT
 
-.PHONY: install test dev e2e test-pg clean data audit eval-voice research-dry-run triage-eval eval-e1-dev eval-e1-test
+.PHONY: install test dev e2e test-pg clean data audit eval-voice research-dry-run triage-eval eval-e1-dev eval-e1-test eval-i2-dev eval-i2-test
 
 SEED ?= 20260926
 OUT ?= data/synthetic/v1
@@ -89,6 +89,15 @@ eval-e1-dev: $(VENV)/.installed
 ## Test split: refuses (exit 2, nothing written) unless all 4 e1 manifests are frozen; run once, then commit.
 eval-e1-test: $(VENV)/.installed
 	$(PY) -m eval.adapters run --split test
+
+## i2 Case Graph vs single prompt (PROPOSAL Table 3.2 row "Case Graph"; synthetic, mock only).
+## Unfrozen dev -> eval/results/i2/unfrozen/ (scratch ledger); frozen runs record in eval/ledger/.
+eval-i2-dev: $(VENV)/.installed
+	$(PY) -m eval_i2 run --split dev
+
+## Test split: refuses (exit 2, nothing written) unless i2-cg-vs-sp-test-v1 is frozen; run once, then commit.
+eval-i2-test: $(VENV)/.installed
+	$(PY) -m eval_i2 run --split test
 
 clean:
 	rm -rf $(VENV) web/node_modules web/.next backend/dev.db

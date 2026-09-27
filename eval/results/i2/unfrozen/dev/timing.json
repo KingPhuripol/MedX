@@ -1,0 +1,337 @@
+{
+ "case_graph": {
+  "median_ms": 4.83,
+  "n": 80,
+  "p95_ms": 5.685
+ },
+ "label": "System Evaluation on synthetic data \u2014 not clinical performance",
+ "note": "in-process wall time per DP, arms alternated per DP; orchestration overhead with a mock provider, not model latency",
+ "per_dp_ms": {
+  "SYNE-0007/T1": {
+   "case_graph": 9.362,
+   "single_prompt": 1.104
+  },
+  "SYNE-0007/T2": {
+   "case_graph": 5.062,
+   "single_prompt": 1.139
+  },
+  "SYNE-0011/T1": {
+   "case_graph": 5.5,
+   "single_prompt": 1.031
+  },
+  "SYNE-0011/T2": {
+   "case_graph": 5.255,
+   "single_prompt": 1.141
+  },
+  "SYNE-0012/T1": {
+   "case_graph": 5.682,
+   "single_prompt": 1.176
+  },
+  "SYNE-0012/T2": {
+   "case_graph": 5.099,
+   "single_prompt": 1.235
+  },
+  "SYNE-0028/T1": {
+   "case_graph": 5.526,
+   "single_prompt": 0.971
+  },
+  "SYNE-0028/T2": {
+   "case_graph": 5.018,
+   "single_prompt": 1.06
+  },
+  "SYNE-0030/T1": {
+   "case_graph": 5.403,
+   "single_prompt": 1.011
+  },
+  "SYNE-0030/T2": {
+   "case_graph": 4.863,
+   "single_prompt": 1.115
+  },
+  "SYNE-0071/T1": {
+   "case_graph": 4.289,
+   "single_prompt": 0.881
+  },
+  "SYNE-0071/T2": {
+   "case_graph": 3.811,
+   "single_prompt": 0.946
+  },
+  "SYNE-0073/T1": {
+   "case_graph": 5.747,
+   "single_prompt": 1.082
+  },
+  "SYNE-0073/T2": {
+   "case_graph": 5.114,
+   "single_prompt": 1.123
+  },
+  "SYNE-0077/T1": {
+   "case_graph": 5.279,
+   "single_prompt": 0.986
+  },
+  "SYNE-0077/T2": {
+   "case_graph": 4.636,
+   "single_prompt": 1.096
+  },
+  "SYNE-0079/T1": {
+   "case_graph": 4.974,
+   "single_prompt": 0.969
+  },
+  "SYNE-0079/T2": {
+   "case_graph": 4.646,
+   "single_prompt": 1.094
+  },
+  "SYNE-0081/T1": {
+   "case_graph": 4.831,
+   "single_prompt": 0.926
+  },
+  "SYNE-0081/T2": {
+   "case_graph": 4.378,
+   "single_prompt": 1.022
+  },
+  "SYNE-0085/T1": {
+   "case_graph": 4.708,
+   "single_prompt": 0.879
+  },
+  "SYNE-0085/T2": {
+   "case_graph": 4.362,
+   "single_prompt": 0.98
+  },
+  "SYNE-0088/T1": {
+   "case_graph": 4.63,
+   "single_prompt": 0.886
+  },
+  "SYNE-0088/T2": {
+   "case_graph": 4.305,
+   "single_prompt": 1.012
+  },
+  "SYNE-0089/T1": {
+   "case_graph": 4.187,
+   "single_prompt": 0.844
+  },
+  "SYNE-0089/T2": {
+   "case_graph": 3.704,
+   "single_prompt": 0.921
+  },
+  "SYNE-0093/T1": {
+   "case_graph": 5.471,
+   "single_prompt": 1.077
+  },
+  "SYNE-0093/T2": {
+   "case_graph": 4.875,
+   "single_prompt": 1.198
+  },
+  "SYNE-0096/T1": {
+   "case_graph": 4.557,
+   "single_prompt": 0.877
+  },
+  "SYNE-0096/T2": {
+   "case_graph": 4.192,
+   "single_prompt": 0.991
+  },
+  "SYNE-0097/T1": {
+   "case_graph": 4.794,
+   "single_prompt": 0.937
+  },
+  "SYNE-0097/T2": {
+   "case_graph": 4.554,
+   "single_prompt": 1.066
+  },
+  "SYNE-0104/T1": {
+   "case_graph": 5.198,
+   "single_prompt": 1.005
+  },
+  "SYNE-0104/T2": {
+   "case_graph": 4.756,
+   "single_prompt": 1.109
+  },
+  "SYNE-0107/T1": {
+   "case_graph": 4.937,
+   "single_prompt": 0.965
+  },
+  "SYNE-0107/T2": {
+   "case_graph": 4.484,
+   "single_prompt": 1.068
+  },
+  "SYNE-0108/T1": {
+   "case_graph": 5.212,
+   "single_prompt": 1.032
+  },
+  "SYNE-0108/T2": {
+   "case_graph": 4.935,
+   "single_prompt": 1.148
+  },
+  "SYNE-0109/T1": {
+   "case_graph": 5.013,
+   "single_prompt": 1.025
+  },
+  "SYNE-0109/T2": {
+   "case_graph": 4.828,
+   "single_prompt": 1.085
+  },
+  "SYNE-0118/T1": {
+   "case_graph": 5.102,
+   "single_prompt": 1.01
+  },
+  "SYNE-0118/T2": {
+   "case_graph": 4.735,
+   "single_prompt": 1.139
+  },
+  "SYNE-0119/T1": {
+   "case_graph": 5.534,
+   "single_prompt": 1.053
+  },
+  "SYNE-0119/T2": {
+   "case_graph": 4.954,
+   "single_prompt": 1.147
+  },
+  "SYNE-0127/T1": {
+   "case_graph": 5.272,
+   "single_prompt": 1.027
+  },
+  "SYNE-0127/T2": {
+   "case_graph": 4.941,
+   "single_prompt": 1.149
+  },
+  "SYNE-0139/T1": {
+   "case_graph": 5.309,
+   "single_prompt": 1.013
+  },
+  "SYNE-0139/T2": {
+   "case_graph": 4.793,
+   "single_prompt": 1.127
+  },
+  "SYNE-0140/T1": {
+   "case_graph": 4.647,
+   "single_prompt": 0.92
+  },
+  "SYNE-0140/T2": {
+   "case_graph": 4.23,
+   "single_prompt": 1.033
+  },
+  "SYNE-0147/T1": {
+   "case_graph": 5.141,
+   "single_prompt": 0.972
+  },
+  "SYNE-0147/T2": {
+   "case_graph": 4.769,
+   "single_prompt": 1.104
+  },
+  "SYNE-0149/T1": {
+   "case_graph": 4.764,
+   "single_prompt": 0.909
+  },
+  "SYNE-0149/T2": {
+   "case_graph": 4.569,
+   "single_prompt": 1.029
+  },
+  "SYNE-0157/T1": {
+   "case_graph": 4.946,
+   "single_prompt": 0.999
+  },
+  "SYNE-0157/T2": {
+   "case_graph": 4.593,
+   "single_prompt": 1.127
+  },
+  "SYNE-0165/T1": {
+   "case_graph": 4.114,
+   "single_prompt": 0.82
+  },
+  "SYNE-0165/T2": {
+   "case_graph": 3.56,
+   "single_prompt": 0.896
+  },
+  "SYNE-0166/T1": {
+   "case_graph": 4.188,
+   "single_prompt": 0.892
+  },
+  "SYNE-0166/T2": {
+   "case_graph": 3.685,
+   "single_prompt": 0.979
+  },
+  "SYNE-0169/T1": {
+   "case_graph": 4.728,
+   "single_prompt": 0.921
+  },
+  "SYNE-0169/T2": {
+   "case_graph": 4.386,
+   "single_prompt": 1.047
+  },
+  "SYNE-0170/T1": {
+   "case_graph": 5.267,
+   "single_prompt": 1.083
+  },
+  "SYNE-0170/T2": {
+   "case_graph": 4.937,
+   "single_prompt": 1.205
+  },
+  "SYNE-0173/T1": {
+   "case_graph": 4.45,
+   "single_prompt": 0.844
+  },
+  "SYNE-0173/T2": {
+   "case_graph": 4.099,
+   "single_prompt": 0.96
+  },
+  "SYNE-0181/T1": {
+   "case_graph": 5.203,
+   "single_prompt": 1.028
+  },
+  "SYNE-0181/T2": {
+   "case_graph": 4.756,
+   "single_prompt": 1.134
+  },
+  "SYNE-0184/T1": {
+   "case_graph": 4.811,
+   "single_prompt": 0.941
+  },
+  "SYNE-0184/T2": {
+   "case_graph": 4.426,
+   "single_prompt": 1.064
+  },
+  "SYNE-0185/T1": {
+   "case_graph": 4.656,
+   "single_prompt": 0.928
+  },
+  "SYNE-0185/T2": {
+   "case_graph": 4.414,
+   "single_prompt": 1.045
+  },
+  "SYNE-0192/T1": {
+   "case_graph": 4.911,
+   "single_prompt": 1.0
+  },
+  "SYNE-0192/T2": {
+   "case_graph": 4.769,
+   "single_prompt": 1.169
+  },
+  "SYNE-0194/T1": {
+   "case_graph": 5.419,
+   "single_prompt": 1.017
+  },
+  "SYNE-0194/T2": {
+   "case_graph": 5.04,
+   "single_prompt": 1.112
+  },
+  "SYNE-0195/T1": {
+   "case_graph": 5.366,
+   "single_prompt": 1.017
+  },
+  "SYNE-0195/T2": {
+   "case_graph": 5.278,
+   "single_prompt": 1.106
+  },
+  "SYNE-0196/T1": {
+   "case_graph": 8.644,
+   "single_prompt": 1.581
+  },
+  "SYNE-0196/T2": {
+   "case_graph": 5.996,
+   "single_prompt": 1.594
+  }
+ },
+ "single_prompt": {
+  "median_ms": 1.028,
+  "n": 80,
+  "p95_ms": 1.198
+ },
+ "split": "dev"
+}
