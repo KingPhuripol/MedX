@@ -1,0 +1,207 @@
+{"decision_point_id": "SYNE-0007:T1", "patient_id": "SYNP-0006", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0007:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0006", "suggested": [], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0007:T2", "patient_id": "SYNP-0006", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0007:T2", "patient_id": "SYNP-0006", "task": "care_pathway", "y_pred": "CP-NEWS-URGENT-REVIEW", "y_true": "CP-NEWS-URGENT-REVIEW"}
+{"decision_point_id": "SYNE-0011:T1", "patient_id": "SYNP-0010", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0011:T1", "ordered": ["NI-ASK-DIARRHEA-FEATURES", "NI-LAB-BLOOD-CULTURE", "NI-LAB-LACTATE"], "patient_id": "SYNP-0010", "suggested": ["NI-OBS-REPEAT-VITALS", "NI-LAB-LACTATE", "NI-LAB-BLOOD-CULTURE", "NI-ASK-DIARRHEA-FEATURES"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0011:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0010", "suggested": ["NI-OBS-REPEAT-VITALS", "NI-LAB-LACTATE", "NI-LAB-BLOOD-CULTURE", "NI-ASK-DIARRHEA-FEATURES"], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0011:T1", "patient_id": "SYNP-0010", "task": "care_pathway", "y_pred": "CP-SEPSIS-SCREEN", "y_true": "CP-SEPSIS-SCREEN"}
+{"decision_point_id": "SYNE-0012:T1", "patient_id": "SYNP-0010", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0012:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-GLU", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0010", "suggested": [], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0011:T2", "patient_id": "SYNP-0010", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0011:T2", "ordered": ["NI-ASK-DIARRHEA-FEATURES", "NI-LAB-BLOOD-CULTURE", "NI-LAB-LACTATE"], "patient_id": "SYNP-0010", "suggested": ["NI-LAB-LACTATE", "NI-LAB-BLOOD-CULTURE", "NI-ASK-DIARRHEA-FEATURES"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0011:T2", "patient_id": "SYNP-0010", "task": "care_pathway", "y_pred": "CP-SEPSIS-SCREEN", "y_true": "CP-SEPSIS-SCREEN"}
+{"decision_point_id": "SYNE-0012:T2", "patient_id": "SYNP-0010", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0028:T1", "patient_id": "SYNP-0023", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0028:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0023", "suggested": ["NI-OBS-REPEAT-VITALS"], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0028:T2", "patient_id": "SYNP-0023", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0030:T1", "patient_id": "SYNP-0025", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0030:T1", "ordered": ["NI-OBS-REPEAT-VITALS"], "patient_id": "SYNP-0025", "suggested": ["NI-OBS-REPEAT-VITALS"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0030:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-GLU", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0025", "suggested": ["NI-OBS-REPEAT-VITALS"], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0030:T1", "patient_id": "SYNP-0025", "task": "care_pathway", "y_pred": "CP-NEWS-URGENT-REVIEW", "y_true": "CP-NEWS-URGENT-REVIEW"}
+{"decision_point_id": "SYNE-0030:T2", "patient_id": "SYNP-0025", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0030:T2", "patient_id": "SYNP-0025", "task": "care_pathway", "y_pred": "CP-NEWS-URGENT-REVIEW", "y_true": "CP-NEWS-URGENT-REVIEW"}
+{"decision_point_id": "SYNE-0071:T1", "patient_id": "SYNP-0061", "status": "abstained", "task": "care_coverage", "y_pred": null, "y_true": "abstain"}
+{"decision_point_id": "SYNE-0071:T1", "ordered": ["NI-ASK-ALLERGEN-TRIGGER", "NI-LAB-TRYPTASE"], "patient_id": "SYNP-0061", "suggested": null, "task": "care_next_info"}
+{"decision_point_id": "SYNE-0071:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-HBA1C", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0061", "suggested": null, "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0071:T1", "patient_id": "SYNP-0061", "task": "care_pathway", "y_pred": null, "y_true": "CP-ANAPHYLAXIS-EVAL"}
+{"decision_point_id": "SYNE-0071:T2", "patient_id": "SYNP-0061", "status": "abstained", "task": "care_coverage", "y_pred": null, "y_true": "abstain"}
+{"decision_point_id": "SYNE-0071:T2", "ordered": ["NI-ASK-ALLERGEN-TRIGGER", "NI-LAB-TRYPTASE"], "patient_id": "SYNP-0061", "suggested": null, "task": "care_next_info"}
+{"decision_point_id": "SYNE-0071:T2", "patient_id": "SYNP-0061", "task": "care_pathway", "y_pred": null, "y_true": "CP-ANAPHYLAXIS-EVAL"}
+{"decision_point_id": "SYNE-0073:T1", "patient_id": "SYNP-0063", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0073:T1", "ordered": ["NI-LAB-HBA1C", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0063", "suggested": [], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0073:T2", "patient_id": "SYNP-0063", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0077:T1", "patient_id": "SYNP-0066", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0077:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0066", "suggested": [], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0077:T2", "patient_id": "SYNP-0066", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0079:T1", "patient_id": "SYNP-0068", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0079:T1", "ordered": ["NI-ECG-12LEAD"], "patient_id": "SYNP-0068", "suggested": ["NI-ECG-12LEAD", "NI-LAB-TROPONIN"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0079:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-GLU", "NI-LAB-HBA1C", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0068", "suggested": ["NI-ECG-12LEAD", "NI-LAB-TROPONIN"], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0079:T1", "patient_id": "SYNP-0068", "task": "care_pathway", "y_pred": "CP-CHEST-PAIN-EVAL", "y_true": "CP-CHEST-PAIN-EVAL"}
+{"decision_point_id": "SYNE-0079:T2", "patient_id": "SYNP-0068", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0079:T2", "ordered": ["NI-ECG-12LEAD"], "patient_id": "SYNP-0068", "suggested": ["NI-ECG-12LEAD", "NI-LAB-TROPONIN"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0079:T2", "patient_id": "SYNP-0068", "task": "care_pathway", "y_pred": "CP-CHEST-PAIN-EVAL", "y_true": "CP-CHEST-PAIN-EVAL"}
+{"decision_point_id": "SYNE-0081:T1", "patient_id": "SYNP-0070", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0081:T1", "ordered": ["NI-ECG-12LEAD", "NI-LAB-TROPONIN"], "patient_id": "SYNP-0070", "suggested": ["NI-ECG-12LEAD", "NI-LAB-TROPONIN"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0081:T1", "ordered": ["NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0070", "suggested": ["NI-ECG-12LEAD", "NI-LAB-TROPONIN"], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0081:T1", "patient_id": "SYNP-0070", "task": "care_pathway", "y_pred": "CP-CHEST-PAIN-EVAL", "y_true": "CP-CHEST-PAIN-EVAL"}
+{"decision_point_id": "SYNE-0081:T2", "patient_id": "SYNP-0070", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0081:T2", "ordered": ["NI-ECG-12LEAD", "NI-LAB-TROPONIN"], "patient_id": "SYNP-0070", "suggested": ["NI-ECG-12LEAD", "NI-LAB-TROPONIN"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0081:T2", "patient_id": "SYNP-0070", "task": "care_pathway", "y_pred": "CP-CHEST-PAIN-EVAL", "y_true": "CP-CHEST-PAIN-EVAL"}
+{"decision_point_id": "SYNE-0085:T1", "patient_id": "SYNP-0074", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0085:T1", "ordered": ["NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0074", "suggested": [], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0085:T2", "patient_id": "SYNP-0074", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0088:T1", "patient_id": "SYNP-0077", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0088:T1", "ordered": ["NI-LAB-ABSCESS-CULTURE"], "patient_id": "SYNP-0077", "suggested": ["NI-LAB-ABSCESS-CULTURE"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0088:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-GLU", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0077", "suggested": ["NI-LAB-ABSCESS-CULTURE"], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0088:T1", "patient_id": "SYNP-0077", "task": "care_pathway", "y_pred": "CP-SKIN-ABSCESS-EVAL", "y_true": "CP-SKIN-ABSCESS-EVAL"}
+{"decision_point_id": "SYNE-0088:T2", "patient_id": "SYNP-0077", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0088:T2", "ordered": ["NI-LAB-ABSCESS-CULTURE"], "patient_id": "SYNP-0077", "suggested": ["NI-LAB-ABSCESS-CULTURE"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0088:T2", "patient_id": "SYNP-0077", "task": "care_pathway", "y_pred": "CP-SKIN-ABSCESS-EVAL", "y_true": "CP-SKIN-ABSCESS-EVAL"}
+{"decision_point_id": "SYNE-0089:T1", "patient_id": "SYNP-0078", "status": "abstained", "task": "care_coverage", "y_pred": null, "y_true": "abstain"}
+{"decision_point_id": "SYNE-0089:T1", "ordered": ["NI-ECG-12LEAD", "NI-LAB-TROPONIN"], "patient_id": "SYNP-0078", "suggested": null, "task": "care_next_info"}
+{"decision_point_id": "SYNE-0089:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0078", "suggested": null, "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0089:T1", "patient_id": "SYNP-0078", "task": "care_pathway", "y_pred": null, "y_true": "CP-CHEST-PAIN-EVAL"}
+{"decision_point_id": "SYNE-0089:T2", "patient_id": "SYNP-0078", "status": "abstained", "task": "care_coverage", "y_pred": null, "y_true": "abstain"}
+{"decision_point_id": "SYNE-0089:T2", "ordered": ["NI-ECG-12LEAD", "NI-LAB-TROPONIN"], "patient_id": "SYNP-0078", "suggested": null, "task": "care_next_info"}
+{"decision_point_id": "SYNE-0089:T2", "patient_id": "SYNP-0078", "task": "care_pathway", "y_pred": null, "y_true": "CP-CHEST-PAIN-EVAL"}
+{"decision_point_id": "SYNE-0093:T1", "patient_id": "SYNP-0081", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0093:T1", "ordered": ["NI-OBS-DIX-HALLPIKE"], "patient_id": "SYNP-0081", "suggested": ["NI-OBS-DIX-HALLPIKE"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0093:T1", "ordered": ["NI-LAB-HBA1C", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0081", "suggested": ["NI-OBS-DIX-HALLPIKE"], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0093:T1", "patient_id": "SYNP-0081", "task": "care_pathway", "y_pred": "CP-POSITIONAL-VERTIGO-EVAL", "y_true": "CP-POSITIONAL-VERTIGO-EVAL"}
+{"decision_point_id": "SYNE-0093:T2", "patient_id": "SYNP-0081", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0093:T2", "ordered": ["NI-OBS-DIX-HALLPIKE"], "patient_id": "SYNP-0081", "suggested": ["NI-OBS-DIX-HALLPIKE"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0093:T2", "patient_id": "SYNP-0081", "task": "care_pathway", "y_pred": "CP-POSITIONAL-VERTIGO-EVAL", "y_true": "CP-POSITIONAL-VERTIGO-EVAL"}
+{"decision_point_id": "SYNE-0096:T1", "patient_id": "SYNP-0084", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0096:T1", "ordered": ["NI-ECG-12LEAD"], "patient_id": "SYNP-0084", "suggested": ["NI-ECG-12LEAD"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0096:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-HBA1C", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0084", "suggested": ["NI-ECG-12LEAD"], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0096:T1", "patient_id": "SYNP-0084", "task": "care_pathway", "y_pred": "CP-PALPITATION-EVAL", "y_true": "CP-PALPITATION-EVAL"}
+{"decision_point_id": "SYNE-0096:T2", "patient_id": "SYNP-0084", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0096:T2", "ordered": ["NI-ECG-12LEAD"], "patient_id": "SYNP-0084", "suggested": ["NI-ECG-12LEAD"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0096:T2", "patient_id": "SYNP-0084", "task": "care_pathway", "y_pred": "CP-PALPITATION-EVAL", "y_true": "CP-PALPITATION-EVAL"}
+{"decision_point_id": "SYNE-0097:T1", "patient_id": "SYNP-0085", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0097:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-GLU", "NI-LAB-HBA1C", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0085", "suggested": [], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0097:T2", "patient_id": "SYNP-0085", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0104:T1", "patient_id": "SYNP-0092", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0104:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0092", "suggested": ["NI-ASK-OTTAWA-SAH", "NI-IMG-HEAD-CT"], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0104:T2", "patient_id": "SYNP-0092", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0107:T1", "patient_id": "SYNP-0095", "status": "abstained", "task": "care_coverage", "y_pred": null, "y_true": "abstain"}
+{"decision_point_id": "SYNE-0107:T1", "ordered": ["NI-OBS-REPEAT-VITALS"], "patient_id": "SYNP-0095", "suggested": null, "task": "care_next_info"}
+{"decision_point_id": "SYNE-0107:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0095", "suggested": null, "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0107:T1", "patient_id": "SYNP-0095", "task": "care_pathway", "y_pred": null, "y_true": "CP-NEWS-URGENT-REVIEW"}
+{"decision_point_id": "SYNE-0107:T2", "patient_id": "SYNP-0095", "status": "abstained", "task": "care_coverage", "y_pred": null, "y_true": "abstain"}
+{"decision_point_id": "SYNE-0107:T2", "patient_id": "SYNP-0095", "task": "care_pathway", "y_pred": null, "y_true": "CP-NEWS-URGENT-REVIEW"}
+{"decision_point_id": "SYNE-0108:T1", "patient_id": "SYNP-0096", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0108:T1", "ordered": ["NI-ASK-OTTAWA-SAH", "NI-IMG-HEAD-CT"], "patient_id": "SYNP-0096", "suggested": ["NI-ASK-OTTAWA-SAH", "NI-IMG-HEAD-CT"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0108:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0096", "suggested": ["NI-ASK-OTTAWA-SAH", "NI-IMG-HEAD-CT"], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0108:T1", "patient_id": "SYNP-0096", "task": "care_pathway", "y_pred": "CP-ACUTE-HEADACHE-EVAL", "y_true": "CP-ACUTE-HEADACHE-EVAL"}
+{"decision_point_id": "SYNE-0109:T1", "patient_id": "SYNP-0096", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0109:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0096", "suggested": [], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0108:T2", "patient_id": "SYNP-0096", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0108:T2", "ordered": ["NI-ASK-OTTAWA-SAH", "NI-IMG-HEAD-CT"], "patient_id": "SYNP-0096", "suggested": ["NI-ASK-OTTAWA-SAH", "NI-IMG-HEAD-CT"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0108:T2", "patient_id": "SYNP-0096", "task": "care_pathway", "y_pred": "CP-ACUTE-HEADACHE-EVAL", "y_true": "CP-ACUTE-HEADACHE-EVAL"}
+{"decision_point_id": "SYNE-0109:T2", "patient_id": "SYNP-0096", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0118:T1", "patient_id": "SYNP-0105", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0118:T1", "ordered": ["NI-LAB-HBA1C", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0105", "suggested": [], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0119:T1", "patient_id": "SYNP-0105", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0119:T1", "ordered": ["NI-ASK-ALLERGEN-TRIGGER", "NI-LAB-TRYPTASE"], "patient_id": "SYNP-0105", "suggested": ["NI-ASK-ALLERGEN-TRIGGER", "NI-LAB-TRYPTASE"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0119:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0105", "suggested": ["NI-ASK-ALLERGEN-TRIGGER", "NI-LAB-TRYPTASE"], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0119:T1", "patient_id": "SYNP-0105", "task": "care_pathway", "y_pred": "CP-ANAPHYLAXIS-EVAL", "y_true": "CP-ANAPHYLAXIS-EVAL"}
+{"decision_point_id": "SYNE-0118:T2", "patient_id": "SYNP-0105", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0119:T2", "patient_id": "SYNP-0105", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0119:T2", "ordered": ["NI-ASK-ALLERGEN-TRIGGER", "NI-LAB-TRYPTASE"], "patient_id": "SYNP-0105", "suggested": ["NI-ASK-ALLERGEN-TRIGGER", "NI-LAB-TRYPTASE"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0119:T2", "patient_id": "SYNP-0105", "task": "care_pathway", "y_pred": "CP-ANAPHYLAXIS-EVAL", "y_true": "CP-ANAPHYLAXIS-EVAL"}
+{"decision_point_id": "SYNE-0127:T1", "patient_id": "SYNP-0113", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0127:T1", "ordered": ["NI-ASK-OTTAWA-SAH", "NI-IMG-HEAD-CT"], "patient_id": "SYNP-0113", "suggested": ["NI-ASK-OTTAWA-SAH", "NI-IMG-HEAD-CT"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0127:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0113", "suggested": ["NI-ASK-OTTAWA-SAH", "NI-IMG-HEAD-CT"], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0127:T1", "patient_id": "SYNP-0113", "task": "care_pathway", "y_pred": "CP-ACUTE-HEADACHE-EVAL", "y_true": "CP-ACUTE-HEADACHE-EVAL"}
+{"decision_point_id": "SYNE-0127:T2", "patient_id": "SYNP-0113", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0127:T2", "ordered": ["NI-ASK-OTTAWA-SAH", "NI-IMG-HEAD-CT"], "patient_id": "SYNP-0113", "suggested": ["NI-ASK-OTTAWA-SAH", "NI-IMG-HEAD-CT"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0127:T2", "patient_id": "SYNP-0113", "task": "care_pathway", "y_pred": "CP-ACUTE-HEADACHE-EVAL", "y_true": "CP-ACUTE-HEADACHE-EVAL"}
+{"decision_point_id": "SYNE-0139:T1", "patient_id": "SYNP-0125", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0139:T1", "ordered": ["NI-IMG-CXR"], "patient_id": "SYNP-0125", "suggested": ["NI-IMG-CXR", "NI-LAB-GLU", "NI-LAB-HGB"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0139:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-GLU", "NI-LAB-HBA1C", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0125", "suggested": ["NI-IMG-CXR", "NI-LAB-GLU", "NI-LAB-HGB"], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0139:T1", "patient_id": "SYNP-0125", "task": "care_pathway", "y_pred": "CP-CAP-EVAL", "y_true": "CP-CAP-EVAL"}
+{"decision_point_id": "SYNE-0139:T2", "patient_id": "SYNP-0125", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0139:T2", "ordered": ["NI-IMG-CXR"], "patient_id": "SYNP-0125", "suggested": ["NI-IMG-CXR"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0139:T2", "patient_id": "SYNP-0125", "task": "care_pathway", "y_pred": "CP-CAP-EVAL", "y_true": "CP-CAP-EVAL"}
+{"decision_point_id": "SYNE-0140:T1", "patient_id": "SYNP-0126", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0140:T1", "ordered": ["NI-ASK-BLEEDING-RISK", "NI-OBS-ANTERIOR-RHINOSCOPY"], "patient_id": "SYNP-0126", "suggested": ["NI-ASK-BLEEDING-RISK", "NI-OBS-ANTERIOR-RHINOSCOPY"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0140:T1", "ordered": ["NI-LAB-HBA1C", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0126", "suggested": ["NI-ASK-BLEEDING-RISK", "NI-OBS-ANTERIOR-RHINOSCOPY"], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0140:T1", "patient_id": "SYNP-0126", "task": "care_pathway", "y_pred": "CP-EPISTAXIS-EVAL", "y_true": "CP-EPISTAXIS-EVAL"}
+{"decision_point_id": "SYNE-0140:T2", "patient_id": "SYNP-0126", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0140:T2", "ordered": ["NI-ASK-BLEEDING-RISK", "NI-OBS-ANTERIOR-RHINOSCOPY"], "patient_id": "SYNP-0126", "suggested": ["NI-ASK-BLEEDING-RISK", "NI-OBS-ANTERIOR-RHINOSCOPY"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0140:T2", "patient_id": "SYNP-0126", "task": "care_pathway", "y_pred": "CP-EPISTAXIS-EVAL", "y_true": "CP-EPISTAXIS-EVAL"}
+{"decision_point_id": "SYNE-0147:T1", "patient_id": "SYNP-0131", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0147:T1", "ordered": ["NI-IMG-ABD-US", "NI-LAB-CRP", "NI-LAB-WBC"], "patient_id": "SYNP-0131", "suggested": ["NI-LAB-WBC", "NI-LAB-CRP", "NI-IMG-ABD-US"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0147:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-GLU", "NI-LAB-HBA1C", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0131", "suggested": ["NI-LAB-WBC", "NI-LAB-CRP", "NI-IMG-ABD-US"], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0147:T1", "patient_id": "SYNP-0131", "task": "care_pathway", "y_pred": "CP-RLQ-PAIN-EVAL", "y_true": "CP-RLQ-PAIN-EVAL"}
+{"decision_point_id": "SYNE-0147:T2", "patient_id": "SYNP-0131", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0147:T2", "ordered": ["NI-IMG-ABD-US", "NI-LAB-CRP"], "patient_id": "SYNP-0131", "suggested": ["NI-LAB-CRP", "NI-IMG-ABD-US"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0147:T2", "patient_id": "SYNP-0131", "task": "care_pathway", "y_pred": "CP-RLQ-PAIN-EVAL", "y_true": "CP-RLQ-PAIN-EVAL"}
+{"decision_point_id": "SYNE-0149:T1", "patient_id": "SYNP-0133", "status": "abstained", "task": "care_coverage", "y_pred": null, "y_true": "abstain"}
+{"decision_point_id": "SYNE-0149:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-GLU", "NI-LAB-HBA1C", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0133", "suggested": null, "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0149:T2", "patient_id": "SYNP-0133", "status": "abstained", "task": "care_coverage", "y_pred": null, "y_true": "abstain"}
+{"decision_point_id": "SYNE-0157:T1", "patient_id": "SYNP-0141", "status": "abstained", "task": "care_coverage", "y_pred": null, "y_true": "abstain"}
+{"decision_point_id": "SYNE-0157:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-GLU", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0141", "suggested": null, "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0157:T2", "patient_id": "SYNP-0141", "status": "abstained", "task": "care_coverage", "y_pred": null, "y_true": "abstain"}
+{"decision_point_id": "SYNE-0165:T1", "patient_id": "SYNP-0149", "status": "abstained", "task": "care_coverage", "y_pred": null, "y_true": "abstain"}
+{"decision_point_id": "SYNE-0165:T1", "ordered": ["NI-IMG-CXR"], "patient_id": "SYNP-0149", "suggested": null, "task": "care_next_info"}
+{"decision_point_id": "SYNE-0165:T1", "ordered": ["NI-LAB-HBA1C", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0149", "suggested": null, "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0165:T1", "patient_id": "SYNP-0149", "task": "care_pathway", "y_pred": null, "y_true": "CP-CAP-EVAL"}
+{"decision_point_id": "SYNE-0165:T2", "patient_id": "SYNP-0149", "status": "abstained", "task": "care_coverage", "y_pred": null, "y_true": "abstain"}
+{"decision_point_id": "SYNE-0165:T2", "ordered": ["NI-IMG-CXR"], "patient_id": "SYNP-0149", "suggested": null, "task": "care_next_info"}
+{"decision_point_id": "SYNE-0165:T2", "patient_id": "SYNP-0149", "task": "care_pathway", "y_pred": null, "y_true": "CP-NEWS-URGENT-REVIEW"}
+{"decision_point_id": "SYNE-0166:T1", "patient_id": "SYNP-0150", "status": "abstained", "task": "care_coverage", "y_pred": null, "y_true": "abstain"}
+{"decision_point_id": "SYNE-0166:T1", "ordered": ["NI-ASK-LAST-KNOWN-WELL", "NI-IMG-HEAD-CT", "NI-LAB-GLU"], "patient_id": "SYNP-0150", "suggested": null, "task": "care_next_info"}
+{"decision_point_id": "SYNE-0166:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-GLU", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0150", "suggested": null, "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0166:T1", "patient_id": "SYNP-0150", "task": "care_pathway", "y_pred": null, "y_true": "CP-STROKE-EVAL"}
+{"decision_point_id": "SYNE-0166:T2", "patient_id": "SYNP-0150", "status": "abstained", "task": "care_coverage", "y_pred": null, "y_true": "abstain"}
+{"decision_point_id": "SYNE-0166:T2", "ordered": ["NI-ASK-LAST-KNOWN-WELL", "NI-IMG-HEAD-CT"], "patient_id": "SYNP-0150", "suggested": null, "task": "care_next_info"}
+{"decision_point_id": "SYNE-0166:T2", "patient_id": "SYNP-0150", "task": "care_pathway", "y_pred": null, "y_true": "CP-STROKE-EVAL"}
+{"decision_point_id": "SYNE-0169:T1", "patient_id": "SYNP-0152", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0169:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-GLU", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0152", "suggested": [], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0169:T2", "patient_id": "SYNP-0152", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0170:T1", "patient_id": "SYNP-0153", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0170:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-GLU", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0153", "suggested": [], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0170:T2", "patient_id": "SYNP-0153", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0173:T1", "patient_id": "SYNP-0156", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0173:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-GLU", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0156", "suggested": [], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0173:T2", "patient_id": "SYNP-0156", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0181:T1", "patient_id": "SYNP-0163", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0181:T1", "ordered": ["NI-ASK-DIARRHEA-FEATURES"], "patient_id": "SYNP-0163", "suggested": ["NI-ASK-DIARRHEA-FEATURES"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0181:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0163", "suggested": ["NI-ASK-DIARRHEA-FEATURES"], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0181:T1", "patient_id": "SYNP-0163", "task": "care_pathway", "y_pred": "CP-ACUTE-DIARRHEA-EVAL", "y_true": "CP-ACUTE-DIARRHEA-EVAL"}
+{"decision_point_id": "SYNE-0181:T2", "patient_id": "SYNP-0163", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0181:T2", "ordered": ["NI-ASK-DIARRHEA-FEATURES"], "patient_id": "SYNP-0163", "suggested": ["NI-ASK-DIARRHEA-FEATURES"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0181:T2", "patient_id": "SYNP-0163", "task": "care_pathway", "y_pred": "CP-ACUTE-DIARRHEA-EVAL", "y_true": "CP-ACUTE-DIARRHEA-EVAL"}
+{"decision_point_id": "SYNE-0184:T1", "patient_id": "SYNP-0166", "status": "abstained", "task": "care_coverage", "y_pred": null, "y_true": "abstain"}
+{"decision_point_id": "SYNE-0184:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0166", "suggested": null, "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0184:T2", "patient_id": "SYNP-0166", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0185:T1", "patient_id": "SYNP-0167", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0185:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-GLU", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0167", "suggested": [], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0185:T2", "patient_id": "SYNP-0167", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0192:T1", "patient_id": "SYNP-0174", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0192:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-HBA1C", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0174", "suggested": [], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0192:T2", "patient_id": "SYNP-0174", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0194:T1", "patient_id": "SYNP-0176", "status": "abstained", "task": "care_coverage", "y_pred": null, "y_true": "abstain"}
+{"decision_point_id": "SYNE-0194:T1", "ordered": ["NI-LAB-GAS-RADT"], "patient_id": "SYNP-0176", "suggested": null, "task": "care_next_info"}
+{"decision_point_id": "SYNE-0194:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-HBA1C", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0176", "suggested": null, "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0194:T1", "patient_id": "SYNP-0176", "task": "care_pathway", "y_pred": null, "y_true": "CP-PHARYNGITIS-EVAL"}
+{"decision_point_id": "SYNE-0194:T2", "patient_id": "SYNP-0176", "status": "abstained", "task": "care_coverage", "y_pred": null, "y_true": "abstain"}
+{"decision_point_id": "SYNE-0194:T2", "ordered": ["NI-LAB-GAS-RADT"], "patient_id": "SYNP-0176", "suggested": null, "task": "care_next_info"}
+{"decision_point_id": "SYNE-0194:T2", "patient_id": "SYNP-0176", "task": "care_pathway", "y_pred": null, "y_true": "CP-PHARYNGITIS-EVAL"}
+{"decision_point_id": "SYNE-0195:T1", "patient_id": "SYNP-0177", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0195:T1", "ordered": ["NI-ECG-12LEAD"], "patient_id": "SYNP-0177", "suggested": ["NI-ECG-12LEAD"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0195:T1", "ordered": ["NI-LAB-CREAT", "NI-LAB-GLU", "NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0177", "suggested": ["NI-ECG-12LEAD"], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0195:T1", "patient_id": "SYNP-0177", "task": "care_pathway", "y_pred": "CP-CHEST-PAIN-EVAL", "y_true": "CP-CHEST-PAIN-EVAL"}
+{"decision_point_id": "SYNE-0196:T1", "patient_id": "SYNP-0177", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0196:T1", "ordered": ["NI-ASK-LAST-KNOWN-WELL", "NI-IMG-HEAD-CT", "NI-LAB-GLU"], "patient_id": "SYNP-0177", "suggested": ["NI-IMG-HEAD-CT", "NI-LAB-GLU", "NI-ASK-LAST-KNOWN-WELL"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0196:T1", "ordered": ["NI-LAB-HGB", "NI-LAB-WBC"], "patient_id": "SYNP-0177", "suggested": ["NI-IMG-HEAD-CT", "NI-LAB-GLU", "NI-ASK-LAST-KNOWN-WELL"], "task": "care_ordered_proxy"}
+{"decision_point_id": "SYNE-0196:T1", "patient_id": "SYNP-0177", "task": "care_pathway", "y_pred": "CP-STROKE-EVAL", "y_true": "CP-STROKE-EVAL"}
+{"decision_point_id": "SYNE-0195:T2", "patient_id": "SYNP-0177", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0195:T2", "ordered": ["NI-ECG-12LEAD"], "patient_id": "SYNP-0177", "suggested": ["NI-ECG-12LEAD"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0195:T2", "patient_id": "SYNP-0177", "task": "care_pathway", "y_pred": "CP-CHEST-PAIN-EVAL", "y_true": "CP-CHEST-PAIN-EVAL"}
+{"decision_point_id": "SYNE-0196:T2", "patient_id": "SYNP-0177", "status": "suggested", "task": "care_coverage", "y_pred": "suggest", "y_true": "suggest"}
+{"decision_point_id": "SYNE-0196:T2", "ordered": ["NI-ASK-LAST-KNOWN-WELL", "NI-IMG-HEAD-CT", "NI-LAB-GLU"], "patient_id": "SYNP-0177", "suggested": ["NI-IMG-HEAD-CT", "NI-LAB-GLU", "NI-ASK-LAST-KNOWN-WELL"], "task": "care_next_info"}
+{"decision_point_id": "SYNE-0196:T2", "patient_id": "SYNP-0177", "task": "care_pathway", "y_pred": "CP-STROKE-EVAL", "y_true": "CP-STROKE-EVAL"}

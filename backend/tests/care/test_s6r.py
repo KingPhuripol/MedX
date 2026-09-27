@@ -144,3 +144,39 @@ def test_engine_qsofa_news_cofire_sepsis_first(dataset, monkeypatch):
     assert new.escalation_required is old.escalation_required is True
     assert [x.code for x in new.next_information] == [x.code for x in old.next_information]
     assert ruleset.CARE_RULES_VERSION == "care-rules-1.1.0"
+
+
+# ---------------------------------------------------------------- dev before/after (S6R-A03, A04)
+
+
+def test_dev_before_after_matches_results():
+    doc = json.loads((evaluate.S6R_DIR / "dev_before_after.json").read_text("utf-8"))
+    assert doc["label"] == evaluate.LABEL
+    for side, eid in (("before", "s6-care-dev-0001"), ("after", "s6-care-dev-0002")):
+        res = json.loads((evaluate.paths("dev", eid)["results"] / "results.json").read_text("utf-8"))
+        assert doc[side]["evaluation_id"] == eid == res["evaluation_id"]
+        rows = {r["metric_id"]: r for r in res["rows"]}
+        comp = {c["comparator"]: c for c in rows["care_selective_hit3"]["comparisons"]}
+        src = {"coverage": (rows["care_coverage"], ""), "selective_hit3": (rows["care_selective_hit3"], ""),
+               "always_answer_hit3_all_evaluable": (comp["always_answer"], "comparator_"),
+               "always_answer_hit3_on_answered": (comp["always_answer_on_answered"], "comparator_"),
+               "train_prior_hit3": (comp["train_prior"], "comparator_"),
+               "ordered_proxy_hit3": (rows["care_ordered_proxy_hit3"], ""),
+               "pathway_top1": (rows["care_pathway_top1"], "")}
+        assert set(doc[side]["metrics"]) == set(src)
+        for k, (row, pre) in src.items():
+            cell = doc[side]["metrics"][k]
+            for f in ("point", "ci_low", "ci_high", "n_patients", "n_decision_points", "n_patients_scored",
+                      "n_decision_points_scored", "exact_ci"):
+                assert cell[f] == row.get(pre + f), (side, k, f)
+    md = (evaluate.S6R_DIR / "dev_before_after.md").read_text("utf-8")
+    assert evaluate.LABEL in md and "s6-care-dev-0002" in md
+
+
+def test_dev_improvement_without_regression():
+    doc = json.loads((evaluate.S6R_DIR / "dev_before_after.json").read_text("utf-8"))
+    b, a = doc["before"]["metrics"], doc["after"]["metrics"]
+    assert a["selective_hit3"]["point"] >= max(0.80, b["selective_hit3"]["point"])
+    assert a["pathway_top1"]["point"] >= b["pathway_top1"]["point"]
+    assert a["ordered_proxy_hit3"]["point"] >= b["ordered_proxy_hit3"]["point"]
+    assert a["coverage"] == b["coverage"]

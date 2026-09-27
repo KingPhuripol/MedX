@@ -28,10 +28,13 @@ def test_committed_manifests_reproduce_from_gold(dataset):
     for split in ("dev", "test"):
         committed = json.loads((evaluate.EVAL_DIR / f"manifest_{split}.json").read_text("utf-8"))
         fresh = evaluate.manifest(split)
-        # s6r: the $comment names the rules version (care-rules-1.0.0 when these were frozen)
-        assert {k: v for k, v in fresh.items() if k != "$comment"} == {k: v for k, v in committed.items()
-                                                                        if k != "$comment"}
-        assert committed["dataset"]["version"] == json.loads((dataset.root / "manifest.json").read_text())["tree_sha256"]
+        # s6r: the -0001 manifests were written with care-rules-1.0.0 ($comment) on generator v1.2.0 (dataset); the
+        # v1.2.1 inputs are byte-identical, so every other field still reproduces
+        skip = ("$comment", "dataset")
+        assert {k: v for k, v in fresh.items() if k not in skip} == {k: v for k, v in committed.items() if k not in skip}
+    committed = json.loads((evaluate.EVAL_DIR / "manifest_dev_0002.json").read_text("utf-8"))
+    assert evaluate.manifest("dev", "s6-care-dev-0002") == committed
+    assert committed["dataset"]["version"] == json.loads((dataset.root / "manifest.json").read_text())["tree_sha256"]
 
 
 def test_train_prior_uses_train_split_only(dataset):
