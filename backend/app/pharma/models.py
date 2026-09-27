@@ -29,7 +29,9 @@ IssueType = Literal[
 NoticeType = Literal["unrecognised_drug", "allergy_unmapped", "source_unreadable", "source_missing"]
 MissingField = Literal["dose", "frequency"]
 DoseStatus = Literal["resolved", "not_stated", "unverifiable"]
-UnverifiableReason = Literal["variable_regimen", "liquid_volume", "multiple_strengths", "ambiguous_quantity"]
+UnverifiableReason = Literal[
+    "variable_regimen", "liquid_volume", "multiple_strengths", "range", "ambiguous_quantity", "unparsed_token"
+]
 FrequencyStatus = Literal["recognised", "not_stated", "not_recognised"]
 DoseBasis = Literal["strength_x_quantity", "stated_amount"]
 ISSUE_TYPES: tuple[str, ...] = IssueType.__args__  # type: ignore[attr-defined]

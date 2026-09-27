@@ -251,6 +251,11 @@ describe("pharmacist reconciliation page", () => {
       expect(scope).toHaveTextContent(/dose per administration \(strength × quantity\)/);
       for (const term of ["drug–drug interaction", "dose range", "renal", "hepatic", "route"])
         expect(within(scope).getByText(/Not checked/).nextElementSibling).toHaveTextContent(new RegExp(term));
+      // s5r3: the dose is read by a fixed, listed grammar; anything else could not be verified (residual risk kept).
+      expect(scope).toHaveTextContent(/read by a fixed, listed grammar/);
+      expect(scope).toHaveTextContent(/Any other dose form is shown as could not be verified/);
+      expect(scope).toHaveTextContent(/still read as 2 tablets per dose/);
+      expect(scope.textContent).not.toMatch(/may be misread|all doses|every dose/i);
     };
     await screen.findByRole("button", { name: "Run check" });
     check();
@@ -360,6 +365,35 @@ describe("pharmacist reconciliation page", () => {
     expect(screen.getByText(/frequency not recognised in the first source listed/)).toBeInTheDocument();
     expect(screen.getByText(/dose not verifiable \(variable regimen\) in the first source listed/)).toBeInTheDocument();
   });
+
+  const NEW_REASONS: Record<string, string> = {
+    range: "a range or alternative between two amounts",
+    unparsed_token: "a dose form this checker does not read",
+  };
+  for (const [reason, label] of Object.entries(NEW_REASONS)) {
+    it(`field status labels[${reason}]`, async () => {
+      installFetch({
+        ...RUN,
+        issues: [
+          {
+            ...MISSING_FIELD_ISSUE,
+            detail: { field: "dose", field_status: "unverifiable", unverifiable_reason: reason },
+            conflicting_sources: [
+              src({ source_type: "new_order", raw_span: "Warfarin 3 mg 1-2 tabs od", dose_status: "unverifiable", dose_unverifiable_reason: reason, frequency_code: "q24h" }),
+              MISSING_FIELD_ISSUE.conflicting_sources[1],
+            ],
+          },
+        ],
+      });
+      await runCheck();
+      expect(screen.getByRole("heading", { level: 3 })).toHaveTextContent("Dose could not be verified: warfarin");
+      const row = within(document.querySelector("ol.issue-list article") as HTMLElement)
+        .getByRole("rowheader", { name: "New order" })
+        .closest("tr")!;
+      expect(within(row).getByText(`not verifiable (${label})`)).toBeInTheDocument();
+      expect(document.body.textContent).not.toMatch(/not verifiable \(unverifiable\)/);
+    });
+  }
 
   it("dose per administration: strength × quantity, or the stated amount when no quantity", async () => {
     expect(formatDose({ dose_value: 3, dose_unit: "mg", quantity: 2, dose_per_administration: 6, dose_status: "resolved" })).toBe("3 mg × 2 = 6 mg");

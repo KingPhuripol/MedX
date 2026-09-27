@@ -18,7 +18,7 @@ export const SCOPE_NOT_CHECKED = [
   "route",
 ];
 export const SCOPE_READING =
-  "Each line is read with a fixed set of text patterns. A dose or frequency that the patterns cannot read is shown as not stated, not recognised or not verifiable, and is never counted as a match.";
+  "The dose on each line is read by a fixed, listed grammar of strength and quantity forms. Any other dose form is shown as could not be verified, and a frequency the fixed patterns cannot read is shown as not stated or not recognised; neither is ever counted as a match. A phrase that fits the grammar can still be clinically wrong: for example, a dispensed count written as “2 tabs” is still read as 2 tablets per dose.";
 
 export const TYPE_LABELS: Record<string, string> = {
   allergy_direct: "Allergy: direct match",
@@ -46,7 +46,9 @@ export const UNVERIFIABLE_REASONS: Record<string, string> = {
   variable_regimen: "variable regimen",
   liquid_volume: "liquid volume",
   multiple_strengths: "more than one strength",
+  range: "a range or alternative between two amounts",
   ambiguous_quantity: "conflicting quantities",
+  unparsed_token: "a dose form this checker does not read",
 };
 
 export function notVerifiable(reason: string | null | undefined): string {

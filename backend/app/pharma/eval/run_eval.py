@@ -21,7 +21,7 @@ from ...db import create_schema
 from ...gateway import GatewayRequest, build_provider, invoke_gateway
 from ..fixtures.build import MANIFEST_FILE, SURFACE_GENERATOR_VERSION, SURFACE_SEED
 from ..formulary import load_formulary
-from ..mock_rules import EXTRACT_TASK, MOCK_RULES_VERSION, parse_entry
+from ..mock_rules import DOSE_GRAMMAR_VERSION, EXTRACT_TASK, MOCK_RULES_VERSION, parse_entry
 from ..models import ISSUE_TYPES, MedSnapshot
 from ..phrasing import TEMPLATE_VERSION
 from ..pipeline import PIPELINE_VERSION, issue_signature, reconcile
@@ -441,7 +441,7 @@ def evaluate(out_dir: Path | None = DEFAULT_OUT) -> dict:
         "data_class": "synthetic",
         "versions": {
             "pipeline": PIPELINE_VERSION, "rules": RULES_VERSION, "rule_versions": dict(RULE_VERSIONS),
-            "mock_rules": MOCK_RULES_VERSION, "template": TEMPLATE_VERSION, "extract_task": EXTRACT_TASK,
+            "mock_rules": MOCK_RULES_VERSION, "dose_grammar": DOSE_GRAMMAR_VERSION, "template": TEMPLATE_VERSION, "extract_task": EXTRACT_TASK,
             "formulary": form.version, "cross_reactivity": form.cross_version, "provider": "mock",
             "surface_suite": SURFACE_GENERATOR_VERSION,
         },
@@ -457,9 +457,11 @@ def evaluate(out_dir: Path | None = DEFAULT_OUT) -> dict:
         "surface_form_langs": surface_langs,
         "surface_extra_issues_per_case": {s: surface[s]["extra_issues_per_case"] for s in ("test", "all")},
         "notes": [
-            "Surface-form recall measures a fixed, seeded set of written forms on synthetic lists. Real-world wordings "
-            "outside the mock's pattern set may be misread as resolved; pharmacist review is required before any "
-            "non-synthetic use.",
+            "Surface-form recall measures a fixed, seeded set of written forms on synthetic lists. The dose is read by "
+            f"a fixed, listed grammar ({DOSE_GRAMMAR_VERSION}); any other written dose form is shown as \"could not be "
+            "verified\" (missing_field on the dose), never read as a value. A phrase that fits the grammar can still be "
+            "clinically wrong: for example, a dispensed count written as \"2 tabs\" is still read as 2 tablets per dose. "
+            "Pharmacist review is required before any non-synthetic use.",
             "Quantity not stated: the stated amount is taken as the dose per administration (dose_basis=stated_amount); "
             "this convention needs pharmacist sign-off before any non-synthetic use.",
             "SF-EQUIV 'recall' is the fraction of equivalent-dose cases with no dose issue (dose_mismatch or "

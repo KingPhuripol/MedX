@@ -8,7 +8,7 @@ from sqlalchemy import func, select
 from app.gateway.provider import ProviderResult
 from app.pharma.db import pharma_issue_decisions, pharma_issues, pharma_runs
 from app.pharma.fixtures import get_fixture
-from app.pharma.mock_rules import EXTRACT_TASK, MOCK_RULES_VERSION, extract_handler, parse_entry
+from app.pharma.mock_rules import DOSE_GRAMMAR_VERSION, EXTRACT_TASK, MOCK_RULES_VERSION, extract_handler, parse_entry
 from app.pharma.phrasing import TEMPLATE_VERSION, phrase_input, template_text, validate_text
 from app.pharma.pipeline import PIPELINE_VERSION, issue_signature
 from app.pharma.rules import RULE_VERSIONS, RULES_VERSION
@@ -143,7 +143,7 @@ def test_extract_quantity_mixed_number_and_thai_attached(text):
 def test_extract_stray_number_before_quantity_is_unverifiable():
     # "1 0.5 tab" is not a known form: never drop the leading number and read 0.5.
     e = parse_entry("Warfarin 3 mg 1 0.5 tab od")
-    assert (e["dose_status"], e["dose_unverifiable_reason"], e["quantity"]) == ("unverifiable", "ambiguous_quantity", None)
+    assert (e["dose_status"], e["dose_unverifiable_reason"], e["quantity"]) == ("unverifiable", "unparsed_token", None)
 
 
 # Checker findings F3-F5 on v1.2 (fix 2): a mixed number joined by "-"/"and" lost its whole part (F3), Thai
@@ -164,26 +164,27 @@ def test_extract_quantity_joined_mixed_number_and_thai_half(text):
     assert e["quantity"] == QUANTITY_FORMS_REGRESSION_2[text] and e["dose_status"] == "resolved"
 
 
-AMBIGUOUS_QUANTITY_FORMS = [
-    "พาราเซตามอล 500 มก. ครั้งละ 1-2 เม็ด ทุก 6 ชั่วโมง เวลาปวด",  # range
-    "Paracetamol 500 mg 1-2 tabs q6h prn",
-    "Paracetamol 500 mg 1 to 2 tabs q6h prn",
-    "Paracetamol 500 mg 1 or 2 tabs q6h prn",
-    "Warfarin 3 mg 1/2-1 tab od",
-    "Warfarin 3 mg ½-1 tab od",
-    "Metformin 500 mg 1-2x2",
-    "Warfarin 3 mg one tab od",  # quantity word the pattern set cannot read
-    "วาร์ฟาริน 3 มก. สองเม็ด วันละ 1 ครั้ง",
-    "Warfarin 3 mg 1/0 tab od",
-    "Warfarin 3 mg 1.5 เม็ดครึ่ง od",
-]
+# s5r3 amended expectations: only the reason string changed (range / unparsed_token, was ambiguous_quantity).
+AMBIGUOUS_QUANTITY_FORMS = {
+    "พาราเซตามอล 500 มก. ครั้งละ 1-2 เม็ด ทุก 6 ชั่วโมง เวลาปวด": "range",
+    "Paracetamol 500 mg 1-2 tabs q6h prn": "range",
+    "Paracetamol 500 mg 1 to 2 tabs q6h prn": "range",
+    "Paracetamol 500 mg 1 or 2 tabs q6h prn": "range",
+    "Warfarin 3 mg 1/2-1 tab od": "range",
+    "Warfarin 3 mg ½-1 tab od": "range",
+    "Metformin 500 mg 1-2x2": "range",
+    "Warfarin 3 mg one tab od": "unparsed_token",  # a number word is never read as a quantity
+    "วาร์ฟาริน 3 มก. สองเม็ด วันละ 1 ครั้ง": "unparsed_token",
+    "Warfarin 3 mg 1/0 tab od": "unparsed_token",
+    "Warfarin 3 mg 1.5 เม็ดครึ่ง od": "unparsed_token",
+}
 
 
-@pytest.mark.parametrize("text", AMBIGUOUS_QUANTITY_FORMS)
+@pytest.mark.parametrize("text", list(AMBIGUOUS_QUANTITY_FORMS))
 def test_extract_range_or_unknown_quantity_is_unverifiable(text):
     e = parse_entry(text)
     assert (e["dose_status"], e["dose_unverifiable_reason"], e["quantity"], e["dose_value"]) == (
-        "unverifiable", "ambiguous_quantity", None, None)
+        "unverifiable", AMBIGUOUS_QUANTITY_FORMS[text], None, None)
 
 
 def test_range_quantity_raises_missing_dose_not_silent_pass():
@@ -191,7 +192,7 @@ def test_range_quantity_raises_missing_dose_not_silent_pass():
     result = run(snapshot(home=["พาราเซตามอล 500 มก. ครั้งละ 1-2 เม็ด ทุก 6 ชั่วโมง เวลาปวด"],
                           orders=["Paracetamol 1000 mg q6h prn"]))
     [mf] = [i for i in of_type(result, "missing_field") if i["field"] == "dose"]
-    assert (mf["detail"]["field_status"], mf["detail"]["unverifiable_reason"]) == ("unverifiable", "ambiguous_quantity")
+    assert (mf["detail"]["field_status"], mf["detail"]["unverifiable_reason"]) == ("unverifiable", "range")
     assert of_type(result, "dose_mismatch") == [] and result["unchecked_comparisons"] >= 1
 
 
@@ -367,16 +368,19 @@ def test_decision_atomic_with_audit(app, audit_rows, monkeypatch):
 
 
 def test_versions_bumped():
-    assert MOCK_RULES_VERSION == "s5-mock-rules-1.2.0"
-    assert TEMPLATE_VERSION == "template-1.1.0"
+    # s5r3 amendment (S5R2-A16 reads the s5r3 §6 strings); RULES_VERSION and RULE_VERSIONS are unchanged.
+    assert MOCK_RULES_VERSION == "s5-mock-rules-2.0.0"
+    assert DOSE_GRAMMAR_VERSION == "s5-dose-grammar-1.0.0"
+    assert TEMPLATE_VERSION == "template-1.2.0"
     assert RULES_VERSION == "s5-rules-2.1.0"
     assert RULE_VERSIONS["dose_mismatch"] == "1.2.0" and RULE_VERSIONS["missing_field"] == "2.1.0"
     assert {RULE_VERSIONS[t] for t in ("allergy_direct", "allergy_class", "allergy_cross_reactivity")} == {"1.1.0"}
-    assert PIPELINE_VERSION == "s5-pipeline-2.1.0"
+    assert PIPELINE_VERSION == "s5-pipeline-2.2.0"
     assert EXTRACT_TASK == "pharma.extract.v2"
     r = run(get_fixture("demo-01"))
     assert (r["extract_mock_version"], r["template_version"], r["rules_version"], r["pipeline_version"]) == (
         MOCK_RULES_VERSION, TEMPLATE_VERSION, RULES_VERSION, PIPELINE_VERSION)
+    assert r["dose_grammar_version"] == DOSE_GRAMMAR_VERSION
     assert r["rule_versions"] == RULE_VERSIONS and r["extract_task"] == "pharma.extract.v2"
     assert {c["task"] for c in r["gateway_calls"]} == {"pharma.extract.v2", "pharma.phrase.v1"}
 

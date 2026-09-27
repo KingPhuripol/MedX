@@ -17,13 +17,13 @@ from pydantic import ValidationError
 
 from ..gateway import GatewayRequest, GatewayResponse
 from .formulary import Formulary, load_formulary
-from .mock_rules import EXTRACT_TASK, MOCK_RULES_VERSION, PHRASE_TASK
+from .mock_rules import DOSE_GRAMMAR_VERSION, EXTRACT_TASK, MOCK_RULES_VERSION, PHRASE_TASK
 from .models import ExtractOutput, Issue, MedSnapshot, Mode, Notice
 from .phrasing import TEMPLATE_VERSION, parse_phrase_output, phrase_input, template_text, validate_text
 from .rules import NOTICE_RANK, RULE_VERSIONS, RULES_VERSION, AllergyItem, MedItem, count_comparisons, run_rules
 
 Invoke = Callable[[GatewayRequest], GatewayResponse]
-PIPELINE_VERSION = "s5-pipeline-2.1.0"
+PIPELINE_VERSION = "s5-pipeline-2.2.0"
 
 
 def canonical_json(data: Any) -> str:
@@ -257,6 +257,7 @@ def reconcile(
         "unchecked_by_reason": comparisons["unchecked_by_reason"],
         "extract_task": EXTRACT_TASK,
         "extract_mock_version": MOCK_RULES_VERSION,
+        "dose_grammar_version": DOSE_GRAMMAR_VERSION,
         "template_version": TEMPLATE_VERSION,
         "rule_versions": dict(RULE_VERSIONS),
         "extraction": extraction,
