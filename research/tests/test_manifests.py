@@ -106,6 +106,14 @@ def test_validator_rejects_cli_exit_code(tmp_path):
     assert out.returncode != 0 and "approval" in out.stdout
 
 
-def test_validator_accepts_approved_tier3(decisions):
+def test_validator_accepts_approved_tier3(tmp_path):
+    """s9r: a dated heading alone no longer approves; the section must hold an explicit, matching record."""
     m = _approval(_tier(copy.deepcopy(load_json(BASE)), 3))
-    assert validate_manifest(m, decisions_path=decisions) == []
+    budget = m["resources"]["budget"]
+    record = {"experiment_id": m["experiment_id"], "tier": 3, "gpu_count": 8, "max_minutes": 600,
+              "gpu_hours": budget["gpu_hours"], "cost_usd_max": budget["cost_usd_max"], "approved_by": "project owner",
+              "date": "2026-10-01", "scope": "fixture only: one tier-3 run"}
+    path = tmp_path / "DECISIONS.md"
+    path.write_text(f"# Decisions\n\n## {APPROVAL_HEADING}\n- fixture\n\n```approval\n{json.dumps(record)}\n```\n",
+                    encoding="utf-8")
+    assert validate_manifest(m, decisions_path=path) == []

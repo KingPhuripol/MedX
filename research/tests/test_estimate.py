@@ -80,7 +80,7 @@ def test_estimate_terms_hand_calc():
     assert E.gpu_hours(3600 * 100.0, 100.0, 1.0) == 1.0
 
 
-def _tiny_arch() -> tuple[dict, list[str], dict]:
+def _tiny_arch() -> tuple[dict, str, dict]:
     cfg = load_cfg("stage3")
     bb = cfg["dry_run"]["backbone"]
     arch = {"hidden_size": bb["hidden_size"], "attention_heads": bb["num_attention_heads"], "kv_heads": bb["num_key_value_heads"],
@@ -95,10 +95,12 @@ def test_lora_param_formula_matches_peft(r):
 
     from research.train.models import build_tiny_backbone
 
-    arch, targets, bb = _tiny_arch()
-    peft_model = get_peft_model(build_tiny_backbone(bb), LoraConfig(r=r, lora_alpha=2 * r, target_modules=targets))
+    # PEFT gets the config's anchored regex (s9r); the estimate formula uses the leaf names it adapts.
+    arch, regex, bb = _tiny_arch()
+    leaves = E._v(E._load("plan")["run"], "lora_target_modules")
+    peft_model = get_peft_model(build_tiny_backbone(bb), LoraConfig(r=r, lora_alpha=2 * r, target_modules=regex))
     trainable, _ = peft_model.get_nb_trainable_parameters()
-    assert E.lora_params(E.adapted_shapes(arch, targets), r) == trainable
+    assert E.lora_params(E.adapted_shapes(arch, leaves), r) == trainable
 
 
 def test_adapted_shapes_match_candidate_layouts():

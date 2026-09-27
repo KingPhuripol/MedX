@@ -8,6 +8,7 @@ size; the tokens are prepended to the text embeddings of the backbone.
 from __future__ import annotations
 
 import abc
+import re
 from typing import Any
 
 import torch
@@ -134,6 +135,31 @@ class CaseModel(nn.Module):
         return out.loss
 
 
+def lora_target_regex(target: Any) -> str:
+    """A LoRA `target_modules` value must be one anchored regex (PEFT full-match on the module path).
+
+    Bare leaf-name lists are rejected: PEFT matches them by suffix, so they also wrap vision-tower and
+    connector modules that share names like q_proj or gate_proj.
+    """
+    if not isinstance(target, str):
+        raise ValueError(f"LoRA target_modules must be one anchored regex string, not {type(target).__name__} ({target!r})")
+    if not (target.startswith("^") and target.endswith("$")):
+        raise ValueError(f"LoRA target_modules regex must be anchored '^...$': {target!r}")
+    re.compile(target)
+    return target
+
+
+def real_run_lora_target(cfg: dict[str, Any], candidate: str) -> str:
+    """The backbone-only LoRA regex for a real-run candidate (language_model paths only)."""
+    targets = cfg["real_run"]["lora"]["target_modules"]
+    if not isinstance(targets, dict) or candidate not in targets:
+        raise ValueError(f"no LoRA target regex for candidate {candidate!r}")
+    regex = lora_target_regex(targets[candidate])
+    if "language_model" not in regex:
+        raise ValueError(f"candidate {candidate!r} LoRA regex must be restricted to language_model paths")
+    return regex
+
+
 def build_model(cfg: dict[str, Any], *, dry_run: bool) -> CaseModel:
     """Model factory used by the launcher (tests spy on it to prove invalid manifests never reach it)."""
     if not dry_run:
@@ -156,7 +182,8 @@ def build_model(cfg: dict[str, Any], *, dry_run: bool) -> CaseModel:
         lora = dry["lora"]
         backbone = get_peft_model(
             backbone,
-            LoraConfig(r=lora["r"], lora_alpha=lora["alpha"], lora_dropout=0.0, target_modules=list(lora["target_modules"])),
+            LoraConfig(r=lora["r"], lora_alpha=lora["alpha"], lora_dropout=0.0,
+                       target_modules=lora_target_regex(lora["target_modules"])),
         )
     connector.requires_grad_(True)
     return CaseModel(encoder, connector, backbone)
