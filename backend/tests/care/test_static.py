@@ -67,7 +67,7 @@ def test_rules_hash_pinned_to_version(tmp_path):
     doc = ruleset.load()
     assert doc["version"] == ruleset.CARE_RULES_VERSION
     changed = tmp_path / "rules.json"
-    changed.write_text(ruleset.RULES_PATH.read_text("utf-8").replace("care-rules-1.0.0", "care-rules-1.0.1"), "utf-8")
+    changed.write_text(ruleset.RULES_PATH.read_text("utf-8").replace(ruleset.CARE_RULES_VERSION, "care-rules-9.9.9"), "utf-8")
     with pytest.raises(RuntimeError, match="without a CARE_RULES_VERSION bump"):
         ruleset.load(changed)
     with pytest.raises(RuntimeError, match="version does not match"):

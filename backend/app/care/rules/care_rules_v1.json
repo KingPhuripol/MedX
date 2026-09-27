@@ -1,6 +1,6 @@
 {
-  "version": "care-rules-1.0.0",
-  "status": "MOCK baseline rules for the deterministic mock provider; written from the dev split only; not calibrated; not expert-reviewed (D1).",
+  "version": "care-rules-1.1.0",
+  "status": "MOCK baseline rules for the deterministic mock provider; written from the train/dev splits only (changes since 1.0.0 in rules/CHANGELOG.md); not calibrated; not expert-reviewed (D1).",
   "vocabulary": {
     "next_info": {
       "NI-ECG-12LEAD": {
@@ -387,6 +387,10 @@
       "pathway": "CP-NEWS-URGENT-REVIEW"
     }
   ],
+  "pathway_priority": [
+    "CP-SEPSIS-SCREEN",
+    "CP-NEWS-URGENT-REVIEW"
+  ],
   "vitals_rules": [
     {
       "id": "V-MULTI-ABNORMAL",
@@ -540,7 +544,9 @@
         ]
       ],
       "next_info": [
-        "NI-IMG-CXR"
+        "NI-IMG-CXR",
+        "NI-LAB-GLU",
+        "NI-LAB-HGB"
       ],
       "pathway": "CP-CAP-EVAL"
     },

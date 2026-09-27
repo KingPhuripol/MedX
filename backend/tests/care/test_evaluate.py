@@ -27,7 +27,10 @@ def test_care_eval_deterministic_and_complete(dataset):
 def test_committed_manifests_reproduce_from_gold(dataset):
     for split in ("dev", "test"):
         committed = json.loads((evaluate.EVAL_DIR / f"manifest_{split}.json").read_text("utf-8"))
-        assert evaluate.manifest(split) == committed
+        fresh = evaluate.manifest(split)
+        # s6r: the $comment names the rules version (care-rules-1.0.0 when these were frozen)
+        assert {k: v for k, v in fresh.items() if k != "$comment"} == {k: v for k, v in committed.items()
+                                                                        if k != "$comment"}
         assert committed["dataset"]["version"] == json.loads((dataset.root / "manifest.json").read_text())["tree_sha256"]
 
 

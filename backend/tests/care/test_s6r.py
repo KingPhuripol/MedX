@@ -81,3 +81,66 @@ def test_evaluate_refuses_retired_test(tmp_path, dataset, capsys):
     assert evaluate.main(["--split", "test", "--dataset", str(dataset.root), "--write-manifest",
                           "--manifest", str(tmp_path / "m.json")]) == 2
     assert not (tmp_path / "m.json").exists()
+
+
+# ---------------------------------------------------------------- rules 1.1.0 (S6R-A04)
+
+CHANGELOG = REPO / "backend" / "app" / "care" / "rules" / "CHANGELOG.md"
+_DP_ID = re.compile(r"\bSYN[A-Z]*-\d{4}(?::T[12])?\b")
+_REF = re.compile(r"\b(?:PMID-\d+|RCP-NEWS-2012|LOINC)\b")
+
+
+def _entries() -> list[str]:
+    text = CHANGELOG.read_text("utf-8")
+    return re.split(r"^### ", text.split("## care-rules-1.1.0", 1)[1], flags=re.M)[1:]
+
+
+def test_rules_changelog_ids_train_dev_only(dataset):
+    split_of = {r["case_id"]: r["split"] for r in dataset.rows}
+    entries = _entries()
+    assert len(entries) >= 2
+    for e in entries:
+        ids = _DP_ID.findall(e)
+        assert ids, e[:60]
+        for i in ids:
+            assert i.startswith("SYNE-"), i  # never a held-out SYNH/SYNHE id
+            assert split_of[i.split(":")[0]] in ("train", "dev"), i
+
+
+def test_rules_changelog_sources_resolve():
+    refs = {r["ref_id"] for r in json.loads((REPO / "data_factory/templates/references.json").read_text("utf-8"))}
+    for e in _entries():
+        if e.startswith("Explained"):
+            continue
+        found = _REF.findall(e.split("Sources:", 1)[1])
+        assert found and set(found) <= refs, e[:60]
+
+
+def _v100_rules() -> dict:
+    raw = subprocess.run(["git", "show", "72d4c45:backend/app/care/rules/care_rules_v1.json"], cwd=REPO,
+                         capture_output=True, check=True).stdout
+    doc = json.loads(raw)
+    assert doc["version"] == "care-rules-1.0.0"
+    return doc
+
+
+def test_engine_qsofa_news_cofire_sepsis_first(dataset, monkeypatch):
+    """R1 regression: qSOFA + NEWS co-fire -> CP-SEPSIS-SCREEN first; alerts and screening identical to 1.0.0."""
+    from app.care import engine, mock_rules, ruleset
+
+    snap = dataset.snapshot("dev", "SYNE-0011", "T1")
+    new, _ = run(snap, "T1")
+    ids = {a.rule_id for a in new.alerts}
+    assert "RF-QSOFA" in ids and ids & {"RF-SPO2", "RF-RR", "RF-SBP", "RF-HR", "RF-CONSC", "RF-TEMP"}
+    assert [p.code for p in new.pathway_options][:2] == ["CP-SEPSIS-SCREEN", "CP-NEWS-URGENT-REVIEW"]
+    old_doc = _v100_rules()
+    for mod in (engine, mock_rules):
+        monkeypatch.setattr(mod, "rules", lambda: old_doc)
+    old, _ = run(snap, "T1")
+    assert [p.code for p in old.pathway_options][0] == "CP-NEWS-URGENT-REVIEW"
+    dump = lambda r: json.dumps([a.model_dump(mode="json") for a in r.alerts], sort_keys=True)  # noqa: E731
+    assert dump(new) == dump(old)
+    assert new.red_flag_screening.model_dump_json() == old.red_flag_screening.model_dump_json()
+    assert new.escalation_required is old.escalation_required is True
+    assert [x.code for x in new.next_information] == [x.code for x in old.next_information]
+    assert ruleset.CARE_RULES_VERSION == "care-rules-1.1.0"

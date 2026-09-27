@@ -61,9 +61,12 @@ def suggest(inputs: dict[str, Any]) -> dict[str, Any]:
                 next_info[code] = sorted(set(next_info[code]) | set(refs))
         pathways.setdefault(rule["pathway"], [])
         pathways[rule["pathway"]] = sorted(set(pathways[rule["pathway"]]) | set(refs))
+    # care-rules-1.1.0: listed pathways rank first in the declared order (stable; CHANGELOG.md)
+    prio = {c: i for i, c in enumerate(r.get("pathway_priority", ()))}
+    ranked = sorted(pathways.items(), key=lambda kv: prio.get(kv[0], len(prio)))
     return {
         "next_information": [{"code": c, "evidence_refs": refs} for c, refs in list(next_info.items())[:5]],
-        "pathway_options": [{"code": c, "evidence_refs": refs} for c, refs in list(pathways.items())[:3]],
+        "pathway_options": [{"code": c, "evidence_refs": refs} for c, refs in ranked[:3]],
     }
 
 

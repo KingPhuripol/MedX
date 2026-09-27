@@ -10,8 +10,8 @@ from pathlib import Path
 from typing import Any
 
 RULES_PATH = Path(__file__).with_name("rules") / "care_rules_v1.json"
-CARE_RULES_VERSION = "care-rules-1.0.0"
-CARE_RULES_SHA256 = "8f04f66fbc901f13f63fb866b8add38506df5f99f5782f679d6caf397082a10c"
+CARE_RULES_VERSION = "care-rules-1.1.0"
+CARE_RULES_SHA256 = "4a4fc16cc41f0b807df4095cbea1d81f5593fbd31c7618225620ed6c44ccbfd3"
 
 
 def file_sha256(path: Path = RULES_PATH) -> str:
