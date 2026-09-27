@@ -57,9 +57,10 @@ _WORD_ONLY = frozenset({"มก", "มล"})  # lexemes that must not touch a Th
 _SYMBOLS = frozenset("/⁄.,-–—~x+&")
 _CONNECTORS = frozenset({"to", "or", "and", "ถึง", "หรือ", "และ"})
 _RANGE_CONNECTORS = frozenset({"-", "–", "—", "~"}) | _CONNECTORS
-# R1: a strength or quantity followed by one of these is an amount per day / weight / other unit, not per dose.
-# "ต่อ" is matched as a lexicon prefix ("ต่อวัน" -> "ต่อ" + "วัน"); over-matching can only make a dose unverifiable.
-_PER = frozenset({"/", "⁄", "per", "ต่อ"})
+# R1 (rev 3): an anchor's TAIL may hold only these characters; anything else breaks the anchor (unparsed_token).
+NEUTRAL = frozenset(" .,;:()[]+&")
+# R1 (b): the first word after the TAIL is Latin "per", Thai text starting with "ต่อ", or "a" + ␣? + one of these.
+_A_PERIODS = ("day", "week", "month")
 # T1: text directly after "ครึ่ง" that starts with one of these is a time ("half an hour"), never a half tablet.
 _TW_TH_PREFIXES = ("ชั่วโมง", "ชม", "ช.ม.", "นาที")
 _TW_EN = frozenset({"h", "hr", "hrs", "hour", "hours", "min", "mins", "minute", "minutes"})
@@ -185,6 +186,8 @@ class Match:
     strengths: tuple[tuple[Fraction, str], ...] = ()
     quantity: Fraction | None = None
     anchor: int | None = None  # token index where dose text starts (drug-name boundary)
+    last: int | None = None  # R1 anchor: last token of S1/Q1-Q5 (UNIT, QW, closing ครึ่ง of Q4b, M of Q5)
+    broken: bool = False  # R1 (c): a non-NEUTRAL character in the anchor's TAIL
     freq_code: str | None = None  # Q5 only
     daily_total: bool = False  # Q7 with a value > 1
     conflict: bool = False  # T1 whose "ครึ่ง" could also complete "INT เม็ด ครึ่ง" (Q4b)
@@ -231,7 +234,7 @@ def _s1(toks: list[Token], i: int) -> Match | None:
     t = _num(toks, i)
     if not t or _text(toks, i - 1) == "/" or _text(toks, i + 1) not in _UNITS or Fraction(t) <= 0:
         return None
-    return Match("S1", i, i + 2, strengths=((Fraction(t), _UNITS[toks[i + 1].text]),), anchor=i)
+    return Match("S1", i, i + 2, strengths=((Fraction(t), _UNITS[toks[i + 1].text]),), anchor=i, last=i + 1)
 
 
 def _s2(toks: list[Token], i: int) -> Match | None:
@@ -266,7 +269,7 @@ def _l1(toks: list[Token], i: int) -> Match | None:
 
 def _quantity(pid: str, got: tuple[Fraction, int] | None, toks: list[Token], i: int) -> Match | None:
     if got and _text(toks, got[1]) in QUANTITY_WORDS:
-        return Match(pid, i, got[1] + 1, quantity=got[0], anchor=i)
+        return Match(pid, i, got[1] + 1, quantity=got[0], anchor=i, last=got[1])
     return None
 
 
@@ -288,12 +291,12 @@ def _q3(toks: list[Token], i: int) -> Match | None:
 
 def _q4(toks: list[Token], i: int) -> Match | None:
     if _text(toks, i) == "ครึ่ง" and _text(toks, i + 1) in _QW_TH:
-        return Match("Q4", i, i + 2, quantity=Fraction(1, 2), anchor=i)
+        return Match("Q4", i, i + 2, quantity=Fraction(1, 2), anchor=i, last=i + 1)
     whole = _int(toks, i)
     if whole is None or _text(toks, i + 1) not in _QW_TH or _text(toks, i + 2) != "ครึ่ง" or _is_tw(toks, i + 3):
         return None
     got = _bounded(whole + Fraction(1, 2), i + 3)
-    return Match("Q4", i, got[1], quantity=got[0], anchor=i) if got else None
+    return Match("Q4", i, got[1], quantity=got[0], anchor=i, last=i + 2) if got else None
 
 
 def _is_tw(toks: list[Token], i: int) -> bool:
@@ -321,7 +324,7 @@ def _q5(toks: list[Token], i: int) -> Match | None:
     m = _num(toks, got[1] + 1)
     if m not in _TIMES_CODE or _text(toks, got[1] + 2) in QUANTITY_WORDS:
         return None
-    return Match("Q5", i, got[1] + 2, quantity=got[0], anchor=i, freq_code=_TIMES_CODE[m])
+    return Match("Q5", i, got[1] + 2, quantity=got[0], anchor=i, last=got[1] + 1, freq_code=_TIMES_CODE[m])
 
 
 def _prefixed(pid: str, toks: list[Token], i: int) -> Match | None:
@@ -329,7 +332,7 @@ def _prefixed(pid: str, toks: list[Token], i: int) -> Match | None:
     if not inner:
         return None
     best = max(inner, key=lambda m: m.end)
-    return Match(pid, i, best.end, quantity=best.quantity, anchor=best.anchor)
+    return Match(pid, i, best.end, quantity=best.quantity, anchor=best.anchor, last=best.last)
 
 
 def _q6(toks: list[Token], i: int) -> Match | None:
@@ -339,17 +342,43 @@ def _q6(toks: list[Token], i: int) -> Match | None:
 def _q7(toks: list[Token], i: int) -> Match | None:
     m = _prefixed("Q7", toks, i) if _text(toks, i) == "วันละ" else None
     if m is not None and m.quantity > 1:  # a daily total, not a per-dose amount
-        return Match("Q7", m.start, m.end, anchor=m.anchor, daily_total=True)
+        return Match("Q7", m.start, m.end, anchor=m.anchor, last=m.last, daily_total=True)
     return m
 
 
+def _surface(toks: list[Token]) -> str:
+    """The normalised, case-folded line rebuilt from the tokens (whitespace is always one space)."""
+    chars = [" "] * (toks[-1].end if toks else 0)
+    for t in toks:
+        chars[t.start:t.end] = t.text
+    return "".join(chars)
+
+
 def _r1(toks: list[Token], i: int) -> Match | None:
-    """R1: (UNIT | QW) (/ | ⁄ | per | ต่อ) X, unless the UNIT and "/" begin an L1 liquid."""
-    if _text(toks, i) not in _UNITS and _text(toks, i) not in QUANTITY_WORDS:
+    """R1 (rev 3) on the anchor at token ``i``, unless the anchor's UNIT and a "/" begin an L1 liquid.
+
+    TAIL = the run of characters right after the anchor whose category is not L* or N*. (a) a SLASH-LIKE
+    character in TAIL, or (b) "per" / "ต่อ..." / "a ␣? day|week|month" right after TAIL: per_unit_amount.
+    Otherwise (c) any TAIL character outside NEUTRAL breaks the anchor (unparsed_token). Consumes nothing.
+    """
+    if toks[i].text in _MASS and _l1(toks, i - 1):
         return None
-    if _text(toks, i + 1) not in _PER or i + 2 >= len(toks) or _l1(toks, i - 1):
-        return None
-    return Match("R1", i, i + 3)
+    s = _surface(toks)
+    j = toks[i].end
+    while j < len(s) and unicodedata.category(s[j])[0] not in "LN":
+        j += 1
+    tail = s[toks[i].end:j]
+    nxt = next((k for k in range(i + 1, len(toks)) if toks[k].start == j), None)
+    word = toks[nxt].text if nxt is not None and toks[nxt].kind == "WORD" else None
+    period = (toks[nxt + 1].text if word == "a" and nxt + 1 < len(toks) and toks[nxt + 1].kind == "WORD"
+              and toks[nxt + 1].start <= toks[nxt].end + 1 else None)
+    per_word = (word == "per" or s.startswith("ต่อ", j) or period in _A_PERIODS
+                or word in {"a" + p for p in _A_PERIODS})
+    if per_word or any(is_slash_like(c) for c in tail):
+        return Match("R1", i, i)
+    if set(tail) - NEUTRAL:
+        return Match("R1", i, i, broken=True)
+    return None
 
 
 def _t1(toks: list[Token], i: int) -> Match | None:
@@ -434,9 +463,6 @@ class DoseParse:
 def read_dose(raw: str) -> DoseParse:
     """Tokenise the whole line and apply ``DOSE_GRAMMAR`` left to right, longest match first."""
     toks = tokenise(raw)
-    # R1 is checked at every token: its UNIT or QW is also the tail of the S1/Q production that consumes it,
-    # and any R1 makes the dose unverifiable whatever else is read.
-    per_unit = [m for i in range(len(toks)) if (m := _r1(toks, i))]
     matches: list[Match] = []
     i = 0
     while i < len(toks):
@@ -447,7 +473,10 @@ def read_dose(raw: str) -> DoseParse:
             i = best.end
         else:
             i += 1
-    consumed = frozenset(k for m in matches for k in range(m.start, m.end))  # R1 flags; it consumes nothing
+    consumed = frozenset(k for m in matches for k in range(m.start, m.end))
+    # R1 is checked on every anchor of the productions that fired; it flags and consumes nothing.
+    tails = [r for m in matches if m.last is not None and (r := _r1(toks, m.last))]
+    per_unit = [r for r in tails if not r.broken]
     numeric = numeric_ish(toks)
     left = [k for k in range(len(toks)) if numeric[k] and k not in consumed]
     strengths = {s for m in matches for s in m.strengths}
@@ -467,7 +496,7 @@ def read_dose(raw: str) -> DoseParse:
         reason = "range"
     elif len(quantities) > 1 or any(m.daily_total or m.conflict for m in matches):
         reason = "ambiguous_quantity"
-    elif left:
+    elif left or tails:  # an unconsumed numeric-ish token, or a broken anchor (R1 c)
         reason = "unparsed_token"
     else:
         reason = None
@@ -480,7 +509,7 @@ def read_dose(raw: str) -> DoseParse:
             status, value = "resolved", float(v)
         else:
             status = "not_stated"
-    return DoseParse(tuple(toks), tuple(matches + per_unit), consumed, tuple(numeric), status, reason, value, unit, quantity)
+    return DoseParse(tuple(toks), tuple(matches + tails), consumed, tuple(numeric), status, reason, value, unit, quantity)
 
 
 # ================================================================ frequency mapping (unchanged since s5r2)

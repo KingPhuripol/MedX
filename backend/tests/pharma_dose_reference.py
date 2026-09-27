@@ -32,7 +32,8 @@ LINKS = ("to", "or", "and", "ถึง", "หรือ", "และ")
 RANGE_LINKS = ("-", "–", "—", "~") + LINKS
 S3_JOINERS = ("+", ",", "&", "and", "และ")
 TIMES_OF_DAY = {"1": 1, "2": 2, "3": 3, "4": 4}
-PER_WORDS = ("/", "⁄", "per", "ต่อ")  # R1: amount per day / weight / other unit
+TAIL_OK = " .,;:()[]+&"  # rev 3 R1 (c): the only characters an anchor's tail may hold
+PERIODS_AFTER_A = ("day", "week", "month")  # rev 3 R1 (b): "a day", "a week", "a month"
 HALF = "ครึ่ง"
 TIME_TH = ("ชั่วโมง", "ชม", "ช.ม.", "นาที")  # T1: text right after ครึ่ง starting with one of these is a time
 TIME_EN = ("h", "hr", "hrs", "hour", "hours", "min", "mins", "minute", "minutes")
@@ -83,6 +84,11 @@ def _time_follows(s: str, pos: int) -> bool:
 
 
 def scan(text: str) -> list[tuple[str, str]]:
+    return _scan(text)[1]
+
+
+def _scan(text: str) -> tuple[str, list[tuple[str, str]], list[int]]:
+    """Returns the normalised line, its (kind, text) pairs and the end offset of each pair."""
     s = " ".join(unicodedata.normalize("NFC", text).split()).lower().replace("×", "x")
     lexemes = sorted(THAI_LEXEMES, key=len, reverse=True)
     out: list[tuple[str, str]] = []
@@ -150,14 +156,46 @@ def scan(text: str) -> list[tuple[str, str]]:
             continue
         out.append(("S" if ch in SYMBOL_CHARS else "O", ch))
         pos += 1
-    return out
+    ends, at = [], 0
+    for _, txt in out:  # pairs appear in order and hold every non-space character of s
+        while s[at] == " ":
+            at += 1
+        at += len(txt)
+        ends.append(at)
+    return s, out, ends
+
+
+def _latin_run(s: str, pos: int) -> str:
+    end = pos
+    while end < len(s) and _latin_letter(s[end]):
+        end += 1
+    return s[pos:end]
+
+
+def _per_follows(s: str, pos: int) -> bool:
+    """rev 3 R1 (b): Latin "per", Thai text beginning with "ต่อ", or Latin "a" then an optional space and a period."""
+    if s[pos:pos + 3] == "ต่อ":
+        return True
+    word = _latin_run(s, pos)
+    if word == "per":
+        return True
+    if word[:1] == "a" and word[1:] in PERIODS_AFTER_A:
+        return True
+    if word == "a":
+        nxt = pos + 1 + (1 if s[pos + 1:pos + 2] == " " else 0)
+        return _latin_run(s, nxt) in PERIODS_AFTER_A
+    return False
 
 
 class _Walk:
     """One left-to-right pass over the scanned pairs."""
 
-    def __init__(self, pairs: list[tuple[str, str]]):
+    def __init__(self, pairs: list[tuple[str, str]], s: str = "", ends: list[int] | None = None):
         self.p = pairs
+        self.s = s
+        self.ends = ends or []
+        self.anchors: list[int] = []  # last pair of each S1 / Q1-Q5 (inner of Q6/Q7)
+        self.broken_tail = False
         self.used = [False] * len(pairs)
         self.strengths: set[tuple[Fraction, str]] = set()
         self.quantities: set[Fraction] = set()
@@ -252,12 +290,19 @@ class _Walk:
             j += 2
         return j - i
 
-    def mark_per_unit(self) -> None:
-        """R1, checked at every pair: (UNIT | QW) then / ⁄ per ต่อ then any pair, unless it starts an L1."""
-        for j in range(len(self.p)):
-            if (self.t(j) in UNIT_OF or self.t(j) in QW) and self.t(j + 1) in PER_WORDS and j + 2 < len(self.p):
-                if not self.liquid_len(j - 1):
-                    self.per_unit = True
+    def check_tails(self) -> None:
+        """rev 3 R1 on every anchor: the tail is the run after it with no letter and no number."""
+        for a in self.anchors:
+            if self.t(a) in MASS and self.liquid_len(a - 1):
+                continue
+            start = stop = self.ends[a]
+            while stop < len(self.s) and unicodedata.category(self.s[stop])[:1] not in ("L", "N"):
+                stop += 1
+            tail = self.s[start:stop]
+            if any(slashy(c) for c in tail) or _per_follows(self.s, stop):
+                self.per_unit = True
+            elif any(c not in TAIL_OK for c in tail):
+                self.broken_tail = True
 
     # -- the cascade
     def step(self, i: int) -> int:
@@ -286,6 +331,7 @@ class _Walk:
                     self.strengths.update(chain)
                     return self.take(i, j - i)
                 self.strengths.add(first)
+                self.anchors.append(i + 1)
                 return self.take(i, 2)
             # S2 combination
             if self.t(i + 1) == "/" and self.k(i + 2) == "N" and self.t(i + 3) in UNIT_OF:
@@ -297,17 +343,20 @@ class _Walk:
         if n and self.t(i + n[1]) == "x" and self.k(i + n[1] + 1) == "N" and self.t(i + n[1] + 1) in TIMES_OF_DAY:
             if self.t(i + n[1] + 2) not in QW:
                 self.quantities.add(n[0])
+                self.anchors.append(i + n[1] + 1)
                 return self.take(i, n[1] + 2)
         # Q1-Q4 at this position
         q = self.small_quantity(i)
         if q:
             self.quantities.add(q[0])
+            self.anchors.append(i + q[1] - 1)
             return self.take(i, q[1])
         # Q6 / Q7 / F3
         if t == "ครั้งละ":
             q = self.small_quantity(i + 1)
             if q:
                 self.quantities.add(q[0])
+                self.anchors.append(i + q[1])
                 return self.take(i, 1 + q[1])
         if t == "วันละ":
             q = self.small_quantity(i + 1)
@@ -316,6 +365,7 @@ class _Walk:
                     self.daily_total = True
                 else:
                     self.quantities.add(q[0])
+                self.anchors.append(i + q[1])
                 return self.take(i, 1 + q[1])
         if t in ("วันละ", "สัปดาห์ละ", "อาทิตย์ละ", "เดือนละ"):
             j = i + 1 + (1 if self.whole(i + 1) is not None else 0)
@@ -365,12 +415,12 @@ def _variable(text: str, pairs: list[tuple[str, str]]) -> bool:
 
 
 def _walk(text: str) -> tuple[list[tuple[str, str]], _Walk]:
-    pairs = scan(text)
-    walk = _Walk(pairs)
+    s, pairs, ends = _scan(text)
+    walk = _Walk(pairs, s, ends)
     i = 0
     while i < len(pairs):
         i = walk.step(i)
-    walk.mark_per_unit()
+    walk.check_tails()
     return pairs, walk
 
 
@@ -389,7 +439,7 @@ def reference_parse(text: str) -> tuple[str, float | None, str | None, float | N
         reason = "range"
     elif len(walk.quantities) > 1 or walk.daily_total or walk.half_conflict:
         reason = "ambiguous_quantity"
-    elif leftover:
+    elif leftover or walk.broken_tail:
         reason = "unparsed_token"
     else:
         reason = None
@@ -408,4 +458,4 @@ def reference_reason_hint(text: str) -> str:
     left = [pairs[j][1] for j in range(len(pairs)) if walk.numericish(j) and not walk.used[j]]
     return (f"variable={_variable(text, pairs)} liquid={walk.liquid} strengths={sorted(walk.strengths)} "
             f"per_unit={walk.per_unit} quantities={sorted(walk.quantities)} daily_total={walk.daily_total} "
-            f"half_conflict={walk.half_conflict} leftover={left}")
+            f"half_conflict={walk.half_conflict} broken_tail={walk.broken_tail} leftover={left}")
