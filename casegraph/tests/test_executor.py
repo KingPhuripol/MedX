@@ -142,7 +142,7 @@ def _alerts(graph):
 def test_red_flag_escalates_regardless_of_reasoning(env, reasoning_state):
     cfg = None
     if reasoning_state == "abstained":
-        cfg = ProviderConfig(library=LibraryConfig(reasoning_required_inputs=("Findings<-CXRImage",)))
+        cfg = s2_config(ProviderConfig(library=LibraryConfig(reasoning_required_inputs=("Findings<-CXRImage",))))
     if reasoning_state == "error":
         _with_fake(env, "project_model", model_version="proj-mock-0.1", mode="error", tasks={"reasoning"})
     graph = env.executor().run_sync(compile_case("F5", F5_T, cfg))
@@ -159,7 +159,7 @@ def test_red_flag_escalates_regardless_of_reasoning(env, reasoning_state):
 def test_red_flag_not_evaluated_without_inputs(env):
     # Only a CXR on encoder_2d: ImageTokens reach Reasoning only; Red-flag gets no Findings and no Vitals.
     items = [cxr("SYN-RF0", "rf0-cxr", DAY + 8 * H, DAY + 8 * H)]
-    graph = env.executor().run_sync(compile_graph(build_snapshot(items, DAY + 9 * H)))
+    graph = env.executor().run_sync(compile_graph(build_snapshot(items, DAY + 9 * H), s2_config()))
     alerts = _alerts(graph)
     assert alerts["status"] == "not_evaluated" and alerts["alerts"] == []
     # s2r: plus each rule's declared Vitals.<key> (was ["Findings", "Vitals"] at edf8182)
@@ -207,7 +207,7 @@ def test_f1_t2_executes_all_seven_nodes(env):
     issues = graph.node("pharma_agent").output["MedicationIssues"]["issues"]
     assert {i["kind"] for i in issues} == {"duplicate", "dose_mismatch"}
     assert graph.node("reader_cxr").output["ImageTokens"]["encoder_provider"] == "encoder_2d"
-    assert len(f1()) == 4
+    assert len(f1()) == 6  # i2: F1 gained Demographics and an S3 intake transcript
 
 
 # ------------------------------------------------------------------------ S2R-A11 (s2r)
@@ -228,9 +228,11 @@ class _ReasoningOutput(FakeProvider):
         return super().invoke(request, request_sha256)
 
 
-@pytest.mark.parametrize("absent", ["care", "department"])
+# i2: the department part is S4 department.suggest (its own strict parser); the summary/care call no
+# longer carries a department key, so only "text" and "care" are required of it.
+@pytest.mark.parametrize("absent", ["care", "text"])
 def test_reasoning_missing_keys_schema_invalid(env, absent):
-    full = {"text": "synthetic summary", "department": None, "care": ["synthetic item"]}
+    full = {"text": "synthetic summary", "care": ["synthetic item"]}
     env.gateways["project_model"] = LocalGateway(_ReasoningOutput({k: v for k, v in full.items() if k != absent}))
     r = env.executor().run_sync(compile_case("F1", F1_T1)).node("reasoning")
     assert (r.status, r.reason, r.output) == ("error", "schema_invalid", None)
@@ -238,7 +240,10 @@ def test_reasoning_missing_keys_schema_invalid(env, absent):
     env2 = Env(env.root / "explicit")
     env2.gateways["project_model"] = LocalGateway(_ReasoningOutput(full))
     ok = env2.executor().run_sync(compile_case("F1", F1_T1)).node("reasoning")
-    assert ok.status == "ok" and ok.output["DepartmentSuggestion"]["department"] is None
+    # the fake answers the S4 department task with a non-S4 body: S4's strict parser records an error, and the
+    # suggestion carries no top3 (never a fabricated department)
+    dep = ok.output["DepartmentSuggestion"]
+    assert ok.status == "ok" and dep["status"] == "error" and dep["top3"] == []
     assert ok.output["CareSuggestion"]["items"] == ["synthetic item"]
 
 

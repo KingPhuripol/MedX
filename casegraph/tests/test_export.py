@@ -62,10 +62,12 @@ def test_export_fields(env):
     assert [n["id"] for n in data["nodes"] if not n["reproducible"]] == ["reader_text"]
     for e in data["edges"]:
         assert EDGE <= set(e)
-    assert {r["item_id"] for r in data["evidence"]} == {"f2-text", "f2-vitals", "f2-labs", "f2-ct", "f2-mri"}
+    assert {r["item_id"] for r in data["evidence"]} == {"f2-text", "f2-vitals", "f2-labs", "f2-ct", "f2-mri",
+                                                        "f2-demo", "f2-intake"}  # i2: S4 intake added to F2
     for r in data["evidence"]:
         assert EVIDENCE <= set(r)
-    assert data["totals"]["gateway_calls"] == sum(n["gateway_calls"] for n in data["nodes"]) == 3
+    # i2: Reasoning makes 2 calls (S4 department + mock summary) -> 1 reader + 2 + 1 CT/MRI encoder = 4
+    assert data["totals"]["gateway_calls"] == sum(n["gateway_calls"] for n in data["nodes"]) == 4
     assert data["totals"]["wall_time_ms"] >= 0
     assert data["nodes"][0]["params"] == {} or "temperature" not in data["nodes"][0]["params"]
     reasoning = graph.node("reasoning")
@@ -112,14 +114,14 @@ def _cli_inspect(path):
 def _partial_graph(env):
     items = [text("SYN-EXP-P", "p-text", DAY + 8 * H, DAY + 8 * H),
              vitals("SYN-EXP-P", "p-vitals", DAY + 9 * H, DAY + 9 * H, spo2=97.0, hr=80.0)]
-    return env.executor().run_sync(compile_graph(build_snapshot(items, DAY + 12 * H)))
+    return env.executor().run_sync(compile_graph(build_snapshot(items, DAY + 12 * H), s2_config()))
 
 
 @pytest.mark.parametrize("name,T", CASES)
 def test_export_red_flag_screening(env, name, T):
     graph = env.executor().run_sync(compile_case(name, T))
     data = json.loads(to_json(graph))
-    assert data["schema_version"] == SCHEMA_VERSION == "casegraph-export/0.2"
+    assert data["schema_version"] == SCHEMA_VERSION == "casegraph-export/0.3"  # i2 (D-I2-5)
     payload = graph.node("human_checkpoint").output[PENDING_KEY]
     assert data["red_flag_screening"] == payload["red_flag_screening"]
     assert data["red_flag_screening"]["status"] == graph.node("red_flag").output["Alerts"]["status"]

@@ -13,7 +13,7 @@ from casegraph.compiler import build_snapshot, compile_graph
 from casegraph.library import MODEL_PROVIDERS
 from casegraph.providers import mock_provider
 
-from .conftest import FakeProvider, compile_case
+from .conftest import FakeProvider, compile_case, s2_config
 from .fixtures import F1_T2, F2_T, f1
 from casegraph.executor import Executor
 from casegraph.providers import LocalGateway
@@ -57,14 +57,15 @@ def _with_sentinel():
 
 def test_one_gateway_call_and_audit_per_model_node(env):
     graphs = [
-        env.executor().run_sync(compile_graph(build_snapshot(_with_sentinel(), F1_T2))),
+        env.executor().run_sync(compile_graph(build_snapshot(_with_sentinel(), F1_T2), s2_config())),
         env.executor().run_sync(compile_case("F2", F2_T)),
     ]
     model_nodes = [n for g in graphs for n in g.nodes if n.provider in MODEL_PROVIDERS]
     assert len(model_nodes) == 6
-    assert all(n.gateway_calls == 1 and not n.cached for n in model_nodes)
+    # i2: Reasoning = S4 department.suggest call + the summary/care call (2); every other model node 1
+    assert all(n.gateway_calls == (2 if n.id == "reasoning" else 1) and not n.cached for n in model_nodes)
     assert all(n.gateway_calls == 0 for g in graphs for n in g.nodes if n.provider not in MODEL_PROVIDERS)
-    assert env.calls == len(model_nodes) == len(env.audit)
+    assert env.calls == sum(n.gateway_calls for n in model_nodes) == len(env.audit)
     for rec in env.audit:
         assert rec["action"] == "gateway.invoke" and rec["outcome"] == rec["details"]["status"]
         assert AUDIT_FIELDS <= set(rec["details"])

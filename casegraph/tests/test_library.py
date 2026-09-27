@@ -6,14 +6,18 @@ from casegraph.library import LIBRARY, LibraryConfig, ProviderConfig, node_decls
 from casegraph.types import NodeType as N
 
 TABLE_3_1 = {
-    N.READER_TEXT: ({"ClinicalText"}, {"Findings"}, {"project_model", "external_model"}, False),
+    # i2: the ClinicalText family (transcripts, extracted facts) and the voice_extract provider
+    N.READER_TEXT: ({"ClinicalText", "IntakeTranscript", "VoiceIntakeFacts"}, {"Findings"},
+                    {"voice_extract", "project_model", "external_model"}, False),
     N.READER_VITALS_LABS: ({"Vitals", "LabSeries"}, {"Findings"}, {"rules", "project_model"}, False),
     N.READER_CXR: ({"CXRImage"}, {"ImageTokens", "Findings"}, {"encoder_2d", "external_model", "classifier"}, False),
     N.READER_CT_MRI: ({"CTVolume", "MRIVolume"}, {"ImageTokens", "Findings"},
                       {"encoder_3d", "external_model", "segmentation"}, False),
-    N.RED_FLAG: ({"Findings", "Vitals"}, {"Alerts"}, {"rules"}, True),
+    N.RED_FLAG: ({"Findings", "Vitals", "Demographics"}, {"Alerts"}, {"rules"}, True),  # i2: S4 reads age/sex
     N.PHARMA_AGENT: ({"MedicationList", "Findings"}, {"MedicationIssues"}, {"project_model", "rules"}, False),
-    N.REASONING: ({"Findings", "ImageTokens", "Alerts"}, {"CaseSummary", "DepartmentSuggestion", "CareSuggestion"},
+    # i2: Reasoning builds the S4 Case for department.suggest from Demographics/Vitals directly
+    N.REASONING: ({"Findings", "ImageTokens", "Alerts", "Demographics", "Vitals"},
+                  {"CaseSummary", "DepartmentSuggestion", "CareSuggestion"},
                   {"project_model", "external_model"}, False),
     N.HUMAN_CHECKPOINT: ({"Alerts", "MedicationIssues", "CaseSummary", "DepartmentSuggestion", "CareSuggestion"},
                          {"ConfirmedResult"}, {"human:nurse", "human:physician", "human:pharmacist"}, True),

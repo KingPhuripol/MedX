@@ -122,6 +122,40 @@ def _symptom_facts(item: IntakeTranscript, output: Any, patient: dict[int, Turn]
     return out
 
 
+# ------------------------------------------------------------------------------- one entry point
+
+
+def read_clinical_text(
+    evidence: Sequence[Any], T: datetime, invoke: Invoke
+) -> tuple[list[IntakeValue], list[SymptomFact], list[str], set[str]]:
+    """(intake, symptom facts, statements, read data types) for the transcripts / voice facts in ``evidence``.
+
+    A transcript, when present, is always the source; ``VoiceIntakeFacts`` pass through (0 calls) only when
+    there is no transcript. Shared by the Reader:Text node and the single-prompt arm (same logic, same order).
+    """
+    transcripts = [i for i in evidence if isinstance(i, IntakeTranscript)]
+    facts_items = [i for i in evidence if isinstance(i, VoiceIntakeFacts)]
+    intake: list[IntakeValue] = []
+    facts: list[SymptomFact] = []
+    statements: list[str] = []
+    read_types: set[str] = set()
+    for item in sorted(transcripts, key=lambda i: (i.available_at_time, i.item_id)):
+        values, symptoms, versions = read_transcript(item, T, invoke)
+        intake += values
+        facts += symptoms
+        read_types.add(item.data_type)
+        statements.append(f"{item.item_id}: read by {', '.join(versions)}")
+    if facts_items and not transcripts:
+        values, symptoms = pass_through(facts_items)
+        intake += values
+        facts += symptoms
+        read_types.add("VoiceIntakeFacts")
+        statements += [f"{i.item_id}: VoiceIntakeFacts passed through (0 calls)" for i in facts_items]
+    elif facts_items:
+        statements += [f"{i.item_id}: not read (a transcript is present and is the source)" for i in facts_items]
+    return intake, facts, statements, read_types
+
+
 # ------------------------------------------------------------------------------- pass-through
 
 

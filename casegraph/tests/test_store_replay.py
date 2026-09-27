@@ -115,7 +115,9 @@ def test_regenerate_swap_provider_recomputes_only_descendants(env, name, T, swap
             assert n.cached and n.gateway_calls == 0
             assert n.output_sha256 == v1.node(n.id).output_sha256
     model_backed = {n.id for n in v2.nodes if n.id in recomputed and n.provider in MODEL_PROVIDERS}
-    assert env.calls - calls == len(model_backed) == sum(n.gateway_calls for n in v2.nodes)
+    # i2: Reasoning makes 2 calls (S4 department.suggest + the mock summary/care call); every other model node 1
+    assert env.calls - calls == sum(n.gateway_calls for n in v2.nodes) == len(model_backed) + 1
+    assert all(v2.node(n).gateway_calls == (2 if n == "reasoning" else 1) for n in model_backed)
     assert model_backed == {swap.value, "reasoning"}
 
 

@@ -2,6 +2,9 @@
 
 A05 (construction invariant) and A10 (validation) live in ``test_typed_data.py``.
 Rule thresholds are PLACEHOLDER — not clinical.
+
+i2: these tests pin the s2 configuration (placeholder rule set, explicit assignment via ``s2_config``);
+the screening block now also carries rule set, label, scope and counts (v1.2).
 """
 
 from __future__ import annotations
@@ -15,7 +18,7 @@ from pydantic import ValidationError
 from casegraph import data as d
 from casegraph.compiler import build_snapshot, compile_graph
 from casegraph.executor import PENDING_KEY, Executor
-from casegraph.library import RULES_VERSIONS, LibraryConfig, ProviderAssignment, ProviderConfig
+from casegraph.library import PLACEHOLDER_RED_FLAG_VERSION, RULES_VERSIONS, LibraryConfig, ProviderAssignment, ProviderConfig
 from casegraph.providers import (
     RED_FLAG_RULE_IDS,
     RED_FLAG_RULE_SET_VERSION,
@@ -37,7 +40,7 @@ T = DAY + 12 * H
 
 def _run(items, T=T, config=None, patient_ref=None, gateways=None):
     ex = Executor(gateways or mock_gateways(), OutputStore(), MemoryStateStore())
-    return ex.run_sync(compile_graph(build_snapshot(items, T, patient_ref=patient_ref), config))
+    return ex.run_sync(compile_graph(build_snapshot(items, T, patient_ref=patient_ref), config or s2_config()))
 
 
 def _alerts(graph):
@@ -167,6 +170,11 @@ EXPECTED_BLOCK = {
     "evaluated": dict(status="evaluated", performed=True, banner=None, rules_evaluated=ALL_RULES,
                       rules_not_evaluated=[], missing_inputs=[]),
 }
+_PH = dict(rule_set_version="placeholder-redflag-0.2", label=d.PLACEHOLDER_LABEL,
+           scope=d.RULE_SET_SCOPES["placeholder-redflag-0.2"], n_declared=4, readings=[], conflicts=[])
+for _case_name, _block in EXPECTED_BLOCK.items():  # i2 (v1.2): rule set, label, scope and counts
+    _block.update(_PH, n_evaluated=len(_block["rules_evaluated"]), n_not_evaluated=len(_block["rules_not_evaluated"]),
+                  n_fired={"evaluated": 2}.get(_case_name, 0))  # F5: RF-PH-001, RF-PH-002
 EXPECTED_REASONS = {
     "not_evaluated": ["red_flag_not_evaluated"],
     "partial": ["red_flag_partially_evaluated"],
@@ -200,8 +208,12 @@ def test_evaluated_without_urgent_does_not_escalate():
 
 
 def test_reasoning_output_carries_screening_status(env):
-    cfg = ProviderConfig(library=LibraryConfig(reasoning_required_inputs=("Findings<-ClinicalText",)))
-    for name, T_, expected in (("F3", F3_T, "not_evaluated"), ("F5", F5_T, "evaluated")):
+    cfg = s2_config(ProviderConfig(library=LibraryConfig(reasoning_required_inputs=("Findings<-ClinicalText",))))
+    # i2: F3 has no S4 required fields, so the S4 department abstains (0 calls) and still carries the status
+    f3 = env.executor().run_sync(compile_case("F3", F3_T, cfg)).node("reasoning")
+    assert f3.status == "abstained" and f3.gateway_calls == 0
+    assert f3.output["DepartmentSuggestion"]["red_flag_screening"] == "not_evaluated"
+    for name, T_, expected in (("F5", F5_T, "evaluated"),):
         graph = env.executor().run_sync(compile_case(name, T_, cfg))
         r = graph.node("reasoning")
         assert r.status == "ok", r.reason
@@ -214,7 +226,9 @@ def test_reasoning_output_carries_screening_status(env):
 
 @pytest.mark.parametrize("cls,payload", [
     (d.CaseSummary, {"text": "t"}),
-    (d.DepartmentSuggestion, {"department": None}),
+    (d.DepartmentSuggestion, {"status": "abstained", "top3": (), "uncertainty": None, "uncertainty_label": "u",
+                              "missing_information": ("age",), "reason": "r", "gateway_provider": None,
+                              "gateway_model_version": None, "contract_version": None, "request_sha256": None}),
     (d.CareSuggestion, {"items": ()}),
 ])
 def test_suggestion_requires_screening_field(cls, payload):
@@ -247,7 +261,9 @@ def test_rule_treats_non_finite_as_missing(bad):
 
 
 def test_red_flag_rule_set_version_and_label(env):
-    assert RULES_VERSIONS[N.RED_FLAG] == RED_FLAG_RULE_SET_VERSION == "placeholder-redflag-0.2"
+    # i2: the default is rf-1.1.0; the placeholder set is reachable only by explicit assignment
+    assert RULES_VERSIONS[N.RED_FLAG] == "rf-1.1.0"
+    assert PLACEHOLDER_RED_FLAG_VERSION == RED_FLAG_RULE_SET_VERSION == "placeholder-redflag-0.2"
     assert tuple(ALL_RULES) == RED_FLAG_RULE_IDS
     graph = env.executor().run_sync(compile_case("F5", F5_T))
     alerts = _alerts(graph)

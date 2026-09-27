@@ -282,16 +282,17 @@ def screen_rf110(adapted: Adapted, extra_missing: Sequence[str] = ()) -> Screen:
     results: list[RuleResult] = []
     for rule in redflags.rules():
         rid = rule["id"]
-        if rid in missing_by_rule:
-            missing = tuple(sorted({adapted.stale.get(m, m) for m in missing_by_rule[rid]}))
-            results.append(RuleResult(rule_id=rid, status="not_evaluated", missing_inputs=missing, evaluated_on=(),
-                                      fired=None, label=label))
-            continue
+        # a stale vital is reported with its read time and age instead of the bare kind (C1)
+        missing = tuple(sorted({adapted.stale.get(m, m) for m in missing_by_rule.get(rid, ())}))
         read = sorted({adapted.fact_source[fid] for fid, f in visible.items() if f.kind in kinds[rid]})
-        if not read:
+        if not missing and not read:
             raise BridgeError(f"{rid} evaluated without reading any input")
-        results.append(RuleResult(rule_id=rid, status="evaluated", missing_inputs=(), evaluated_on=tuple(read),
-                                  fired=rid in fired, label=label))
+        results.append(RuleResult(
+            rule_id=rid, missing_inputs=missing,
+            status=screening_status([not missing], missing, allow_partial=False),
+            evaluated_on=tuple(read) if not missing else (), fired=(rid in fired) if not missing else None,
+            label=label,
+        ))
     out_alerts = tuple(
         Alert(rule_id=a.rule_id, severity="urgent", message=a.message_en, name_en=a.name_en, name_th=a.name_th,
               message_th=a.message_th, evidence_refs=tuple(a.evidence_refs))
@@ -303,9 +304,8 @@ def screen_rf110(adapted: Adapted, extra_missing: Sequence[str] = ()) -> Screen:
 
 
 def screen_fields(adapted: Adapted, screen: Screen) -> dict[str, Any]:
-    """Alerts constructor fields for an rf-1.1.0 screen."""
+    """Alerts constructor fields for an rf-1.1.0 screen (``status`` is set by the caller via the aggregator)."""
     return {
-        "status": screening_status(screen.rule_results, screen.missing_inputs),
         "alerts": screen.alerts,
         "rule_results": screen.rule_results,
         "rules_evaluated": tuple(sorted(r.rule_id for r in screen.rule_results if r.status == "evaluated")),

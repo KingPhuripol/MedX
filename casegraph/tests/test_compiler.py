@@ -315,7 +315,7 @@ def test_new_data_new_version_old_kept(env):
 def test_compile_deterministic():
     for name, T in CASES:
         a = compile_case(name, T).spec.to_json()
-        b = compile_graph(build_snapshot(list(reversed(FIXTURES[name]())), T)).spec.to_json()
+        b = compile_graph(build_snapshot(list(reversed(FIXTURES[name]())), T), s2_config()).spec.to_json()
         assert a.encode() == b.encode()
 
 

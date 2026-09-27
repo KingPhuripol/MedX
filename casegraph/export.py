@@ -163,11 +163,18 @@ def inspect_lines(graph: ExportedGraph) -> list[str]:
         f"version={graph.version} parent={graph.parent_version} snapshot={graph.snapshot_id[:12]}"
     ]
     rfs = graph.red_flag_screening
-    lines.append(f"screening status={rfs.status} {rfs.summary()} label={rfs.label!r}")
     if rfs.status == "partially_evaluated":
         lines.append(f"!! {rfs.banner} not_evaluated={list(rfs.rules_not_evaluated)} missing={list(rfs.missing_inputs)}")
     elif not rfs.performed:
         lines.append(f"!! {rfs.banner} missing={list(rfs.missing_inputs)}")
+    # i2: the screening block is stated, never "no red flags": counts out of the declared rules + scope + label
+    lines.append(f"screening status={rfs.status}: {rfs.summary()} label={rfs.label!r}")
+    for r in rfs.readings:
+        lines.append(f"reading {r.vital}={r.value} read_at={r.read_at.isoformat()} age_min={r.age_min:.2f} "
+                     f"window_min={r.window_min:g} {'fresh' if r.fresh else 'STALE'}")
+    for c in rfs.conflicts:
+        lines.append(f"conflict {c.get('kind')} at={c.get('available_at_time')} values={c.get('values')} "
+                     f"resolution={c.get('resolution')}")
     for n in graph.nodes:
         screening = f" screening={rfs.status}" if n.type is NodeType.RED_FLAG else ""
         extra = f" missing={list(n.missing_inputs)}" if n.missing_inputs else ""

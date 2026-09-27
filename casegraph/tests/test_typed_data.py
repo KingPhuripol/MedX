@@ -73,7 +73,11 @@ DERIVED_SAMPLES = {
                                              evaluated_on=("x-1",), fired=False),),
                "rules_evaluated": ("R1",), "rules_not_evaluated": ()},
     d.CaseSummary: {"text": "t", "red_flag_screening": "evaluated"},
-    d.DepartmentSuggestion: {"department": None, "red_flag_screening": "evaluated"},
+    # i2: the S4 department.suggest structure (the s2 ``department: str | None`` is retired)
+    d.DepartmentSuggestion: {"status": "abstained", "top3": (), "uncertainty": None, "uncertainty_label": "u",
+                             "missing_information": ("age",), "reason": "r", "gateway_provider": None,
+                             "gateway_model_version": None, "contract_version": None, "request_sha256": None,
+                             "red_flag_screening": "evaluated"},
     d.CareSuggestion: {"items": (), "red_flag_screening": "evaluated"},
     d.MedicationIssues: {"status": "not_evaluated", "issues": (), "check_results": (), "checks_not_evaluated": (),
                          "missing_inputs": ()},
@@ -81,6 +85,12 @@ DERIVED_SAMPLES = {
                         "confirmed_at": DAY, "checkpoint_input_hash": SHA_A, "payload": None},
 }
 PROV = {"produced_by": "n", "input_refs": ("x-1",), "provider": "rules", "model_version": "v"}
+
+
+@pytest.fixture(autouse=True)
+def _declared_test_rule_set(monkeypatch):
+    """i2: an Alerts output must list exactly the declared rules of its rule set; declare test set "v"."""
+    monkeypatch.setitem(d.DECLARED_RULES, "v", ("R1",))
 
 
 @pytest.mark.parametrize("cls", d.DERIVED_TYPES, ids=lambda c: c.__name__)
@@ -138,7 +148,8 @@ ALERTS_BAD = {
 
 
 @pytest.mark.parametrize("case", list(ALERTS_BAD))
-def test_alerts_cannot_claim_evaluated(case):
+def test_alerts_cannot_claim_evaluated(case, monkeypatch):
+    monkeypatch.setitem(d.DECLARED_RULES, "v", tuple(r.rule_id for r in ALERTS_BAD[case]["rule_results"]))
     with pytest.raises(ValidationError, match="status"):
         d.Alerts(**PROV, status="evaluated", alerts=(), rule_set_version="v", **ALERTS_BAD[case])
     # the aggregator gives the honest status for the same inputs, and that constructs fine

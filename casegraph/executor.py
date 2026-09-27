@@ -333,8 +333,6 @@ class Executor:
         that one generic call and ``VoiceIntakeFacts`` still pass through (structured facts need no model).
         """
         T = ctx.T
-        transcripts = [i for i in ctx.evidence if isinstance(i, IntakeTranscript)]
-        facts_items = [i for i in ctx.evidence if isinstance(i, VoiceIntakeFacts)]
         notes = [i for i in ctx.evidence if i.data_type == "ClinicalText"]
         dc = DataClass(ctx.node.data_class)
 
@@ -346,28 +344,20 @@ class Executor:
                 raise reader_text.ReaderError(f"gateway_{response.status}:{response.reason}")
             return response.output, response.model_version
 
-        statements: list[str] = []
-        intake, facts, read_types = [], [], set()
         if ctx.node.provider not in (VOICE_EXTRACT, *MODEL_PROVIDERS):
             return _Result("error", reason="provider_unsupported")
-        if ctx.node.provider != VOICE_EXTRACT:
+        voice_evidence = [i for i in ctx.evidence if isinstance(i, (IntakeTranscript, VoiceIntakeFacts))]
+        skipped: list[str] = []
+        if ctx.node.provider != VOICE_EXTRACT:  # s2 configuration: transcripts go to the one generic call
             notes = [i for i in ctx.evidence if not isinstance(i, VoiceIntakeFacts)]
-            transcripts = []
+            facts_items = [i for i in voice_evidence if isinstance(i, VoiceIntakeFacts)]
+            has_transcript = any(isinstance(i, IntakeTranscript) for i in ctx.evidence)
+            voice_evidence = [] if has_transcript else facts_items
+            if has_transcript:
+                skipped = [f"{i.item_id}: not read (a transcript is present and is the source)" for i in facts_items]
         try:
-            for item in sorted(transcripts, key=lambda i: (i.available_at_time, i.item_id)):
-                values, symptoms, versions = reader_text.read_transcript(item, T, invoke)
-                intake += values
-                facts += symptoms
-                read_types.add(item.data_type)
-                statements.append(f"{item.item_id}: read by {', '.join(versions)}")
-            if facts_items and not any(isinstance(i, IntakeTranscript) for i in ctx.evidence):
-                values, symptoms = reader_text.pass_through(facts_items)
-                intake += values
-                facts += symptoms
-                read_types.add("VoiceIntakeFacts")
-                statements += [f"{i.item_id}: VoiceIntakeFacts passed through (0 calls)" for i in facts_items]
-            elif facts_items:
-                statements += [f"{i.item_id}: not read (a transcript is present and is the source)" for i in facts_items]
+            intake, facts, statements, read_types = reader_text.read_clinical_text(voice_evidence, T, invoke)
+            statements += skipped
             if notes:
                 output, _, err = self._call(ctx, {"evidence": dump_evidence(notes)})
                 if err:
@@ -420,7 +410,8 @@ class Executor:
             freshness=triage_bridge.load_freshness(), data_class=ctx.node.data_class,
         )
         screen = triage_bridge.screen_rf110(adapted, extra)
-        output = Alerts(**self._derived(ctx), **triage_bridge.screen_fields(adapted, screen))
+        output = Alerts(**self._derived(ctx), status=screening_status(screen.rule_results, screen.missing_inputs),
+                        **triage_bridge.screen_fields(adapted, screen))
         return _Result("ok", _dump(output), missing_inputs=output.missing_inputs, errored_inputs=errored)
 
     def _pharma(self, ctx: _Ctx) -> _Result:

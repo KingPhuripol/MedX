@@ -79,6 +79,34 @@ def _uncertainty(top: list[DepartmentEntry]) -> str:
     return "low"
 
 
+def parse_ranking(output: dict) -> list[_Ranked] | None:
+    """The provider ranking, or None when it violates the output schema (unknown/duplicate code, extra key)."""
+    try:
+        ranking = _Output.model_validate(output).ranking
+    except ValidationError:
+        return None
+    codes = [r.code for r in ranking]
+    if len(set(codes)) != len(codes) or not set(codes) <= set(CODES):
+        return None
+    return ranking
+
+
+def top3_of(ranking: list[_Ranked]) -> list[DepartmentEntry]:
+    """Top 3 by (score desc, code); entries with score 0 or no evidence are dropped (shared with slice i2 Arm B)."""
+    ranked = sorted(ranking, key=lambda r: (-r.score, r.code))
+    return [
+        DepartmentEntry(
+            code=r.code,
+            label_th=BY_CODE[r.code].label_th,
+            label_en=BY_CODE[r.code].label_en,
+            score=round(r.score, 4),
+            evidence_refs=sorted(set(r.evidence_refs)),
+        )
+        for r in ranked
+        if r.score > 0 and r.evidence_refs
+    ][:3]
+
+
 def suggest(snap: Snapshot, invoke: InvokeFn) -> DepartmentSuggestion:
     missing = snap.missing_required()
     conflicts = snap.conflict_required()  # i2: a flagged same-timestamp conflict abstains too
@@ -100,18 +128,7 @@ def suggest(snap: Snapshot, invoke: InvokeFn) -> DepartmentSuggestion:
     if len(set(codes)) != len(codes) or not set(codes) <= set(CODES) or not refs_ok:
         return _empty("error", "provider_output_schema_invalid", [], resp)
 
-    ranked = sorted(output.ranking, key=lambda r: (-r.score, r.code))
-    top = [
-        DepartmentEntry(
-            code=r.code,
-            label_th=BY_CODE[r.code].label_th,
-            label_en=BY_CODE[r.code].label_en,
-            score=round(r.score, 4),
-            evidence_refs=sorted(set(r.evidence_refs)),
-        )
-        for r in ranked
-        if r.score > 0 and r.evidence_refs
-    ][:3]
+    top = top3_of(output.ranking)
     if not top:
         return _empty("abstained", "no_evidence_matched", [], resp)
     return DepartmentSuggestion(
