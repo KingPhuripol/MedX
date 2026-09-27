@@ -1,0 +1,208 @@
+{
+  "id": "plan",
+  "note": "Run plan and assumptions. Values whose source is ASSUMPTION have no primary source; ranges are low/high. Design choices are declared here and mirrored in research/configs.",
+  "run": {
+    "micro_batch": {
+      "value": 1,
+      "source": "ASSUMPTION",
+      "note": "design choice, sequences per GPU per micro-step"
+    },
+    "seq_len_stage2": {
+      "value": 1024,
+      "source": "ASSUMPTION",
+      "note": "design choice: n_query image tokens + CT report tokens"
+    },
+    "seq_len_stage3": {
+      "value": 4096,
+      "source": "ASSUMPTION",
+      "note": "design choice: case context + image tokens"
+    },
+    "grad_accum_1gpu": {
+      "value": 1,
+      "source": "ASSUMPTION",
+      "note": "Tier-2 smoke"
+    },
+    "grad_accum_8gpu": {
+      "value": 8,
+      "source": "ASSUMPTION",
+      "note": "design choice; mirrored in research/configs/deepspeed/*.json"
+    },
+    "data_parallel_8gpu": {
+      "value": 8,
+      "source": "ASSUMPTION",
+      "note": "one 8x B200 node, data parallel with ZeRO"
+    },
+    "lora_ranks": {
+      "value": [
+        8,
+        16,
+        64
+      ],
+      "source": "ASSUMPTION",
+      "note": "grid required by the slice spec"
+    },
+    "lora_target_modules": {
+      "value": [
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",
+        "up_proj",
+        "down_proj"
+      ],
+      "source": "ASSUMPTION",
+      "note": "language-model layers only; Gated DeltaNet projections (Qwen3.8 linear-attention layers) and the 2D vision tower are not adapted"
+    },
+    "headroom_fraction": {
+      "value": 0.1,
+      "source": "ASSUMPTION",
+      "note": "a configuration FITS only if total <= (1 - headroom) x GPU memory"
+    },
+    "framework_overhead_bytes": {
+      "value": 5000000000,
+      "source": "ASSUMPTION",
+      "note": "CUDA context, allocator fragmentation, communication buffers"
+    }
+  },
+  "enc3d": {
+    "volume_shape_hwd": {
+      "value": [
+        480,
+        480,
+        240
+      ],
+      "source": "https://github.com/ibrahimethemhamamci/CT-CLIP/blob/main/scripts/data.py",
+      "note": "CT-CLIP data.py target_shape (480,480,240)"
+    },
+    "patch_hw": {
+      "value": 20,
+      "source": "https://github.com/ibrahimethemhamamci/CT-CLIP/blob/main/scripts/run_train.py",
+      "note": "CTViT patch_size"
+    },
+    "patch_d": {
+      "value": 10,
+      "source": "https://github.com/ibrahimethemhamamci/CT-CLIP/blob/main/scripts/run_train.py",
+      "note": "CTViT temporal_patch_size"
+    },
+    "enc_dim": {
+      "value": 512,
+      "source": "https://github.com/ibrahimethemhamamci/CT-CLIP/blob/main/scripts/run_train.py",
+      "note": "CTViT dim"
+    },
+    "enc_heads": {
+      "value": 8,
+      "source": "https://github.com/ibrahimethemhamamci/CT-CLIP/blob/main/scripts/run_train.py",
+      "note": "CTViT heads (dim_head 32)"
+    }
+  },
+  "connector": {
+    "d_model": {
+      "value": 1024,
+      "source": "ASSUMPTION",
+      "note": "design choice"
+    },
+    "n_query": {
+      "value": 256,
+      "source": "ASSUMPTION",
+      "note": "design choice: fixed 3D token count (RadFM-style resampler)"
+    },
+    "n_layers": {
+      "value": 2,
+      "source": "ASSUMPTION",
+      "note": "design choice"
+    },
+    "n_heads": {
+      "value": 8,
+      "source": "ASSUMPTION",
+      "note": "design choice"
+    }
+  },
+  "compute": {
+    "c_lora": {
+      "low": 4,
+      "high": 6,
+      "source": "ASSUMPTION",
+      "note": "FLOPs per parameter per token with a frozen backbone; argued in ESTIMATE.md"
+    },
+    "mfu": {
+      "low": 0.25,
+      "high": 0.45,
+      "source": "ASSUMPTION",
+      "note": "model FLOPs utilisation on B200 in BF16"
+    },
+    "stage2_samples": {
+      "low": 25692,
+      "high": 50188,
+      "source": "ASSUMPTION",
+      "note": "CT-RATE training CT volumes (scans vs reconstructions, unverified); replace with the count after access is granted"
+    },
+    "stage2_tokens_per_sample": {
+      "low": 512,
+      "high": 1024,
+      "source": "ASSUMPTION",
+      "note": "image tokens + report tokens"
+    },
+    "stage2_epochs": {
+      "low": 1,
+      "high": 3,
+      "source": "ASSUMPTION",
+      "note": "passes over CT-RATE"
+    },
+    "stage3_tokens": {
+      "low": 300000000,
+      "high": 1500000000,
+      "source": "ASSUMPTION",
+      "note": "total stage-3 training tokens over MIMIC-IV, MIMIC-CXR and CT-RATE mixtures, all epochs"
+    },
+    "runs_multiplier": {
+      "low": 2,
+      "high": 5,
+      "source": "ASSUMPTION",
+      "note": "reruns, LoRA-rank grid points, failed runs and equal-budget baselines; applies to stage 2 + stage 3"
+    },
+    "price_usd_per_gpu_hour": {
+      "low": 3.0,
+      "high": 8.0,
+      "source": "ASSUMPTION",
+      "note": "B200 price per GPU-hour; an allocation may be free, then this is the opportunity cost"
+    }
+  },
+  "storage": {
+    "checkpoint_retention": {
+      "low": 3,
+      "high": 5,
+      "source": "ASSUMPTION",
+      "note": "resume checkpoints kept per run"
+    },
+    "ct_rate_bytes": {
+      "low": 5000000000000,
+      "high": 20000000000000,
+      "source": "ASSUMPTION",
+      "note": "CT-RATE on disk; replace with the measured size"
+    },
+    "mimic_cxr_bytes": {
+      "low": 500000000000,
+      "high": 5000000000000,
+      "source": "ASSUMPTION",
+      "note": "MIMIC-CXR JPG (low) to DICOM (high); replace with the measured size"
+    },
+    "mimic_iv_bytes": {
+      "low": 10000000000,
+      "high": 100000000000,
+      "source": "ASSUMPTION",
+      "note": "MIMIC-IV + MIMIC-IV-Note + MIMIC-IV-ED; replace with the measured size"
+    }
+  },
+  "schedule": {
+    "semester1_prelim": {
+      "value": "Tier-2 preliminary experiments before the progress report (4 Dec 2026 / 4 ธ.ค. 2569)",
+      "source": "docs/PROPOSAL.md section 1.5 (tasks 6-7)"
+    },
+    "semester2_window_weeks": {
+      "value": 20,
+      "source": "docs/PROPOSAL.md section 1.5",
+      "note": "semester 2 runs January to May 2027 (ม.ค.-พ.ค. 2570); task 9 'Fine-tune model of approximately 27B' falls in it; about 20 weeks"
+    }
+  }
+}

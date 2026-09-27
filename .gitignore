@@ -48,3 +48,7 @@ web/next-env.d.ts
 *.tsbuildinfo
 .pytest_cache/
 .venv-stamp
+
+# s9 research run outputs and checkpoints (never committed)
+research/**/outputs/
+research/**/checkpoints/

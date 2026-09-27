@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://senior-project.local/schemas/experiment-manifest.schema.json",
+  "title": "Experiment Manifest (slice s9, trimmed from archive/pre-factory-2026-09-26)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "experiment_id", "owner", "slice", "research_question", "hypothesis",
+    "measurement_goals", "status", "run_tier", "created_at", "code", "model", "data", "training",
+    "resources", "metrics", "stop_rules", "artifacts", "approval_note"
+  ],
+  "properties": {
+    "schema_version": {"const": "2.0.0"},
+    "experiment_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]{2,80}$"},
+    "owner": {"type": "string", "minLength": 2},
+    "slice": {"type": "string", "pattern": "^s[0-9]+$"},
+    "research_question": {"type": "string", "minLength": 20},
+    "hypothesis": {"type": "string", "minLength": 20},
+    "measurement_goals": {"type": "array", "items": {"type": "string", "minLength": 3}, "minItems": 1},
+    "status": {"enum": ["planned", "approved", "running", "completed", "failed", "stopped", "invalidated"]},
+    "run_tier": {"type": "integer", "minimum": 0, "maximum": 4},
+    "created_at": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
+    "code": {
+      "type": "object", "additionalProperties": false,
+      "required": ["revision", "config_path", "config_sha256"],
+      "properties": {
+        "revision": {"type": "string", "minLength": 7},
+        "config_path": {"type": "string", "minLength": 3},
+        "config_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "model": {
+      "type": "object", "additionalProperties": false,
+      "required": ["candidate", "hf_repo_id", "hub_revision", "parameter_count", "license", "stage"],
+      "properties": {
+        "candidate": {"type": "string", "minLength": 2},
+        "hf_repo_id": {"type": ["string", "null"]},
+        "hub_revision": {"type": ["string", "null"]},
+        "parameter_count": {"type": "integer", "minimum": 1},
+        "license": {"type": "string", "minLength": 2},
+        "stage": {"enum": ["stage2_connector", "stage3_lora"]}
+      }
+    },
+    "data": {
+      "type": "object", "additionalProperties": false,
+      "required": ["data_class", "locality", "external_api", "datasets"],
+      "properties": {
+        "data_class": {"enum": ["synthetic", "public_licensed", "mimic", "hospital"]},
+        "locality": {"enum": ["local_only", "team_controlled_remote"]},
+        "external_api": {"const": false},
+        "datasets": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["name", "dataset_version", "split_version"],
+            "properties": {
+              "name": {"type": "string", "minLength": 2},
+              "dataset_version": {"type": "string", "minLength": 2},
+              "split_version": {"type": "string", "minLength": 2}
+            }
+          }
+        }
+      }
+    },
+    "training": {
+      "type": "object", "additionalProperties": false,
+      "required": ["seed", "precision", "micro_batch", "grad_accum", "seq_len", "max_steps", "lora_rank"],
+      "properties": {
+        "seed": {"type": "integer", "minimum": 0},
+        "precision": {"enum": ["fp32", "bf16"]},
+        "micro_batch": {"type": "integer", "minimum": 1},
+        "grad_accum": {"type": "integer", "minimum": 1},
+        "seq_len": {"type": "integer", "minimum": 1},
+        "max_steps": {"type": "integer", "minimum": 1},
+        "lora_rank": {"type": ["integer", "null"], "minimum": 1}
+      }
+    },
+    "resources": {
+      "type": "object", "additionalProperties": false,
+      "required": ["devices", "gpu_count", "max_minutes", "budget"],
+      "properties": {
+        "devices": {"type": "string", "minLength": 2},
+        "gpu_count": {"type": "integer", "minimum": 0},
+        "max_minutes": {"type": "integer", "minimum": 1},
+        "budget": {
+          "type": "object", "additionalProperties": false,
+          "required": ["gpu_hours", "cost_usd_max", "storage_gb_max"],
+          "properties": {
+            "gpu_hours": {"type": "number", "minimum": 0},
+            "cost_usd_max": {"type": "number", "minimum": 0},
+            "storage_gb_max": {"type": "number", "minimum": 0}
+          }
+        }
+      }
+    },
+    "metrics": {"type": "array", "items": {"type": "string", "minLength": 2}, "minItems": 1},
+    "stop_rules": {"type": "array", "items": {"type": "string", "minLength": 5}, "minItems": 1},
+    "artifacts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["root", "logs", "checkpoints", "retention"],
+      "properties": {
+        "root": {"type": "string", "minLength": 3},
+        "logs": {"type": "string", "minLength": 3},
+        "checkpoints": {"type": "string", "minLength": 3},
+        "retention": {"type": "string", "minLength": 5}
+      }
+    },
+    "approval_note": {
+      "const": "Tier-3/4 runs (beyond 1 GPU or 60 min, including any 8x B200 or ~27B full run) require explicit human approval recorded in docs/DECISIONS.md before launch."
+    },
+    "approval": {
+      "type": "object", "additionalProperties": false,
+      "required": ["decision_ref", "approved_by", "date", "budget", "run_id"],
+      "properties": {
+        "decision_ref": {"type": "string", "minLength": 10},
+        "approved_by": {"type": "string", "minLength": 2},
+        "date": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
+        "budget": {"type": "string", "minLength": 3},
+        "run_id": {"type": "string", "minLength": 3}
+      }
+    },
+    "result": {"type": ["object", "null"]}
+  }
+}

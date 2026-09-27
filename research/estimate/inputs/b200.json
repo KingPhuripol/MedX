@@ -1,0 +1,21 @@
+{
+  "id": "b200",
+  "display_name": "NVIDIA B200 (HGX/DGX B200, 8 GPUs per node)",
+  "inputs": {
+    "memory_bytes_per_gpu": {
+      "value": 180000000000,
+      "source": "https://www.nvidia.com/en-us/data-center/dgx-b200/",
+      "note": "Derived: DGX B200 'GPU Memory 1,440 GB total' over 8 GPUs = 180 GB (decimal) per GPU."
+    },
+    "bf16_dense_flops_per_gpu": {
+      "value": 2250000000000000,
+      "source": "https://www.nvidia.com/en-us/data-center/hgx/",
+      "note": "Derived: HGX B200 'FP16/BF16 Tensor Core 36 PFLOPS' is a sparse figure for 8 GPUs (footnote: 'Dense is 1/2 sparse spec shown'), so 18 PFLOPS dense / 8 = 2.25 PFLOPS per GPU."
+    },
+    "gpus_per_node": {
+      "value": 8,
+      "source": "https://www.nvidia.com/en-us/data-center/dgx-b200/",
+      "note": "8x NVIDIA Blackwell GPUs"
+    }
+  }
+}
