@@ -436,10 +436,14 @@ def build_results(m: dict[str, Any], digest: str, rows, cmp_rows, pred_sha: str,
     return results
 
 
+def results_json_bytes(results: dict[str, Any]) -> bytes:
+    """The exact results.json bytes whose sha256 is the ledger's ``results_sha256``."""
+    return (json.dumps(results, sort_keys=True, indent=2, ensure_ascii=False, allow_nan=False) + "\n").encode("utf-8")
+
+
 def render_all(results: dict[str, Any]) -> dict[str, bytes]:
-    js = json.dumps(results, sort_keys=True, indent=2, ensure_ascii=False, allow_nan=False) + "\n"
     return {
-        "results.json": js.encode("utf-8"),
+        "results.json": results_json_bytes(results),
         "results.md": render_md(results).encode("utf-8"),
         "results.html": render_html(results).encode("utf-8"),
     }

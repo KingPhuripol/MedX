@@ -1,3 +1,5 @@
+> **RETIRED: seen — not a held-out result** (DECISIONS.md 2026-09-27: S6 test split redone on a fresh held-out set; the S6 test result is s6-care-test-0002)
+
 # Table 3.2 evaluation results
 
 > **System Evaluation, not clinical efficacy**
