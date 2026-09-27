@@ -1,0 +1,650 @@
+{
+  "version": "care-rules-1.0.0",
+  "status": "MOCK baseline rules for the deterministic mock provider; written from the dev split only; not calibrated; not expert-reviewed (D1).",
+  "vocabulary": {
+    "next_info": {
+      "NI-ECG-12LEAD": {
+        "kind": "ecg",
+        "display_en": "12-lead ECG",
+        "display_th": "คลื่นไฟฟ้าหัวใจ 12 ลีด"
+      },
+      "NI-LAB-TROPONIN": {
+        "kind": "lab",
+        "display_en": "Cardiac troponin I",
+        "display_th": "ระดับโทรโปนินไอในเลือด",
+        "loinc": "10839-9"
+      },
+      "NI-IMG-HEAD-CT": {
+        "kind": "imaging",
+        "display_en": "Non-contrast head CT",
+        "display_th": "ภาพเอกซเรย์คอมพิวเตอร์ศีรษะแบบไม่ฉีดสารทึบรังสี"
+      },
+      "NI-LAB-GLU": {
+        "kind": "lab",
+        "display_en": "Blood glucose",
+        "display_th": "ระดับน้ำตาลในเลือด",
+        "loinc": "2345-7"
+      },
+      "NI-ASK-LAST-KNOWN-WELL": {
+        "kind": "ask",
+        "display_en": "Time last known well",
+        "display_th": "เวลาที่ผู้ป่วยยังปกติดีครั้งสุดท้าย"
+      },
+      "NI-ASK-OTTAWA-SAH": {
+        "kind": "ask",
+        "display_en": "Ottawa SAH rule items: age 40 or over, neck pain or stiffness, witnessed loss of consciousness, onset during exertion, instantly peaking pain, limited neck flexion",
+        "display_th": "ข้อมูลตาม Ottawa SAH rule: อายุ 40 ปีขึ้นไป ปวดหรือตึงต้นคอ หมดสติโดยมีผู้เห็น เริ่มปวดขณะออกแรง ปวดสุดทันที ก้มคอได้จำกัด"
+      },
+      "NI-LAB-TRYPTASE": {
+        "kind": "lab",
+        "display_en": "Serum tryptase",
+        "display_th": "ระดับทริปเทสในเลือด",
+        "loinc": "21582-2"
+      },
+      "NI-ASK-ALLERGEN-TRIGGER": {
+        "kind": "ask",
+        "display_en": "Possible trigger and time of exposure (food, drug, insect sting)",
+        "display_th": "สิ่งกระตุ้นที่อาจสัมผัสและเวลาที่สัมผัส (อาหาร ยา แมลงต่อย)"
+      },
+      "NI-LAB-LACTATE": {
+        "kind": "lab",
+        "display_en": "Blood lactate",
+        "display_th": "ระดับแลคเตทในเลือด",
+        "loinc": "2524-7"
+      },
+      "NI-LAB-BLOOD-CULTURE": {
+        "kind": "lab",
+        "display_en": "Blood culture",
+        "display_th": "การเพาะเชื้อจากเลือด",
+        "loinc": "600-7"
+      },
+      "NI-OBS-REPEAT-VITALS": {
+        "kind": "observe",
+        "display_en": "Repeat full set of vital signs (NEWS parameters)",
+        "display_th": "วัดสัญญาณชีพซ้ำครบชุด (ตัวแปร NEWS)"
+      },
+      "NI-IMG-CXR": {
+        "kind": "imaging",
+        "display_en": "Chest radiograph",
+        "display_th": "ภาพถ่ายรังสีทรวงอก"
+      },
+      "NI-LAB-WBC": {
+        "kind": "lab",
+        "display_en": "White blood cell count",
+        "display_th": "จำนวนเม็ดเลือดขาว",
+        "loinc": "6690-2"
+      },
+      "NI-LAB-CRP": {
+        "kind": "lab",
+        "display_en": "C-reactive protein",
+        "display_th": "ระดับซีรีแอคทีฟโปรตีน",
+        "loinc": "1988-5"
+      },
+      "NI-IMG-ABD-US": {
+        "kind": "imaging",
+        "display_en": "Abdominal ultrasound",
+        "display_th": "อัลตราซาวด์ช่องท้อง"
+      },
+      "NI-LAB-HGB": {
+        "kind": "lab",
+        "display_en": "Hemoglobin",
+        "display_th": "ระดับฮีโมโกลบิน",
+        "loinc": "718-7"
+      },
+      "NI-LAB-CREAT": {
+        "kind": "lab",
+        "display_en": "Serum creatinine",
+        "display_th": "ระดับครีเอตินินในเลือด",
+        "loinc": "2160-0"
+      },
+      "NI-LAB-HBA1C": {
+        "kind": "lab",
+        "display_en": "Hemoglobin A1c",
+        "display_th": "ระดับฮีโมโกลบินเอวันซี",
+        "loinc": "4548-4"
+      },
+      "NI-ASK-DIARRHEA-FEATURES": {
+        "kind": "ask",
+        "display_en": "Fever, blood or mucus in stool, recent travel and exposures",
+        "display_th": "ไข้ มูกหรือเลือดในอุจจาระ ประวัติการเดินทางและการสัมผัส"
+      },
+      "NI-OBS-DIX-HALLPIKE": {
+        "kind": "observe",
+        "display_en": "Dix-Hallpike positional test",
+        "display_th": "การทดสอบท่า Dix-Hallpike"
+      },
+      "NI-LAB-ABSCESS-CULTURE": {
+        "kind": "lab",
+        "display_en": "Culture of pus from the abscess",
+        "display_th": "การเพาะเชื้อจากหนองในฝี",
+        "loinc": "595-9"
+      },
+      "NI-LAB-GAS-RADT": {
+        "kind": "lab",
+        "display_en": "Rapid antigen test for group A streptococcus (throat)",
+        "display_th": "การตรวจแอนติเจนเชื้อสเตรปโตคอคคัสกลุ่มเอจากลำคออย่างรวดเร็ว",
+        "loinc": "78012-2"
+      },
+      "NI-ASK-BLEEDING-RISK": {
+        "kind": "ask",
+        "display_en": "Bleeding history and anticoagulant or antiplatelet use",
+        "display_th": "ประวัติเลือดออกง่ายและการใช้ยาต้านการแข็งตัวของเลือดหรือยาต้านเกล็ดเลือด"
+      },
+      "NI-OBS-ANTERIOR-RHINOSCOPY": {
+        "kind": "observe",
+        "display_en": "Anterior rhinoscopy to find the bleeding site",
+        "display_th": "การส่องตรวจโพรงจมูกด้านหน้าเพื่อหาตำแหน่งเลือดออก"
+      }
+    },
+    "pathways": {
+      "CP-CHEST-PAIN-EVAL": {
+        "display_en": "Acute chest pain evaluation pathway (AHA/ACC 2021)",
+        "display_th": "แนวทางประเมินอาการเจ็บหน้าอกเฉียบพลัน (AHA/ACC 2021)"
+      },
+      "CP-STROKE-EVAL": {
+        "display_en": "Acute stroke early evaluation pathway (AHA/ASA 2019)",
+        "display_th": "แนวทางประเมินระยะแรกเมื่อสงสัยโรคหลอดเลือดสมองเฉียบพลัน (AHA/ASA 2019)"
+      },
+      "CP-ACUTE-HEADACHE-EVAL": {
+        "display_en": "Acute headache evaluation pathway (Ottawa SAH rule)",
+        "display_th": "แนวทางประเมินอาการปวดศีรษะเฉียบพลัน (Ottawa SAH rule)"
+      },
+      "CP-ANAPHYLAXIS-EVAL": {
+        "display_en": "Anaphylaxis recognition and assessment pathway (WAO 2020)",
+        "display_th": "แนวทางประเมินและเฝ้าระวังภาวะแอนาฟิแล็กซิส (WAO 2020)"
+      },
+      "CP-SEPSIS-SCREEN": {
+        "display_en": "Sepsis screening and assessment pathway (SSC 2021)",
+        "display_th": "แนวทางคัดกรองและประเมินภาวะติดเชื้อในกระแสเลือด (SSC 2021)"
+      },
+      "CP-NEWS-URGENT-REVIEW": {
+        "display_en": "NEWS urgent clinical review pathway (RCP 2012)",
+        "display_th": "แนวทางทบทวนอาการโดยเร่งด่วนตามคะแนน NEWS (RCP 2012)"
+      },
+      "CP-CAP-EVAL": {
+        "display_en": "Community-acquired pneumonia evaluation pathway (ATS/IDSA 2019)",
+        "display_th": "แนวทางประเมินเมื่อสงสัยปอดอักเสบจากชุมชน (ATS/IDSA 2019)"
+      },
+      "CP-RLQ-PAIN-EVAL": {
+        "display_en": "Right lower quadrant pain evaluation pathway (WSES 2020)",
+        "display_th": "แนวทางประเมินอาการปวดท้องด้านขวาล่าง (WSES 2020)"
+      },
+      "CP-ACUTE-DIARRHEA-EVAL": {
+        "display_en": "Acute infectious diarrhoea evaluation pathway (IDSA 2017)",
+        "display_th": "แนวทางประเมินอาการท้องเสียเฉียบพลันจากการติดเชื้อ (IDSA 2017)"
+      },
+      "CP-PALPITATION-EVAL": {
+        "display_en": "Palpitations evaluation pathway (EHRA 2011)",
+        "display_th": "แนวทางประเมินอาการใจสั่น (EHRA 2011)"
+      },
+      "CP-POSITIONAL-VERTIGO-EVAL": {
+        "display_en": "Positional vertigo evaluation pathway (AAO-HNS 2017)",
+        "display_th": "แนวทางประเมินอาการเวียนศีรษะจากการเปลี่ยนท่า (AAO-HNS 2017)"
+      },
+      "CP-SKIN-ABSCESS-EVAL": {
+        "display_en": "Skin abscess evaluation pathway (IDSA 2014)",
+        "display_th": "แนวทางประเมินฝีที่ผิวหนัง (IDSA 2014)"
+      },
+      "CP-EPISTAXIS-EVAL": {
+        "display_en": "Nosebleed evaluation pathway (AAO-HNS 2020)",
+        "display_th": "แนวทางประเมินเลือดกำเดาไหล (AAO-HNS 2020)"
+      },
+      "CP-PHARYNGITIS-EVAL": {
+        "display_en": "Sore throat testing pathway for group A streptococcus (IDSA 2012)",
+        "display_th": "แนวทางตรวจหาเชื้อสเตรปโตคอคคัสกลุ่มเอเมื่อเจ็บคอ (IDSA 2012)"
+      }
+    }
+  },
+  "source_refs": {
+    "NI-ECG-12LEAD": [
+      "PMID-34709879",
+      "PMID-21697315"
+    ],
+    "NI-LAB-TROPONIN": [
+      "PMID-34709879"
+    ],
+    "NI-IMG-HEAD-CT": [
+      "PMID-31662037",
+      "PMID-24065011"
+    ],
+    "NI-LAB-GLU": [
+      "PMID-31662037"
+    ],
+    "NI-ASK-LAST-KNOWN-WELL": [
+      "PMID-31662037"
+    ],
+    "NI-ASK-OTTAWA-SAH": [
+      "PMID-24065011"
+    ],
+    "NI-LAB-TRYPTASE": [
+      "PMID-33204386"
+    ],
+    "NI-ASK-ALLERGEN-TRIGGER": [
+      "PMID-33204386"
+    ],
+    "NI-LAB-LACTATE": [
+      "PMID-34599691"
+    ],
+    "NI-LAB-BLOOD-CULTURE": [
+      "PMID-34599691"
+    ],
+    "NI-OBS-REPEAT-VITALS": [
+      "RCP-NEWS-2012"
+    ],
+    "NI-IMG-CXR": [
+      "PMID-31573350"
+    ],
+    "NI-LAB-WBC": [
+      "PMID-32295644"
+    ],
+    "NI-LAB-CRP": [
+      "PMID-32295644"
+    ],
+    "NI-IMG-ABD-US": [
+      "PMID-32295644"
+    ],
+    "NI-LAB-HGB": [
+      "LOINC"
+    ],
+    "NI-LAB-CREAT": [
+      "LOINC"
+    ],
+    "NI-LAB-HBA1C": [
+      "LOINC"
+    ],
+    "NI-ASK-DIARRHEA-FEATURES": [
+      "PMID-29053792"
+    ],
+    "NI-OBS-DIX-HALLPIKE": [
+      "PMID-28248609"
+    ],
+    "NI-LAB-ABSCESS-CULTURE": [
+      "PMID-24973422"
+    ],
+    "NI-LAB-GAS-RADT": [
+      "PMID-22965026"
+    ],
+    "NI-ASK-BLEEDING-RISK": [
+      "PMID-31910111"
+    ],
+    "NI-OBS-ANTERIOR-RHINOSCOPY": [
+      "PMID-31910111"
+    ],
+    "CP-CHEST-PAIN-EVAL": [
+      "PMID-34709879"
+    ],
+    "CP-STROKE-EVAL": [
+      "PMID-31662037"
+    ],
+    "CP-ACUTE-HEADACHE-EVAL": [
+      "PMID-24065011"
+    ],
+    "CP-ANAPHYLAXIS-EVAL": [
+      "PMID-33204386"
+    ],
+    "CP-SEPSIS-SCREEN": [
+      "PMID-34599691"
+    ],
+    "CP-NEWS-URGENT-REVIEW": [
+      "RCP-NEWS-2012"
+    ],
+    "CP-CAP-EVAL": [
+      "PMID-31573350"
+    ],
+    "CP-RLQ-PAIN-EVAL": [
+      "PMID-32295644"
+    ],
+    "CP-ACUTE-DIARRHEA-EVAL": [
+      "PMID-29053792"
+    ],
+    "CP-PALPITATION-EVAL": [
+      "PMID-21697315"
+    ],
+    "CP-POSITIONAL-VERTIGO-EVAL": [
+      "PMID-28248609"
+    ],
+    "CP-SKIN-ABSCESS-EVAL": [
+      "PMID-24973422"
+    ],
+    "CP-EPISTAXIS-EVAL": [
+      "PMID-31910111"
+    ],
+    "CP-PHARYNGITIS-EVAL": [
+      "PMID-22965026"
+    ]
+  },
+  "intake": {
+    "complaint_question": "อาการอะไร",
+    "duration_question": "นานเท่าไร",
+    "complaint_unknown_phrases": [
+      "บอกไม่ถูก",
+      "ไม่ทราบ",
+      "ไม่แน่ใจ",
+      "จำไม่ได้"
+    ],
+    "duration_known_pattern": "\\d+\\s*(นาที|ชั่วโมง|วัน|สัปดาห์|เดือน|ปี)",
+    "pregnancy_status_ages": [
+      18,
+      50
+    ]
+  },
+  "lab_names": {
+    "WBC": "NI-LAB-WBC",
+    "Hemoglobin": "NI-LAB-HGB",
+    "Creatinine": "NI-LAB-CREAT",
+    "Glucose": "NI-LAB-GLU"
+  },
+  "repeat_vitals_code": "NI-OBS-REPEAT-VITALS",
+  "alert_rules": [
+    {
+      "alert": "RF-QSOFA",
+      "next_info": [
+        "NI-LAB-LACTATE",
+        "NI-LAB-BLOOD-CULTURE"
+      ],
+      "pathway": "CP-SEPSIS-SCREEN"
+    },
+    {
+      "alert": "RF-SPO2",
+      "next_info": [
+        "NI-OBS-REPEAT-VITALS"
+      ],
+      "pathway": "CP-NEWS-URGENT-REVIEW"
+    },
+    {
+      "alert": "RF-RR",
+      "next_info": [
+        "NI-OBS-REPEAT-VITALS"
+      ],
+      "pathway": "CP-NEWS-URGENT-REVIEW"
+    },
+    {
+      "alert": "RF-SBP",
+      "next_info": [
+        "NI-OBS-REPEAT-VITALS"
+      ],
+      "pathway": "CP-NEWS-URGENT-REVIEW"
+    },
+    {
+      "alert": "RF-HR",
+      "next_info": [
+        "NI-OBS-REPEAT-VITALS"
+      ],
+      "pathway": "CP-NEWS-URGENT-REVIEW"
+    },
+    {
+      "alert": "RF-CONSC",
+      "next_info": [
+        "NI-OBS-REPEAT-VITALS"
+      ],
+      "pathway": "CP-NEWS-URGENT-REVIEW"
+    },
+    {
+      "alert": "RF-TEMP",
+      "next_info": [
+        "NI-OBS-REPEAT-VITALS"
+      ],
+      "pathway": "CP-NEWS-URGENT-REVIEW"
+    }
+  ],
+  "vitals_rules": [
+    {
+      "id": "V-MULTI-ABNORMAL",
+      "min_count": 3,
+      "conditions": [
+        [
+          "rr",
+          ">=",
+          21
+        ],
+        [
+          "sbp",
+          "<=",
+          110
+        ],
+        [
+          "temp_c",
+          ">=",
+          38.1
+        ],
+        [
+          "hr",
+          ">=",
+          91
+        ],
+        [
+          "spo2",
+          "<=",
+          95
+        ]
+      ],
+      "next_info": [
+        "NI-OBS-REPEAT-VITALS"
+      ],
+      "pathway": "CP-NEWS-URGENT-REVIEW"
+    }
+  ],
+  "text_rules": [
+    {
+      "id": "T-CHEST-ACUTE",
+      "rank": "acute",
+      "all_of": [
+        [
+          "หน้าอก"
+        ],
+        [
+          "ทันที",
+          "เฉียบพลัน",
+          "จู่ ๆ",
+          "ไม่กี่วินาที"
+        ]
+      ],
+      "next_info": [
+        "NI-ECG-12LEAD",
+        "NI-LAB-TROPONIN"
+      ],
+      "pathway": "CP-CHEST-PAIN-EVAL"
+    },
+    {
+      "id": "T-STROKE-ACUTE",
+      "rank": "acute",
+      "all_of": [
+        [
+          "เบี้ยว",
+          "พูดไม่ชัด",
+          "พูดลำบาก",
+          "อ่อนแรง"
+        ],
+        [
+          "ทันที",
+          "เฉียบพลัน",
+          "จู่ ๆ",
+          "ไม่กี่วินาที"
+        ]
+      ],
+      "none_of": [
+        "อาการเท่าเดิม",
+        "มาตรวจตามนัด"
+      ],
+      "next_info": [
+        "NI-IMG-HEAD-CT",
+        "NI-LAB-GLU",
+        "NI-ASK-LAST-KNOWN-WELL"
+      ],
+      "pathway": "CP-STROKE-EVAL"
+    },
+    {
+      "id": "T-HEADACHE-ACUTE",
+      "rank": "acute",
+      "all_of": [
+        [
+          "ปวดหัว",
+          "ปวดศีรษะ"
+        ],
+        [
+          "ทันที",
+          "เฉียบพลัน",
+          "จู่ ๆ",
+          "ไม่กี่วินาที"
+        ]
+      ],
+      "next_info": [
+        "NI-ASK-OTTAWA-SAH",
+        "NI-IMG-HEAD-CT"
+      ],
+      "pathway": "CP-ACUTE-HEADACHE-EVAL"
+    },
+    {
+      "id": "T-ANAPHYLAXIS",
+      "rank": "acute",
+      "all_of": [
+        [
+          "ลมพิษ",
+          "ปากบวม"
+        ],
+        [
+          "หายใจ",
+          "แน่นคอ",
+          "เสียงหวีด",
+          "หน้ามืด"
+        ]
+      ],
+      "next_info": [
+        "NI-ASK-ALLERGEN-TRIGGER",
+        "NI-LAB-TRYPTASE"
+      ],
+      "pathway": "CP-ANAPHYLAXIS-EVAL"
+    },
+    {
+      "id": "T-CHEST",
+      "rank": "complaint",
+      "all_of": [
+        [
+          "หน้าอก"
+        ]
+      ],
+      "next_info": [
+        "NI-ECG-12LEAD"
+      ],
+      "pathway": "CP-CHEST-PAIN-EVAL"
+    },
+    {
+      "id": "T-FEVER-COUGH",
+      "rank": "complaint",
+      "all_of": [
+        [
+          "ไข้"
+        ],
+        [
+          "ไอ"
+        ]
+      ],
+      "next_info": [
+        "NI-IMG-CXR"
+      ],
+      "pathway": "CP-CAP-EVAL"
+    },
+    {
+      "id": "T-DIARRHEA",
+      "rank": "complaint",
+      "all_of": [
+        [
+          "ถ่ายเหลว",
+          "ท้องเสีย"
+        ]
+      ],
+      "next_info": [
+        "NI-ASK-DIARRHEA-FEATURES"
+      ],
+      "pathway": "CP-ACUTE-DIARRHEA-EVAL"
+    },
+    {
+      "id": "T-RLQ",
+      "rank": "complaint",
+      "all_of": [
+        [
+          "ปวดท้อง"
+        ],
+        [
+          "ขวาล่าง"
+        ]
+      ],
+      "next_info": [
+        "NI-LAB-WBC",
+        "NI-LAB-CRP",
+        "NI-IMG-ABD-US"
+      ],
+      "pathway": "CP-RLQ-PAIN-EVAL"
+    },
+    {
+      "id": "T-ABSCESS",
+      "rank": "complaint",
+      "all_of": [
+        [
+          "ฝี"
+        ]
+      ],
+      "next_info": [
+        "NI-LAB-ABSCESS-CULTURE"
+      ],
+      "pathway": "CP-SKIN-ABSCESS-EVAL"
+    },
+    {
+      "id": "T-VERTIGO",
+      "rank": "complaint",
+      "all_of": [
+        [
+          "เวียนศีรษะ",
+          "บ้านหมุน"
+        ],
+        [
+          "เปลี่ยนท่า"
+        ]
+      ],
+      "next_info": [
+        "NI-OBS-DIX-HALLPIKE"
+      ],
+      "pathway": "CP-POSITIONAL-VERTIGO-EVAL"
+    },
+    {
+      "id": "T-PALPITATION",
+      "rank": "complaint",
+      "all_of": [
+        [
+          "ใจสั่น"
+        ]
+      ],
+      "next_info": [
+        "NI-ECG-12LEAD"
+      ],
+      "pathway": "CP-PALPITATION-EVAL"
+    },
+    {
+      "id": "T-EPISTAXIS",
+      "rank": "complaint",
+      "all_of": [
+        [
+          "เลือดกำเดา"
+        ]
+      ],
+      "next_info": [
+        "NI-ASK-BLEEDING-RISK",
+        "NI-OBS-ANTERIOR-RHINOSCOPY"
+      ],
+      "pathway": "CP-EPISTAXIS-EVAL"
+    },
+    {
+      "id": "T-SORE-THROAT",
+      "rank": "complaint",
+      "all_of": [
+        [
+          "เจ็บคอ"
+        ]
+      ],
+      "next_info": [
+        "NI-LAB-GAS-RADT"
+      ],
+      "pathway": "CP-PHARYNGITIS-EVAL"
+    }
+  ]
+}
