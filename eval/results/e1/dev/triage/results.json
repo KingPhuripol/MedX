@@ -1,0 +1,1101 @@
+{
+  "bootstrap": {
+    "ci_level": 0.95,
+    "method": "percentile",
+    "n_boot": 2000,
+    "rng": "numpy.random.Generator(PCG64(seed))",
+    "seed": 20260926,
+    "unit": "patient"
+  },
+  "comparator_sha256": "8a45cae4008464f389443f4df2a34efc925f63afcc42610575fba1d8ee1551b5",
+  "dataset": {
+    "data_class": "synthetic",
+    "name": "s1r-synthetic",
+    "version": "s1r-1.1.1+tree:e76e38cc67d6317d82196f105cb9781bedf3451b9ba74a1585b19662d4d1162b"
+  },
+  "environment": {
+    "eval_version": "0.2.0",
+    "numpy_version": "2.5.3"
+  },
+  "evaluation_id": "e1-triage-dev-v1",
+  "expert_review": {
+    "done": false,
+    "n_reviewers": 0
+  },
+  "frozen": true,
+  "frozen_entry_hash": "e6aa3b6b4aaf569cd7879e957c2ea4bdf0dc9f2cc317ddeee73d797605e35ae7",
+  "labels": {
+    "banner": "System Evaluation, not clinical efficacy",
+    "research_prototype": "Research prototype - not for clinical use",
+    "synthetic_data": true
+  },
+  "manifest_sha256": "46fc5399852102a27281179fe7a5c16ab0d0e4e2050449e8b391320704ecfc0e",
+  "n_decision_points": 80,
+  "n_patients": 36,
+  "n_patients_in_split_list": 36,
+  "predictions_sha256": "7b388fc08c81112c040c815cff7345266d03da8ee46c8b90d63c3349f5e9b1b9",
+  "rows": [
+    {
+      "ci_high": 0.45454545454545453,
+      "ci_level": 0.95,
+      "ci_low": 0.0,
+      "comparisons": [],
+      "details": {},
+      "item": "Department suggestion",
+      "method": "percentile",
+      "metric": "accuracy",
+      "metric_id": "rf_case_recall",
+      "n_boot": 2000,
+      "n_decision_points": 24,
+      "n_degenerate": 0,
+      "n_patients": 13,
+      "params": {
+        "estimand": "case-level red-flag recall: gold-positive DPs with >=1 S4 alert of any rule"
+      },
+      "point": 0.20833333333333334,
+      "primary": true,
+      "reason": null,
+      "seed": 20260926,
+      "task": "rf_case_recall",
+      "thresholds": [
+        {
+          "compared_value": 0.20833333333333334,
+          "op": ">=",
+          "rule": "point",
+          "status": "not met",
+          "value": 1.0
+        }
+      ],
+      "unstable": false
+    },
+    {
+      "ci_high": 0.3846774193548384,
+      "ci_level": 0.95,
+      "ci_low": 0.0,
+      "comparisons": [],
+      "details": {
+        "component": "recall"
+      },
+      "item": "Department suggestion",
+      "method": "percentile",
+      "metric": "set_prf",
+      "metric_id": "rf_rule_recall",
+      "n_boot": 2000,
+      "n_decision_points": 24,
+      "n_degenerate": 0,
+      "n_patients": 13,
+      "params": {
+        "component": "recall",
+        "estimand": "rule-level recall pooled over gold (DP, rule) pairs; UNMAPPABLE pairs count as missed"
+      },
+      "point": 0.19230769230769232,
+      "primary": true,
+      "reason": null,
+      "seed": 20260926,
+      "task": "rf_rule_recall",
+      "thresholds": [
+        {
+          "compared_value": 0.19230769230769232,
+          "op": ">=",
+          "rule": "point",
+          "status": "not met",
+          "value": 1.0
+        }
+      ],
+      "unstable": false
+    },
+    {
+      "ci_high": 0.5238095238095238,
+      "ci_level": 0.95,
+      "ci_low": 0.0,
+      "comparisons": [],
+      "details": {
+        "component": "recall"
+      },
+      "item": "Department suggestion",
+      "method": "percentile",
+      "metric": "set_prf",
+      "metric_id": "rf_rule_recall_mappable",
+      "n_boot": 2000,
+      "n_decision_points": 21,
+      "n_degenerate": 0,
+      "n_patients": 11,
+      "params": {
+        "component": "recall",
+        "estimand": "rule-level recall over mappable gold (DP, rule) pairs (secondary)"
+      },
+      "point": 0.23809523809523808,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "rf_rule_recall_mappable",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 0.0,
+      "ci_level": 0.95,
+      "ci_low": 0.0,
+      "comparisons": [],
+      "details": {},
+      "item": "Department suggestion",
+      "method": "percentile",
+      "metric": "accuracy",
+      "metric_id": "rf_rule_RF-ACUTE-CHEST-PAIN",
+      "n_boot": 2000,
+      "n_decision_points": 4,
+      "n_degenerate": 0,
+      "n_patients": 2,
+      "params": {
+        "estimand": "per-rule recall of RF-ACUTE-CHEST-PAIN: gold DPs where a mapped S4 rule fired"
+      },
+      "point": 0.0,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "rf_rule_RF-ACUTE-CHEST-PAIN",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 0.0,
+      "ci_level": 0.95,
+      "ci_low": 0.0,
+      "comparisons": [],
+      "details": {},
+      "item": "Department suggestion",
+      "method": "percentile",
+      "metric": "accuracy",
+      "metric_id": "rf_rule_RF-ANAPHYLAXIS",
+      "n_boot": 2000,
+      "n_decision_points": 4,
+      "n_degenerate": 0,
+      "n_patients": 2,
+      "params": {
+        "estimand": "per-rule recall of RF-ANAPHYLAXIS: gold DPs where a mapped S4 rule fired"
+      },
+      "point": 0.0,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "rf_rule_RF-ANAPHYLAXIS",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 0.0,
+      "ci_level": 0.95,
+      "ci_low": 0.0,
+      "comparisons": [],
+      "details": {},
+      "item": "Department suggestion",
+      "method": "percentile",
+      "metric": "accuracy",
+      "metric_id": "rf_rule_RF-FAST",
+      "n_boot": 2000,
+      "n_decision_points": 4,
+      "n_degenerate": 0,
+      "n_patients": 2,
+      "params": {
+        "estimand": "per-rule recall of RF-FAST: gold DPs where a mapped S4 rule fired"
+      },
+      "point": 0.0,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "rf_rule_RF-FAST",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 1.0,
+      "ci_level": 0.95,
+      "ci_low": 1.0,
+      "comparisons": [],
+      "details": {},
+      "item": "Department suggestion",
+      "method": "percentile",
+      "metric": "accuracy",
+      "metric_id": "rf_rule_RF-NEWS-SINGLE3",
+      "n_boot": 2000,
+      "n_decision_points": 3,
+      "n_degenerate": 0,
+      "n_patients": 2,
+      "params": {
+        "estimand": "per-rule recall of RF-NEWS-SINGLE3: gold DPs where a mapped S4 rule fired"
+      },
+      "point": 1.0,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "rf_rule_RF-NEWS-SINGLE3",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 1.0,
+      "ci_level": 0.95,
+      "ci_low": 1.0,
+      "comparisons": [],
+      "details": {},
+      "item": "Department suggestion",
+      "method": "percentile",
+      "metric": "accuracy",
+      "metric_id": "rf_rule_RF-QSOFA",
+      "n_boot": 2000,
+      "n_decision_points": 2,
+      "n_degenerate": 0,
+      "n_patients": 1,
+      "params": {
+        "estimand": "per-rule recall of RF-QSOFA: gold DPs where a mapped S4 rule fired"
+      },
+      "point": 1.0,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "rf_rule_RF-QSOFA",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 0.0,
+      "ci_level": 0.95,
+      "ci_low": 0.0,
+      "comparisons": [],
+      "details": {},
+      "item": "Department suggestion",
+      "method": "percentile",
+      "metric": "accuracy",
+      "metric_id": "rf_rule_RF-THUNDERCLAP",
+      "n_boot": 2000,
+      "n_decision_points": 4,
+      "n_degenerate": 0,
+      "n_patients": 2,
+      "params": {
+        "estimand": "per-rule recall of RF-THUNDERCLAP: gold DPs where a mapped S4 rule fired"
+      },
+      "point": 0.0,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "rf_rule_RF-THUNDERCLAP",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 0.0,
+      "ci_level": 0.95,
+      "ci_low": 0.0,
+      "comparisons": [],
+      "details": {},
+      "item": "Department suggestion",
+      "method": "percentile",
+      "metric": "accuracy",
+      "metric_id": "rf_fpr",
+      "n_boot": 2000,
+      "n_decision_points": 56,
+      "n_degenerate": 0,
+      "n_patients": 29,
+      "params": {
+        "estimand": "false-positive rate: gold-negative DPs with >=1 S4 alert of any rule"
+      },
+      "point": 0.0,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "rf_fpr",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 0.0,
+      "ci_level": 0.95,
+      "ci_low": 0.0,
+      "comparisons": [],
+      "details": {},
+      "item": "Department suggestion",
+      "method": "percentile",
+      "metric": "accuracy",
+      "metric_id": "rf_fpr_mapped",
+      "n_boot": 2000,
+      "n_decision_points": 56,
+      "n_degenerate": 0,
+      "n_patients": 29,
+      "params": {
+        "estimand": "false-positive rate counting only S4 rules mapped to the S1r registry (secondary)"
+      },
+      "point": 0.0,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "rf_fpr_mapped",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 0.0,
+      "ci_level": 0.95,
+      "ci_low": 0.0,
+      "comparisons": [
+        {
+          "comparator": "shortcut_s_star",
+          "comparator_ci_high": 0.625,
+          "comparator_ci_low": 0.0,
+          "comparator_point": 0.25,
+          "comparator_reason": null,
+          "diff": {
+            "ci_high": 0.0,
+            "ci_low": -0.625,
+            "n_degenerate": 0,
+            "point": -0.25,
+            "reason": null,
+            "unstable": false
+          },
+          "status": "computed"
+        },
+        {
+          "comparator": "shortcut_tamtee",
+          "comparator_ci_high": 0.75,
+          "comparator_ci_low": 0.125,
+          "comparator_point": 0.375,
+          "comparator_reason": null,
+          "diff": {
+            "ci_high": -0.125,
+            "ci_low": -0.75,
+            "n_degenerate": 0,
+            "point": -0.375,
+            "reason": null,
+            "unstable": false
+          },
+          "status": "computed"
+        }
+      ],
+      "details": {},
+      "item": "Department suggestion",
+      "method": "percentile",
+      "metric": "accuracy",
+      "metric_id": "rf_text_t1_recall",
+      "n_boot": 2000,
+      "n_decision_points": 8,
+      "n_degenerate": 0,
+      "n_patients": 8,
+      "params": {
+        "estimand": "text red-flag recall at T1: any alert of RF-CHEST, RF-STROKE, RF-THUNDER, RF-ANAPH"
+      },
+      "point": 0.0,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "rf_text_t1_recall",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 0.0,
+      "ci_level": 0.95,
+      "ci_low": 0.0,
+      "comparisons": [
+        {
+          "comparator": "shortcut_s_star",
+          "comparator_ci_high": 0.15625,
+          "comparator_ci_low": 0.0,
+          "comparator_point": 0.0625,
+          "comparator_reason": null,
+          "diff": {
+            "ci_high": 0.0,
+            "ci_low": -0.15625,
+            "n_degenerate": 0,
+            "point": -0.0625,
+            "reason": null,
+            "unstable": false
+          },
+          "status": "computed"
+        },
+        {
+          "comparator": "shortcut_tamtee",
+          "comparator_ci_high": 0.5161290322580645,
+          "comparator_ci_low": 0.18181818181818182,
+          "comparator_point": 0.34375,
+          "comparator_reason": null,
+          "diff": {
+            "ci_high": -0.18181818181818182,
+            "ci_low": -0.5161290322580645,
+            "n_degenerate": 0,
+            "point": -0.34375,
+            "reason": null,
+            "unstable": false
+          },
+          "status": "computed"
+        }
+      ],
+      "details": {},
+      "item": "Department suggestion",
+      "method": "percentile",
+      "metric": "accuracy",
+      "metric_id": "rf_text_t1_fpr",
+      "n_boot": 2000,
+      "n_decision_points": 32,
+      "n_degenerate": 0,
+      "n_patients": 31,
+      "params": {
+        "estimand": "text red-flag false-positive rate at T1 (same alert set)"
+      },
+      "point": 0.0,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "rf_text_t1_fpr",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 0.6923076923076923,
+      "ci_level": 0.95,
+      "ci_low": 0.3076923076923077,
+      "comparisons": [
+        {
+          "comparator": "always_answer",
+          "comparator_ci_high": 0.7843137254901961,
+          "comparator_ci_low": 0.40384615384615385,
+          "comparator_point": 0.5961538461538461,
+          "comparator_reason": null,
+          "diff": {
+            "ci_high": 0.0,
+            "ci_low": -0.21568627450980393,
+            "n_degenerate": 0,
+            "point": -0.09615384615384615,
+            "reason": null,
+            "unstable": false
+          },
+          "status": "computed"
+        }
+      ],
+      "details": {
+        "k": 1
+      },
+      "item": "Department suggestion",
+      "method": "percentile",
+      "metric": "topk_accuracy",
+      "metric_id": "dept_top1",
+      "n_boot": 2000,
+      "n_decision_points": 52,
+      "n_degenerate": 0,
+      "n_patients": 27,
+      "params": {
+        "k": 1
+      },
+      "point": 0.5,
+      "primary": true,
+      "reason": null,
+      "seed": 20260926,
+      "task": "dept",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 0.6923076923076923,
+      "ci_level": 0.95,
+      "ci_low": 0.3076923076923077,
+      "comparisons": [
+        {
+          "comparator": "always_answer",
+          "comparator_ci_high": 0.7843137254901961,
+          "comparator_ci_low": 0.40384615384615385,
+          "comparator_point": 0.5961538461538461,
+          "comparator_reason": null,
+          "diff": {
+            "ci_high": 0.0,
+            "ci_low": -0.21568627450980393,
+            "n_degenerate": 0,
+            "point": -0.09615384615384615,
+            "reason": null,
+            "unstable": false
+          },
+          "status": "computed"
+        }
+      ],
+      "details": {
+        "k": 3
+      },
+      "item": "Department suggestion",
+      "method": "percentile",
+      "metric": "topk_accuracy",
+      "metric_id": "dept_top3",
+      "n_boot": 2000,
+      "n_decision_points": 52,
+      "n_degenerate": 0,
+      "n_patients": 27,
+      "params": {
+        "k": 3
+      },
+      "point": 0.5,
+      "primary": true,
+      "reason": null,
+      "seed": 20260926,
+      "task": "dept",
+      "thresholds": [
+        {
+          "compared_value": 0.5,
+          "op": ">=",
+          "rule": "point",
+          "status": "not met",
+          "value": 0.8
+        }
+      ],
+      "unstable": false
+    },
+    {
+      "ci_high": 0.7368421052631579,
+      "ci_level": 0.95,
+      "ci_low": 0.375,
+      "comparisons": [
+        {
+          "comparator": "always_answer",
+          "comparator_ci_high": 1.0,
+          "comparator_ci_low": 1.0,
+          "comparator_point": 1.0,
+          "comparator_reason": null,
+          "diff": {
+            "ci_high": -0.26315789473684215,
+            "ci_low": -0.625,
+            "n_degenerate": 0,
+            "point": -0.4464285714285714,
+            "reason": null,
+            "unstable": false
+          },
+          "status": "computed"
+        }
+      ],
+      "details": {
+        "abstain": "y_pred null or absent"
+      },
+      "item": "Abstention",
+      "method": "percentile",
+      "metric": "coverage",
+      "metric_id": "abst_coverage",
+      "n_boot": 2000,
+      "n_decision_points": 56,
+      "n_degenerate": 0,
+      "n_patients": 29,
+      "params": {},
+      "point": 0.5535714285714286,
+      "primary": true,
+      "reason": null,
+      "seed": 20260926,
+      "task": "abstention",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 1.0,
+      "ci_level": 0.95,
+      "ci_low": 0.6285714285714286,
+      "comparisons": [
+        {
+          "comparator": "always_answer",
+          "comparator_ci_high": 0.732260338345864,
+          "comparator_ci_low": 0.368345141700405,
+          "comparator_point": 0.5535714285714286,
+          "comparator_reason": null,
+          "diff": {
+            "ci_high": 0.47024450330371376,
+            "ci_low": 0.11948908512505484,
+            "n_degenerate": 0,
+            "point": 0.28513824884792627,
+            "reason": null,
+            "unstable": false
+          },
+          "status": "computed"
+        }
+      ],
+      "details": {
+        "abstain": "y_pred null or absent"
+      },
+      "item": "Abstention",
+      "method": "percentile",
+      "metric": "selective_accuracy",
+      "metric_id": "abst_selective_top1",
+      "n_boot": 2000,
+      "n_decision_points": 56,
+      "n_degenerate": 0,
+      "n_patients": 29,
+      "params": {
+        "estimand": "top-1 accuracy among answered DPs; answering a NOT_EVALUABLE DP is wrong"
+      },
+      "point": 0.8387096774193549,
+      "primary": true,
+      "reason": null,
+      "seed": 20260926,
+      "task": "abstention",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 1.0,
+      "ci_level": 0.95,
+      "ci_low": 1.0,
+      "comparisons": [],
+      "details": {},
+      "item": "Abstention",
+      "method": "percentile",
+      "metric": "accuracy",
+      "metric_id": "abst_rate_not_evaluable",
+      "n_boot": 2000,
+      "n_decision_points": 4,
+      "n_degenerate": 0,
+      "n_patients": 2,
+      "params": {
+        "estimand": "abstain rate on NOT_EVALUABLE DPs (secondary)"
+      },
+      "point": 1.0,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "abst_on_not_evaluable",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 0.6078431372549019,
+      "ci_level": 0.95,
+      "ci_low": 0.2222222222222222,
+      "comparisons": [],
+      "details": {},
+      "item": "Abstention",
+      "method": "percentile",
+      "metric": "accuracy",
+      "metric_id": "abst_false_abstain_rate",
+      "n_boot": 2000,
+      "n_decision_points": 52,
+      "n_degenerate": 0,
+      "n_patients": 27,
+      "params": {
+        "estimand": "false-abstain rate on the department population (secondary)"
+      },
+      "point": 0.40384615384615385,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "false_abstain",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 0.6447368421052632,
+      "ci_level": 0.95,
+      "ci_low": 0.32926829268292684,
+      "comparisons": [],
+      "details": {},
+      "item": "Abstention",
+      "method": "percentile",
+      "metric": "accuracy",
+      "metric_id": "abst_expected_action_agreement",
+      "n_boot": 2000,
+      "n_decision_points": 80,
+      "n_degenerate": 0,
+      "n_patients": 36,
+      "params": {
+        "estimand": "3-class expected_action agreement (suggest/abstain/escalate) over every DP (secondary)"
+      },
+      "point": 0.4875,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "expected_action",
+      "thresholds": [],
+      "unstable": false
+    }
+  ],
+  "schema_version": "1.1",
+  "slice": "e1",
+  "split": "dev",
+  "split_coverage": [
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 13,
+          "status": "provided"
+        }
+      ],
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 13,
+      "n_missing": 0,
+      "n_predicted": 13,
+      "population": null,
+      "task": "rf_case_recall"
+    },
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 13,
+          "status": "provided"
+        }
+      ],
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 13,
+      "n_missing": 0,
+      "n_predicted": 13,
+      "population": null,
+      "task": "rf_rule_recall"
+    },
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 11,
+          "status": "provided"
+        }
+      ],
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 11,
+      "n_missing": 0,
+      "n_predicted": 11,
+      "population": null,
+      "task": "rf_rule_recall_mappable"
+    },
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 2,
+          "status": "provided"
+        }
+      ],
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 2,
+      "n_missing": 0,
+      "n_predicted": 2,
+      "population": null,
+      "task": "rf_rule_RF-ACUTE-CHEST-PAIN"
+    },
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 2,
+          "status": "provided"
+        }
+      ],
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 2,
+      "n_missing": 0,
+      "n_predicted": 2,
+      "population": null,
+      "task": "rf_rule_RF-ANAPHYLAXIS"
+    },
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 2,
+          "status": "provided"
+        }
+      ],
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 2,
+      "n_missing": 0,
+      "n_predicted": 2,
+      "population": null,
+      "task": "rf_rule_RF-FAST"
+    },
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 2,
+          "status": "provided"
+        }
+      ],
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 2,
+      "n_missing": 0,
+      "n_predicted": 2,
+      "population": null,
+      "task": "rf_rule_RF-NEWS-SINGLE3"
+    },
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 1,
+          "status": "provided"
+        }
+      ],
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 1,
+      "n_missing": 0,
+      "n_predicted": 1,
+      "population": null,
+      "task": "rf_rule_RF-QSOFA"
+    },
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 2,
+          "status": "provided"
+        }
+      ],
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 2,
+      "n_missing": 0,
+      "n_predicted": 2,
+      "population": null,
+      "task": "rf_rule_RF-THUNDERCLAP"
+    },
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 29,
+          "status": "provided"
+        }
+      ],
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 29,
+      "n_missing": 0,
+      "n_predicted": 29,
+      "population": null,
+      "task": "rf_fpr"
+    },
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 29,
+          "status": "provided"
+        }
+      ],
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 29,
+      "n_missing": 0,
+      "n_predicted": 29,
+      "population": null,
+      "task": "rf_fpr_mapped"
+    },
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 8,
+          "status": "provided"
+        },
+        {
+          "arm": "comparator:shortcut_s_star",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 8,
+          "status": "provided"
+        },
+        {
+          "arm": "comparator:shortcut_tamtee",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 8,
+          "status": "provided"
+        }
+      ],
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 8,
+      "n_missing": 0,
+      "n_predicted": 8,
+      "population": null,
+      "task": "rf_text_t1_recall"
+    },
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 31,
+          "status": "provided"
+        },
+        {
+          "arm": "comparator:shortcut_s_star",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 31,
+          "status": "provided"
+        },
+        {
+          "arm": "comparator:shortcut_tamtee",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 31,
+          "status": "provided"
+        }
+      ],
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 31,
+      "n_missing": 0,
+      "n_predicted": 31,
+      "population": null,
+      "task": "rf_text_t1_fpr"
+    },
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 27,
+          "status": "provided"
+        },
+        {
+          "arm": "comparator:always_answer",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 27,
+          "status": "provided"
+        }
+      ],
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 27,
+      "n_missing": 0,
+      "n_predicted": 27,
+      "population": null,
+      "task": "dept"
+    },
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 29,
+          "status": "provided"
+        },
+        {
+          "arm": "comparator:always_answer",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 29,
+          "status": "provided"
+        }
+      ],
+      "imputation_rule": "abstention-only tasks: a listed patient absent from every arm gets one decision point '__missing__' (y_pred=null) in every arm; any (patient, decision point) key present in one arm but absent from another is imputed as abstain (y_pred=null) where absent",
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 29,
+      "n_missing": 0,
+      "n_predicted": 29,
+      "population": null,
+      "task": "abstention"
+    },
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 2,
+          "status": "provided"
+        }
+      ],
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 2,
+      "n_missing": 0,
+      "n_predicted": 2,
+      "population": null,
+      "task": "abst_on_not_evaluable"
+    },
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 27,
+          "status": "provided"
+        }
+      ],
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 27,
+      "n_missing": 0,
+      "n_predicted": 27,
+      "population": null,
+      "task": "false_abstain"
+    },
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 36,
+          "status": "provided"
+        }
+      ],
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 36,
+      "n_missing": 0,
+      "n_predicted": 36,
+      "population": null,
+      "task": "expected_action"
+    }
+  ],
+  "split_version": "fb9454a2bc7433b663c6d921ebd68d3a1897bdbffb02dc3849e9d37976c828e9",
+  "stamp": null
+}

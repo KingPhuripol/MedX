@@ -24,6 +24,8 @@ be a byte prefix of the working file) refuses with exit 2 and nothing is written
 ## Commit policy
 
 1. Ledger appends happen on one integration branch only (`main`), by a single writer.
+   Exception: `docs/DECISIONS.md` "2026-09-27 — Evaluation ledger: freeze and test runs allowed on factory branches"
+   (own `factory/<slice>` branch, merge-only to `main` via `factory/int`, verify `--git-history` after each merge).
 2. Order: `freeze`, then commit `eval(ledger): freeze <evaluation_id>` together with the manifest.
    Then `run`, then commit `eval(ledger): run <evaluation_id>`.
 3. Commits that touch `eval/ledger/` are never amended, rebased, squashed or force-pushed.

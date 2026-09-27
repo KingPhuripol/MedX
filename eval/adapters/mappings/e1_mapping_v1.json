@@ -1,0 +1,259 @@
+{
+ "mapping_version": "e1-mapping-v1",
+ "status": "Written from code definitions (department lists, ICD-10-CM titles, rule citations) before the first e1 run; pending clinical review under decision D1. Not clinically validated. Research prototype - not for clinical use.",
+ "target_conventions": {
+  "UNMAPPABLE": "the target system cannot express the source; the row is excluded or counted as missed exactly as the section's scoring note says",
+  "(absent)": "no gold value and no fact: the item is absent, never a negative",
+  "(no fact)": "nothing is given to the downstream component"
+ },
+ "sections": {
+  "department_s1r": {
+   "title": "S1r gold department (SIL-TH cs-chi-clinic) -> evaluation space E",
+   "scoring": "Department population = DPs with department_evaluable and a target in E. 12 rows are scored by the red-flag metrics; 11 rows are excluded (counted); NOT_EVALUABLE rows enter the abstention population only.",
+   "rows": [
+    {"source": "01", "target": "E-MED", "route": "department", "rationale": "Internal medicine clinic; S4 MED, CARD and NEURO are internal-medicine sub-clinics, so E-MED is their common parent.", "source_ref": "data_factory/templates/departments.json (SIL-TH-CS-CHI-CLINIC 01 อายุรกรรม); backend/app/triage/departments.py"},
+    {"source": "02", "target": "E-SURG", "route": "department", "rationale": "Surgery clinic; S4 SURG and URO are surgical clinics (urology is a surgical specialty).", "source_ref": "SIL-TH-CS-CHI-CLINIC 02 ศัลยกรรม; S4 URO label 'ศัลยกรรมระบบทางเดินปัสสาวะ'"},
+    {"source": "03", "target": "E-OBGYN", "route": "department", "rationale": "Obstetrics; S4 has one combined OBGYN code.", "source_ref": "SIL-TH-CS-CHI-CLINIC 03 สูติกรรม; S4 OBGYN 'สูติ-นรีเวชกรรม'"},
+    {"source": "04", "target": "E-OBGYN", "route": "department", "rationale": "Gynaecology; S4 has one combined OBGYN code.", "source_ref": "SIL-TH-CS-CHI-CLINIC 04 นรีเวชกรรม; S4 OBGYN 'สูติ-นรีเวชกรรม'"},
+    {"source": "06", "target": "E-ENT", "route": "department", "rationale": "ENT clinic; S4 ENT has the same scope.", "source_ref": "SIL-TH-CS-CHI-CLINIC 06 โสต ศอ นาสิก; S4 ENT"},
+    {"source": "07", "target": "E-EYE", "route": "department", "rationale": "Ophthalmology clinic; S4 EYE has the same scope.", "source_ref": "SIL-TH-CS-CHI-CLINIC 07 จักษุ; S4 EYE"},
+    {"source": "08", "target": "E-ORTHO", "route": "department", "rationale": "Orthopaedic surgery clinic; S4 ORTHO has the same scope.", "source_ref": "SIL-TH-CS-CHI-CLINIC 08 ศัลยกรรมกระดูก; S4 ORTHO"},
+    {"source": "09", "target": "E-PSY", "route": "department", "rationale": "Psychiatry clinic; S4 PSY has the same scope.", "source_ref": "SIL-TH-CS-CHI-CLINIC 09 จิตเวช; S4 PSY"},
+    {"source": "11", "target": "UNMAPPABLE", "route": "excluded", "rationale": "Dental clinic; the S4 department list has no dental code, so S4 cannot suggest it. Rows are excluded from the department population and counted.", "source_ref": "SIL-TH-CS-CHI-CLINIC 11 ทันตกรรม; backend/app/triage/departments.py (10 codes, no dental)"},
+    {"source": "12", "target": "UNMAPPABLE", "route": "red_flag_metrics", "rationale": "Emergency is not an S4 department: S4 routes urgency through red-flag alerts by design. These rows are scored by the red-flag metrics, not by department accuracy.", "source_ref": "SIL-TH-CS-CHI-CLINIC 12 ฉุกเฉิน; departments.py docstring 'There is deliberately no emergency code'"},
+    {"source": "NOT_EVALUABLE", "target": "UNMAPPABLE", "route": "abstention_only", "rationale": "Chief complaint missing: S1r labels no department. The DP enters the abstention population with y_true NOT_EVALUABLE, so any answer is wrong.", "source_ref": "S1r gold department_evaluable=false, department_reason=chief_complaint_missing"}
+   ]
+  },
+  "department_s4": {
+   "title": "S4 department code -> evaluation space E",
+   "scoring": "The S4 top-3 is mapped to E and de-duplicated, keeping the first occurrence.",
+   "rows": [
+    {"source": "MED", "target": "E-MED", "rationale": "Internal medicine.", "source_ref": "backend/app/triage/departments.py MED อายุรกรรม"},
+    {"source": "CARD", "target": "E-MED", "rationale": "Cardiology is an internal-medicine sub-clinic; S1r has no cardiology code.", "source_ref": "departments.py CARD อายุรกรรมหัวใจ"},
+    {"source": "NEURO", "target": "E-MED", "rationale": "Neurology is an internal-medicine sub-clinic; S1r has no neurology code.", "source_ref": "departments.py NEURO ประสาทวิทยา"},
+    {"source": "SURG", "target": "E-SURG", "rationale": "General surgery.", "source_ref": "departments.py SURG ศัลยกรรมทั่วไป"},
+    {"source": "URO", "target": "E-SURG", "rationale": "Urology is a surgical specialty; S1r has no urology code. Known disagreement: S1r maps dysuria to 01 while S4 suggests URO; reported as-is, flagged for D1.", "source_ref": "departments.py URO ศัลยกรรมระบบทางเดินปัสสาวะ"},
+    {"source": "ORTHO", "target": "E-ORTHO", "rationale": "Orthopaedics.", "source_ref": "departments.py ORTHO"},
+    {"source": "OBGYN", "target": "E-OBGYN", "rationale": "Obstetrics and gynaecology.", "source_ref": "departments.py OBGYN"},
+    {"source": "EYE", "target": "E-EYE", "rationale": "Ophthalmology.", "source_ref": "departments.py EYE"},
+    {"source": "ENT", "target": "E-ENT", "rationale": "Ear, nose and throat.", "source_ref": "departments.py ENT"},
+    {"source": "PSY", "target": "E-PSY", "rationale": "Psychiatry.", "source_ref": "departments.py PSY"}
+   ]
+  },
+  "red_flag_s1r": {
+   "title": "S1r red-flag rule -> S4 rule(s) whose alert detects it (any of)",
+   "scoring": "A gold (DP, rule) pair is detected when any listed S4 rule fired at that DP. UNMAPPABLE pairs count as missed in the primary rule-level recall; the mappable-only recall is secondary. A not_evaluable S4 rule is never a detection.",
+   "rows": [
+    {"source": "RF-NEWS-SINGLE3", "target": ["RF-SPO2", "RF-RR", "RF-SBP", "RF-HR", "RF-CONSC", "RF-TEMP"], "rationale": "S1r: any single NEWS parameter scoring 3 (RR, SpO2, temperature, SBP, HR, V/P/U). S4 has one NEWS2 single-parameter-3 rule per parameter with the same cut-offs.", "source_ref": "data_factory/templates/red_flags.json (PMID 23295778); redflag_rules_v1.json (RCP NEWS2 Chart 1)"},
+    {"source": "RF-QSOFA", "target": ["RF-QSOFA"], "rationale": "Same qSOFA >= 2 criteria (RR >= 22, SBP <= 100, altered mentation).", "source_ref": "PMID 26903335 (both registries)"},
+    {"source": "RF-ACUTE-CHEST-PAIN", "target": ["RF-CHEST"], "rationale": "Acute chest pain; S4 RF-CHEST fires on symptom.acute_chest_pain.", "source_ref": "PMID 34709879 (both registries)"},
+    {"source": "RF-FAST", "target": ["RF-STROKE"], "rationale": "Sudden face/arm/speech deficit; S4 RF-STROKE fires on sudden facial droop, limb weakness, speech or vision disturbance.", "source_ref": "S1r PMID 12511753; S4 PMID 31662037"},
+    {"source": "RF-THUNDERCLAP", "target": ["RF-THUNDER"], "rationale": "Thunderclap headache.", "source_ref": "PMID 24065011 (both registries)"},
+    {"source": "RF-ANAPHYLAXIS", "target": ["RF-ANAPH"], "rationale": "Possible anaphylaxis (skin/mucosal plus respiratory compromise or SBP < 90).", "source_ref": "S1r PMID 16461139; S4 PMID 33204386"},
+    {"source": "RF-NEWS-AGG5", "target": "UNMAPPABLE", "rationale": "Aggregate NEWS >= 5 with no single parameter scoring 3; S4 has no aggregate-NEWS rule. Pairs count as missed in primary rule-level recall.", "source_ref": "RCP NEWS 2012 Chart 1; redflag_rules_v1.json has only single-parameter rules"}
+   ]
+  },
+  "red_flag_s4": {
+   "title": "S4 red-flag rule -> S1r rule it serves",
+   "scoring": "UNMAPPABLE rows are outside the S1r registry: their alerts are counted per rule and listed, counted in the primary FPR and excluded from the mapped-only FPR (secondary). Gold 'no red flag' means only that no S1r rule fires, not that the case is safe.",
+   "rows": [
+    {"source": "RF-SPO2", "target": "RF-NEWS-SINGLE3", "rationale": "SpO2 <= 91 is a NEWS single-parameter 3.", "source_ref": "redflag_rules_v1.json RF-SPO2"},
+    {"source": "RF-RR", "target": "RF-NEWS-SINGLE3", "rationale": "RR <= 8 or >= 25.", "source_ref": "RF-RR"},
+    {"source": "RF-SBP", "target": "RF-NEWS-SINGLE3", "rationale": "SBP <= 90 or >= 220.", "source_ref": "RF-SBP"},
+    {"source": "RF-HR", "target": "RF-NEWS-SINGLE3", "rationale": "HR <= 40 or >= 131.", "source_ref": "RF-HR"},
+    {"source": "RF-CONSC", "target": "RF-NEWS-SINGLE3", "rationale": "AVPU not A (V/P/U score 3). S4 also fires on new confusion (NEWS2 C), which scores 0 under S1r NEWS 2012; such alerts on gold-negative DPs appear as false positives.", "source_ref": "RF-CONSC"},
+    {"source": "RF-TEMP", "target": "RF-NEWS-SINGLE3", "rationale": "Temperature <= 35.0.", "source_ref": "RF-TEMP"},
+    {"source": "RF-QSOFA", "target": "RF-QSOFA", "rationale": "Same criteria.", "source_ref": "RF-QSOFA"},
+    {"source": "RF-CHEST", "target": "RF-ACUTE-CHEST-PAIN", "rationale": "Acute chest pain.", "source_ref": "RF-CHEST"},
+    {"source": "RF-STROKE", "target": "RF-FAST", "rationale": "Sudden focal deficit.", "source_ref": "RF-STROKE"},
+    {"source": "RF-THUNDER", "target": "RF-THUNDERCLAP", "rationale": "Thunderclap headache.", "source_ref": "RF-THUNDER"},
+    {"source": "RF-ANAPH", "target": "RF-ANAPHYLAXIS", "rationale": "Possible anaphylaxis.", "source_ref": "RF-ANAPH"},
+    {"source": "RF-SUICIDE", "target": "UNMAPPABLE", "route": "outside_s1r_registry", "rationale": "No S1r counterpart (suicidal ideation / self-harm).", "source_ref": "RF-SUICIDE"},
+    {"source": "RF-GIBLEED", "target": "UNMAPPABLE", "route": "outside_s1r_registry", "rationale": "No S1r counterpart (upper GI bleeding).", "source_ref": "RF-GIBLEED"},
+    {"source": "RF-ECTOPIC", "target": "UNMAPPABLE", "route": "outside_s1r_registry", "rationale": "No S1r counterpart (possible ectopic pregnancy).", "source_ref": "RF-ECTOPIC"},
+    {"source": "RF-MENING", "target": "UNMAPPABLE", "route": "outside_s1r_registry", "rationale": "No S1r counterpart (possible meningitis).", "source_ref": "RF-MENING"},
+    {"source": "RF-HYPOGLY", "target": "UNMAPPABLE", "route": "outside_s1r_registry", "rationale": "No S1r counterpart (level 2 hypoglycaemia); S1r has no glucose item.", "source_ref": "RF-HYPOGLY"}
+   ]
+  },
+  "vitals_demographics": {
+   "title": "S1r Vitals / Demographics item field -> S4 fact kind",
+   "scoring": "Every Vitals item is passed with its own available_at_time; S4 keeps the latest fact per kind (S4 behaviour, reported, not altered).",
+   "rows": [
+    {"source": "hr", "target": "vital.hr", "rationale": "Same quantity (beats/min).", "source_ref": "S1r Vitals.hr; S4 models.NUMERIC_VITALS"},
+    {"source": "rr", "target": "vital.rr", "rationale": "Same quantity (breaths/min).", "source_ref": "S1r Vitals.rr"},
+    {"source": "sbp", "target": "vital.sbp", "rationale": "Same quantity (mmHg).", "source_ref": "S1r Vitals.sbp"},
+    {"source": "dbp", "target": "vital.dbp", "rationale": "Same quantity (mmHg).", "source_ref": "S1r Vitals.dbp"},
+    {"source": "spo2", "target": "vital.spo2", "rationale": "Same quantity (%).", "source_ref": "S1r Vitals.spo2"},
+    {"source": "temp_c", "target": "vital.temp_c", "rationale": "Same quantity (degrees C).", "source_ref": "S1r Vitals.temp_c"},
+    {"source": "consciousness", "target": "vital.avpu (+ vital.new_confusion for C)", "rationale": "ACVPU convention; see section consciousness.", "source_ref": "RCP NEWS2 ACVPU"},
+    {"source": "on_oxygen", "target": "UNMAPPABLE", "rationale": "S4 has no supplemental-oxygen fact kind.", "source_ref": "S4 models._KIND"},
+    {"source": "null value", "target": "(no fact)", "rationale": "A null vital is not recorded; it is never given as a normal value.", "source_ref": "CLAUDE.md data rule 6 (preserve missingness)"},
+    {"source": "Demographics.age_years", "target": "age", "rationale": "Same quantity (years).", "source_ref": "S1r Demographics"},
+    {"source": "Demographics.sex", "target": "sex", "rationale": "Same values (female, male).", "source_ref": "S1r Demographics"},
+    {"source": "pregnancy status", "target": "UNMAPPABLE", "rationale": "S1r has no pregnancy item, so no pregnancy_status fact is given (S4 treats it as not known).", "source_ref": "S1r snapshot item types"}
+   ]
+  },
+  "consciousness": {
+   "title": "S1r consciousness (ACVPU) -> S4 facts",
+   "scoring": "Applied to every Vitals item.",
+   "rows": [
+    {"source": "A", "target": "vital.avpu=A", "rationale": "Alert.", "source_ref": "RCP NEWS2 ACVPU"},
+    {"source": "C", "target": "vital.avpu=A + vital.new_confusion=true", "rationale": "ACVPU 'new confusion': the patient is alert on AVPU and newly confused. C scores 0 under S1r NEWS 2012 but counts as altered mentation for qSOFA.", "source_ref": "RCP NEWS2 ACVPU; S1r red_flags.json (C scores 0 in NEWS 2012, counts for qSOFA)"},
+    {"source": "V", "target": "vital.avpu=V", "rationale": "Responds to voice.", "source_ref": "RCP NEWS2 ACVPU"},
+    {"source": "P", "target": "vital.avpu=P", "rationale": "Responds to pain.", "source_ref": "RCP NEWS2 ACVPU"},
+    {"source": "U", "target": "vital.avpu=U", "rationale": "Unresponsive.", "source_ref": "RCP NEWS2 ACVPU"}
+   ]
+  },
+  "chief_complaint_s1r_to_s3": {
+   "title": "S1r chief-complaint code (ICD-10-CM) -> acceptable S3 chief_complaint codes",
+   "scoring": "S3 outputs one code from a closed 16-code symptom vocabulary. A prediction is correct when it is in the acceptable set (the S3 codes that express the ICD-10-CM title or a symptom stated in the complaint). UNMAPPABLE cases are excluded from the chief_complaint field only, and counted. The S3 code definitions are the 16 names in backend/app/voice/models.py; runny_nose covers nasal discharge and nasal congestion (its declared phrases include คัดจมูก).",
+   "rows": [
+    {"source": "CC-FEVER-COUGH", "icd10cm": "R50.9", "target": ["fever", "cough"], "rationale": "Fever, unspecified; complaint states fever and cough.", "source_ref": "ICD10CM-FY2026 R50.9"},
+    {"source": "CC-DIARRHEA", "icd10cm": "R19.7", "target": ["diarrhea"], "rationale": "Diarrhoea, unspecified.", "source_ref": "ICD10CM-FY2026 R19.7"},
+    {"source": "CC-DYSURIA", "icd10cm": "R30.0", "target": ["dysuria"], "rationale": "Dysuria.", "source_ref": "ICD10CM-FY2026 R30.0"},
+    {"source": "CC-PALPITATION", "icd10cm": "R00.2", "target": "UNMAPPABLE", "rationale": "Palpitations; no S3 code expresses palpitations (chest_pain would be a different symptom).", "source_ref": "ICD10CM-FY2026 R00.2"},
+    {"source": "CC-HEADACHE", "icd10cm": "R51.9", "target": ["headache"], "rationale": "Headache, unspecified.", "source_ref": "ICD10CM-FY2026 R51.9"},
+    {"source": "CC-FATIGUE", "icd10cm": "R53.83", "target": ["fatigue"], "rationale": "Other fatigue.", "source_ref": "ICD10CM-FY2026 R53.83"},
+    {"source": "CC-RLQ-PAIN", "icd10cm": "R10.31", "target": ["abdominal_pain"], "rationale": "Right lower quadrant pain is abdominal pain (R10).", "source_ref": "ICD10CM-FY2026 R10.31"},
+    {"source": "CC-ABSCESS", "icd10cm": "L02.91", "target": "UNMAPPABLE", "rationale": "Cutaneous abscess; not a rash and no S3 code for a skin swelling.", "source_ref": "ICD10CM-FY2026 L02.91"},
+    {"source": "CC-GROIN-LUMP", "icd10cm": "K40.90", "target": "UNMAPPABLE", "rationale": "Inguinal hernia / groin lump; no S3 code.", "source_ref": "ICD10CM-FY2026 K40.90"},
+    {"source": "CC-PREG-NAUSEA", "icd10cm": "O21.0", "target": ["nausea_vomiting"], "rationale": "Mild hyperemesis gravidarum; complaint states nausea and vomiting.", "source_ref": "ICD10CM-FY2026 O21.0"},
+    {"source": "CC-PREG-ITCH", "icd10cm": "O26.899", "target": "UNMAPPABLE", "rationale": "Pregnancy-related itching without a stated rash; S3 has no pruritus code and rash is not equal.", "source_ref": "ICD10CM-FY2026 O26.899"},
+    {"source": "CC-DYSMENORRHEA", "icd10cm": "N94.6", "target": ["abdominal_pain"], "rationale": "Dysmenorrhoea is cyclical lower abdominal / pelvic pain; ICD-10-CM groups pelvic pain with abdominal pain (R10 'Abdominal and pelvic pain'). Flagged for D1.", "source_ref": "ICD10CM-FY2026 N94.6, R10.2"},
+    {"source": "CC-DISCHARGE", "icd10cm": "N89.8", "target": "UNMAPPABLE", "rationale": "Abnormal vaginal discharge; no S3 code.", "source_ref": "ICD10CM-FY2026 N89.8"},
+    {"source": "CC-SORE-THROAT", "icd10cm": "J02.9", "target": ["sore_throat"], "rationale": "Acute pharyngitis presenting as sore throat.", "source_ref": "ICD10CM-FY2026 J02.9"},
+    {"source": "CC-EAR-PAIN", "icd10cm": "H92.09", "target": "UNMAPPABLE", "rationale": "Otalgia; no S3 code.", "source_ref": "ICD10CM-FY2026 H92.09"},
+    {"source": "CC-VERTIGO", "icd10cm": "H81.10", "target": ["dizziness"], "rationale": "Benign paroxysmal vertigo; vertigo is a form of dizziness (R42 'Dizziness and giddiness').", "source_ref": "ICD10CM-FY2026 H81.10, R42"},
+    {"source": "CC-RED-EYE", "icd10cm": "H10.9", "target": "UNMAPPABLE", "rationale": "Conjunctivitis / red eye; no S3 code.", "source_ref": "ICD10CM-FY2026 H10.9"},
+    {"source": "CC-BLURRED", "icd10cm": "H53.8", "target": "UNMAPPABLE", "rationale": "Visual disturbance; no S3 code.", "source_ref": "ICD10CM-FY2026 H53.8"},
+    {"source": "CC-LOW-BACK", "icd10cm": "M54.50", "target": ["back_pain"], "rationale": "Low back pain.", "source_ref": "ICD10CM-FY2026 M54.50"},
+    {"source": "CC-KNEE", "icd10cm": "M25.569", "target": ["joint_pain"], "rationale": "Pain in knee is joint pain (M25.5).", "source_ref": "ICD10CM-FY2026 M25.569"},
+    {"source": "CC-ANKLE", "icd10cm": "S93.409A", "target": ["joint_pain"], "rationale": "Ankle sprain presenting with a swollen ankle joint; the S3 joint category covers joint pain and joint swelling. Flagged for D1.", "source_ref": "ICD10CM-FY2026 S93.409A, M25.57"},
+    {"source": "CC-INSOMNIA", "icd10cm": "G47.00", "target": "UNMAPPABLE", "rationale": "Insomnia; no S3 code.", "source_ref": "ICD10CM-FY2026 G47.00"},
+    {"source": "CC-ANXIETY", "icd10cm": "F41.9", "target": "UNMAPPABLE", "rationale": "Anxiety; no S3 code.", "source_ref": "ICD10CM-FY2026 F41.9"},
+    {"source": "CC-TOOTHACHE", "icd10cm": "K08.89", "target": "UNMAPPABLE", "rationale": "Toothache; no S3 code.", "source_ref": "ICD10CM-FY2026 K08.89"},
+    {"source": "CC-GUM", "icd10cm": "K05.10", "target": "UNMAPPABLE", "rationale": "Gingivitis; no S3 code.", "source_ref": "ICD10CM-FY2026 K05.10"},
+    {"source": "CC-GASTRO", "icd10cm": "A09", "target": ["diarrhea", "abdominal_pain"], "rationale": "Infectious gastroenteritis; complaint states cramping abdominal pain and loose stools.", "source_ref": "ICD10CM-FY2026 A09"},
+    {"source": "CC-HEARTBURN", "icd10cm": "R12", "target": "UNMAPPABLE", "rationale": "Heartburn is not chest pain (R12 vs R07); no S3 code.", "source_ref": "ICD10CM-FY2026 R12"},
+    {"source": "CC-NASAL", "icd10cm": "R09.81", "target": ["runny_nose"], "rationale": "Nasal congestion; the S3 runny_nose category covers nasal congestion.", "source_ref": "ICD10CM-FY2026 R09.81"},
+    {"source": "CC-COLD", "icd10cm": "J00", "target": ["runny_nose"], "rationale": "Common cold; complaint states runny and blocked nose.", "source_ref": "ICD10CM-FY2026 J00"},
+    {"source": "CC-EPISTAXIS", "icd10cm": "R04.0", "target": "UNMAPPABLE", "rationale": "Nosebleed; no S3 code (runny_nose is nasal discharge, not bleeding).", "source_ref": "ICD10CM-FY2026 R04.0"},
+    {"source": "CC-CARIES", "icd10cm": "K02.9", "target": "UNMAPPABLE", "rationale": "Dental caries; no S3 code.", "source_ref": "ICD10CM-FY2026 K02.9"},
+    {"source": "CC-LOW-MOOD", "icd10cm": "F32.A", "target": "UNMAPPABLE", "rationale": "Depressed mood; no S3 code (fatigue is not equal).", "source_ref": "ICD10CM-FY2026 F32.A"},
+    {"source": "CC-RF-CHEST", "icd10cm": "R07.9", "target": ["chest_pain"], "rationale": "Chest pain, unspecified.", "source_ref": "ICD10CM-FY2026 R07.9"},
+    {"source": "CC-RF-CHEST-2", "icd10cm": "R07.9", "target": ["chest_pain"], "rationale": "Chest pain, unspecified.", "source_ref": "ICD10CM-FY2026 R07.9"},
+    {"source": "CC-RF-CHEST-3", "icd10cm": "R07.9", "target": ["chest_pain"], "rationale": "Chest pain, unspecified.", "source_ref": "ICD10CM-FY2026 R07.9"},
+    {"source": "CC-RF-CHEST-4", "icd10cm": "R07.9", "target": ["chest_pain"], "rationale": "Chest pain, unspecified.", "source_ref": "ICD10CM-FY2026 R07.9"},
+    {"source": "CC-RF-FAST", "icd10cm": "R29.810", "target": "UNMAPPABLE", "rationale": "Facial weakness with speech disturbance; no S3 code (never fatigue).", "source_ref": "ICD10CM-FY2026 R29.810"},
+    {"source": "CC-RF-FAST-2", "icd10cm": "R29.810", "target": "UNMAPPABLE", "rationale": "Facial droop with one-sided arm weakness; no S3 code (never fatigue).", "source_ref": "ICD10CM-FY2026 R29.810"},
+    {"source": "CC-RF-FAST-3", "icd10cm": "R29.810", "target": "UNMAPPABLE", "rationale": "One-sided limb weakness with speech difficulty; no S3 code (never fatigue).", "source_ref": "ICD10CM-FY2026 R29.810"},
+    {"source": "CC-RF-FAST-4", "icd10cm": "R29.810", "target": "UNMAPPABLE", "rationale": "Slurred speech with drooping mouth corner; no S3 code.", "source_ref": "ICD10CM-FY2026 R29.810"},
+    {"source": "CC-RF-THUNDERCLAP", "icd10cm": "R51.9", "target": ["headache"], "rationale": "Headache, unspecified (S3 records no onset).", "source_ref": "ICD10CM-FY2026 R51.9"},
+    {"source": "CC-RF-THUNDERCLAP-2", "icd10cm": "R51.9", "target": ["headache"], "rationale": "Headache, unspecified.", "source_ref": "ICD10CM-FY2026 R51.9"},
+    {"source": "CC-RF-THUNDERCLAP-3", "icd10cm": "R51.9", "target": ["headache"], "rationale": "Headache, unspecified.", "source_ref": "ICD10CM-FY2026 R51.9"},
+    {"source": "CC-RF-THUNDERCLAP-4", "icd10cm": "R51.9", "target": ["headache"], "rationale": "Headache, unspecified.", "source_ref": "ICD10CM-FY2026 R51.9"},
+    {"source": "CC-RF-ANAPHYLAXIS", "icd10cm": "L50.0", "target": ["rash", "dyspnea"], "rationale": "Allergic urticaria (rash); complaint also states difficulty breathing.", "source_ref": "ICD10CM-FY2026 L50.0"},
+    {"source": "CC-RF-ANAPHYLAXIS-2", "icd10cm": "L50.0", "target": ["rash", "dyspnea"], "rationale": "Allergic urticaria (rash); complaint also states wheezing.", "source_ref": "ICD10CM-FY2026 L50.0"},
+    {"source": "CC-RF-ANAPHYLAXIS-3", "icd10cm": "L50.0", "target": ["rash", "dyspnea"], "rationale": "Coded allergic urticaria (rash); complaint states lip swelling and inability to breathe.", "source_ref": "ICD10CM-FY2026 L50.0"},
+    {"source": "CC-RF-ANAPHYLAXIS-4", "icd10cm": "L50.0", "target": ["rash", "dizziness"], "rationale": "Allergic urticaria (rash); complaint also states light-headedness (near-faint).", "source_ref": "ICD10CM-FY2026 L50.0, R42"},
+    {"source": "CC-TNM-CHEST-1", "icd10cm": "R07.89", "target": ["chest_pain"], "rationale": "Other chest pain.", "source_ref": "ICD10CM-FY2026 R07.89"},
+    {"source": "CC-TNM-CHEST-2", "icd10cm": "R07.89", "target": ["chest_pain"], "rationale": "Other chest pain.", "source_ref": "ICD10CM-FY2026 R07.89"},
+    {"source": "CC-TNM-HEADACHE-1", "icd10cm": "R51.9", "target": ["headache"], "rationale": "Headache, unspecified.", "source_ref": "ICD10CM-FY2026 R51.9"},
+    {"source": "CC-TNM-HEADACHE-2", "icd10cm": "R51.9", "target": ["headache"], "rationale": "Headache, unspecified.", "source_ref": "ICD10CM-FY2026 R51.9"},
+    {"source": "CC-TNM-NUMB-1", "icd10cm": "R20.2", "target": "UNMAPPABLE", "rationale": "Paraesthesia of skin (finger numbness); no S3 code.", "source_ref": "ICD10CM-FY2026 R20.2"},
+    {"source": "CC-TNM-NUMB-2", "icd10cm": "R20.2", "target": "UNMAPPABLE", "rationale": "Paraesthesia of skin; no S3 code.", "source_ref": "ICD10CM-FY2026 R20.2"},
+    {"source": "CC-TNM-URTICARIA-1", "icd10cm": "L50.9", "target": ["rash"], "rationale": "Urticaria is a rash.", "source_ref": "ICD10CM-FY2026 L50.9"},
+    {"source": "CC-TNM-URTICARIA-2", "icd10cm": "L50.9", "target": ["rash"], "rationale": "Urticaria is a rash.", "source_ref": "ICD10CM-FY2026 L50.9"},
+    {"source": "CC-TNM-DEFICIT-1", "icd10cm": "I69.398", "target": "UNMAPPABLE", "rationale": "Sequelae of stroke (chronic deficit, follow-up visit); no S3 code.", "source_ref": "ICD10CM-FY2026 I69.398"},
+    {"source": "CC-TNM-DEFICIT-2", "icd10cm": "I69.359", "target": "UNMAPPABLE", "rationale": "Hemiplegia following stroke (chronic); no S3 code.", "source_ref": "ICD10CM-FY2026 I69.359"}
+   ]
+  },
+  "duration_unit": {
+   "title": "S1r duration unit -> ISO-8601 (gold and S3 compared after normalisation)",
+   "scoring": "PnW is normalised to P(7n)D on both sides; months and years are not converted. Gold duration MISSING is absent.",
+   "rows": [
+    {"source": "minute", "target": "PT{n}M", "rationale": "ISO-8601 time component, minutes.", "source_ref": "ISO 8601 durations"},
+    {"source": "hour", "target": "PT{n}H", "rationale": "ISO-8601 time component, hours.", "source_ref": "ISO 8601 durations"},
+    {"source": "day", "target": "P{n}D", "rationale": "ISO-8601 days.", "source_ref": "ISO 8601 durations"},
+    {"source": "week", "target": "P{7n}D", "rationale": "One week is 7 days; S3 P{n}W is normalised the same way.", "source_ref": "ISO 8601 durations"},
+    {"source": "month", "target": "P{n}M", "rationale": "Calendar months are not converted to days.", "source_ref": "ISO 8601 durations"},
+    {"source": "year", "target": "P{n}Y", "rationale": "Calendar years are not converted to days.", "source_ref": "ISO 8601 durations"}
+   ]
+  },
+  "allergy_value": {
+   "title": "S1r allergy_status -> S3 allergy_status",
+   "scoring": "Only KNOWN S3 facts count as extracted values; UNKNOWN, REFUSED and MISSING are no extracted value. False-none: gold known or MISSING but S3 KNOWN none.",
+   "rows": [
+    {"source": "no_known_allergy", "target": "none", "rationale": "Stated no drug allergy = S3 KNOWN none.", "source_ref": "S1r gold required_fields.allergy_status; S3 ALLERGY_VALUES"},
+    {"source": "known", "target": "present", "rationale": "A stated drug allergy = S3 KNOWN present.", "source_ref": "S1r gold; S3 ALLERGY_VALUES"},
+    {"source": "MISSING", "target": "(absent)", "rationale": "Not stated in the transcript: no gold value (never a negative).", "source_ref": "CLAUDE.md data rule 6"}
+   ]
+  },
+  "s3_cc_to_s4_symptom": {
+   "title": "S3 chief_complaint code -> S4 symptom fact (end-to-end pipeline)",
+   "scoring": "symptom.<name>=present is given only where the meaning is equal. S4 acuity- or exposure-qualified symptoms are never produced (section s4_symptom_qualified).",
+   "rows": [
+    {"source": "fever", "target": "symptom.fever", "rationale": "Same meaning.", "source_ref": "S3 models.CHIEF_COMPLAINT_CODES; S4 baseline_keywords_v1.json"},
+    {"source": "cough", "target": "symptom.cough", "rationale": "Same meaning.", "source_ref": "same"},
+    {"source": "sore_throat", "target": "symptom.sore_throat", "rationale": "Same meaning.", "source_ref": "same"},
+    {"source": "runny_nose", "target": "UNMAPPABLE", "rationale": "S4 has no nasal symptom.", "source_ref": "S4 symptom names"},
+    {"source": "headache", "target": "symptom.headache", "rationale": "Same meaning (not thunderclap_headache, which needs onset).", "source_ref": "same"},
+    {"source": "dizziness", "target": "symptom.dizziness", "rationale": "Same meaning.", "source_ref": "same"},
+    {"source": "chest_pain", "target": "UNMAPPABLE", "rationale": "S4 has only acute_chest_pain, which is acuity-qualified; S3 records no onset.", "source_ref": "redflag_rules_v1.json RF-CHEST"},
+    {"source": "dyspnea", "target": "symptom.dyspnea", "rationale": "Same meaning (not airway_breathing_compromise, which is qualified).", "source_ref": "same"},
+    {"source": "abdominal_pain", "target": "symptom.abdominal_pain", "rationale": "Same meaning.", "source_ref": "same"},
+    {"source": "diarrhea", "target": "UNMAPPABLE", "rationale": "S4 has no diarrhoea symptom.", "source_ref": "S4 symptom names"},
+    {"source": "nausea_vomiting", "target": "UNMAPPABLE", "rationale": "S4 has only hematemesis (vomiting blood), which is not equal.", "source_ref": "S4 symptom names"},
+    {"source": "rash", "target": "UNMAPPABLE", "rationale": "S4 has only non_blanching_rash, which is qualified.", "source_ref": "RF-MENING"},
+    {"source": "back_pain", "target": "symptom.back_pain", "rationale": "Same meaning.", "source_ref": "same"},
+    {"source": "joint_pain", "target": "symptom.joint_pain", "rationale": "Same meaning.", "source_ref": "same"},
+    {"source": "dysuria", "target": "symptom.dysuria", "rationale": "Same meaning.", "source_ref": "same"},
+    {"source": "fatigue", "target": "UNMAPPABLE", "rationale": "S4 has no fatigue symptom.", "source_ref": "S4 symptom names"}
+   ]
+  },
+  "s3_field_to_s4_fact": {
+   "title": "S3 intake fact -> S4 fact (end-to-end pipeline)",
+   "scoring": "The final S3 fact per field at finish is used, with its own available_at_time.",
+   "rows": [
+    {"source": "chief_complaint", "target": "chief_complaint (NFC text of the span turns) + symptom per s3_cc_to_s4_symptom", "rationale": "S4 reads the chief complaint as free text; the span turns are what the patient said.", "source_ref": "S3 IntakeFact.span_turn_ids; S4 department.build_request"},
+    {"source": "onset_duration", "target": "onset_duration (S3 ISO value)", "rationale": "S4 needs only a non-empty duration.", "source_ref": "S4 models.REQUIRED_FIELDS"},
+    {"source": "severity", "target": "UNMAPPABLE", "rationale": "S4 has no severity fact kind.", "source_ref": "S4 models._KIND"},
+    {"source": "allergy_status", "target": "UNMAPPABLE", "rationale": "S4 has no allergy fact kind.", "source_ref": "S4 models._KIND"},
+    {"source": "allergens", "target": "UNMAPPABLE", "rationale": "S4 has no allergy fact kind.", "source_ref": "S4 models._KIND"},
+    {"source": "current_medications", "target": "UNMAPPABLE", "rationale": "S4 has no medication fact kind.", "source_ref": "S4 models._KIND"},
+    {"source": "relevant_history", "target": "UNMAPPABLE", "rationale": "S4 has no history fact kind (diabetes_known is not produced).", "source_ref": "S4 models._KIND"},
+    {"source": "state MISSING", "target": "(no fact)", "rationale": "Not captured: never a negative.", "source_ref": "CLAUDE.md data rule 6"},
+    {"source": "state UNKNOWN", "target": "(no fact)", "rationale": "A non-answer is not a value.", "source_ref": "S3 FactState"},
+    {"source": "state REFUSED", "target": "(no fact)", "rationale": "A refusal is not a value.", "source_ref": "S3 FactState"}
+   ]
+  },
+  "s4_symptom_qualified": {
+   "title": "S4 acuity- or exposure-qualified symptoms (never produced end to end)",
+   "scoring": "S3 records no onset, acuity or exposure, so these S4 inputs stay unknown and the S4 text red-flag rules cannot fire end to end. This is measured and reported, not patched.",
+   "rows": [
+    {"source": "acute_chest_pain", "target": "UNMAPPABLE", "rationale": "Needs acuity.", "source_ref": "RF-CHEST"},
+    {"source": "sudden_facial_droop", "target": "UNMAPPABLE", "rationale": "Needs sudden onset.", "source_ref": "RF-STROKE"},
+    {"source": "sudden_limb_weakness", "target": "UNMAPPABLE", "rationale": "Needs sudden onset.", "source_ref": "RF-STROKE"},
+    {"source": "sudden_speech_disturbance", "target": "UNMAPPABLE", "rationale": "Needs sudden onset.", "source_ref": "RF-STROKE"},
+    {"source": "sudden_vision_disturbance", "target": "UNMAPPABLE", "rationale": "Needs sudden onset.", "source_ref": "RF-STROKE"},
+    {"source": "thunderclap_headache", "target": "UNMAPPABLE", "rationale": "Needs peak-within-1-hour onset.", "source_ref": "RF-THUNDER"},
+    {"source": "allergen_exposure", "target": "UNMAPPABLE", "rationale": "Needs an exposure history.", "source_ref": "RF-ANAPH"},
+    {"source": "airway_breathing_compromise", "target": "UNMAPPABLE", "rationale": "Needs severity qualification.", "source_ref": "RF-ANAPH"}
+   ]
+  }
+ },
+ "known_disagreements": [
+  "Dysuria: S1r maps CC-DYSURIA to 01 (E-MED); the S4 keyword baseline suggests URO (E-SURG). Reported as-is; flagged for D1.",
+  "OBGYN merge (03 and 04 -> E-OBGYN) and CARD/NEURO -> E-MED are coarsenings forced by the two department lists; flagged for D1.",
+  "ACVPU C -> avpu A + new_confusion: S4 RF-CONSC then fires on C, which scores 0 under S1r NEWS 2012; flagged for D1."
+ ],
+ "replay_deviations": [
+  "S3 replays the recorded T1 IntakeTranscript turn by turn. S3's own policy still emits its agent questions between recorded turns and decides which field it thinks was asked last (last_asked_field); in the recording the nurse asked, not the agent, so S3's field context can differ from live use.",
+  "Speakers keep their role (nurse -> nurse, patient -> patient). A nurse turn that is a question yields no facts (S3 behaviour).",
+  "Turn times: started_at = spoken_at; ended_at = the next turn's spoken_at, or the transcript observed_at for the last turn. The service clock passed to S3 is the turn's ended_at.",
+  "S3 requires patient_ref to match ^SYN-...; the S1r patient_ref (SYNP-nnnn) is passed as SYN-SYNP-nnnn. This is an identifier prefix only.",
+  "The final fact per field at finish is used. The S3 output of the T1 transcript is used at both T1 and T2 (the T2 snapshot holds the same transcript).",
+  "S3 and S4 run in-process on an in-memory SQLite engine with the offline mock provider through the Model Gateway; latency is not measured."
+ ],
+ "changelog": []
+}

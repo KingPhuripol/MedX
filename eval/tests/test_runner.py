@@ -342,7 +342,11 @@ def test_eval_isolation():
                          "http", "requests", "httpx", "aiohttp"}
     forbidden_tests = {"backend", "app", "casegraph", "web", "slices", "urllib", "http", "requests", "httpx",
                        "aiohttp"}  # tests may import socket only to assert it is blocked
-    files = sorted(EVAL_DIR.rglob("*.py"))
+    # e1 (E1-A15, D-E1-2): eval/adapters/ runs product code in-process and has its own import allowlist
+    # (eval/adapters/tests/test_e1_isolation.py). Every other eval/ file keeps the s8 rule unchanged, and none of
+    # them may import eval.adapters or data_factory.generate.
+    adapters = EVAL_DIR / "adapters"
+    files = sorted(p for p in EVAL_DIR.rglob("*.py") if adapters not in p.parents)
     assert len(files) >= 8
     violations = []
     for p in files:
@@ -353,9 +357,13 @@ def test_eval_isolation():
                 mods = [a.name for a in node.names]
             elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
                 mods = [node.module]
+            elif isinstance(node, ast.ImportFrom) and node.level > 0:
+                mods = [f".{node.module or ''}"] + [f".{a.name}" for a in node.names]
             for mod in mods:
                 if mod.split(".")[0] in banned:
                     violations.append(f"{p.relative_to(EVAL_DIR)}: {mod}")
+                if mod.startswith(("eval.adapters", ".adapters", "data_factory.generate")):
+                    violations.append(f"{p.relative_to(EVAL_DIR)}: {mod} (not allowed outside eval/adapters)")
     assert violations == []
     # Fixtures are synthetic and live under eval/.
     for p in (MANIFEST, PREDS, CMP):

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Table 3.2 evaluation results</title>
+<style>body{font-family:sans-serif;margin:2em}table{border-collapse:collapse}td,th{border:1px solid #999;padding:4px 8px;text-align:left}.banner{font-weight:bold;border:2px solid #333;padding:6px;margin:4px 0}</style>
+</head>
+<body>
+<div class="banner">System Evaluation on synthetic data - not clinical performance</div>
+<h1>Table 3.2 evaluation results</h1>
+<div class="banner">System Evaluation, not clinical efficacy</div>
+<div class="banner">Research prototype - not for clinical use</div>
+<div class="banner">Synthetic data</div>
+<ul><li>Evaluation ID: e1-triage-test-v1 (slice e1)</li><li>Dataset: s1r-synthetic vs1r-1.1.1+tree:e76e38cc67d6317d82196f105cb9781bedf3451b9ba74a1585b19662d4d1162b (synthetic); split: test (fb9454a2bc7433b663c6d921ebd68d3a1897bdbffb02dc3849e9d37976c828e9); frozen: yes</li><li>Patients: 36; decision points: 80</li><li>CI: 95% percentile patient-level cluster bootstrap, n_boot=2000, seed=20260926</li><li>Manifest sha256: d9be1b73ce9c4b863a9c5a9f23bebc13fa8e8e349359e510918d1639f138f691</li><li>Frozen ledger entry hash: c884b4178599bb283189140a1ffdd2209a1ce4c7cdb65197f8e81168b22dac5a</li><li>Predictions sha256: 6c66d654a5beb666e06c0b9339407ac35c7dda6f6ba79803b4be2fdb200a6207</li><li>Comparator sha256: a5994725dec09b73705ea0c7f3dda6d5704cbd387b589f2b8e57f11cba278762</li><li>numpy 2.5.3; eval 0.2.0</li></ul>
+<div class="banner">System Evaluation on synthetic data - not clinical performance</div>
+<table>
+<tr><th>Evaluated item</th><th>Metric</th><th>Point estimate</th><th>95% CI</th><th>Comparator</th><th>Difference (95% CI)</th><th>n patients / decision points</th><th>Threshold (predeclared rule)</th></tr>
+<tr><td>Department suggestion</td><td>accuracy(estimand=case-level red-flag recall: gold-positive DPs with &gt;=1 S4 alert of any rule) *primary*</td><td>0.4091</td><td>[0.1364, 0.6842]</td><td>none declared</td><td>-</td><td>13 / 22</td><td>&gt;= 1.0 on point: not met</td></tr>
+<tr><td>Department suggestion</td><td>set_prf(component=recall, estimand=rule-level recall pooled over gold (DP, rule) pairs; UNMAPPABLE pairs count as missed) *primary*</td><td>0.3103</td><td>[0.1304, 0.4828]</td><td>none declared</td><td>-</td><td>13 / 22</td><td>&gt;= 1.0 on point: not met</td></tr>
+<tr><td>Department suggestion</td><td>set_prf(component=recall, estimand=rule-level recall over mappable gold (DP, rule) pairs (secondary))</td><td>0.4286</td><td>[0.1818, 0.7000]</td><td>none declared</td><td>-</td><td>11 / 19</td><td>not declared</td></tr>
+<tr><td>Department suggestion</td><td>accuracy(estimand=per-rule recall of RF-ACUTE-CHEST-PAIN: gold DPs where a mapped S4 rule fired)</td><td>0.0000</td><td>[0.0000, 0.0000]</td><td>none declared</td><td>-</td><td>2 / 4</td><td>not declared</td></tr>
+<tr><td>Department suggestion</td><td>accuracy(estimand=per-rule recall of RF-ANAPHYLAXIS: gold DPs where a mapped S4 rule fired)</td><td>0.0000</td><td>[0.0000, 0.0000]</td><td>none declared</td><td>-</td><td>1 / 2</td><td>not declared</td></tr>
+<tr><td>Department suggestion</td><td>accuracy(estimand=per-rule recall of RF-FAST: gold DPs where a mapped S4 rule fired)</td><td>0.0000</td><td>[0.0000, 0.0000]</td><td>none declared</td><td>-</td><td>2 / 4</td><td>not declared</td></tr>
+<tr><td>Department suggestion</td><td>accuracy(estimand=per-rule recall of RF-NEWS-SINGLE3: gold DPs where a mapped S4 rule fired)</td><td>1.0000</td><td>[1.0000, 1.0000]</td><td>none declared</td><td>-</td><td>3 / 5</td><td>not declared</td></tr>
+<tr><td>Department suggestion</td><td>accuracy(estimand=per-rule recall of RF-QSOFA: gold DPs where a mapped S4 rule fired)</td><td>1.0000</td><td>[1.0000, 1.0000]</td><td>none declared</td><td>-</td><td>3 / 4</td><td>not declared</td></tr>
+<tr><td>Department suggestion</td><td>accuracy(estimand=per-rule recall of RF-THUNDERCLAP: gold DPs where a mapped S4 rule fired)</td><td>0.0000</td><td>[0.0000, 0.0000]</td><td>none declared</td><td>-</td><td>1 / 2</td><td>not declared</td></tr>
+<tr><td>Department suggestion</td><td>accuracy(estimand=false-positive rate: gold-negative DPs with &gt;=1 S4 alert of any rule)</td><td>0.0000</td><td>[0.0000, 0.0000]</td><td>none declared</td><td>-</td><td>28 / 58</td><td>not declared</td></tr>
+<tr><td>Department suggestion</td><td>accuracy(estimand=false-positive rate counting only S4 rules mapped to the S1r registry (secondary))</td><td>0.0000</td><td>[0.0000, 0.0000]</td><td>none declared</td><td>-</td><td>28 / 58</td><td>not declared</td></tr>
+<tr><td>Department suggestion</td><td>accuracy(estimand=text red-flag recall at T1: any alert of RF-CHEST, RF-STROKE, RF-THUNDER, RF-ANAPH)</td><td>0.0000</td><td>[0.0000, 0.0000]</td><td>shortcut_s_star: 0.6667</td><td>-0.6667 [-1.0000, -0.3333]</td><td>6 / 6</td><td>not declared</td></tr>
+<tr><td></td><td></td><td></td><td></td><td>shortcut_tamtee: 0.5000</td><td>-0.5000 [-0.8333, -0.1667]</td><td></td><td></td></tr>
+<tr><td>Department suggestion</td><td>accuracy(estimand=text red-flag false-positive rate at T1 (same alert set))</td><td>0.0000</td><td>[0.0000, 0.0000]</td><td>shortcut_s_star: 0.0294</td><td>-0.0294 [-0.0882, 0.0000]</td><td>31 / 34</td><td>not declared</td></tr>
+<tr><td></td><td></td><td></td><td></td><td>shortcut_tamtee: 0.3235</td><td>-0.3235 [-0.4848, -0.1818]</td><td></td><td></td></tr>
+<tr><td>Department suggestion</td><td>topk_accuracy(k=1) *primary*</td><td>0.3673</td><td>[0.2041, 0.5491]</td><td>always_answer: 0.5102</td><td>-0.1429 [-0.2642, -0.0227]</td><td>23 / 49</td><td>not declared</td></tr>
+<tr><td>Department suggestion</td><td>topk_accuracy(k=3) *primary*</td><td>0.4082</td><td>[0.2400, 0.5918]</td><td>always_answer: 0.5510</td><td>-0.1429 [-0.2642, -0.0227]</td><td>23 / 49</td><td>&gt;= 0.8 on point: not met</td></tr>
+<tr><td>Abstention</td><td>coverage *primary*</td><td>0.4151</td><td>[0.2500, 0.5958]</td><td>always_answer: 1.0000</td><td>-0.5849 [-0.7500, -0.4042]</td><td>25 / 53</td><td>not declared</td></tr>
+<tr><td>Abstention</td><td>selective_accuracy(estimand=top-1 accuracy among answered DPs; answering a NOT_EVALUABLE DP is wrong) *primary*</td><td>0.8182</td><td>[0.5714, 1.0000]</td><td>always_answer: 0.4717</td><td>0.3465 [0.1582, 0.5769]</td><td>25 / 53</td><td>not declared</td></tr>
+<tr><td>Abstention</td><td>accuracy(estimand=abstain rate on NOT_EVALUABLE DPs (secondary))</td><td>1.0000</td><td>[1.0000, 1.0000]</td><td>none declared</td><td>-</td><td>2 / 4</td><td>not declared</td></tr>
+<tr><td>Abstention</td><td>accuracy(estimand=false-abstain rate on the department population (secondary))</td><td>0.5510</td><td>[0.3658, 0.7241]</td><td>none declared</td><td>-</td><td>23 / 49</td><td>not declared</td></tr>
+<tr><td>Abstention</td><td>accuracy(estimand=3-class expected_action agreement (suggest/abstain/escalate) over every DP (secondary))</td><td>0.4750</td><td>[0.3293, 0.6250]</td><td>none declared</td><td>-</td><td>36 / 80</td><td>not declared</td></tr>
+</table>
+<p>Undefined values are shown as null with a reason; they are never reported as 0 or 1. Differences are system minus comparator with a paired patient-level bootstrap CI.</p>
+<h2>Split coverage</h2>
+<p>Every listed patient must have predictions. A missing patient refuses the run unless all metrics of the task are abstention-aware, where it is counted as abstain (imputation unit: 1 decision point per missing patient).</p>
+<div class="banner">System Evaluation on synthetic data - not clinical performance</div>
+<table>
+<tr><th>Task</th><th>Population</th><th>Arm</th><th>n_listed</th><th>n_predicted</th><th>n_missing</th><th>missing_policy</th><th>n_imputed_abstain_decision_points</th></tr>
+<tr><td>rf_case_recall</td><td>null</td><td>system</td><td>13</td><td>13</td><td>0</td><td>complete</td><td>0</td></tr>
+<tr><td>rf_rule_recall</td><td>null</td><td>system</td><td>13</td><td>13</td><td>0</td><td>complete</td><td>0</td></tr>
+<tr><td>rf_rule_recall_mappable</td><td>null</td><td>system</td><td>11</td><td>11</td><td>0</td><td>complete</td><td>0</td></tr>
+<tr><td>rf_rule_RF-ACUTE-CHEST-PAIN</td><td>null</td><td>system</td><td>2</td><td>2</td><td>0</td><td>complete</td><td>0</td></tr>
+<tr><td>rf_rule_RF-ANAPHYLAXIS</td><td>null</td><td>system</td><td>1</td><td>1</td><td>0</td><td>complete</td><td>0</td></tr>
+<tr><td>rf_rule_RF-FAST</td><td>null</td><td>system</td><td>2</td><td>2</td><td>0</td><td>complete</td><td>0</td></tr>
+<tr><td>rf_rule_RF-NEWS-SINGLE3</td><td>null</td><td>system</td><td>3</td><td>3</td><td>0</td><td>complete</td><td>0</td></tr>
+<tr><td>rf_rule_RF-QSOFA</td><td>null</td><td>system</td><td>3</td><td>3</td><td>0</td><td>complete</td><td>0</td></tr>
+<tr><td>rf_rule_RF-THUNDERCLAP</td><td>null</td><td>system</td><td>1</td><td>1</td><td>0</td><td>complete</td><td>0</td></tr>
+<tr><td>rf_fpr</td><td>null</td><td>system</td><td>28</td><td>28</td><td>0</td><td>complete</td><td>0</td></tr>
+<tr><td>rf_fpr_mapped</td><td>null</td><td>system</td><td>28</td><td>28</td><td>0</td><td>complete</td><td>0</td></tr>
+<tr><td>rf_text_t1_recall</td><td>null</td><td>system</td><td>6</td><td>6</td><td>0</td><td>complete</td><td>0</td></tr>
+<tr><td></td><td></td><td>comparator:shortcut_s_star</td><td>6</td><td>6</td><td>0</td><td></td><td>0</td></tr>
+<tr><td></td><td></td><td>comparator:shortcut_tamtee</td><td>6</td><td>6</td><td>0</td><td></td><td>0</td></tr>
+<tr><td>rf_text_t1_fpr</td><td>null</td><td>system</td><td>31</td><td>31</td><td>0</td><td>complete</td><td>0</td></tr>
+<tr><td></td><td></td><td>comparator:shortcut_s_star</td><td>31</td><td>31</td><td>0</td><td></td><td>0</td></tr>
+<tr><td></td><td></td><td>comparator:shortcut_tamtee</td><td>31</td><td>31</td><td>0</td><td></td><td>0</td></tr>
+<tr><td>dept</td><td>null</td><td>system</td><td>23</td><td>23</td><td>0</td><td>complete</td><td>0</td></tr>
+<tr><td></td><td></td><td>comparator:always_answer</td><td>23</td><td>23</td><td>0</td><td></td><td>0</td></tr>
+<tr><td>abstention</td><td>null</td><td>system</td><td>25</td><td>25</td><td>0</td><td>complete</td><td>0</td></tr>
+<tr><td></td><td></td><td>comparator:always_answer</td><td>25</td><td>25</td><td>0</td><td></td><td>0</td></tr>
+<tr><td>abst_on_not_evaluable</td><td>null</td><td>system</td><td>2</td><td>2</td><td>0</td><td>complete</td><td>0</td></tr>
+<tr><td>false_abstain</td><td>null</td><td>system</td><td>23</td><td>23</td><td>0</td><td>complete</td><td>0</td></tr>
+<tr><td>expected_action</td><td>null</td><td>system</td><td>36</td><td>36</td><td>0</td><td>complete</td><td>0</td></tr>
+</table>
+</body>
+</html>
