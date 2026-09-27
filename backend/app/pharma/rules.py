@@ -12,17 +12,18 @@ from dataclasses import dataclass, field
 
 from .formulary import Formulary, Resolution
 
-RULES_VERSION = "s5-rules-2.0.0"
+RULES_VERSION = "s5-rules-2.1.0"
 RULE_VERSIONS: dict[str, str] = {
-    "allergy_direct": "1.0.0",
-    "allergy_class": "1.0.0",
-    "allergy_cross_reactivity": "1.0.0",
+    "allergy_direct": "1.1.0",
+    "allergy_class": "1.1.0",
+    "allergy_cross_reactivity": "1.1.0",
     "duplication_ingredient": "1.0.0",
     "duplication_class": "1.0.0",
-    "dose_mismatch": "1.1.0",
+    # Compares the dose per administration (strength x quantity; stated amount when no quantity).
+    "dose_mismatch": "1.2.0",
     "frequency_mismatch": "1.1.0",
     # A dose or frequency not stated in an entry: a discrepancy type of its own (DECISIONS 2026-09-27).
-    "missing_field": "2.0.0",
+    "missing_field": "2.1.0",
     "omission": "1.0.0",
 }
 # Fixed by rule; model output never changes it. missing_field shares the dose/frequency tier and is
@@ -59,10 +60,39 @@ class MedItem:
     frequency_code: str | None
     ingredients: tuple[str, ...]
     discontinue_intent: bool = False
+    quantity: float | None = None
+    dose_status: str = "not_stated"
+    dose_unverifiable_reason: str | None = None
+    frequency_status: str = "not_stated"
 
     @property
     def active(self) -> bool:
         return not self.discontinue_intent
+
+    @property
+    def dose_basis(self) -> str | None:
+        if self.dose_value is None or self.dose_unit is None:
+            return None
+        return "stated_amount" if self.quantity is None else "strength_x_quantity"
+
+    @property
+    def dose_per_administration(self) -> float | None:
+        """Dose per administration in ``dose_unit``: strength x quantity, or the stated amount itself
+        when no quantity is stated (recorded per source as ``dose_basis``)."""
+        if self.dose_basis is None:
+            return None
+        return round(self.dose_value * (self.quantity or 1.0), 6)  # type: ignore[operator]
+
+    def field_status(self, field_name: str) -> str | None:
+        """Why a compared field has no value: ``unverifiable`` / ``not_recognised`` / ``not_stated``
+        (None when the field is stated)."""
+        if field_name == "dose":
+            if self.dose_per_administration is not None:
+                return None
+            return "unverifiable" if self.dose_status == "unverifiable" else "not_stated"
+        if self.frequency_code is not None:
+            return None
+        return "not_recognised" if self.frequency_status == "not_recognised" else "not_stated"
 
     def as_source(self) -> dict:
         return {
@@ -74,8 +104,14 @@ class MedItem:
             "drug_name_raw": self.drug_name_raw,
             "dose_value": self.dose_value,
             "dose_unit": self.dose_unit,
+            "quantity": self.quantity,
+            "dose_per_administration": self.dose_per_administration,
+            "dose_basis": self.dose_basis,
+            "dose_status": self.dose_status,
+            "dose_unverifiable_reason": self.dose_unverifiable_reason,
             "route": self.route,
             "frequency_code": self.frequency_code,
+            "frequency_status": self.frequency_status,
         }
 
 
@@ -189,12 +225,14 @@ def rule_duplication_class(items: list[MedItem], form: Formulary) -> list[IssueD
 
 
 def _canonical_dose(item: MedItem) -> tuple[str, float] | None:
-    if item.dose_value is None or item.dose_unit is None:
+    """Dose per administration in a comparable unit family, or None when not stated / unverifiable."""
+    per_admin = item.dose_per_administration
+    if per_admin is None:
         return None
-    unit = item.dose_unit.lower()
+    unit = item.dose_unit.lower()  # type: ignore[union-attr]
     if unit in _MASS:
-        return ("mass", round(item.dose_value * _MASS[unit], 6))
-    return (unit, round(item.dose_value, 6))
+        return ("mass", round(per_admin * _MASS[unit], 6))
+    return (unit, per_admin)
 
 
 def _comparable_groups(items: list[MedItem]) -> dict[tuple[str, ...], list[MedItem]]:
@@ -279,25 +317,41 @@ def rule_frequency_mismatch(items: list[MedItem], form: Formulary) -> list[Issue
     return out
 
 
-def count_skipped_comparisons(items: list[MedItem]) -> int:
-    """Number of cross-source comparisons (per field, per pair of active entries of the same ingredient
-    set in different source types) that the mismatch rules could not make because a side is not stated.
-    Reported per run as ``unchecked_comparisons``; each null side is also a ``missing_field`` issue."""
-    skipped = 0
+UNCHECKED_REASONS = ("unverifiable", "not_recognised", "not_stated")  # attribution order for a pair
+
+
+def count_comparisons(items: list[MedItem]) -> dict:
+    """Cross-source comparisons (per field, per pair of active entries of the same ingredient set in
+    different source types). A pair with a null side is not compared: it is counted in
+    ``unchecked_comparisons`` and attributed once, to the first reason (in ``UNCHECKED_REASONS`` order)
+    of its null side(s). Each null side is also a ``missing_field`` issue."""
+    made = 0
+    by_reason = dict.fromkeys(UNCHECKED_REASONS, 0)
     for _, group in sorted(_comparable_groups(items).items()):
-        for _, value_of in COMPARED_FIELDS:
-            skipped += sum(value_of(a) is None or value_of(b) is None for a, b in _cross_source_pairs(group))
-    return skipped
+        for field_name, _ in COMPARED_FIELDS:
+            for a, b in _cross_source_pairs(group):
+                reasons = {r for r in (a.field_status(field_name), b.field_status(field_name)) if r}
+                if not reasons:
+                    made += 1
+                else:
+                    by_reason[next(r for r in UNCHECKED_REASONS if r in reasons)] += 1
+    return {"comparisons_made": made, "unchecked_comparisons": sum(by_reason.values()), "unchecked_by_reason": by_reason}
+
+
+def count_skipped_comparisons(items: list[MedItem]) -> int:
+    return count_comparisons(items)["unchecked_comparisons"]
 
 
 def rule_missing_field(items: list[MedItem], form: Formulary) -> list[IssueDraft]:
-    """One issue per (entry, field) for every recognised entry, in any source, whose dose (value and unit)
-    or frequency is not stated. ``conflicting_sources`` = the incomplete entry first, then every other
-    snapshot entry of the same ingredient set, then other entries sharing an ingredient (e.g. a
-    combination product). So there are >= 2 sources whenever the ingredient is in >= 2 source types."""
+    """One issue per (entry, field) for every recognised *active* entry, in any source, whose dose per
+    administration or frequency has no value (not stated, not recognised, or unverifiable; recorded in
+    ``detail.field_status``). Entries with ``discontinue_intent`` raise nothing themselves but still appear
+    as other sources. ``conflicting_sources`` = the incomplete entry first, then every other snapshot entry
+    of the same ingredient set, then other entries sharing an ingredient (e.g. a combination product).
+    So there are >= 2 sources whenever the ingredient is in >= 2 source types."""
     recognised = [i for i in items if i.ingredients]
     out = []
-    for item in sorted(recognised, key=lambda i: (tuple(sorted(i.ingredients)), i.key)):
+    for item in sorted((i for i in recognised if i.active), key=lambda i: (tuple(sorted(i.ingredients)), i.key)):
         ings = tuple(sorted(item.ingredients))
         same = [o for o in recognised if o.key != item.key and tuple(sorted(o.ingredients)) == ings]
         overlap = [o for o in recognised if o.key != item.key and o not in same and set(o.ingredients) & set(ings)]
@@ -305,17 +359,22 @@ def rule_missing_field(items: list[MedItem], form: Formulary) -> list[IssueDraft
             if value_of(item) is not None:
                 continue
             others = same + overlap
+            status = item.field_status(field_name)
+            detail = {
+                "field": field_name,
+                "field_status": status,
+                "incomplete_source": item.source_type,
+                "stated_in": sorted({o.source_type for o in same if value_of(o) is not None}),
+            }
+            if status == "unverifiable":
+                detail["unverifiable_reason"] = item.dose_unverifiable_reason
             out.append(
                 IssueDraft(
                     "missing_field",
                     ings,
                     [item.as_source()] + [o.as_source() for o in others],
                     field=field_name,
-                    detail={
-                        "field": field_name,
-                        "incomplete_source": item.source_type,
-                        "stated_in": sorted({o.source_type for o in same if value_of(o) is not None}),
-                    },
+                    detail=detail,
                 )
             )
     return out
@@ -362,16 +421,35 @@ def rule_omission(items: list[MedItem], form: Formulary, order_sources: list[dic
 
 
 def _allergy_subtype(form: Formulary, res: Resolution, ingredient: str) -> tuple[str, dict] | None:
+    """Subtype plus its visible basis (``detail.basis``): what the match rests on and which version."""
     if ingredient in res.ingredients:
-        return "allergy_direct", {}
+        rxcui = form.ingredients[ingredient]["rxcui"]
+        return "allergy_direct", {
+            "basis": f"The allergen maps to the ingredient {ingredient} (RxCUI {rxcui}) in formulary {form.version}.",
+            "formulary_version": form.version,
+        }
     allergen_classes = form.allergen_class_set(res)
-    if allergen_classes & set(form.classes_of(ingredient)):
-        return "allergy_class", {}
+    shared = sorted(allergen_classes & set(form.classes_of(ingredient)))
+    if shared:
+        cls = form.classes[shared[0]]
+        return "allergy_class", {
+            "basis": (f"The allergen and {ingredient} share the class {cls['name']} "
+                      f"(class source: {cls['source']}; formulary {form.version})."),
+            "class_name": cls["name"],
+            "class_source": cls["source"],
+            "formulary_version": form.version,
+        }
     allergen_keys = {("ingredient", i) for i in res.ingredients} | {("class", c) for c in allergen_classes}
     drug_keys = {("ingredient", ingredient)} | {("class", c) for c in form.classes_of(ingredient)}
     pair = form.cross_reactive(allergen_keys, drug_keys)
     if pair:
-        return "allergy_cross_reactivity", {"cross_reactivity_id": pair["id"], "citation": pair["citation"]}
+        return "allergy_cross_reactivity", {
+            "basis": (f"Curated cross-reactivity row {pair['id']} ({form.cross_version}); "
+                      "pending pharmacist sign-off."),
+            "cross_reactivity_id": pair["id"],
+            "citation": pair["citation"],
+            "clinical_review_status": pair["clinical_review_status"],
+        }
     return None
 
 

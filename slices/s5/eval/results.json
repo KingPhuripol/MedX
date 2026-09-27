@@ -123,10 +123,13 @@
    "fabricated_values": 0,
    "failed_sources": 0,
    "field_accuracy": {
+    "dose_status": 1.0,
     "dose_unit": 1.0,
     "dose_value": 1.0,
     "drug_name_raw": 1.0,
     "frequency_code": 1.0,
+    "frequency_status": 1.0,
+    "quantity": 1.0,
     "route": 1.0
    },
    "overall_accuracy": 1.0
@@ -136,10 +139,13 @@
    "fabricated_values": 0,
    "failed_sources": 0,
    "field_accuracy": {
+    "dose_status": 1.0,
     "dose_unit": 1.0,
     "dose_value": 1.0,
     "drug_name_raw": 1.0,
     "frequency_code": 1.0,
+    "frequency_status": 1.0,
+    "quantity": 1.0,
     "route": 1.0
    },
    "overall_accuracy": 1.0
@@ -1058,6 +1064,11 @@
    }
   }
  },
+ "notes": [
+  "Surface-form recall measures a fixed, seeded set of written forms on synthetic lists. Real-world wordings outside the mock's pattern set may be misread as resolved; pharmacist review is required before any non-synthetic use.",
+  "Quantity not stated: the stated amount is taken as the dose per administration (dose_basis=stated_amount); this convention needs pharmacist sign-off before any non-synthetic use.",
+  "SF-EQUIV 'recall' is the fraction of equivalent-dose cases with no dose issue (dose_mismatch or missing_field(dose))."
+ ],
  "precision": {
   "allergy_class": {
    "all": {
@@ -1499,19 +1510,439 @@
   "bootstrap": 20260926,
   "inject": 7,
   "resamples": 1000,
-  "resampling_unit": "patient"
+  "resampling_unit": "patient",
+  "surface": 11
+ },
+ "summary": [
+  "allergy_direct [test] recall 1.00 (Clopper–Pearson 95% 0.89–1.00; bootstrap 1.00–1.00), n=32",
+  "allergy_direct [all] recall 1.00 (Clopper–Pearson 95% 0.96–1.00; bootstrap 1.00–1.00), n=96",
+  "allergy_class [test] recall 1.00 (Clopper–Pearson 95% 0.89–1.00; bootstrap 1.00–1.00), n=32",
+  "allergy_class [all] recall 1.00 (Clopper–Pearson 95% 0.96–1.00; bootstrap 1.00–1.00), n=96",
+  "allergy_cross_reactivity [test] recall 1.00 (Clopper–Pearson 95% 0.89–1.00; bootstrap 1.00–1.00), n=32",
+  "allergy_cross_reactivity [all] recall 1.00 (Clopper–Pearson 95% 0.96–1.00; bootstrap 1.00–1.00), n=96",
+  "duplication_ingredient [test] recall 1.00 (Clopper–Pearson 95% 0.89–1.00; bootstrap 1.00–1.00), n=32",
+  "duplication_ingredient [all] recall 1.00 (Clopper–Pearson 95% 0.96–1.00; bootstrap 1.00–1.00), n=96",
+  "duplication_class [test] recall 1.00 (Clopper–Pearson 95% 0.89–1.00; bootstrap 1.00–1.00), n=32",
+  "duplication_class [all] recall 1.00 (Clopper–Pearson 95% 0.96–1.00; bootstrap 1.00–1.00), n=96",
+  "dose_mismatch [test] recall 1.00 (Clopper–Pearson 95% 0.89–1.00; bootstrap 1.00–1.00), n=32",
+  "dose_mismatch [all] recall 1.00 (Clopper–Pearson 95% 0.96–1.00; bootstrap 1.00–1.00), n=96",
+  "frequency_mismatch [test] recall 1.00 (Clopper–Pearson 95% 0.89–1.00; bootstrap 1.00–1.00), n=32",
+  "frequency_mismatch [all] recall 1.00 (Clopper–Pearson 95% 0.96–1.00; bootstrap 1.00–1.00), n=96",
+  "missing_field [test] recall 1.00 (Clopper–Pearson 95% 0.89–1.00; bootstrap 1.00–1.00), n=32",
+  "missing_field [all] recall 1.00 (Clopper–Pearson 95% 0.96–1.00; bootstrap 1.00–1.00), n=96",
+  "omission [test] recall 1.00 (Clopper–Pearson 95% 0.89–1.00; bootstrap 1.00–1.00), n=32",
+  "omission [all] recall 1.00 (Clopper–Pearson 95% 0.96–1.00; bootstrap 1.00–1.00), n=96",
+  "SF-NXM [test] recall 1.00 (Clopper–Pearson 95% 0.89–1.00; bootstrap 1.00–1.00), n=32",
+  "SF-NXM [all] recall 1.00 (Clopper–Pearson 95% 0.96–1.00; bootstrap 1.00–1.00), n=96",
+  "SF-TABS [test] recall 1.00 (Clopper–Pearson 95% 0.89–1.00; bootstrap 1.00–1.00), n=32",
+  "SF-TABS [all] recall 1.00 (Clopper–Pearson 95% 0.96–1.00; bootstrap 1.00–1.00), n=96",
+  "SF-MED [test] recall 1.00 (Clopper–Pearson 95% 0.89–1.00; bootstrap 1.00–1.00), n=32",
+  "SF-MED [all] recall 1.00 (Clopper–Pearson 95% 0.96–1.00; bootstrap 1.00–1.00), n=96",
+  "SF-FRAC [test] recall 1.00 (Clopper–Pearson 95% 0.89–1.00; bootstrap 1.00–1.00), n=32",
+  "SF-FRAC [all] recall 1.00 (Clopper–Pearson 95% 0.96–1.00; bootstrap 1.00–1.00), n=96",
+  "SF-EQUIV [test] recall 1.00 (Clopper–Pearson 95% 0.89–1.00; bootstrap 1.00–1.00), n=32",
+  "SF-EQUIV [all] recall 1.00 (Clopper–Pearson 95% 0.96–1.00; bootstrap 1.00–1.00), n=96",
+  "SF-VAR [test] recall 1.00 (Clopper–Pearson 95% 0.89–1.00; bootstrap 1.00–1.00), n=32",
+  "SF-VAR [all] recall 1.00 (Clopper–Pearson 95% 0.96–1.00; bootstrap 1.00–1.00), n=96",
+  "SF-LIQ [test] recall 1.00 (Clopper–Pearson 95% 0.89–1.00; bootstrap 1.00–1.00), n=32",
+  "SF-LIQ [all] recall 1.00 (Clopper–Pearson 95% 0.96–1.00; bootstrap 1.00–1.00), n=96",
+  "SF-MULTI [test] recall 1.00 (Clopper–Pearson 95% 0.89–1.00; bootstrap 1.00–1.00), n=32",
+  "SF-MULTI [all] recall 1.00 (Clopper–Pearson 95% 0.96–1.00; bootstrap 1.00–1.00), n=96",
+  "SF-FREQ [test] recall 1.00 (Clopper–Pearson 95% 0.89–1.00; bootstrap 1.00–1.00), n=32",
+  "SF-FREQ [all] recall 1.00 (Clopper–Pearson 95% 0.96–1.00; bootstrap 1.00–1.00), n=96",
+  "clean false alerts per list [test] 0.00; extra issues per injected case [test] 0.00; extra issues per surface case [test] 0.00",
+  "clean false alerts per list [all] 0.00; extra issues per injected case [all] 0.00; extra issues per surface case [all] 0.00"
+ ],
+ "surface_extra_issues_per_case": {
+  "all": {
+   "cases": 864,
+   "ci95": [
+    0.0,
+    0.0
+   ],
+   "extra": 0,
+   "mean_per_case": 0.0
+  },
+  "test": {
+   "cases": 288,
+   "ci95": [
+    0.0,
+    0.0
+   ],
+   "extra": 0,
+   "mean_per_case": 0.0
+  }
+ },
+ "surface_form_langs": {
+  "SF-EQUIV": {
+   "all": {
+    "en": 48,
+    "th": 48
+   },
+   "test": {
+    "en": 16,
+    "th": 16
+   }
+  },
+  "SF-FRAC": {
+   "all": {
+    "en": 48,
+    "th": 48
+   },
+   "test": {
+    "en": 16,
+    "th": 16
+   }
+  },
+  "SF-FREQ": {
+   "all": {
+    "en": 48,
+    "th": 48
+   },
+   "test": {
+    "en": 16,
+    "th": 16
+   }
+  },
+  "SF-LIQ": {
+   "all": {
+    "en": 48,
+    "th": 48
+   },
+   "test": {
+    "en": 16,
+    "th": 16
+   }
+  },
+  "SF-MED": {
+   "all": {
+    "en": 0,
+    "th": 96
+   },
+   "test": {
+    "en": 0,
+    "th": 32
+   }
+  },
+  "SF-MULTI": {
+   "all": {
+    "en": 48,
+    "th": 48
+   },
+   "test": {
+    "en": 16,
+    "th": 16
+   }
+  },
+  "SF-NXM": {
+   "all": {
+    "en": 48,
+    "th": 48
+   },
+   "test": {
+    "en": 16,
+    "th": 16
+   }
+  },
+  "SF-TABS": {
+   "all": {
+    "en": 96,
+    "th": 0
+   },
+   "test": {
+    "en": 32,
+    "th": 0
+   }
+  },
+  "SF-VAR": {
+   "all": {
+    "en": 48,
+    "th": 48
+   },
+   "test": {
+    "en": 16,
+    "th": 16
+   }
+  }
+ },
+ "surface_forms": {
+  "SF-EQUIV": {
+   "all": {
+    "cases": 96,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "ci95_exact": [
+     0.9623,
+     1.0
+    ],
+    "detected": 96,
+    "recall": 1.0
+   },
+   "test": {
+    "cases": 32,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "ci95_exact": [
+     0.8911,
+     1.0
+    ],
+    "detected": 32,
+    "recall": 1.0
+   }
+  },
+  "SF-FRAC": {
+   "all": {
+    "cases": 96,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "ci95_exact": [
+     0.9623,
+     1.0
+    ],
+    "detected": 96,
+    "recall": 1.0
+   },
+   "test": {
+    "cases": 32,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "ci95_exact": [
+     0.8911,
+     1.0
+    ],
+    "detected": 32,
+    "recall": 1.0
+   }
+  },
+  "SF-FREQ": {
+   "all": {
+    "cases": 96,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "ci95_exact": [
+     0.9623,
+     1.0
+    ],
+    "detected": 96,
+    "recall": 1.0
+   },
+   "test": {
+    "cases": 32,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "ci95_exact": [
+     0.8911,
+     1.0
+    ],
+    "detected": 32,
+    "recall": 1.0
+   }
+  },
+  "SF-LIQ": {
+   "all": {
+    "cases": 96,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "ci95_exact": [
+     0.9623,
+     1.0
+    ],
+    "detected": 96,
+    "recall": 1.0
+   },
+   "test": {
+    "cases": 32,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "ci95_exact": [
+     0.8911,
+     1.0
+    ],
+    "detected": 32,
+    "recall": 1.0
+   }
+  },
+  "SF-MED": {
+   "all": {
+    "cases": 96,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "ci95_exact": [
+     0.9623,
+     1.0
+    ],
+    "detected": 96,
+    "recall": 1.0
+   },
+   "test": {
+    "cases": 32,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "ci95_exact": [
+     0.8911,
+     1.0
+    ],
+    "detected": 32,
+    "recall": 1.0
+   }
+  },
+  "SF-MULTI": {
+   "all": {
+    "cases": 96,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "ci95_exact": [
+     0.9623,
+     1.0
+    ],
+    "detected": 96,
+    "recall": 1.0
+   },
+   "test": {
+    "cases": 32,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "ci95_exact": [
+     0.8911,
+     1.0
+    ],
+    "detected": 32,
+    "recall": 1.0
+   }
+  },
+  "SF-NXM": {
+   "all": {
+    "cases": 96,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "ci95_exact": [
+     0.9623,
+     1.0
+    ],
+    "detected": 96,
+    "recall": 1.0
+   },
+   "test": {
+    "cases": 32,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "ci95_exact": [
+     0.8911,
+     1.0
+    ],
+    "detected": 32,
+    "recall": 1.0
+   }
+  },
+  "SF-TABS": {
+   "all": {
+    "cases": 96,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "ci95_exact": [
+     0.9623,
+     1.0
+    ],
+    "detected": 96,
+    "recall": 1.0
+   },
+   "test": {
+    "cases": 32,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "ci95_exact": [
+     0.8911,
+     1.0
+    ],
+    "detected": 32,
+    "recall": 1.0
+   }
+  },
+  "SF-VAR": {
+   "all": {
+    "cases": 96,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "ci95_exact": [
+     0.9623,
+     1.0
+    ],
+    "detected": 96,
+    "recall": 1.0
+   },
+   "test": {
+    "cases": 32,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "ci95_exact": [
+     0.8911,
+     1.0
+    ],
+    "detected": 32,
+    "recall": 1.0
+   }
+  }
  },
  "test_manifest": {
-  "generator_version": "s5-fixtures-2.0.0",
-  "sha256": "313e44b314097bf8980d353b3d28f739223fb848c5fe8f9cabdf9b307771dad9"
+  "fixtures_file_sha256": "22979820a842432e5faf63e63490a6e8ea24cb973704c3c29a88d0dda80d0521",
+  "generator_version": "s5-fixtures-3.0.0",
+  "manifest_version": 3,
+  "sha256": "700d598ba3d756af83992d72447d90db8e92763d87ad269870c641dbb07375e1",
+  "surface_suite": {
+   "generator_version": "s5-surface-forms-1.0.0",
+   "seed": 11
+  }
  },
  "thresholds": {
   "clean_false_alerts_max": 0.1,
   "extra_issues_per_case_max": 0.1,
   "extraction_accuracy_min": 0.98,
   "min_cases_per_type": 30,
+  "min_surface_cases_per_form": {
+   "all": 30,
+   "test": 10
+  },
   "mode_equality": 1.0,
-  "recall_min_per_type": 0.95
+  "recall_min_per_type": 0.95,
+  "surface_equiv_no_dose_issue_min": 0.95,
+  "surface_extra_issues_per_case_max": 0.1,
+  "surface_recall_min_per_form": 0.95
  },
  "unchecked_comparisons": {
   "clean_lists": 0,
@@ -1519,9 +1950,24 @@
  },
  "versions": {
   "cross_reactivity": "s5-cross-reactivity-1.0.0",
+  "extract_task": "pharma.extract.v2",
   "formulary": "s5-formulary-1.0.0",
-  "pipeline": "s5-pipeline-2.0.0",
+  "mock_rules": "s5-mock-rules-1.2.0",
+  "pipeline": "s5-pipeline-2.1.0",
   "provider": "mock",
-  "rules": "s5-rules-2.0.0"
+  "rule_versions": {
+   "allergy_class": "1.1.0",
+   "allergy_cross_reactivity": "1.1.0",
+   "allergy_direct": "1.1.0",
+   "dose_mismatch": "1.2.0",
+   "duplication_class": "1.0.0",
+   "duplication_ingredient": "1.0.0",
+   "frequency_mismatch": "1.1.0",
+   "missing_field": "2.1.0",
+   "omission": "1.0.0"
+  },
+  "rules": "s5-rules-2.1.0",
+  "surface_suite": "s5-surface-forms-1.0.0",
+  "template": "template-1.1.0"
  }
 }

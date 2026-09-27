@@ -28,6 +28,10 @@ IssueType = Literal[
 ]
 NoticeType = Literal["unrecognised_drug", "allergy_unmapped", "source_unreadable", "source_missing"]
 MissingField = Literal["dose", "frequency"]
+DoseStatus = Literal["resolved", "not_stated", "unverifiable"]
+UnverifiableReason = Literal["variable_regimen", "liquid_volume", "multiple_strengths", "ambiguous_quantity"]
+FrequencyStatus = Literal["recognised", "not_stated", "not_recognised"]
+DoseBasis = Literal["strength_x_quantity", "stated_amount"]
 ISSUE_TYPES: tuple[str, ...] = IssueType.__args__  # type: ignore[attr-defined]
 NOTICE_TYPES: tuple[str, ...] = NoticeType.__args__  # type: ignore[attr-defined]
 
@@ -93,12 +97,34 @@ class MedSnapshot(_Frozen):
 
 
 class ExtractedEntry(_Frozen):
+    """``pharma.extract.v2``: every field is required (no defaults); a provider that omits one fails the
+    schema and the source is ``source_unreadable``. A partial dose is never accepted."""
+
     drug_name_raw: str = Field(min_length=1, max_length=200)
     dose_value: float | None = Field(default=..., ge=0)
     dose_unit: str | None = Field(default=..., max_length=16)
+    quantity: float | None = Field(default=..., gt=0)  # units per administration; null when not stated
+    dose_status: DoseStatus = Field(default=...)
+    dose_unverifiable_reason: UnverifiableReason | None = Field(default=...)
     route: str | None = Field(default=..., max_length=32)
     frequency_code: FrequencyCode | None = Field(default=...)
+    frequency_status: FrequencyStatus = Field(default=...)
     raw_span: str = Field(min_length=1, max_length=500)
+
+    @model_validator(mode="after")
+    def _statuses_consistent(self) -> "ExtractedEntry":
+        stated = self.dose_value is not None and self.dose_unit is not None
+        if self.dose_status == "resolved" and not stated:
+            raise ValueError("dose_status=resolved needs dose_value and dose_unit")
+        if self.dose_status != "resolved" and (self.dose_value is not None or self.dose_unit is not None):
+            raise ValueError("a dose that is not resolved must have null dose_value and dose_unit")
+        if (self.dose_status == "unverifiable") != (self.dose_unverifiable_reason is not None):
+            raise ValueError("dose_unverifiable_reason is required exactly when dose_status=unverifiable")
+        if self.dose_status == "unverifiable" and self.quantity is not None:
+            raise ValueError("an unverifiable dose has a null quantity")
+        if (self.frequency_status == "recognised") != (self.frequency_code is not None):
+            raise ValueError("frequency_code is set exactly when frequency_status=recognised")
+        return self
 
 
 class ExtractOutput(_Frozen):
@@ -129,8 +155,14 @@ class ConflictingSource(_Frozen):
     drug_name_raw: str | None = None
     dose_value: float | None = None
     dose_unit: str | None = None
+    quantity: float | None = None
+    dose_per_administration: float | None = None  # in dose_unit
+    dose_basis: DoseBasis | None = None
+    dose_status: DoseStatus | None = None
+    dose_unverifiable_reason: UnverifiableReason | None = None
     route: str | None = None
     frequency_code: str | None = None
+    frequency_status: FrequencyStatus | None = None
 
 
 class Phrasing(_Frozen):

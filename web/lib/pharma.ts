@@ -8,13 +8,25 @@ export const PHRASING_LABEL = "Rules primary / model phrasing supplementary / mo
 export const REVIEW_NOTE =
   "Issues are suggestions for pharmacist review. The agent compares medication lists only and never changes an order.";
 
+/** What the check compares and what it does not (C2). Shown before and after every run. */
+export const SCOPE_COMPARED =
+  "Compared across the lists: ingredient duplication, dose per administration (strength × quantity), frequency, omission from the new order, and recorded allergies.";
+export const SCOPE_NOT_CHECKED = [
+  "drug–drug interactions",
+  "dose range",
+  "renal or hepatic adjustment",
+  "route",
+];
+export const SCOPE_READING =
+  "Each line is read with a fixed set of text patterns. A dose or frequency that the patterns cannot read is shown as not stated, not recognised or not verifiable, and is never counted as a match.";
+
 export const TYPE_LABELS: Record<string, string> = {
   allergy_direct: "Allergy: direct match",
   allergy_class: "Allergy: drug class",
   allergy_cross_reactivity: "Allergy: possible cross-reactivity",
   duplication_ingredient: "Duplicate ingredient",
   duplication_class: "Same-class duplication",
-  dose_mismatch: "Dose differs between sources",
+  dose_mismatch: "Dose per administration differs between sources",
   frequency_mismatch: "Frequency differs between sources",
   missing_field: "Dose or frequency not stated",
   omission: "Home medicine not in new order",
@@ -28,6 +40,18 @@ export const NOTICE_LABELS: Record<string, string> = {
 };
 
 export const NOT_STATED = "not stated";
+export const NOT_RECOGNISED = "not recognised";
+
+export const UNVERIFIABLE_REASONS: Record<string, string> = {
+  variable_regimen: "variable regimen",
+  liquid_volume: "liquid volume",
+  multiple_strengths: "more than one strength",
+  ambiguous_quantity: "conflicting quantities",
+};
+
+export function notVerifiable(reason: string | null | undefined): string {
+  return `not verifiable (${(reason && UNVERIFIABLE_REASONS[reason]) || "unverifiable"})`;
+}
 
 export const SOURCE_LABELS: Record<string, string> = {
   home_list: "Home list",
@@ -46,7 +70,26 @@ export type ConflictingSource = {
   presence?: "present" | "absent";
   dose_value?: number | null;
   dose_unit?: string | null;
+  quantity?: number | null;
+  dose_per_administration?: number | null;
+  dose_basis?: "strength_x_quantity" | "stated_amount" | null;
+  dose_status?: "resolved" | "not_stated" | "unverifiable" | null;
+  dose_unverifiable_reason?: string | null;
   frequency_code?: string | null;
+  frequency_status?: "recognised" | "not_stated" | "not_recognised" | null;
+};
+
+export type IssueDetail = {
+  field?: string;
+  field_status?: "not_stated" | "not_recognised" | "unverifiable";
+  unverifiable_reason?: string | null;
+  basis?: string;
+  citation?: string;
+  clinical_review_status?: string;
+  class_name?: string;
+  class_source?: string;
+  formulary_version?: string;
+  [key: string]: unknown;
 };
 
 export type Issue = {
@@ -62,6 +105,7 @@ export type Issue = {
   possible_substitution?: boolean;
   /** missing_field only: the field the first listed source does not state. */
   field?: "dose" | "frequency" | null;
+  detail?: IssueDetail;
   phrasing: { text: string; source: string; provider: string; model_version: string; fallback_reason?: string | null };
   status: "open" | "confirmed" | "dismissed";
   decision?: { decision: string; reason: string | null; reviewer_role: string; ts_utc: string } | null;
@@ -81,8 +125,12 @@ export type ExtractedEntry = {
   drug_name_raw: string;
   dose_value: number | null;
   dose_unit: string | null;
+  quantity?: number | null;
+  dose_status?: "resolved" | "not_stated" | "unverifiable";
+  dose_unverifiable_reason?: string | null;
   route: string | null;
   frequency_code: string | null;
+  frequency_status?: "recognised" | "not_stated" | "not_recognised";
   ingredients: string[];
   recognised: boolean;
   discontinue_intent: boolean;
@@ -107,7 +155,9 @@ export type Run = {
   formulary_version: string;
   rules_version: string;
   excluded_future_items: number;
+  comparisons_made?: number;
   unchecked_comparisons?: number;
+  unchecked_by_reason?: { unverifiable: number; not_recognised: number; not_stated: number };
   extraction?: ExtractionRecord[];
   issues: Issue[];
   notices: Notice[];
@@ -122,10 +172,30 @@ export function sortIssues(issues: Issue[]): Issue[] {
   return [...issues].sort((a, b) => a.severity_rank - b.severity_rank);
 }
 
-export function formatDose(src: Pick<ConflictingSource, "presence" | "dose_value" | "dose_unit">): string {
+type DoseFields = Pick<
+  ConflictingSource,
+  "presence" | "dose_value" | "dose_unit" | "quantity" | "dose_per_administration" | "dose_status" | "dose_unverifiable_reason"
+>;
+
+function num(value: number): string {
+  return String(Number(value.toFixed(6)));
+}
+
+/** Dose per administration as compared: "3 mg × 2 = 6 mg", or the stated amount when no quantity is stated. */
+export function formatDose(src: DoseFields): string {
   if (src.presence === "absent") return "—";
+  if (src.dose_status === "unverifiable") return notVerifiable(src.dose_unverifiable_reason);
   if (src.dose_value === null || src.dose_value === undefined) return NOT_STATED;
-  return `${src.dose_value} ${src.dose_unit ?? ""}`.trim();
+  const unit = src.dose_unit ?? "";
+  const strength = `${num(src.dose_value)} ${unit}`.trim();
+  if (src.quantity === null || src.quantity === undefined) return `${strength} (quantity not stated; stated amount used)`;
+  const per = src.dose_per_administration ?? src.dose_value * src.quantity;
+  return `${strength} × ${num(src.quantity)} = ${num(per)} ${unit}`.trim();
+}
+
+export function formatFrequency(src: Pick<ConflictingSource, "frequency_code" | "frequency_status">): string {
+  if (src.frequency_code) return src.frequency_code;
+  return src.frequency_status === "not_recognised" ? NOT_RECOGNISED : NOT_STATED;
 }
 
 /** A field the source did not state is shown as "not stated", never as blank or as a match. */
@@ -133,8 +203,46 @@ export function orNotStated(value: string | null | undefined): string {
   return value === null || value === undefined || value === "" ? NOT_STATED : value;
 }
 
-export function uncheckedSummary(run: Pick<Run, "unchecked_comparisons">): string {
+const MISSING_FIELD_TITLES: Record<string, string> = {
+  "dose:not_stated": "Dose not stated",
+  "dose:unverifiable": "Dose could not be verified",
+  "frequency:not_stated": "Frequency not stated",
+  "frequency:not_recognised": "Frequency not recognised",
+};
+
+/** Issue label. Titles follow what actually happened: an unverifiable comparison never "differs". */
+export function issueLabel(issue: Pick<Issue, "type" | "field" | "unverifiable" | "detail">): string {
+  if (issue.type === "missing_field") {
+    const key = `${issue.field ?? issue.detail?.field}:${issue.detail?.field_status ?? "not_stated"}`;
+    return MISSING_FIELD_TITLES[key] ?? TYPE_LABELS.missing_field;
+  }
+  if (issue.type === "dose_mismatch" && issue.unverifiable) return "Dose not comparable (units)";
+  return TYPE_LABELS[issue.type] ?? issue.type;
+}
+
+export const COMPARED_FIELDS = "dose per administration and frequency";
+
+/**
+ * Run summary (B1, C3). The every-comparison sentence appears only when nothing was left unchecked; otherwise
+ * the counts made and not made are stated, with the reasons.
+ */
+export function runSummary(run: Pick<Run, "comparisons_made" | "unchecked_comparisons" | "unchecked_by_reason">): {
+  complete: boolean;
+  text: string;
+} {
+  const made = run.comparisons_made ?? 0;
   const n = run.unchecked_comparisons ?? 0;
-  if (n === 0) return "Every dose and frequency present in two or more lists could be compared.";
-  return `${n} comparison(s) could not be checked because a dose or frequency was not stated in one list. These are not counted as matches; see the “not stated” issues and the lists below.`;
+  if (n === 0) {
+    return {
+      complete: true,
+      text: `Every comparison between lists was made: ${COMPARED_FIELDS} were compared (${made} comparison(s)).`,
+    };
+  }
+  const r = run.unchecked_by_reason ?? { unverifiable: 0, not_recognised: 0, not_stated: 0 };
+  return {
+    complete: false,
+    text:
+      `${made} comparison(s) made; ${n} comparison(s) could not be checked and are not counted as matches: ` +
+      `${r.unverifiable} not verifiable, ${r.not_recognised} not recognised, ${r.not_stated} not stated.`,
+  };
 }

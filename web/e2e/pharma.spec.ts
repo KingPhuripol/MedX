@@ -68,10 +68,59 @@ test("every source list is shown as read, with not-stated fields and the uncheck
   // s5r: the missing dose is an issue of its own in the issue list, reviewable like the others.
   const mf = page.locator("ol.issue-list > li > article[data-type='missing_field']");
   await expect(mf).toHaveCount(1);
-  await expect(mf.locator("h3")).toHaveText("Dose or frequency not stated: metformin");
+  await expect(mf.locator("h3")).toHaveText("Dose not stated: metformin");
   const mfRow = mf.locator("tbody tr").filter({ has: page.getByRole("rowheader", { name: "Patient-reported list" }) });
   await expect(mfRow.locator("td").nth(3)).toHaveText("not stated");
   await expect(mf.getByRole("button", { name: "Confirm" })).toBeVisible();
+});
+
+test("scope of the check is visible before and after a run and names what is not checked", async ({ page }) => {
+  await login(page, "pharmacist");
+  await page.goto("/pharmacist/reconcile");
+  const scope = page.locator("section[aria-labelledby='scope-title']");
+  const expectScope = async () => {
+    await expect(scope.getByRole("heading", { level: 2 })).toHaveText("Scope of this check");
+    for (const term of ["drug–drug interaction", "dose range", "renal", "hepatic", "route"]) await expect(scope).toContainText(term);
+    await expect(scope).toContainText("dose per administration (strength × quantity)");
+  };
+  await expectScope();
+  await page.getByRole("button", { name: "Run check" }).click();
+  await expect(page.getByRole("status")).toContainText(/issue\(s\)/);
+  await expectScope();
+  // allergy issue shows its basis (demo-01: penicillin allergy with a penicillin-class order)
+  await expect(page.locator("ol.issue-list > li > article").first().getByTestId("allergy-basis")).toContainText("class source");
+});
+
+test("demo-quantity: dose per administration from the tablet quantity (warfarin EN, metformin TH)", async ({ page }) => {
+  await runDemo(page, "demo-quantity");
+  const dm = page.locator("ol.issue-list > li > article[data-type='dose_mismatch']");
+  await expect(dm).toHaveCount(2);
+  await expect(dm.locator("h3")).toHaveText([
+    "Dose per administration differs between sources: metformin",
+    "Dose per administration differs between sources: warfarin",
+  ]);
+  await expect(dm.nth(0).locator("table")).toContainText("500 mg × 2 = 1000 mg");
+  await expect(dm.nth(1).locator("table")).toContainText("3 mg × 2 = 6 mg");
+  await expect(dm.nth(1).locator("table")).toContainText("3 mg × 1 = 3 mg");
+  await expect(page.getByTestId("unchecked-summary")).toContainText("Every comparison between lists was made");
+  await expect(page.getByTestId("unchecked-summary")).toContainText("dose per administration and frequency");
+});
+
+test("demo-unverifiable: three doses that could not be verified and a non-zero unchecked count", async ({ page }) => {
+  await runDemo(page, "demo-unverifiable");
+  const mf = page.locator("ol.issue-list > li > article[data-type='missing_field']");
+  await expect(mf).toHaveCount(3);
+  await expect(mf.locator("h3")).toHaveText([
+    "Dose could not be verified: acetaminophen",
+    "Dose could not be verified: metformin",
+    "Dose could not be verified: warfarin",
+  ]);
+  await expect(mf.nth(2).locator("table")).toContainText("not verifiable (variable regimen)");
+  const summary = page.getByTestId("unchecked-summary");
+  await expect(summary).toContainText("3 comparison(s) could not be checked");
+  await expect(summary).toContainText("3 not verifiable, 0 not recognised, 0 not stated");
+  const copy = await page.locator("main").innerText();
+  expect(copy).not.toMatch(/all doses|every dose|doses match|Every comparison/i);
 });
 
 test("dismiss without a reason is blocked in the UI", async ({ page }) => {

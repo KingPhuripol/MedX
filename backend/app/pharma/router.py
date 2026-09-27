@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
-from ..audit import utc_now_iso, write_audit
+from ..audit import insert_audit, utc_now_iso, write_audit
 from ..deps import CurrentUser, get_engine, request_id, require_user
 from ..gateway import GatewayRequest, invoke_gateway
 from ..roles import Role
@@ -78,6 +78,7 @@ def post_reconcile(body: ReconcileBody, request: Request, user: CurrentUser = De
 
     run = reconcile(snapshot, invoke, body.mode)
     ts = utc_now_iso()
+    # One transaction: the run, its issues and the pharma.reconcile audit row commit together or not at all.
     with engine.begin() as conn:
         conn.execute(
             pharma_runs.insert().values(
@@ -95,25 +96,25 @@ def post_reconcile(body: ReconcileBody, request: Request, user: CurrentUser = De
                     issue_json=json.dumps(issue, sort_keys=True, ensure_ascii=False),
                 )
             )
-    write_audit(
-        engine,
-        action="pharma.reconcile",
-        target=f"pharma_run/{run['run_id']}",
-        outcome=run["status"],
-        request_id=rid,
-        actor_id=user.id,
-        actor_role=user.role.value,
-        details={
-            "run_id": run["run_id"],
-            "snapshot_sha256": run["snapshot_sha256"],
-            "formulary_version": run["formulary_version"],
-            "rules_version": run["rules_version"],
-            "mode": run["mode"],
-            "issue_count": len(run["issues"]),
-            "notice_count": len(run["notices"]),
-            "unchecked_comparison_count": run["unchecked_comparisons"],
-        },
-    )
+        insert_audit(
+            conn,
+            action="pharma.reconcile",
+            target=f"pharma_run/{run['run_id']}",
+            outcome=run["status"],
+            request_id=rid,
+            actor_id=user.id,
+            actor_role=user.role.value,
+            details={
+                "run_id": run["run_id"],
+                "snapshot_sha256": run["snapshot_sha256"],
+                "formulary_version": run["formulary_version"],
+                "rules_version": run["rules_version"],
+                "mode": run["mode"],
+                "issue_count": len(run["issues"]),
+                "notice_count": len(run["notices"]),
+                "unchecked_comparison_count": run["unchecked_comparisons"],
+            },
+        )
     return _load_run(engine, run["run_id"])  # type: ignore[return-value]
 
 
@@ -135,6 +136,7 @@ def _decide(issue_id: str, decision: str, reason: str | None, request: Request, 
         raise HTTPException(status_code=404, detail="unknown issue")
     reason_sha = hashlib.sha256(reason.encode("utf-8")).hexdigest() if reason is not None else None
     ts = utc_now_iso()
+    # One transaction: the decision row and its pharma.issue.* audit row commit together or not at all.
     try:
         with engine.begin() as conn:
             conn.execute(
@@ -144,26 +146,26 @@ def _decide(issue_id: str, decision: str, reason: str | None, request: Request, 
                     reviewer_role=user.role.value, ts_utc=ts,
                 )
             )
+            insert_audit(
+                conn,
+                action=f"pharma.issue.{decision}",
+                target=f"pharma_issue/{issue_id}",
+                outcome="recorded",
+                request_id=request_id(request),
+                actor_id=user.id,
+                actor_role=user.role.value,
+                details={
+                    "reviewer_id": user.id,
+                    "reviewer_role": user.role.value,
+                    "ts_utc": ts,
+                    "run_id": issue.run_id,
+                    "issue_id": issue_id,
+                    "rule_id": issue.rule_id,
+                    "reason_sha256": reason_sha,
+                },
+            )
     except IntegrityError:
         raise HTTPException(status_code=409, detail="issue already decided") from None
-    write_audit(
-        engine,
-        action=f"pharma.issue.{decision}",
-        target=f"pharma_issue/{issue_id}",
-        outcome="recorded",
-        request_id=request_id(request),
-        actor_id=user.id,
-        actor_role=user.role.value,
-        details={
-            "reviewer_id": user.id,
-            "reviewer_role": user.role.value,
-            "ts_utc": ts,
-            "run_id": issue.run_id,
-            "issue_id": issue_id,
-            "rule_id": issue.rule_id,
-            "reason_sha256": reason_sha,
-        },
-    )
     status = {"confirm": "confirmed", "dismiss": "dismissed"}[decision]
     return {"issue_id": issue_id, "run_id": issue.run_id, "status": status, "ts_utc": ts}
 

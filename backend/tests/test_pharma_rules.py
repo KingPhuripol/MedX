@@ -133,7 +133,7 @@ def test_rule_missing_field():
             lists[target] = [text]
             result = run(snapshot(home=lists["home_list"], reported=lists["patient_reported"], orders=lists["new_order"]))
             [mf] = result["issues"]
-            assert (mf["type"], mf["field"], mf["rule_id"]) == ("missing_field", field, "missing_field@2.0.0")
+            assert (mf["type"], mf["field"], mf["rule_id"]) == ("missing_field", field, "missing_field@2.1.0")
             assert mf["conflicting_sources"][0]["source_type"] == target
             assert {s["source_type"] for s in mf["conflicting_sources"]} == {"home_list", "patient_reported", "new_order"}
             key = "dose_value" if field == "dose" else "frequency_code"
@@ -162,26 +162,36 @@ def test_rule_missing_field():
 
 PAIRS = [(a, b) for a in ("home_list", "patient_reported", "new_order") for b in ("home_list", "patient_reported", "new_order") if a != b]
 STATED = "Metformin 500 mg bid"
-NULLED = {"dose": "Metformin bid", "frequency": "Metformin 500 mg"}
+# (field, field_status) -> a line whose field has no value for that reason (every other field stated).
+NULLED = {
+    ("dose", "not_stated"): "Metformin bid",
+    ("dose", "unverifiable"): "Metformin 500 mg + 250 mg bid",
+    ("frequency", "not_stated"): "Metformin 500 mg",
+    ("frequency", "not_recognised"): "Metformin 500 mg every other day",
+}
 
 
 @pytest.mark.parametrize("nulls", ["first", "second", "both"])
 @pytest.mark.parametrize("pair", PAIRS, ids=[f"{a}-{b}" for a, b in PAIRS])
-@pytest.mark.parametrize("field", ["dose", "frequency"])
-def test_missing_never_agreement(field, pair, nulls):
-    """S5R-A08: every comparison rule x ordered source-type pair x null pattern."""
+@pytest.mark.parametrize("field,status", list(NULLED), ids=[f"{f}-{st}" for f, st in NULLED])
+def test_missing_never_agreement(field, status, pair, nulls):
+    """S5R-A08 x S5R2-A06: every comparison rule x ordered source-type pair x null pattern x field_status."""
     first, second = pair
     null_in = {"first": [first], "second": [second], "both": [first, second]}[nulls]
-    lists = {t: [NULLED[field] if t in null_in else STATED] for t in pair}
+    lists = {t: [NULLED[(field, status)] if t in null_in else STATED] for t in pair}
     result = run(snapshot(home=lists.get("home_list"), reported=lists.get("patient_reported"), orders=lists.get("new_order")))
     assert not same_meds_clean(result)
     mfs = of_type(result, "missing_field")
     assert sorted((i["field"], i["conflicting_sources"][0]["source_type"]) for i in mfs) == sorted((field, t) for t in null_in)
     for mf in mfs:
         assert len(mf["conflicting_sources"]) == 2  # the ingredient is in 2 source types
+        assert mf["detail"]["field_status"] == status
+        if status == "unverifiable":
+            assert mf["detail"]["unverifiable_reason"] == "multiple_strengths"
     assert of_type(result, "dose_mismatch") == [] and of_type(result, "frequency_mismatch") == []
     assert [i["type"] for i in result["issues"]] == ["missing_field"] * len(null_in)
-    assert result["unchecked_comparisons"] == 1
+    assert result["unchecked_comparisons"] == 1 and result["comparisons_made"] == 1  # the other field compared
+    assert result["unchecked_by_reason"] == {r: int(r == status) for r in ("unverifiable", "not_recognised", "not_stated")}
     # the mismatch rule still runs for the other field, stated in both, and never fires from the null entry
     other_differs = {"dose": ("Metformin bid", "Metformin tid"), "frequency": ("Metformin 500 mg", "Metformin 1000 mg")}[field]
     lists = {first: [other_differs[0]], second: [other_differs[1]]}

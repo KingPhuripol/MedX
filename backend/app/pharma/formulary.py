@@ -10,7 +10,10 @@ from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
 _STRIP_PREFIXES = ("ยา",)
-_STRIP_SUFFIX_WORDS = {"tab", "tabs", "tablet", "tablets", "cap", "caps", "capsule", "capsules", "เม็ด", "แคปซูล"}
+_STRIP_SUFFIX_WORDS = {
+    "tab", "tabs", "tablet", "tablets", "cap", "caps", "capsule", "capsules", "เม็ด", "แคปซูล",
+    "syrup", "suspension", "elixir", "solution", "น้ำเชื่อม", "ยาน้ำ",  # dosage-form words, never part of a name
+}
 _ALLERGY_PREFIX = re.compile(r"^(?:แพ้ยา|แพ้|allergy to|allergic to|allergy:)\s*", re.IGNORECASE)
 
 

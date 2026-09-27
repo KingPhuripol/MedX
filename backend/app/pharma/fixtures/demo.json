@@ -152,6 +152,78 @@
      }
     ]
    }
+  },
+  {
+   "fixture_ref": "demo-quantity",
+   "label": "Demo: dose per administration from tablet quantity (EN and TH)",
+   "snapshot": {
+    "patient_ref": "s5-demo-quantity",
+    "as_of": "2026-06-20T10:00:00+07:00",
+    "data_class": "synthetic",
+    "sources": [
+     {
+      "source_type": "home_list",
+      "evidence_ref": "s5-demo-quantity/home_list/1",
+      "available_at_time": "2026-05-20T09:00:00+07:00",
+      "provenance": "synthetic: hand-authored s5 demo case (no real patient data)",
+      "version": "1",
+      "entries": [
+       "Warfarin 3 mg 1 tab od",
+       "เมทฟอร์มิน 500 มก. 1x2",
+       "Amlodipine 5 mg od"
+      ]
+     },
+     {
+      "source_type": "new_order",
+      "evidence_ref": "s5-demo-quantity/new_order/1",
+      "available_at_time": "2026-06-20T09:50:00+07:00",
+      "provenance": "synthetic: hand-authored s5 demo case (no real patient data)",
+      "version": "1",
+      "entries": [
+       "Warfarin 3 mg 2 tabs od",
+       "เมทฟอร์มิน 500 มก. 2x2",
+       "Amlodipine 2.5 mg 2 tabs od"
+      ]
+     }
+    ],
+    "allergies": []
+   }
+  },
+  {
+   "fixture_ref": "demo-unverifiable",
+   "label": "Demo: doses that could not be verified (variable, liquid, two strengths)",
+   "snapshot": {
+    "patient_ref": "s5-demo-unverifiable",
+    "as_of": "2026-06-21T10:00:00+07:00",
+    "data_class": "synthetic",
+    "sources": [
+     {
+      "source_type": "home_list",
+      "evidence_ref": "s5-demo-unverifiable/home_list/1",
+      "available_at_time": "2026-05-21T09:00:00+07:00",
+      "provenance": "synthetic: hand-authored s5 demo case (no real patient data)",
+      "version": "1",
+      "entries": [
+       "Warfarin 3 mg od",
+       "Paracetamol 500 mg prn",
+       "Metformin 500 mg bid"
+      ]
+     },
+     {
+      "source_type": "new_order",
+      "evidence_ref": "s5-demo-unverifiable/new_order/1",
+      "available_at_time": "2026-06-21T09:50:00+07:00",
+      "provenance": "synthetic: hand-authored s5 demo case (no real patient data)",
+      "version": "1",
+      "entries": [
+       "Warfarin 3 mg od except 1.5 mg on Sunday",
+       "Paracetamol syrup 250 mg/5 ml 10 ml prn",
+       "Metformin 500 mg + 250 mg bid"
+      ]
+     }
+    ],
+    "allergies": []
+   }
   }
  ]
 }

@@ -22,7 +22,7 @@ from .pharma_helpers import AFTER, allergy, mem_engine, mock_invoke, notices, of
 
 PHARMA_DIR = REPO_ROOT / "backend" / "app" / "pharma"
 PATIENTS = json.loads((PHARMA_DIR / "fixtures" / "patients.json").read_text(encoding="utf-8"))["patients"]
-FIELDS = ("drug_name_raw", "dose_value", "dose_unit", "route", "frequency_code")
+FIELDS = ("drug_name_raw", "dose_value", "dose_unit", "quantity", "dose_status", "route", "frequency_code", "frequency_status")
 
 
 def test_pipeline_uses_gateway(client, login, audit_rows):
@@ -34,7 +34,9 @@ def test_pipeline_uses_gateway(client, login, audit_rows):
     rows = [r for r in audit_rows()[before:] if r["action"] == "gateway.invoke"]
     present = len(run_data["extraction"])
     assert present == 3
+    assert EXTRACT_TASK == "pharma.extract.v2"  # the pipeline calls only v2
     assert [r["target"] for r in rows].count(f"task/{EXTRACT_TASK}") == present
+    assert not [r for r in rows if r["target"] == "task/pharma.extract.v1"]
     assert [r["target"] for r in rows].count(f"task/{PHRASE_TASK}") == 1
     assert {r["details"]["provider"] for r in rows} == {"mock"}
     assert [r["details"]["request_sha256"] for r in rows] == [c["request_sha256"] for c in run_data["gateway_calls"]]

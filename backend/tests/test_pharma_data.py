@@ -7,10 +7,18 @@ from datetime import datetime
 from collections import Counter
 from functools import lru_cache
 
-from app.pharma.eval.inject import build_cases, load_patients, log_lines
+from app.pharma.eval.inject import (
+    DETECTION_FORMS,
+    SURFACE_FORMS,
+    build_cases,
+    build_surface_cases,
+    load_patients,
+    log_lines,
+    surface_log_lines,
+)
 from app.pharma.eval.run_eval import THRESHOLDS, bootstrap_stats, evaluate
 from app.pharma.mock_rules import parse_entry
-from app.pharma.fixtures.build import build_all, dumps, manifest, frozen_split_sha256
+from app.pharma.fixtures.build import build_all, dumps, fixtures_file_sha256, manifest, frozen_split_sha256
 from app.pharma.formulary import DATA_DIR, load_formulary
 from app.pharma.models import ISSUE_TYPES
 
@@ -21,9 +29,20 @@ ORIGINAL_TEST_REFS = [f"s5-p{n:02d}" for n in range(3, 31, 3)]  # the 10 s5 v1 t
 MANIFEST = PHARMA_DIR / "fixtures" / "test_manifest.json"
 
 
+V2_TEST_REFS = [f"s5-p{n:02d}" for n in range(3, 97, 3)]  # manifest v2 test split (32 refs)
+V2_SHA256 = "313e44b314097bf8980d353b3d28f739223fb848c5fe8f9cabdf9b307771dad9"
+BILINGUAL_FORMS = ("SF-NXM", "SF-FRAC", "SF-VAR", "SF-LIQ", "SF-MULTI", "SF-FREQ")
+
+
 @lru_cache(maxsize=1)
 def _cases() -> tuple[dict, ...]:
     return tuple(build_cases(load_patients()))
+
+
+@lru_cache(maxsize=1)
+def _surface_cases() -> tuple[dict, ...]:
+    return tuple(build_surface_cases(load_patients()))
+
 ATC_RE = re.compile(r"^[A-Z]\d\d[A-Z]{2}\d\d$")
 TMT_RE = re.compile(r"^\d{6,7}$")  # TMTID (numeric concept id); rxcui values are exempt below
 NLM_ATTRIBUTION = (
@@ -94,13 +113,15 @@ def test_fixtures_valid():
     assert (PHARMA_DIR / "fixtures" / "patients.json").read_text(encoding="utf-8") == dumps(
         {"generator_version": stored["generator_version"], "seed": stored["seed"], "patients": build_all()}
     ), "patients.json is not reproducible from the generator"
-    assert stored["generator_version"].startswith("s5-fixtures-2.")
+    assert stored["generator_version"].startswith("s5-fixtures-3.")
     assert len(patients) >= 90
     splits = [p["split"] for p in patients]
     assert splits.count("dev") >= 60 and splits.count("test") >= 30
     frozen = json.loads(MANIFEST.read_text(encoding="utf-8"))
     assert frozen["generator_version"] == stored["generator_version"]
     assert frozen["sha256"] == frozen_split_sha256(patients) == manifest(patients)["sha256"]
+    assert frozen["fixtures_file_sha256"] == fixtures_file_sha256()
+    assert frozen == manifest(patients)
     assert frozen["patient_refs"] == [p["patient_ref"] for p in patients if p["split"] == "test"]
     for p in patients:
         snap = p["snapshot"]
@@ -148,8 +169,29 @@ def test_clean_fixtures_fully_specified():
         for source in p["snapshot"]["sources"]:
             for entry, gold in zip(source["entries"], p["gold"][source["source_type"]]):
                 assert gold["dose_value"] is not None and gold["dose_unit"] and gold["frequency_code"], (p["patient_ref"], gold)
+                assert (gold["dose_status"], gold["frequency_status"]) == ("resolved", "recognised"), gold
                 parsed = parse_entry(entry["text"])
                 assert parsed["dose_value"] is not None and parsed["dose_unit"] and parsed["frequency_code"], entry
+                assert (parsed["dose_status"], parsed["frequency_status"]) == ("resolved", "recognised"), entry
+                assert parsed["quantity"] == gold["quantity"], entry
+
+
+def test_quantity_form_clean_patients():
+    """v3: >= 10 test (>= 30 all) clean patients carry an entry in a quantity form whose dose per administration
+    equals the other sources' dose written another way."""
+    patients = load_patients()
+    for scope, minimum in (("test", 10), ("all", 30)):
+        picked = [p for p in patients if p["meta"]["quantity_form"] and (scope == "all" or p["split"] == "test")]
+        assert len(picked) >= minimum, scope
+    for p in patients:
+        qf = p["meta"]["quantity_form"]
+        if not qf:
+            continue
+        g = p["gold"][qf["source_type"]][qf["entry_index"]]
+        assert g["quantity"] in (0.5, 2.0)
+        per_admin = g["dose_value"] * g["quantity"]
+        others = [o for st, gl in p["gold"].items() for o in gl if o["product"] == g["product"] and o is not g]
+        assert others and all(o["dose_value"] * (o["quantity"] or 1) == per_admin and o["quantity"] in (None, 1.0) for o in others)
 
 
 def test_injection_counts():
@@ -273,15 +315,90 @@ def test_eval_thresholds(tmp_path):
     assert r["issue_sources_complete"]["violations"] == 0
     raw = (tmp_path / "results.json").read_text(encoding="utf-8")
     assert "informational_mean_excluding_missing_field" not in raw
+    for scope in ("test", "all"):
+        minimum = THRESHOLDS["min_surface_cases_per_form"][scope]
+        for form in SURFACE_FORMS:
+            rec = r["surface_forms"][form][scope]
+            floor = THRESHOLDS["surface_equiv_no_dose_issue_min" if form == "SF-EQUIV" else "surface_recall_min_per_form"]
+            assert rec["cases"] >= minimum and rec["recall"] >= floor, (scope, form, rec)
+            assert rec["ci95"][0] is not None and 0 <= rec["ci95_exact"][0] <= rec["recall"] <= rec["ci95_exact"][1] <= 1
+        extra = r["surface_extra_issues_per_case"][scope]
+        assert extra["mean_per_case"] <= THRESHOLDS["surface_extra_issues_per_case_max"], (scope, extra)
+        for field in ("quantity", "dose_status", "frequency_status"):
+            assert r["extraction"][scope]["field_accuracy"][field] >= THRESHOLDS["extraction_accuracy_min"]
+    assert r["versions"]["mock_rules"] == "s5-mock-rules-1.2.0" and r["versions"]["template"] == "template-1.1.0"
+    assert r["versions"]["rules"] == "s5-rules-2.1.0" and r["versions"]["extract_task"] == "pharma.extract.v2"
+    assert r["versions"]["rule_versions"]["dose_mismatch"] == "1.2.0"
+    assert r["versions"]["rule_versions"]["missing_field"] == "2.1.0"
     committed = json.loads((REPO_ROOT / "slices" / "s5" / "eval" / "results.json").read_text(encoding="utf-8"))
     assert committed == json.loads(raw), "re-run make pharma-eval"
+    assert (tmp_path / "injection_log_surface.jsonl").read_text(encoding="utf-8") == (
+        REPO_ROOT / "slices" / "s5" / "eval" / "injection_log_surface.jsonl").read_text(encoding="utf-8")
+
+
+def test_eval_summary_leads_with_exact():
+    r = json.loads((REPO_ROOT / "slices" / "s5" / "eval" / "results.json").read_text(encoding="utf-8"))
+    assert "System Evaluation" in r["label"] and "not clinical performance" in r["label"]
+    recall_lines = [line for line in r["summary"] if " recall " in line]
+    assert len(recall_lines) == 2 * (len(ISSUE_TYPES) + len(SURFACE_FORMS))
+    for line in recall_lines:
+        assert "Clopper–Pearson 95%" in line and "bootstrap" in line
+        assert line.index("Clopper–Pearson") < line.index("bootstrap") and line.index("(") < line.index("Clopper–Pearson")
 
 
 def test_results_manifest_matches():
     results = json.loads((REPO_ROOT / "slices" / "s5" / "eval" / "results.json").read_text(encoding="utf-8"))
     frozen = json.loads(MANIFEST.read_text(encoding="utf-8"))
-    assert results["test_manifest"] == {"sha256": frozen["sha256"], "generator_version": frozen["generator_version"]}
+    assert results["test_manifest"] == {k: frozen[k] for k in (
+        "manifest_version", "sha256", "generator_version", "fixtures_file_sha256", "surface_suite")}
+    assert frozen["manifest_version"] == 3
     assert frozen["sha256"] == frozen_split_sha256(load_patients())
+    assert frozen["fixtures_file_sha256"] == fixtures_file_sha256()
+
+
+def test_manifest_v3_same_split():
+    frozen = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    assert frozen["patient_refs"] == V2_TEST_REFS and len(V2_TEST_REFS) == 32
+    assert frozen["supersedes"]["sha256"] == V2_SHA256 and frozen["supersedes"]["manifest_version"] == 2
+    split_of = {p["patient_ref"]: p["split"] for p in load_patients()}
+    assert [r for r, s in split_of.items() if s == "test"] == V2_TEST_REFS  # 0 split changes
+    assert len(split_of) == 96 and set(split_of.values()) == {"dev", "test"}
+    assert frozen["surface_suite"] == {"seed": 11, "generator_version": "s5-surface-forms-1.0.0"}
+
+
+def test_surface_form_counts():
+    cases = _surface_cases()
+    assert len(SURFACE_FORMS) == 9 and "SF-EQUIV" not in DETECTION_FORMS
+    for form in SURFACE_FORMS:
+        test = [c for c in cases if c["form"] == form and c["split"] == "test"]
+        assert len(test) >= 10 and len([c for c in cases if c["form"] == form]) >= 30, form
+        if form in BILINGUAL_FORMS:
+            langs = Counter(c["lang"] for c in test)
+            assert langs["en"] >= 3 and langs["th"] >= 3, (form, langs)
+    assert {c["lang"] for c in cases if c["form"] == "SF-TABS"} == {"en"}
+    assert {c["lang"] for c in cases if c["form"] == "SF-MED"} == {"th"}
+
+
+def test_surface_form_one_per_patient_form():
+    cases = _surface_cases()
+    assert max(Counter((c["patient_ref"], c["form"]) for c in cases).values()) == 1
+    clean = {p["patient_ref"]: p["snapshot"] for p in load_patients()}
+    for c in cases:
+        snap, orig = c["snapshot"], clean[c["patient_ref"]]
+        changes = sum(_entry_changes(o["entries"], s["entries"]) for o, s in zip(orig["sources"], snap["sources"]))
+        assert changes == 1 and snap["allergies"] == orig["allergies"], c["case_id"]  # exactly one injected change
+        assert c["before"] != c["after"] and c["expected"]["sources"] == [c["source"]]
+
+
+def test_surface_form_reproducible():
+    patients = load_patients()
+    a = surface_log_lines(build_surface_cases(patients))
+    assert a.encode() == surface_log_lines(build_surface_cases(patients)).encode()
+    lines = [json.loads(line) for line in a.splitlines()]
+    base = {"case_id", "patient_ref", "split", "type", "source", "before", "after", "expected", "form", "lang"}
+    assert all(set(line) == base and line["lang"] in ("en", "th") for line in lines)
+    committed = REPO_ROOT / "slices" / "s5" / "eval" / "injection_log_surface.jsonl"
+    assert committed.read_text(encoding="utf-8") == a
 
 
 def test_decisions_recorded():

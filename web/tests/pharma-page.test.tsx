@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { router } from "./router-mock";
 
 import PharmaReconcile from "@/components/PharmaReconcile";
-import { NLM_ATTRIBUTION, PHRASING_LABEL } from "@/lib/pharma";
+import { NLM_ATTRIBUTION, PHRASING_LABEL, formatDose, runSummary } from "@/lib/pharma";
 
 const src = (s: Record<string, unknown>) => ({
   evidence_ref: `demo/${s.source_type}/1`,
@@ -42,8 +42,9 @@ const MISSING_FIELD_ISSUE = {
   type: "missing_field",
   severity: "moderate",
   severity_rank: 3,
-  rule_id: "missing_field@2.0.0",
+  rule_id: "missing_field@2.1.0",
   field: "dose",
+  detail: { field: "dose", field_status: "not_stated", incomplete_source: "new_order", stated_in: ["home_list"] },
   ingredients: ["warfarin"],
   conflicting_sources: [
     src({ source_type: "new_order", raw_span: "Warfarin 2 tab daily", frequency_code: "q24h" }),
@@ -70,7 +71,9 @@ const RUN = {
   excluded_future_items: 0,
   issues: [issue(2, "dose_mismatch", 3, "moderate"), MISSING_FIELD_ISSUE, issue(1, "allergy_class", 1, "high")],
   notices: [{ notice_id: "run1-n01", type: "unrecognised_drug", detail: "not in the formulary", raw_span: "Qelvadrine" }],
+  comparisons_made: 3,
   unchecked_comparisons: 1,
+  unchecked_by_reason: { unverifiable: 0, not_recognised: 0, not_stated: 1 },
   extraction: [
     {
       source_index: 0,
@@ -110,7 +113,9 @@ const RUN = {
 
 let decided: Record<string, string> = {};
 
-function installFetch() {
+type RunLike = Omit<typeof RUN, "issues"> & { issues: Record<string, unknown>[] } & Record<string, unknown>;
+
+function installFetch(run: RunLike = RUN) {
   decided = {};
   const fn = vi.fn(async (url: string, init?: RequestInit) => {
     const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
@@ -118,8 +123,8 @@ function installFetch() {
     if (url === "/api/pharma/fixtures")
       return json({ fixtures: [{ fixture_ref: "demo-01", patient_ref: "s5-demo-01", split: "demo", label: "Demo" }] });
     const withStatus = () => ({
-      ...RUN,
-      issues: RUN.issues.map((i) => ({ ...i, status: decided[i.issue_id] ?? "open" })),
+      ...run,
+      issues: run.issues.map((i) => ({ ...i, status: decided[i.issue_id as string] ?? "open" })),
     });
     if (url === "/api/pharma/reconcile" && init?.method === "POST") return json(withStatus());
     if (url.startsWith("/api/pharma/runs/")) return json(withStatus());
@@ -200,13 +205,13 @@ describe("pharmacist reconciliation page", () => {
     const articles = [...document.querySelectorAll("ol.issue-list > li > article")];
     expect(articles.map((a) => a.getAttribute("data-type"))).toEqual(["allergy_class", "dose_mismatch", "missing_field"]);
     const mf = within(articles[2] as HTMLElement);
-    expect(mf.getByRole("heading", { level: 3 })).toHaveTextContent("Dose or frequency not stated: warfarin");
+    expect(mf.getByRole("heading", { level: 3 })).toHaveTextContent("Dose not stated: warfarin");
     expect(mf.getByText(/dose not stated in the first source listed/)).toBeInTheDocument();
     const table = mf.getByRole("table");
-    expect(table.querySelector("caption")).toHaveTextContent(/Conflicting sources for Dose or frequency not stated/);
+    expect(table.querySelector("caption")).toHaveTextContent(/Conflicting sources for Dose not stated/);
     const row = within(table).getByRole("rowheader", { name: "New order" }).closest("tr")!;
     expect(within(row).getByText("not stated")).toBeInTheDocument();
-    expect(within(table).getByText("3 mg")).toBeInTheDocument();
+    expect(within(table).getByText("3 mg (quantity not stated; stated amount used)")).toBeInTheDocument();
     // reviewable like every other issue, and there is no control that hides issues by type
     expect(mf.getByRole("button", { name: "Confirm" })).toBeInTheDocument();
     expect(mf.getByLabelText("Reason for dismissing")).toBeInTheDocument();
@@ -235,6 +240,154 @@ describe("pharmacist reconciliation page", () => {
     await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/Issue confirmed/));
     const statuses = screen.getAllByTestId("issue-status").map((el) => el.textContent);
     expect(statuses).toEqual(["confirmed", "dismissed", "open"]);
+  });
+
+  it("scope limits: the scope section is visible before and after a run", async () => {
+    installFetch();
+    render(<PharmaReconcile />);
+    const check = () => {
+      const scope = screen.getByRole("heading", { level: 2, name: "Scope of this check" }).closest("section")!;
+      expect(scope).toHaveAttribute("aria-labelledby", "scope-title");
+      expect(scope).toHaveTextContent(/dose per administration \(strength × quantity\)/);
+      for (const term of ["drug–drug interaction", "dose range", "renal", "hepatic", "route"])
+        expect(within(scope).getByText(/Not checked/).nextElementSibling).toHaveTextContent(new RegExp(term));
+    };
+    await screen.findByRole("button", { name: "Run check" });
+    check();
+    await waitFor(() => expect(screen.getByLabelText("Synthetic patient")).toHaveValue("demo-01"));
+    await userEvent.click(screen.getByRole("button", { name: "Run check" }));
+    await screen.findByRole("heading", { level: 2, name: /Issues for pharmacist review/ });
+    check();
+  });
+
+  const ALLERGY_DETAIL: Record<string, Record<string, unknown>> = {
+    allergy_direct: { basis: "The allergen maps to the ingredient amoxicillin (RxCUI 723) in formulary s5-formulary-1.0.0.", formulary_version: "s5-formulary-1.0.0" },
+    allergy_class: {
+      basis: "The allergen and amoxicillin share the class Penicillin-class Antibacterial.",
+      class_name: "Penicillin-class Antibacterial",
+      class_source: "FDA Established Pharmacologic Class (EPC) name, US federal work",
+      formulary_version: "s5-formulary-1.0.0",
+    },
+    allergy_cross_reactivity: {
+      basis: "Curated cross-reactivity row xr-001 (s5-cross-reactivity-1.0.0); pending pharmacist sign-off.",
+      citation: "Khan DA, et al. Drug allergy: A 2022 practice parameter update. doi:10.1016/j.jaci.2022.08.028",
+      clinical_review_status: "pending_pharmacist",
+    },
+  };
+
+  for (const [key, type] of [["direct", "allergy_direct"], ["class", "allergy_class"], ["cross_reactivity", "allergy_cross_reactivity"]]) {
+    it(`allergy basis[${key}]`, async () => {
+      installFetch({ ...RUN, issues: [{ ...issue(1, type, 1, "high"), detail: ALLERGY_DETAIL[type] }] });
+      await runCheck();
+      const basis = screen.getByTestId("allergy-basis");
+      expect(basis).toHaveTextContent(String(ALLERGY_DETAIL[type].basis));
+      if (type === "allergy_class") {
+        expect(basis).toHaveTextContent("Penicillin-class Antibacterial");
+        expect(basis).toHaveTextContent(/class source: FDA Established Pharmacologic Class/);
+        expect(basis).toHaveTextContent("s5-formulary-1.0.0");
+      }
+      if (type === "allergy_direct") expect(basis).toHaveTextContent("amoxicillin (RxCUI 723) in formulary s5-formulary-1.0.0");
+      if (type === "allergy_cross_reactivity") {
+        expect(basis).toHaveTextContent("doi:10.1016/j.jaci.2022.08.028");
+        expect(basis).toHaveTextContent("Review status: pending pharmacist sign-off");
+      }
+    });
+  }
+
+  const OVERCLAIM = /all doses|every dose|doses match|Every comparison/i;
+  const WORDING: Record<string, { made: number; by: { unverifiable: number; not_recognised: number; not_stated: number } }> = {
+    zero: { made: 6, by: { unverifiable: 0, not_recognised: 0, not_stated: 0 } },
+    not_stated: { made: 4, by: { unverifiable: 0, not_recognised: 0, not_stated: 2 } },
+    not_recognised: { made: 4, by: { unverifiable: 0, not_recognised: 1, not_stated: 0 } },
+    unverifiable: { made: 3, by: { unverifiable: 3, not_recognised: 0, not_stated: 0 } },
+  };
+  for (const [key, w] of Object.entries(WORDING)) {
+    it(`unchecked wording[${key}]`, async () => {
+      const unchecked = w.by.unverifiable + w.by.not_recognised + w.by.not_stated;
+      installFetch({ ...RUN, comparisons_made: w.made, unchecked_comparisons: unchecked, unchecked_by_reason: w.by });
+      await runCheck();
+      const summary = screen.getByTestId("unchecked-summary");
+      const page = document.body.textContent ?? "";
+      if (unchecked === 0) {
+        expect(summary).toHaveTextContent("Every comparison between lists was made");
+        expect(summary).toHaveTextContent("dose per administration and frequency");
+        expect(within(summary).getByRole("link", { name: "Scope of this check" })).toHaveAttribute("href", "#scope-title");
+      } else {
+        expect(page).not.toMatch(OVERCLAIM);
+        expect(summary).toHaveTextContent(`${w.made} comparison(s) made; ${unchecked} comparison(s) could not be checked`);
+        expect(summary).toHaveTextContent(
+          `${w.by.unverifiable} not verifiable, ${w.by.not_recognised} not recognised, ${w.by.not_stated} not stated`,
+        );
+      }
+      expect(runSummary({ comparisons_made: w.made, unchecked_comparisons: unchecked, unchecked_by_reason: w.by }).complete).toBe(
+        unchecked === 0,
+      );
+    });
+  }
+
+  it("field status labels: not stated / not recognised / not verifiable (reason) and missing_field titles", async () => {
+    const mf = (n: number, field: string, status: string, reason: string | null, sourceOverrides: Record<string, unknown>) => ({
+      ...MISSING_FIELD_ISSUE,
+      issue_id: `run1-i1${n}`,
+      field,
+      detail: { field, field_status: status, unverifiable_reason: reason },
+      conflicting_sources: [src({ source_type: "new_order", raw_span: `line ${n}`, ...sourceOverrides }), MISSING_FIELD_ISSUE.conflicting_sources[1]],
+    });
+    installFetch({
+      ...RUN,
+      issues: [
+        mf(1, "dose", "not_stated", null, { frequency_code: "q24h", frequency_status: "recognised", dose_status: "not_stated" }),
+        mf(2, "frequency", "not_recognised", null, { dose_value: 3, dose_unit: "mg", dose_status: "resolved", frequency_status: "not_recognised" }),
+        mf(3, "dose", "unverifiable", "variable_regimen", { dose_status: "unverifiable", dose_unverifiable_reason: "variable_regimen", frequency_code: "q24h" }),
+        mf(4, "frequency", "not_stated", null, { dose_value: 3, dose_unit: "mg", dose_status: "resolved", frequency_status: "not_stated" }),
+      ],
+    });
+    await runCheck();
+    const titles = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
+    expect(titles).toEqual([
+      "Dose not stated: warfarin",
+      "Frequency not recognised: warfarin",
+      "Dose could not be verified: warfarin",
+      "Frequency not stated: warfarin",
+    ]);
+    const rows = [...document.querySelectorAll("ol.issue-list article")].map(
+      (a) => within(a as HTMLElement).getByRole("rowheader", { name: "New order" }).closest("tr")!,
+    );
+    expect(within(rows[0]).getByText("not stated")).toBeInTheDocument();
+    expect(within(rows[1]).getByText("not recognised")).toBeInTheDocument();
+    expect(within(rows[2]).getByText("not verifiable (variable regimen)")).toBeInTheDocument();
+    expect(within(rows[3]).getAllByText("not stated").length).toBe(1);
+    expect(screen.getByText(/frequency not recognised in the first source listed/)).toBeInTheDocument();
+    expect(screen.getByText(/dose not verifiable \(variable regimen\) in the first source listed/)).toBeInTheDocument();
+  });
+
+  it("dose per administration: strength × quantity, or the stated amount when no quantity", async () => {
+    expect(formatDose({ dose_value: 3, dose_unit: "mg", quantity: 2, dose_per_administration: 6, dose_status: "resolved" })).toBe("3 mg × 2 = 6 mg");
+    expect(formatDose({ dose_value: 3, dose_unit: "mg", quantity: 0.5, dose_status: "resolved" })).toBe("3 mg × 0.5 = 1.5 mg");
+    expect(formatDose({ dose_value: 3, dose_unit: "mg", quantity: null, dose_status: "resolved" })).toBe(
+      "3 mg (quantity not stated; stated amount used)",
+    );
+    const dm = {
+      ...issue(2, "dose_mismatch", 3, "moderate"),
+      conflicting_sources: [
+        src({ source_type: "home_list", dose_value: 3, dose_unit: "mg", quantity: 1, dose_per_administration: 3, dose_status: "resolved", frequency_code: "q24h" }),
+        src({ source_type: "new_order", dose_value: 3, dose_unit: "mg", quantity: 2, dose_per_administration: 6, dose_status: "resolved", frequency_code: "q24h" }),
+      ],
+    };
+    installFetch({ ...RUN, issues: [dm] });
+    await runCheck();
+    const table = within(document.querySelector("ol.issue-list article") as HTMLElement).getByRole("table");
+    expect(within(table).getByRole("columnheader", { name: "Dose per administration" })).toBeInTheDocument();
+    expect(within(table).getByText("3 mg × 2 = 6 mg")).toBeInTheDocument();
+    expect(within(table).getByText("3 mg × 1 = 3 mg")).toBeInTheDocument();
+  });
+
+  it("unverifiable dose_mismatch title never says differs", async () => {
+    installFetch({ ...RUN, issues: [{ ...issue(2, "dose_mismatch", 3, "moderate"), unverifiable: true }] });
+    await runCheck();
+    const h3 = screen.getByRole("heading", { level: 3 });
+    expect(h3).toHaveTextContent("Dose not comparable (units): simvastatin");
+    expect(h3.textContent).not.toMatch(/differs/i);
   });
 
   it("uses no colour literals or clinical-claim terms in pharma page files", () => {

@@ -61,3 +61,17 @@ test("run, confirm and dismiss work with the keyboard alone", async ({ page }) =
   await page.keyboard.press("Enter");
   await expect(articles.nth(1).getByTestId("issue-status")).toHaveText("dismissed");
 });
+
+test("quantity and unverifiable demo runs have no serious/critical axe violations and claim-free copy", async ({ page }) => {
+  await login(page, "pharmacist");
+  await page.goto("/pharmacist/reconcile");
+  for (const ref of ["demo-quantity", "demo-unverifiable"]) {
+    await page.getByLabel("Synthetic patient").selectOption(ref);
+    await page.getByRole("button", { name: "Run check" }).click();
+    await expect(page.getByRole("status")).toContainText(/issue\(s\)/);
+    await expect(page.locator("ol.issue-list > li > article").first()).toBeVisible();
+    expect(await seriousViolations(page)).toEqual([]);
+    const copy = (await page.locator("main").innerText()).toLowerCase();
+    expect(copy).not.toMatch(/diagnos|prescrib|treat/);
+  }
+});

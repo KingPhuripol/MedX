@@ -1,6 +1,6 @@
 """Evaluate both modes on clean and injected synthetic cases. Offline; mock provider only.
 
-Run: ``make pharma-eval`` -> ``slices/s5/eval/{results.json,injection_log.jsonl}``.
+Run: ``make pharma-eval`` -> ``slices/s5/eval/{results.json,injection_log.jsonl,injection_log_surface.jsonl}``.
 Results are a System Evaluation on synthetic data, not clinical performance.
 """
 
@@ -19,19 +19,28 @@ from sqlalchemy.pool import StaticPool
 from ...config import Settings
 from ...db import create_schema
 from ...gateway import GatewayRequest, build_provider, invoke_gateway
-from ..fixtures.build import MANIFEST_FILE
+from ..fixtures.build import MANIFEST_FILE, SURFACE_GENERATOR_VERSION, SURFACE_SEED
 from ..formulary import load_formulary
-from ..mock_rules import parse_entry
+from ..mock_rules import EXTRACT_TASK, MOCK_RULES_VERSION, parse_entry
 from ..models import ISSUE_TYPES, MedSnapshot
+from ..phrasing import TEMPLATE_VERSION
 from ..pipeline import PIPELINE_VERSION, issue_signature, reconcile
-from ..rules import RULES_VERSION
-from .inject import INJECT_SEED, build_cases, load_patients, log_lines
+from ..rules import RULE_VERSIONS, RULES_VERSION
+from .inject import (
+    INJECT_SEED,
+    SURFACE_FORMS,
+    build_cases,
+    build_surface_cases,
+    load_patients,
+    log_lines,
+    surface_log_lines,
+)
 
 BOOT_SEED = 20260926
 RESAMPLES = 1000
 MODES = ("rules_only", "rules_plus_model")
 PRIMARY_MODE = "rules_plus_model"
-FIELDS = ("drug_name_raw", "dose_value", "dose_unit", "route", "frequency_code")
+FIELDS = ("drug_name_raw", "dose_value", "dose_unit", "quantity", "dose_status", "route", "frequency_code", "frequency_status")
 THRESHOLDS = {
     "recall_min_per_type": 0.95,
     "min_cases_per_type": 30,
@@ -39,6 +48,10 @@ THRESHOLDS = {
     "extra_issues_per_case_max": 0.10,
     "extraction_accuracy_min": 0.98,
     "mode_equality": 1.0,
+    "surface_recall_min_per_form": 0.95,
+    "surface_equiv_no_dose_issue_min": 0.95,
+    "surface_extra_issues_per_case_max": 0.10,
+    "min_surface_cases_per_form": {"test": 10, "all": 30},
 }
 DEFAULT_OUT = Path(__file__).resolve().parents[4] / "slices" / "s5" / "eval"
 
@@ -57,7 +70,13 @@ def make_invoke() -> Callable[[GatewayRequest], object]:
 
 def matches(issue: dict, expected: dict) -> bool:
     """Same type, same ingredient set, injected source among ``conflicting_sources``; for
-    ``missing_field`` also the same field, with the injected source as the incomplete entry."""
+    ``missing_field`` also the same field, with the injected source as the incomplete entry, and the
+    expected ``field_status`` / ``unverifiable_reason`` when the case gives one."""
+    if expected["type"] is None:
+        return False
+    for key in ("field_status", "unverifiable_reason"):
+        if key in expected and issue.get("detail", {}).get(key) != expected[key]:
+            return False
     if not (
         issue["type"] == expected["type"]
         and sorted(issue["ingredients"]) == sorted(expected["ingredients"])
@@ -275,6 +294,58 @@ def _extraction_null_preserved(cases: list[dict]) -> dict:
     return {"cases": len(picked), "null_preserved": len(picked) - len(fabricated), "fabricated": fabricated}
 
 
+def _dose_issue(issue: dict) -> bool:
+    return issue["type"] == "dose_mismatch" or (issue["type"] == "missing_field" and issue.get("field") == "dose")
+
+
+def surface_outcome(case: dict, run: dict) -> tuple[int, int]:
+    """(detected, extra issues+notices). SF-EQUIV is detected when the run has *no* dose issue."""
+    if case["form"] == "SF-EQUIV":
+        return int(not any(_dose_issue(i) for i in run["issues"])), len(run["issues"]) + len(run["notices"])
+    hit = next((i for i in run["issues"] if matches(i, case["expected"])), None)
+    return int(hit is not None), len(run["issues"]) + len(run["notices"]) - int(hit is not None)
+
+
+def _surface_metrics(per_patient: dict[str, list[dict]], refs: list[str], seed: int) -> dict:
+    """Per-form recall with Clopper-Pearson and patient-level bootstrap CIs, plus extras per case."""
+    def agg(sample: list[str]) -> dict:
+        out = {f: [0, 0] for f in SURFACE_FORMS} | {"_extras": [0, 0]}
+        for ref in sample:
+            for c in per_patient.get(ref, []):
+                out[c["form"]][0] += c["detected"]
+                out[c["form"]][1] += 1
+                out["_extras"][0] += c["extras"]
+                out["_extras"][1] += 1
+        return out
+
+    rng = random.Random(seed)
+    boots: dict[str, list[float]] = {}
+    for _ in range(RESAMPLES):
+        sample = [refs[rng.randrange(len(refs))] for _ in refs]
+        for k, (num, den) in agg(sample).items():
+            if den:
+                boots.setdefault(k, []).append(round(num / den, 4))
+    point = agg(refs)
+    forms = {}
+    for f in SURFACE_FORMS:
+        hits, n = point[f]
+        forms[f] = {"cases": n, "detected": hits, "recall": _ratio(hits, n),
+                    "ci95": _ci(boots.get(f, [])), "ci95_exact": clopper_pearson(hits, n)}
+    extras, n = point["_extras"]
+    return {"forms": forms, "extra_issues_per_case": {"cases": n, "extra": extras, "mean_per_case": _ratio(extras, n),
+                                                      "ci95": _ci(boots.get("_extras", []))}}
+
+
+def recall_line(name: str, scope: str, rec: dict) -> str:
+    """Leads with the exact (Clopper-Pearson) interval, then the patient-level bootstrap interval."""
+    if not rec["cases"]:
+        return f"{name} [{scope}] recall n/a (no cases), n=0"
+    lo, hi = rec["ci95_exact"]
+    blo, bhi = rec["ci95"]
+    return (f"{name} [{scope}] recall {rec['recall']:.2f} (Clopper–Pearson 95% {lo:.2f}–{hi:.2f}; "
+            f"bootstrap {blo:.2f}–{bhi:.2f}), n={rec['cases']}")
+
+
 def evaluate(out_dir: Path | None = DEFAULT_OUT) -> dict:
     invoke = make_invoke()
     patients = load_patients()
@@ -332,21 +403,68 @@ def evaluate(out_dir: Path | None = DEFAULT_OUT) -> dict:
             "all": _mode_metrics(per_patient, list(per_patient), BOOT_SEED + 1000 * m_index + 500),
         }
 
+    # Surface-form suite (primary mode): one written form per case, patient-level bootstrap.
+    surface_cases = build_surface_cases(patients)
+    surface_pp: dict[str, list[dict]] = {}
+    for case in surface_cases:
+        run = reconcile(MedSnapshot.model_validate(case["snapshot"]), invoke, PRIMARY_MODE, run_id=f"eval-{case['case_id']}")
+        detected, extras = surface_outcome(case, run)
+        surface_pp.setdefault(case["patient_ref"], []).append({"form": case["form"], "detected": detected, "extras": extras})
+    all_refs = [p["patient_ref"] for p in patients]
+    surface = {
+        "test": _surface_metrics(surface_pp, [r for r in all_refs if split_of[r] == "test"], BOOT_SEED + 7000),
+        "all": _surface_metrics(surface_pp, all_refs, BOOT_SEED + 7500),
+    }
+    surface_forms = {f: {s: surface[s]["forms"][f] for s in ("test", "all")} for f in SURFACE_FORMS}
+    surface_langs = {
+        f: {s: {lang: sum(c["form"] == f and c["lang"] == lang and (s == "all" or c["split"] == "test") for c in surface_cases)
+                for lang in ("en", "th")} for s in ("test", "all")}
+        for f in SURFACE_FORMS
+    }
+
     keys = sorted(signatures[MODES[0]])
     identical = sum(signatures[MODES[0]][k] == signatures[MODES[1]][k] for k in keys)
     primary = per_mode[PRIMARY_MODE]
     form = load_formulary()
     extraction = _extraction(patients, clean_runs_primary)
     frozen = json.loads(MANIFEST_FILE.read_text(encoding="utf-8"))
+    summary = [recall_line(t, s, primary[s]["recall"][t]) for t in ISSUE_TYPES for s in ("test", "all")]
+    summary += [recall_line(f, s, surface_forms[f][s]) for f in SURFACE_FORMS for s in ("test", "all")]
+    summary += [
+        f"clean false alerts per list [{s}] {primary[s]['clean_false_alerts']['mean_per_list']:.2f}; "
+        f"extra issues per injected case [{s}] {primary[s]['extra_issues_per_injected_case']['mean_per_case']:.2f}; "
+        f"extra issues per surface case [{s}] {surface[s]['extra_issues_per_case']['mean_per_case']:.2f}"
+        for s in ("test", "all")
+    ]
     results = {
         "label": "System Evaluation on synthetic data; not clinical performance. No expert pharmacist review yet.",
         "data_class": "synthetic",
         "versions": {
-            "pipeline": PIPELINE_VERSION, "rules": RULES_VERSION, "formulary": form.version,
-            "cross_reactivity": form.cross_version, "provider": "mock",
+            "pipeline": PIPELINE_VERSION, "rules": RULES_VERSION, "rule_versions": dict(RULE_VERSIONS),
+            "mock_rules": MOCK_RULES_VERSION, "template": TEMPLATE_VERSION, "extract_task": EXTRACT_TASK,
+            "formulary": form.version, "cross_reactivity": form.cross_version, "provider": "mock",
+            "surface_suite": SURFACE_GENERATOR_VERSION,
         },
-        "test_manifest": {"sha256": frozen["sha256"], "generator_version": frozen["generator_version"]},
-        "seeds": {"inject": INJECT_SEED, "bootstrap": BOOT_SEED, "resamples": RESAMPLES, "resampling_unit": "patient"},
+        "test_manifest": {
+            "manifest_version": frozen["manifest_version"], "sha256": frozen["sha256"],
+            "generator_version": frozen["generator_version"], "fixtures_file_sha256": frozen["fixtures_file_sha256"],
+            "surface_suite": frozen["surface_suite"],
+        },
+        "seeds": {"inject": INJECT_SEED, "surface": SURFACE_SEED, "bootstrap": BOOT_SEED, "resamples": RESAMPLES,
+                  "resampling_unit": "patient"},
+        "summary": summary,
+        "surface_forms": surface_forms,
+        "surface_form_langs": surface_langs,
+        "surface_extra_issues_per_case": {s: surface[s]["extra_issues_per_case"] for s in ("test", "all")},
+        "notes": [
+            "Surface-form recall measures a fixed, seeded set of written forms on synthetic lists. Real-world wordings "
+            "outside the mock's pattern set may be misread as resolved; pharmacist review is required before any "
+            "non-synthetic use.",
+            "Quantity not stated: the stated amount is taken as the dose per administration (dose_basis=stated_amount); "
+            "this convention needs pharmacist sign-off before any non-synthetic use.",
+            "SF-EQUIV 'recall' is the fraction of equivalent-dose cases with no dose issue (dose_mismatch or "
+            "missing_field(dose)).",
+        ],
         "counts": {
             "patients": len(patients),
             "test_patients": sum(p["split"] == "test" for p in patients),
@@ -385,6 +503,7 @@ def evaluate(out_dir: Path | None = DEFAULT_OUT) -> dict:
             json.dumps(results, ensure_ascii=False, indent=1, sort_keys=True) + "\n", encoding="utf-8"
         )
         (out_dir / "injection_log.jsonl").write_text(log_lines(cases), encoding="utf-8")
+        (out_dir / "injection_log_surface.jsonl").write_text(surface_log_lines(surface_cases), encoding="utf-8")
     return results
 
 
@@ -393,13 +512,12 @@ def main() -> None:
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     args = parser.parse_args()
     r = evaluate(args.out)
-    for t in ISSUE_TYPES:
-        print(f"{t:26s} recall test={r['recall'][t]['test']['recall']} all={r['recall'][t]['all']['recall']}")
-    print("clean false alerts/list:", {s: r["clean_false_alerts"][s]["mean_per_list"] for s in ("test", "all")})
-    print("extra issues/case:", {s: r["extra_issues_per_injected_case"][s]["mean_per_case"] for s in ("test", "all")})
+    print(r["label"])
+    for line in r["summary"]:
+        print(line)
     print("extraction overall:", {s: r["extraction"][s]["overall_accuracy"] for s in ("test", "all")})
     print("mode equality:", r["mode_equality"])
-    print(f"wrote {args.out}/results.json and injection_log.jsonl")
+    print(f"wrote {args.out}/results.json, injection_log.jsonl and injection_log_surface.jsonl")
 
 
 if __name__ == "__main__":

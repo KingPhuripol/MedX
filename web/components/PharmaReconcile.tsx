@@ -10,12 +10,17 @@ import {
   NOT_STATED,
   PHRASING_LABEL,
   REVIEW_NOTE,
+  SCOPE_COMPARED,
+  SCOPE_NOT_CHECKED,
+  SCOPE_READING,
   SOURCE_LABELS,
-  TYPE_LABELS,
   formatDose,
+  formatFrequency,
+  issueLabel,
+  notVerifiable,
   orNotStated,
+  runSummary,
   sortIssues,
-  uncheckedSummary,
   type ExtractionRecord,
   type Fixture,
   type Issue,
@@ -25,7 +30,69 @@ import {
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
 function issueTitle(issue: Issue): string {
-  return `${TYPE_LABELS[issue.type] ?? issue.type}: ${issue.ingredients.join(", ")}`;
+  return `${issueLabel(issue)}: ${issue.ingredients.join(", ")}`;
+}
+
+function fieldStatusText(issue: Issue): string {
+  const status = issue.detail?.field_status;
+  if (status === "unverifiable") return notVerifiable(issue.detail?.unverifiable_reason);
+  if (status === "not_recognised") return "not recognised";
+  return NOT_STATED;
+}
+
+function ScopeSection() {
+  return (
+    <section aria-labelledby="scope-title" className="pharma-scope" data-testid="scope">
+      <h2 id="scope-title">Scope of this check</h2>
+      <p>{SCOPE_COMPARED}</p>
+      <p>Not checked:</p>
+      <ul>
+        {SCOPE_NOT_CHECKED.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+      <p>{SCOPE_READING}</p>
+    </section>
+  );
+}
+
+function AllergyBasis({ issue }: { issue: Issue }) {
+  const d = issue.detail ?? {};
+  if (!issue.type.startsWith("allergy_")) return null;
+  return (
+    <div className="issue-basis" data-testid="allergy-basis">
+      <p>Basis: {d.basis ?? "not recorded"}</p>
+      {issue.type === "allergy_class" && (
+        <p>
+          Class: {d.class_name} (class source: {d.class_source}; formulary {d.formulary_version})
+        </p>
+      )}
+      {issue.type === "allergy_cross_reactivity" && (
+        <>
+          <p>Citation: {d.citation}</p>
+          <p>
+            Review status:{" "}
+            {d.clinical_review_status === "pending_pharmacist" ? "pending pharmacist sign-off" : d.clinical_review_status}
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
+
+function RunSummary({ run }: { run: Run }) {
+  const summary = runSummary(run);
+  return (
+    <p data-testid="unchecked-summary">
+      {summary.text}
+      {summary.complete && (
+        <>
+          {" "}
+          See <a href="#scope-title">Scope of this check</a> for what is and is not compared.
+        </>
+      )}
+    </p>
+  );
 }
 
 function IssueCard({
@@ -64,8 +131,9 @@ function IssueCard({
         {issue.rule_id}
         {issue.unverifiable ? " · units not comparable" : ""}
         {issue.possible_substitution ? " · possible same-class substitution" : ""}
-        {issue.type === "missing_field" && issue.field ? ` · ${issue.field} ${NOT_STATED} in the first source listed` : ""}
+        {issue.type === "missing_field" && issue.field ? ` · ${issue.field} ${fieldStatusText(issue)} in the first source listed` : ""}
       </p>
+      <AllergyBasis issue={issue} />
       <p className="phrasing">{issue.phrasing.text}</p>
       <p className="phrasing-label">
         {PHRASING_LABEL} (phrasing: {issue.phrasing.source}, {issue.phrasing.provider})
@@ -78,7 +146,7 @@ function IssueCard({
             <th scope="col">Evidence reference</th>
             <th scope="col">Available at</th>
             <th scope="col">Text as recorded</th>
-            <th scope="col">Dose</th>
+            <th scope="col">Dose per administration</th>
             <th scope="col">Frequency</th>
           </tr>
         </thead>
@@ -93,7 +161,7 @@ function IssueCard({
               <td>{src.available_at_time}</td>
               <td>{src.presence === "absent" ? "—" : src.raw_span}</td>
               <td>{src.source_type === "allergy_record" ? "—" : formatDose(src)}</td>
-              <td>{src.source_type === "allergy_record" || src.presence === "absent" ? "—" : orNotStated(src.frequency_code)}</td>
+              <td>{src.source_type === "allergy_record" || src.presence === "absent" ? "—" : formatFrequency(src)}</td>
             </tr>
           ))}
         </tbody>
@@ -152,7 +220,7 @@ function SourceTable({ record, index }: { record: ExtractionRecord; index: numbe
           <th scope="col">Text as recorded</th>
           <th scope="col">Name read</th>
           <th scope="col">Matched ingredient(s)</th>
-          <th scope="col">Dose</th>
+          <th scope="col">Dose per administration</th>
           <th scope="col">Route</th>
           <th scope="col">Frequency</th>
         </tr>
@@ -168,7 +236,7 @@ function SourceTable({ record, index }: { record: ExtractionRecord; index: numbe
             <td>{e.recognised ? e.ingredients.join(", ") : "not recognised"}</td>
             <td>{formatDose(e)}</td>
             <td>{orNotStated(e.route)}</td>
-            <td>{orNotStated(e.frequency_code)}</td>
+            <td>{formatFrequency(e)}</td>
           </tr>
         ))}
       </tbody>
@@ -292,6 +360,8 @@ function Reconcile() {
         {NLM_ATTRIBUTION}
       </p>
 
+      <ScopeSection />
+
       <section aria-labelledby="run-title">
         <h2 id="run-title">Run a check</h2>
         <form className="pharma-form" onSubmit={onRun}>
@@ -331,7 +401,7 @@ function Reconcile() {
               {run.rules_version}
               {run.excluded_future_items ? ` · ${run.excluded_future_items} item(s) after the decision time excluded` : ""}
             </p>
-            <p data-testid="unchecked-summary">{uncheckedSummary(run)}</p>
+            <RunSummary run={run} />
             {issues.length === 0 ? (
               <p>
                 No discrepancies were found by the rules among the fields that could be compared. This is not a
@@ -371,8 +441,8 @@ function Reconcile() {
           <section aria-labelledby="lists-title">
             <h2 id="lists-title">Medication lists as read ({run.extraction?.length ?? 0})</h2>
             <p>
-              Every source list with the fields read from each line. A field shown as “{NOT_STATED}” was not in the text
-              and was not compared.
+              Every source list with the fields read from each line. A field shown as “{NOT_STATED}”, “not recognised” or
+              “not verifiable” was not compared.
             </p>
             {(run.extraction ?? []).map((record, n) => (
               <SourceTable key={record.evidence_ref} record={record} index={n + 1} />

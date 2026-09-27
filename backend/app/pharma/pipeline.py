@@ -20,10 +20,10 @@ from .formulary import Formulary, load_formulary
 from .mock_rules import EXTRACT_TASK, MOCK_RULES_VERSION, PHRASE_TASK
 from .models import ExtractOutput, Issue, MedSnapshot, Mode, Notice
 from .phrasing import TEMPLATE_VERSION, parse_phrase_output, phrase_input, template_text, validate_text
-from .rules import NOTICE_RANK, RULES_VERSION, AllergyItem, MedItem, count_skipped_comparisons, run_rules
+from .rules import NOTICE_RANK, RULE_VERSIONS, RULES_VERSION, AllergyItem, MedItem, count_comparisons, run_rules
 
 Invoke = Callable[[GatewayRequest], GatewayResponse]
-PIPELINE_VERSION = "s5-pipeline-2.0.0"
+PIPELINE_VERSION = "s5-pipeline-2.1.0"
 
 
 def canonical_json(data: Any) -> str:
@@ -116,6 +116,10 @@ def _extract_source(
                 frequency_code=ext.frequency_code,
                 ingredients=ingredients,
                 discontinue_intent=entry.discontinue_intent,
+                quantity=ext.quantity,
+                dose_status=ext.dose_status,
+                dose_unverifiable_reason=ext.dose_unverifiable_reason,
+                frequency_status=ext.frequency_status,
             )
         )
     return record | {"status": "ok", "failure_reason": None, "entries": entries_out}, items
@@ -197,9 +201,10 @@ def reconcile(
                             "evidence_ref": a.evidence_ref, "raw_span": a.text,
                             "detail": "allergen not mapped to the formulary; not checked automatically"})
 
-    # A dose or frequency that is not stated is never read as agreement: each such entry is a
-    # missing_field issue (run_rules), and every comparison skipped because of it is counted here.
-    unchecked = count_skipped_comparisons(items)
+    # A dose or frequency without a value (not stated, not recognised, unverifiable) is never read as
+    # agreement: each such active entry is a missing_field issue (run_rules), and every comparison
+    # skipped because of it is counted here, by reason.
+    comparisons = count_comparisons(items)
 
     drafts = run_rules(items, allergy_items, form, readable_orders)
     issues = []
@@ -247,8 +252,13 @@ def reconcile(
         "rules_version": RULES_VERSION,
         "cross_reactivity_version": form.cross_version,
         "excluded_future_items": excluded,
-        "unchecked_comparisons": unchecked,
+        "comparisons_made": comparisons["comparisons_made"],
+        "unchecked_comparisons": comparisons["unchecked_comparisons"],
+        "unchecked_by_reason": comparisons["unchecked_by_reason"],
+        "extract_task": EXTRACT_TASK,
         "extract_mock_version": MOCK_RULES_VERSION,
+        "template_version": TEMPLATE_VERSION,
+        "rule_versions": dict(RULE_VERSIONS),
         "extraction": extraction,
         "issues": issues,
         "notices": notice_out,
