@@ -1,0 +1,7 @@
+[
+  {"test": "WBC", "loinc": "6690-2", "unit": "10^3/uL", "ref_low": 4.0, "ref_high": 10.0, "range": [4.5, 12.5], "decimals": 1, "late": false, "source_ref": "LOINC"},
+  {"test": "Hemoglobin", "loinc": "718-7", "unit": "g/dL", "ref_low": 12.0, "ref_high": 16.0, "range": [11.0, 15.5], "decimals": 1, "late": false, "source_ref": "LOINC"},
+  {"test": "Creatinine", "loinc": "2160-0", "unit": "mg/dL", "ref_low": 0.6, "ref_high": 1.2, "range": [0.6, 1.4], "decimals": 2, "late": false, "source_ref": "LOINC"},
+  {"test": "Glucose", "loinc": "2345-7", "unit": "mg/dL", "ref_low": 70, "ref_high": 100, "range": [75, 160], "decimals": 0, "late": false, "source_ref": "LOINC"},
+  {"test": "HbA1c", "loinc": "4548-4", "unit": "%", "ref_low": 4.0, "ref_high": 5.6, "range": [5.0, 8.5], "decimals": 1, "late": true, "source_ref": "LOINC"}
+]

@@ -6,7 +6,10 @@ PY := $(VENV)/bin/python
 PG_URL = postgresql+psycopg://frontdoor:$${POSTGRES_PASSWORD:-frontdoor_dev_only}@127.0.0.1:55432/frontdoor
 export PYTHONPATH := $(CURDIR)/backend:$(CURDIR)
 
-.PHONY: install test dev e2e test-pg clean
+.PHONY: install test dev e2e test-pg clean data audit
+
+SEED ?= 20260926
+OUT ?= data/synthetic/v1
 
 install: $(VENV)/.installed web/node_modules/.installed
 
@@ -20,7 +23,7 @@ web/node_modules/.installed: web/package-lock.json web/package.json
 	cd web && npm ci --no-audit --no-fund
 	@touch $@
 
-## Unit/contract tests: pytest (backend + casegraph, sockets blocked) + web Vitest.
+## Unit/contract tests: pytest (backend + casegraph + data_factory, sockets blocked) + web Vitest.
 test: install
 	$(PY) -m pytest -q -rs
 	cd web && npm test
@@ -44,6 +47,19 @@ test-pg: install
 	docker compose config -q && docker compose up -d --wait postgres || exit 1; \
 	TEST_PG_URL="$(PG_URL)" $(PY) -m pytest -q -rs -m pg; rc=$$?; \
 	docker compose down; exit $$rc
+
+## Synthetic case factory (slice s1): deterministic for a given SEED; output is gitignored.
+## OUT must resolve strictly inside data/ or the temp dir; replacement happens in Python after that check.
+data: $(VENV)/.installed
+	$(PY) -m data_factory generate --seed $(SEED) --out "$(OUT)" --replace
+
+## Leakage audit + schema + gold separation + identifier scan + manifest hashes + snapshot_items_after_T over OUT.
+## Both steps always run; a STEP line is printed per step; exit is non-zero if either failed.
+audit: $(VENV)/.installed
+	@rc=0; \
+	if $(PY) scripts/temporal_leakage_audit.py --dataset "$(OUT)"; then echo "STEP leakage: PASS"; else echo "STEP leakage: FAIL"; rc=1; fi; \
+	if $(PY) -m data_factory audit --dataset "$(OUT)"; then echo "STEP factory: PASS"; else echo "STEP factory: FAIL"; rc=1; fi; \
+	exit $$rc
 
 clean:
 	rm -rf $(VENV) web/node_modules web/.next backend/dev.db

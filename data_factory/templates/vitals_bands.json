@@ -1,0 +1,34 @@
+{
+  "normal": [
+    {"param": "rr", "low": 12, "high": 20, "source_ref": "PMID-23295778"},
+    {"param": "spo2", "low": 96, "high": 99, "source_ref": "PMID-23295778"},
+    {"param": "temp_c", "low": 36.1, "high": 37.9, "source_ref": "PMID-23295778"},
+    {"param": "temp_c_fever", "low": 38.1, "high": 38.9, "source_ref": "PMID-23295778"},
+    {"param": "sbp", "low": 111, "high": 160, "source_ref": "PMID-23295778"},
+    {"param": "hr", "low": 60, "high": 90, "source_ref": "PMID-23295778"},
+    {"param": "hr_fever", "low": 91, "high": 110, "source_ref": "PMID-23295778"}
+  ],
+  "red_flag_variants": [
+    {"variant_id": "QSOFA-RR-SBP", "rule_id": "RF-QSOFA", "set": {"rr": [22, 24], "sbp": [91, 100]}, "source_ref": "PMID-26903335"},
+    {"variant_id": "QSOFA-RR-MENTATION", "rule_id": "RF-QSOFA", "set": {"rr": [22, 24], "consciousness": "C"}, "source_ref": "PMID-26903335"},
+    {"variant_id": "NEWS-SPO2", "rule_id": "RF-NEWS-SINGLE3", "set": {"spo2": [86, 91]}, "source_ref": "PMID-23295778"},
+    {"variant_id": "NEWS-HR", "rule_id": "RF-NEWS-SINGLE3", "set": {"hr": [131, 142]}, "source_ref": "PMID-23295778"},
+    {"variant_id": "NEWS-RR", "rule_id": "RF-NEWS-SINGLE3", "set": {"rr": [25, 29]}, "source_ref": "PMID-23295778"},
+    {"variant_id": "NEWS-TEMP", "rule_id": "RF-NEWS-SINGLE3", "set": {"temp_c": [34.4, 35.0]}, "source_ref": "PMID-23295778"},
+    {"variant_id": "NEWS-SBP", "rule_id": "RF-NEWS-SINGLE3", "set": {"sbp": [82, 90]}, "source_ref": "PMID-23295778"},
+    {"variant_id": "NEWS-AVPU", "rule_id": "RF-NEWS-SINGLE3", "set": {"consciousness": "V"}, "source_ref": "PMID-23295778"},
+    {"variant_id": "NEWS-AGG5", "rule_id": "RF-NEWS-AGG5", "set": {"rr": [21, 24], "sbp": [101, 110], "temp_c": [38.1, 39.0], "hr": [91, 110]}, "note": "aggregate 5 (2+1+1+1), no parameter scoring 3, qSOFA <= 1", "source_ref": "RCP-NEWS-2012"}
+  ],
+  "near_miss_variants": [
+    {"variant_id": "NM-RR21", "set": {"rr": [21, 21]}, "source_ref": "PMID-26903335"},
+    {"variant_id": "NM-SBP100", "set": {"sbp": [100, 100]}, "source_ref": "PMID-26903335"},
+    {"variant_id": "NM-RR22-SBP101", "set": {"rr": [22, 22], "sbp": [101, 101]}, "source_ref": "PMID-26903335"},
+    {"variant_id": "NM-RR24", "set": {"rr": [24, 24]}, "source_ref": "PMID-23295778"},
+    {"variant_id": "NM-SPO2-92", "set": {"spo2": [92, 92]}, "source_ref": "PMID-23295778"},
+    {"variant_id": "NM-HR130", "set": {"hr": [130, 130]}, "source_ref": "PMID-23295778"},
+    {"variant_id": "NM-TEMP35.1-SPO2-93", "set": {"temp_c": [35.1, 35.1], "spo2": [93, 93]}, "source_ref": "PMID-23295778"},
+    {"variant_id": "NM-SBP91", "set": {"sbp": [91, 91]}, "source_ref": "PMID-23295778"},
+    {"variant_id": "NM-NEWS-AGG4", "set": {"rr": [21, 21], "sbp": [101, 110], "hr": [91, 110], "temp_c": [36.1, 37.9]}, "note": "aggregate exactly 4 (2+1+1), no parameter scoring 3, qSOFA 0", "source_ref": "RCP-NEWS-2012"}
+  ],
+  "anaphylaxis_host": {"set": {"hr": [100, 115], "spo2": [94, 95], "sbp": [105, 120]}, "source_ref": "PMID-16461139"}
+}

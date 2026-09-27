@@ -1,11 +1,11 @@
 [project]
 name = "clinical-front-door"
 version = "0.1.0"
-description = "Research prototype — not for clinical use. Slice s0 skeleton (backend + casegraph)."
+description = "Research prototype — not for clinical use. Slices s0-s1 (backend, casegraph, synthetic data_factory)."
 requires-python = ">=3.11"
 
 [tool.pytest.ini_options]
-testpaths = ["backend/tests", "casegraph/tests"]
+testpaths = ["backend/tests", "casegraph/tests", "data_factory/tests"]
 pythonpath = [".", "backend"]
 addopts = "--disable-socket --allow-unix-socket -p no:cacheprovider"
 markers = [

@@ -1,0 +1,4 @@
+[
+  {"atc_prefix": "C09", "class": "agents acting on the renin-angiotensin system (incl. ACE inhibitors)", "action": "exclude_from_pregnancy_cases", "source_ref": "DAILYMED-ENALAPRIL"},
+  {"atc_prefix": "C10AA", "class": "HMG-CoA reductase inhibitors (statins)", "action": "exclude_from_pregnancy_cases", "source_ref": "FDA-DSC-STATIN-2021"}
+]

@@ -1,0 +1,45 @@
+[
+  {"rule_id": "RF-QSOFA", "source_ref": "PMID-26903335", "description": "qSOFA >= 2: RR >= 22/min, SBP <= 100 mm Hg, altered mentation (ACVPU other than A).",
+   "criterion": {"kind": "vitals", "min_count": 2, "conditions": [
+     {"param": "rr", "op": ">=", "value": 22},
+     {"param": "sbp", "op": "<=", "value": 100},
+     {"param": "consciousness", "op": "in", "value": ["C", "V", "P", "U"]}]}},
+  {"rule_id": "RF-NEWS-SINGLE3", "source_ref": "PMID-23295778", "description": "Any single NEWS parameter scoring 3: RR <=8 or >=25; SpO2 <=91; temp <=35.0; SBP <=90 or >=220; HR <=40 or >=131; consciousness V, P or U.",
+   "criterion": {"kind": "vitals", "min_count": 1, "conditions": [
+     {"param": "rr", "op": "<=", "value": 8},
+     {"param": "rr", "op": ">=", "value": 25},
+     {"param": "spo2", "op": "<=", "value": 91},
+     {"param": "temp_c", "op": "<=", "value": 35.0},
+     {"param": "sbp", "op": "<=", "value": 90},
+     {"param": "sbp", "op": ">=", "value": 220},
+     {"param": "hr", "op": "<=", "value": 40},
+     {"param": "hr", "op": ">=", "value": 131},
+     {"param": "consciousness", "op": "in", "value": ["V", "P", "U"]}]}},
+  {"rule_id": "RF-NEWS-AGG5", "source_ref": "PMID-23295778", "chart_ref": "RCP-NEWS-2012", "description": "Aggregate NEWS (RCP 2012, Chart 1) >= 5 on a single Vitals item ('a medium score ... should prompt an urgent review'). Bands are [upper bound inclusive, score]; null upper = no bound. A null parameter scores 0, so the sum is a lower bound. New confusion (C) scores 0 under NEWS 2012 (NEWS2 is a D1 question).",
+   "criterion": {"kind": "news_aggregate", "min_score": 5, "bands": {
+     "rr": [[8, 3], [11, 1], [20, 0], [24, 2], [null, 3]],
+     "spo2": [[91, 3], [93, 2], [95, 1], [null, 0]],
+     "temp_c": [[35.0, 3], [36.0, 1], [38.0, 0], [39.0, 1], [null, 2]],
+     "sbp": [[90, 3], [100, 2], [110, 1], [219, 0], [null, 3]],
+     "hr": [[40, 3], [50, 1], [90, 0], [110, 1], [130, 2], [null, 3]],
+     "on_oxygen": {"true": 2, "false": 0},
+     "consciousness": {"A": 0, "C": 0, "V": 3, "P": 3, "U": 3}}}},
+  {"rule_id": "RF-FAST", "source_ref": "PMID-12511753", "description": "Sudden face, arm or speech deficit (Face Arm Speech Test): a deficit term and a sudden-onset term in the same patient turn. Arm sensory terms (มือชา) are included for D1 review.",
+   "criterion": {"kind": "transcript", "speaker": "patient", "all_of": [
+     ["หน้าเบี้ยว", "ปากเบี้ยว", "พูดไม่ชัด", "พูดลำบาก", "แขนขาอ่อนแรงซีกเดียว", "แขนอ่อนแรงข้างเดียว", "มือชา"],
+     ["ทันที", "จู่ ๆ", "เฉียบพลัน", "ไม่กี่วินาที"]]}},
+  {"rule_id": "RF-ACUTE-CHEST-PAIN", "source_ref": "PMID-34709879", "description": "Acute (sudden-onset) chest pain: a chest-pain term and a sudden-onset term in the same patient turn.",
+   "criterion": {"kind": "transcript", "speaker": "patient", "all_of": [
+     ["เจ็บแน่นหน้าอก", "เจ็บหน้าอก", "แน่นหน้าอก"],
+     ["ทันที", "จู่ ๆ", "เฉียบพลัน", "ไม่กี่วินาที"]]}},
+  {"rule_id": "RF-THUNDERCLAP", "source_ref": "PMID-24065011", "description": "Headache peaking instantly (thunderclap): a severe-headache term and a sudden-onset term in the same patient turn.",
+   "criterion": {"kind": "transcript", "speaker": "patient", "all_of": [
+     ["ปวดศีรษะรุนแรง", "ปวดหัวรุนแรง", "ปวดศีรษะมากที่สุด"],
+     ["ทันที", "จู่ ๆ", "เฉียบพลัน", "ไม่กี่วินาที"]]}},
+  {"rule_id": "RF-ANAPHYLAXIS", "source_ref": "PMID-16461139", "description": "Skin/mucosal involvement plus respiratory compromise or reduced BP (adult SBP < 90 mm Hg).",
+   "criterion": {"kind": "all", "of": [
+     {"kind": "transcript", "speaker": "patient", "all_of": [["ผื่นลมพิษ", "ลมพิษ", "ปากบวม", "ริมฝีปากบวม"]]},
+     {"kind": "any", "of": [
+       {"kind": "transcript", "speaker": "patient", "all_of": [["หายใจลำบาก", "หายใจมีเสียงหวีด", "หายใจไม่ออก"]]},
+       {"kind": "vitals", "min_count": 1, "conditions": [{"param": "sbp", "op": "<", "value": 90}]}]}]}}
+]
