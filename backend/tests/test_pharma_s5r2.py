@@ -122,6 +122,46 @@ def test_rule_dose_quantity_mismatch(case):
     assert result["status"] == "complete" and result["unchecked_comparisons"] == 0
 
 
+# Checker findings on v1.2: a mixed number lost its whole part (F1) and a quantity written straight after a Thai
+# word was not read (F2). Each hid a >= 2-fold dose difference behind a "complete" run.
+QUANTITY_FORMS_REGRESSION = {
+    "Warfarin 3 mg 1 1/2 tab od": 1.5,
+    "Warfarin 3 mg 1½ tab od": 1.5,
+    "Warfarin 3 mg 2 1/2 เม็ด od": 2.5,
+    "เมทฟอร์มิน 500 มก. ครั้งละ2เม็ด วันละ2ครั้ง": 2.0,
+    "วาร์ฟาริน 3 มก. วันละครึ่งเม็ด": 0.5,
+    "เมทฟอร์มิน500มก. 2x2": 2.0,
+}
+
+
+@pytest.mark.parametrize("text", list(QUANTITY_FORMS_REGRESSION))
+def test_extract_quantity_mixed_number_and_thai_attached(text):
+    e = parse_entry(text)
+    assert e["quantity"] == QUANTITY_FORMS_REGRESSION[text] and e["dose_status"] == "resolved"
+
+
+def test_extract_stray_number_before_quantity_is_unverifiable():
+    # "1 0.5 tab" is not a known form: never drop the leading number and read 0.5.
+    e = parse_entry("Warfarin 3 mg 1 0.5 tab od")
+    assert (e["dose_status"], e["dose_unverifiable_reason"], e["quantity"]) == ("unverifiable", "ambiguous_quantity", None)
+
+
+REGRESSION_MISMATCH = {
+    "mixed_number": ("Warfarin 3 mg 1 1/2 tab od", "Warfarin 1.5 mg od", {4.5, 1.5}),
+    "thai_attached": ("เมทฟอร์มิน 500 มก. ครั้งละ2เม็ด วันละ2ครั้ง", "Metformin 500 mg 1 tab bid", {1000.0, 500.0}),
+    "thai_attached_half": ("วาร์ฟาริน 3 มก. วันละครึ่งเม็ด", "Warfarin 3 mg 1 tab od", {1.5, 3.0}),
+}
+
+
+@pytest.mark.parametrize("case", list(REGRESSION_MISMATCH))
+def test_rule_dose_quantity_mismatch_regression(case):
+    home, order, per_admin = REGRESSION_MISMATCH[case]
+    result = run(snapshot(home=[home], orders=[order]))
+    [issue] = of_type(result, "dose_mismatch")
+    assert not issue["unverifiable"]
+    assert {s["dose_per_administration"] for s in issue["conflicting_sources"]} == per_admin
+
+
 def test_rule_dose_quantity_equivalent():
     result = run(snapshot(home=["Metformin 500 mg 2 tabs bid"], orders=["Metformin 1000 mg bid"]))
     assert of_type(result, "dose_mismatch") == [] and of_type(result, "missing_field") == []

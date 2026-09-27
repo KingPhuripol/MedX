@@ -26,12 +26,15 @@ _UNITS = {
     "ml": "ml", "มล": "ml", "มล.": "ml",
 }
 _UNIT_ALT = "|".join(sorted((re.escape(u) for u in _UNITS), key=len, reverse=True))
-# Latin units must end at a word boundary; Thai units are matched as written.
-DOSE_RE = re.compile(rf"(?<![\w/]){_NUM}\s*({_UNIT_ALT})(?![A-Za-z])", re.IGNORECASE)
-# Units per administration: "2 tabs", "1/2 tab", "½ เม็ด", "1.5 tablets", "ครึ่งเม็ด". A fraction is parsed exactly.
-_QTY_NUM = r"(\d+\s*/\s*\d+|\d+(?:\.\d+)?|½|ครึ่ง)"
+# Latin units must end at a word boundary; Thai units are matched as written. The lookbehinds are ASCII-only on
+# purpose: Thai is written without spaces, so a number straight after a Thai word ("ครั้งละ2เม็ด") must still be read.
+DOSE_RE = re.compile(rf"(?<![A-Za-z0-9_/]){_NUM}\s*({_UNIT_ALT})(?![A-Za-z])", re.IGNORECASE)
+# Units per administration: "2 tabs", "1/2 tab", "1 1/2 tab", "½ เม็ด", "1.5 tablets", "ครึ่งเม็ด". A fraction is
+# parsed exactly.
+# A mixed number ("1 1/2", "1½") is tried first so its whole part is never dropped.
+_QTY_NUM = r"(\d+\s+\d+\s*/\s*\d+|\d+\s*½|\d+\s*/\s*\d+|\d+(?:\.\d+)?|½|ครึ่ง)"
 QTY_RE = re.compile(
-    rf"(?<![\w./]){_QTY_NUM}\s*(?:tabs?|tablets?|caps?|capsules?|เม็ด|แคปซูล)(?![A-Za-z])", re.IGNORECASE
+    rf"(?<![A-Za-z0-9_./]){_QTY_NUM}\s*(?:tabs?|tablets?|caps?|capsules?|เม็ด|แคปซูล)(?![A-Za-z])", re.IGNORECASE
 )
 # Variable regimen: an exception, alternation, or a weekday-specific dose.
 _WEEKDAYS = r"mon|tue|tues|wed|wednes|thu|thur|thurs|fri|sat|satur|sun"
@@ -85,7 +88,7 @@ FREQ_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"เช้า\s*[-,/]?\s*เย็น"), "q12h"),
 )
 # "NxM": N units per administration, M times a day.
-TIMES_RE = re.compile(r"(?<![\w./])(\d+(?:\.\d+)?)\s*[x×]\s*([1-4])(?!\d)", re.IGNORECASE)
+TIMES_RE = re.compile(r"(?<![A-Za-z0-9_./])(\d+(?:\.\d+)?)\s*[x×]\s*([1-4])(?!\d)", re.IGNORECASE)
 _TIMES_CODE = {"1": "q24h", "2": "q12h", "3": "q8h", "4": "q6h"}
 # "every N hours" / "q N h" / "ทุก N ชั่วโมง". Only intervals with a schema code are mapped; any other
 # interval (e.g. q4h) gives no code, so the field stays null unless another phrase (e.g. prn) is present.
@@ -103,10 +106,17 @@ def _first_start(text: str, patterns: list[re.Pattern[str]]) -> int:
 
 
 def _qty_value(token: str) -> float:
-    token = token.replace(" ", "")
+    token = " ".join(token.replace("/", " / ").replace("½", " ½").split())
     if token in ("½", "ครึ่ง"):
         return 0.5
-    return float(Fraction(token))  # exact for "1/2", "3/4", "1.5"
+    parts = token.split(" ")
+    if len(parts) == 4 or (len(parts) == 2 and parts[1] == "½"):  # mixed number: "1 1/2" or "1½"
+        return float(Fraction(parts[0]) + (Fraction(0.5) if parts[1] == "½" else Fraction(f"{parts[1]}/{parts[3]}")))
+    return float(Fraction("".join(parts)))  # exact for "1/2", "3/4", "1.5"
+
+
+# A bare number straight before a quantity ("1 0.5 tab") is a split or garbled figure: never drop it silently.
+_STRAY_NUM_BEFORE_RE = re.compile(r"\d\s*$")
 
 
 def _frequency(raw: str) -> str | None:
@@ -126,7 +136,9 @@ def parse_entry(text: str) -> dict[str, Any]:
     """Parse one free-text medication line (EN/TH) into the ``pharma.extract.v2`` schema."""
     raw = " ".join(text.split())
     doses = [(float(m.group(1)), _UNITS[m.group(2).lower()]) for m in DOSE_RE.finditer(raw)]
-    quantities = [_qty_value(m.group(1)) for m in QTY_RE.finditer(raw)]
+    qty_matches = list(QTY_RE.finditer(raw))
+    quantities = [_qty_value(m.group(1)) for m in qty_matches]
+    stray_number = any(_STRAY_NUM_BEFORE_RE.search(raw[: m.start()]) for m in qty_matches)
     quantities += [float(m.group(1)) for m in TIMES_RE.finditer(raw)]
 
     # Order matters: the first reason that applies is reported. When unsure, never guess a value.
@@ -137,7 +149,7 @@ def parse_entry(text: str) -> dict[str, Any]:
         reason = "liquid_volume"
     elif len(set(doses)) > 1:
         reason = "multiple_strengths"
-    elif len(set(quantities)) > 1:
+    elif len(set(quantities)) > 1 or stray_number:
         reason = "ambiguous_quantity"
 
     if reason is not None:
