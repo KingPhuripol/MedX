@@ -7,7 +7,8 @@ import pytest
 
 from casegraph.compiler import build_snapshot, compile_graph
 from casegraph.executor import Executor
-from casegraph.library import ProviderConfig
+from casegraph.library import ProviderAssignment, ProviderConfig
+from casegraph.types import NodeType
 from casegraph.providers import LocalGateway, mock_gateways
 from casegraph.store import OutputStore, SQLiteStateStore
 
@@ -38,8 +39,22 @@ def env(tmp_path) -> Env:
     return Env(tmp_path)
 
 
+def s2_config(base: ProviderConfig | None = None) -> ProviderConfig:
+    """The s2/s2r test configuration: placeholder Red-flag rules and a project_model Reader:Text.
+
+    Slice i2 moved the *default* config to rf-1.1.0 and the voice_extract reader; the s2/s2r executor,
+    screening and replay tests pin the configuration they were written for (placeholder rules stay
+    reachable by explicit assignment only). The i2 tests use the default config.
+    """
+    cfg = base or ProviderConfig()
+    cfg = cfg.with_assignment(NodeType.RED_FLAG, ProviderAssignment(provider="rules",
+                                                                  model_version="placeholder-redflag-0.2"))
+    return cfg.with_assignment(NodeType.READER_TEXT, ProviderAssignment(provider="project_model",
+                                                                      model_version="proj-mock-0.1"))
+
+
 def compile_case(name: str, T, config: ProviderConfig | None = None, **kw):
-    return compile_graph(build_snapshot(FIXTURES[name](), T), config, **kw)
+    return compile_graph(build_snapshot(FIXTURES[name](), T), config or s2_config(), **kw)
 
 
 class FakeProvider:

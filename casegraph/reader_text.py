@@ -28,7 +28,6 @@ from .data import IntakeTranscript, IntakeValue, SymptomFact, Turn, TurnRef, Voi
 
 SYMPTOM_TASK = symptom_extractor.TASK
 Invoke = Callable[[str, dict[str, Any]], tuple[dict[str, Any], str]]
-_SYMPTOM_RANK = {"absent": 0, "unknown": 1, "present": 2}  # worst wins across transcripts
 
 
 class ReaderError(Exception):
@@ -123,17 +122,6 @@ def _symptom_facts(item: IntakeTranscript, output: Any, patient: dict[int, Turn]
     return out
 
 
-def merge_symptoms(groups: Sequence[list[SymptomFact]]) -> list[SymptomFact]:
-    """One fact per name across transcripts: present > unknown > absent (worst wins)."""
-    best: dict[str, SymptomFact] = {}
-    for facts in groups:
-        for f in facts:
-            cur = best.get(f.name)
-            if cur is None or _SYMPTOM_RANK[f.state] > _SYMPTOM_RANK[cur.state]:
-                best[f.name] = f
-    return [best[n] for n in sorted(best)]
-
-
 # ------------------------------------------------------------------------------- pass-through
 
 
@@ -141,20 +129,22 @@ _S4_SYMPTOM_VALUE = {"present": "present", "absent": "absent", "unknown": "unkno
 
 
 def pass_through(items: Sequence[VoiceIntakeFacts]) -> tuple[list[IntakeValue], list[SymptomFact]]:
-    """VoiceIntakeFacts -> Findings parts with 0 calls. ``symptom.*`` facts (S4 fixtures) become SymptomFacts."""
-    intake: dict[str, IntakeValue] = {}
-    facts: list[list[SymptomFact]] = []
+    """VoiceIntakeFacts -> Findings parts with 0 calls. ``symptom.*`` facts (S4 fixtures) become SymptomFacts.
+
+    Every fact is kept with its own ``available_at_time``: the S4 snapshot applies latest-wins across times
+    and worst-value/flag rules within one time, exactly as for the source facts (no merging here).
+    """
+    intake: list[IntakeValue] = []
+    facts: list[SymptomFact] = []
     for item in sorted(items, key=lambda i: (i.available_at_time, i.item_id)):
-        group = []
         for f in item.facts:
             if f.field.startswith("symptom."):
                 state = _S4_SYMPTOM_VALUE.get(f.value) if f.state == "KNOWN" else "unknown"
                 if state is None:
                     raise ReaderError(f"{item.item_id}: invalid symptom value for {f.field}")
-                group.append(SymptomFact(name=f.field.removeprefix("symptom."), state=state,  # type: ignore[arg-type]
+                facts.append(SymptomFact(name=f.field.removeprefix("symptom."), state=state,  # type: ignore[arg-type]
                                          source_item=item.item_id, available_at_time=f.available_at_time))
-            else:  # latest wins per field
-                intake[f.field] = IntakeValue(kind=f.field, state=f.state, value=f.value, value_text=f.value_text,
-                                              source_item=item.item_id, available_at_time=f.available_at_time)
-        facts.append(group)
-    return [intake[k] for k in sorted(intake)], merge_symptoms(facts)
+            else:
+                intake.append(IntakeValue(kind=f.field, state=f.state, value=f.value, value_text=f.value_text,
+                                          source_item=item.item_id, available_at_time=f.available_at_time))
+    return intake, facts

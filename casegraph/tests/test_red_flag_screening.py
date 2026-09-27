@@ -26,7 +26,7 @@ from casegraph.providers import (
 from casegraph.store import MemoryStateStore, OutputStore
 from casegraph.types import NodeType as N
 
-from .conftest import FakeProvider, compile_case
+from .conftest import FakeProvider, compile_case, s2_config
 from .fixtures import DAY, F3_T, F5_T, H, cxr, text, vitals
 
 ALL_RULES = ["RF-PH-001", "RF-PH-002", "RF-PH-003", "RF-PH-004"]
@@ -256,7 +256,7 @@ def test_red_flag_rule_set_version_and_label(env):
     assert all(r["label"] == "PLACEHOLDER — not clinical" for r in alerts["rule_results"])
     assert all("PLACEHOLDER — not clinical" in a["message"] for a in alerts["alerts"])
     # same inputs, rule set 0.1 -> a different cache key (0.1 outputs are never served for 0.2)
-    old = ProviderConfig().with_assignment(
+    old = s2_config().with_assignment(
         N.RED_FLAG, ProviderAssignment(provider="rules", model_version="placeholder-redflag-0.1"))
     graph_old = _run(compile_case("F5", F5_T).snapshot.items, T=F5_T, config=old)
     graph_new = _run(compile_case("F5", F5_T).snapshot.items, T=F5_T)

@@ -15,7 +15,7 @@ from casegraph.providers import LocalGateway
 from casegraph.store import SQLiteStateStore
 from casegraph.types import NodeType as N
 
-from .conftest import Env, FakeProvider, compile_case
+from .conftest import Env, FakeProvider, compile_case, s2_config
 from .fixtures import CASES, DAY, F1_T1, F2_T, F3_T, F5_T, H, cxr, f1
 
 CONFIRM_AT = datetime(2026, 1, 2, 9, 0, tzinfo=timezone.utc)
@@ -38,7 +38,7 @@ def test_independent_readers_run_concurrently(env):
     barrier = threading.Barrier(3, timeout=5)
     for pid in ("project_model", "encoder_3d"):
         _with_fake(env, pid, barrier=barrier)
-    cfg = ProviderConfig().with_assignment(
+    cfg = s2_config().with_assignment(
         N.READER_VITALS_LABS, ProviderAssignment(provider="project_model", model_version="fake-0.1"))
     graph = env.executor().run_sync(compile_case("F2", F2_T, cfg))
     readers = [graph.node(i) for i in ("reader_text", "reader_vitals_labs", "reader_ct_mri")]
@@ -125,7 +125,7 @@ def test_resume_wrong_role_rejected(env):
     assert ex.export("SYN-F1/v1").node("human_checkpoint").status == "pending_confirmation"
     assert ex.state.evidence("SYN-F1") == []
     # a checkpoint configured for a nurse accepts a nurse
-    cfg = ProviderConfig().with_assignment(N.HUMAN_CHECKPOINT,
+    cfg = s2_config().with_assignment(N.HUMAN_CHECKPOINT,
                                            ProviderAssignment(provider="human:nurse", model_version="human"))
     ex.run_sync(compile_case("F3", F3_T, cfg))
     assert ex.resume("SYN-F3/v1", "confirm", "n-01", "nurse").reviewer_role == "nurse"
@@ -269,7 +269,7 @@ def test_pharma_missing_dose_not_evaluated(env):
 
 
 def test_pharma_model_path_not_evaluated(env):
-    cfg = ProviderConfig().with_assignment(
+    cfg = s2_config().with_assignment(
         N.PHARMA_AGENT, ProviderAssignment(provider="project_model", model_version="proj-mock-0.1"))
     graph = env.executor().run_sync(compile_case("F1", F1_T1.replace(hour=10), cfg))
     pa = graph.node("pharma_agent")

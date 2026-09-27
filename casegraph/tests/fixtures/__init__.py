@@ -6,6 +6,9 @@ from datetime import datetime, timedelta, timezone
 
 from casegraph.data import (
     ClinicalText,
+    Demographics,
+    VoiceFact,
+    VoiceIntakeFacts,
     CTVolume,
     CXRImage,
     LabResult,
@@ -37,8 +40,25 @@ def text(pid, iid, event, avail, body="Synthetic note: cough for 3 days.", **kw)
 
 
 def vitals(pid, iid, event, avail, **values):
-    values = values or {"hr": 88.0, "sbp": 124.0, "spo2": 97.0, "rr": 16.0, "temp_c": 37.2}
+    # i2: consciousness "A" added so the S4 department's required vitals are complete
+    values = values or {"hr": 88.0, "sbp": 124.0, "spo2": 97.0, "rr": 16.0, "temp_c": 37.2, "consciousness": "A"}
     return Vitals(**_common(pid, iid, event, avail), **values)
+
+
+def s4_intake(pid, prefix, t):
+    """i2: Demographics + extracted intake facts (chief complaint, onset) available at ``t``.
+
+    Added to F1, F2 and F5 so the S4 department (Reasoning) has its REQUIRED_FIELDS and the s2/s2r
+    executor tests keep a Reasoning node that runs. Facts pass through Reader:Text with 0 calls.
+    """
+    facts = tuple(
+        VoiceFact(field=k, state="KNOWN", value=v, value_text=v, event_time=t, available_at_time=t)
+        for k, v in (("chief_complaint", "synthetic: cough and fever"), ("onset_duration", "3 days"))
+    )
+    return [
+        Demographics(**_common(pid, f"{prefix}-demo", t, t), age_years=45, sex="female"),
+        VoiceIntakeFacts(**_common(pid, f"{prefix}-intake", t, t), facts=facts),
+    ]
 
 
 def labs(pid, iid, event, avail):
@@ -80,6 +100,7 @@ def f1():
         vitals(p, "f1-vitals", DAY + 8 * H + 10 * M, DAY + 8 * H + 10 * M),
         cxr(p, "f1-cxr", DAY + 9 * H, DAY + 9 * H + 15 * M),
         medlist(p, "f1-meds", DAY + 9 * H + 30 * M, DAY + 9 * H + 30 * M),
+        *s4_intake(p, "f1", DAY + 8 * H + 5 * M),
     ]
 
 
@@ -94,6 +115,7 @@ def f2():
         labs(p, "f2-labs", DAY + 8 * H, DAY + 9 * H),
         ct(p, "f2-ct", DAY + 9 * H, DAY + 10 * H),
         mri(p, "f2-mri", DAY + 10 * H, DAY + 11 * H),
+        *s4_intake(p, "f2", DAY + 8 * H),
     ]
 
 
@@ -130,7 +152,9 @@ def f5():
     p = "SYN-F5"
     return [
         text(p, "f5-text", DAY + 9 * H, DAY + 9 * H),
-        vitals(p, "f5-vitals", DAY + 9 * H, DAY + 9 * H + M, hr=118.0, sbp=84.0, spo2=86.0, temp_c=37.0),
+        vitals(p, "f5-vitals", DAY + 9 * H, DAY + 9 * H + M, hr=118.0, sbp=84.0, spo2=86.0, temp_c=37.0,
+               rr=16.0, consciousness="A"),  # i2: rr + consciousness for the S4 department's required fields
+        *s4_intake(p, "f5", DAY + 9 * H),
     ]
 
 

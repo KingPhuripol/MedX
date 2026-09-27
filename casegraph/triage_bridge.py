@@ -157,30 +157,33 @@ def _demographic_facts(item: Demographics) -> list[_Pending]:
     return out
 
 
-def _findings_facts(ref: str, findings: dict[str, Any], version: str) -> tuple[list[_Pending], list[str]]:
-    """S4 facts from one Reader:Text Findings output dict (``ref`` = ``node_id:output_sha256``)."""
+def _findings_facts(n: int, ref: str, findings: dict[str, Any], version: str) -> list[_Pending]:
+    """S4 facts from the ``n``-th Reader Findings output dict (``ref`` = ``node_id:output_sha256``).
+
+    Each fact keeps its own ``available_at_time`` (fact ids are positional, so repeated kinds never collide);
+    the S4 snapshot then applies latest-wins and the same-timestamp rules.
+    """
     out: list[_Pending] = []
-    unmappable: list[str] = []
     meta = {"source": "casegraph.reader_text", "provenance": ref[:256], "version": version[:32]}
-    for f in findings.get("facts", ()):
+    for j, f in enumerate(findings.get("facts", ())):
         if f["state"] == "unknown":
             continue  # unknown is no fact: S4 reads it as unknown, never as absent
-        out.append(_Pending({"fact_id": _fid(f"rt.symptom.{f['name']}"), "kind": f"symptom.{f['name']}",
+        out.append(_Pending({"fact_id": _fid(f"rt{n}.{j}.symptom.{f['name']}"), "kind": f"symptom.{f['name']}",
                              "value": f["state"], "available_at_time": f["available_at_time"], **meta}, ref))
-    for v in findings.get("intake", ()):
+    for j, v in enumerate(findings.get("intake", ())):
         kind = v["kind"]
         if v["state"] != "KNOWN" or kind not in PASS_THROUGH_KINDS:
             continue
         value = v["value"]
-        if kind == "chief_complaint":
-            value = v.get("span_text") or v["value_text"]
+        if kind == "chief_complaint":  # the patient's words (cited turns) are what S4 ranks on
+            value = (v.get("span_text") or v["value_text"])[:500]
             symptom = CC_TO_S4_SYMPTOM.get(v["value"]) if isinstance(v["value"], str) else None
             if symptom is not None:
-                out.append(_Pending({"fact_id": _fid(f"rt.cc_symptom.{symptom}"), "kind": f"symptom.{symptom}",
+                out.append(_Pending({"fact_id": _fid(f"rt{n}.{j}.cc_symptom.{symptom}"), "kind": f"symptom.{symptom}",
                                      "value": "present", "available_at_time": v["available_at_time"], **meta}, ref))
-        out.append(_Pending({"fact_id": _fid(f"rt.{kind}"), "kind": kind, "value": value,
+        out.append(_Pending({"fact_id": _fid(f"rt{n}.{j}.{kind}"), "kind": kind, "value": value,
                              "available_at_time": v["available_at_time"], **meta}, ref))
-    return out, unmappable
+    return out
 
 
 def build_case(
@@ -210,10 +213,9 @@ def build_case(
             unmappable += un
         elif isinstance(item, Demographics):
             pending += _demographic_facts(item)
-    for ref, f, version in findings:
-        facts, un = _findings_facts(ref, f, version)
-        pending += facts
-        unmappable += un
+        # any other evidence type has no S4 fact kind and is not read here
+    for n, (ref, f, version) in enumerate(findings):
+        pending += _findings_facts(n, ref, f, version)
     readings: list[VitalReadingInfo] = []
     stale: dict[str, str] = {}
     if freshness is not None:

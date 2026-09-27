@@ -12,12 +12,16 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .data import CLINICAL_TEXT_TYPES, PLACEHOLDER_RULE_SET, RF_110
 from .types import NodeType
 
 HUMAN_PROVIDERS = ("human:nurse", "human:physician", "human:pharmacist")
 MODEL_PROVIDERS = frozenset(
     {"project_model", "external_model", "encoder_2d", "encoder_3d", "classifier", "segmentation"}
 )
+# Slice i2: Reader:Text provider = S3 voice extraction (+ the i2 symptom extractor) behind the Model Gateway.
+VOICE_EXTRACT = "voice_extract"
+VOICE_EXTRACT_VERSION = "voice-extract-1.0"
 IMAGE_ENCODERS = frozenset({"encoder_2d", "encoder_3d"})
 
 
@@ -60,8 +64,8 @@ def node_decls(library_config: LibraryConfig | None = None) -> dict[NodeType, No
     cfg = library_config or LibraryConfig()
     return {
         NodeType.READER_TEXT: NodeDecl(
-            NodeType.READER_TEXT, ("ClinicalText",), ("Findings",), ("ClinicalText",),
-            ("project_model", "external_model"), evidence_types=("ClinicalText",),
+            NodeType.READER_TEXT, CLINICAL_TEXT_TYPES, ("Findings",), ("ClinicalText",),
+            (VOICE_EXTRACT, "project_model", "external_model"), evidence_types=CLINICAL_TEXT_TYPES,
         ),
         NodeType.READER_VITALS_LABS: NodeDecl(
             NodeType.READER_VITALS_LABS, ("Vitals", "LabSeries"), ("Findings",), ("Vitals|LabSeries",),
@@ -76,16 +80,18 @@ def node_decls(library_config: LibraryConfig | None = None) -> dict[NodeType, No
             ("encoder_3d", "external_model", "segmentation"), evidence_types=("CTVolume", "MRIVolume"),
         ),
         NodeType.RED_FLAG: NodeDecl(
-            NodeType.RED_FLAG, ("Findings", "Vitals"), ("Alerts",), (), ("rules",), mandatory=True,
-            evidence_types=("Vitals",),
+            NodeType.RED_FLAG, ("Findings", "Vitals", "Demographics"), ("Alerts",), (), ("rules",), mandatory=True,
+            evidence_types=("Vitals", "Demographics"),
         ),
         NodeType.PHARMA_AGENT: NodeDecl(
             NodeType.PHARMA_AGENT, ("MedicationList", "Findings"), ("MedicationIssues",), ("MedicationList",),
             ("project_model", "rules"), evidence_types=("MedicationList",),
         ),
+        # i2: Reasoning reads Demographics/Vitals directly to build the S4 Case for department.suggest.
         NodeType.REASONING: NodeDecl(
-            NodeType.REASONING, ("Findings", "ImageTokens", "Alerts"), REASONING_OUTPUTS,
+            NodeType.REASONING, ("Findings", "ImageTokens", "Alerts", "Demographics", "Vitals"), REASONING_OUTPUTS,
             cfg.reasoning_required_inputs, ("project_model", "external_model"),
+            evidence_types=("Demographics", "Vitals"),
         ),
         NodeType.HUMAN_CHECKPOINT: NodeDecl(
             NodeType.HUMAN_CHECKPOINT, ("Alerts", "MedicationIssues", *REASONING_OUTPUTS), ("ConfirmedResult",),
@@ -114,9 +120,10 @@ class ProviderAssignment(BaseModel):
     params: dict[str, Any] = Field(default_factory=dict)
 
 
+PLACEHOLDER_RED_FLAG_VERSION = PLACEHOLDER_RULE_SET  # reachable only by an explicit assignment
 RULES_VERSIONS = {
     NodeType.READER_VITALS_LABS: "placeholder-vitals-reader-0.1",
-    NodeType.RED_FLAG: "placeholder-redflag-0.2",  # s2r: per-rule required inputs
+    NodeType.RED_FLAG: RF_110,  # i2: the S4 engine; placeholder-redflag-0.2 only by explicit config
     NodeType.PHARMA_AGENT: "placeholder-pharma-0.2",  # s2r: check_results + status
 }
 
@@ -124,7 +131,7 @@ RULES_VERSIONS = {
 def _default_assignments() -> dict[NodeType, ProviderAssignment]:
     a = ProviderAssignment
     return {
-        NodeType.READER_TEXT: a(provider="project_model", model_version="proj-mock-0.1"),
+        NodeType.READER_TEXT: a(provider=VOICE_EXTRACT, model_version=VOICE_EXTRACT_VERSION),
         NodeType.READER_VITALS_LABS: a(provider="rules", model_version=RULES_VERSIONS[NodeType.READER_VITALS_LABS]),
         NodeType.READER_CXR: a(provider="encoder_2d", model_version="enc2d-mock-0.1"),
         NodeType.READER_CT_MRI: a(provider="encoder_3d", model_version="enc3d-mock-0.1"),

@@ -18,7 +18,7 @@ from casegraph.library import ProviderAssignment, ProviderConfig
 from casegraph.store import OutputStore, replay
 from casegraph.types import NodeType as N
 
-from .conftest import compile_case
+from .conftest import compile_case, s2_config
 from .fixtures import CASES, DAY, F1_T1, F2_T, F3_T, F5_T, H, text, vitals
 
 REPO = Path(__file__).resolve().parents[2]
@@ -50,7 +50,7 @@ def test_roundtrip_after_confirmation(env):
 
 
 def test_export_fields(env):
-    cfg = ProviderConfig().with_assignment(N.READER_TEXT,
+    cfg = s2_config().with_assignment(N.READER_TEXT,
                                            ProviderAssignment(provider="external_model", model_version="ext-mock-0.1"))
     graph = env.executor().run_sync(compile_case("F2", F2_T, cfg))
     data = graph.model_dump(mode="json")

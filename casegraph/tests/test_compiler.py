@@ -20,7 +20,7 @@ from casegraph.providers import mock_gateways
 from casegraph.types import NodeType as N
 from app.gateway.contract import GatewayRequest
 
-from .conftest import compile_case
+from .conftest import compile_case, s2_config
 from .fixtures import CASES, F1_T1, F1_T2, F2_T, F4_T, F6_T, FIXTURES, f1, f3, f4, f6, sweep_times
 
 READER_T = {"reader_text", "red_flag", "reasoning", "human_checkpoint"}
@@ -37,7 +37,7 @@ ALL_SWEEP = [(name, t) for name in FIXTURES for t in sweep_times(name)]
 
 
 def _ext(node_type=N.REASONING, version="ext-mock-0.1"):
-    return ProviderConfig().with_assignment(node_type, ProviderAssignment(provider="external_model", model_version=version))
+    return s2_config().with_assignment(node_type, ProviderAssignment(provider="external_model", model_version=version))
 
 
 def _spec(name="F1", T=F1_T1, config=None):
@@ -199,7 +199,7 @@ def test_validation_rejects(what):
             else n for n in spec.nodes)})
         code = "provider_not_allowed"
         with pytest.raises(GraphValidationError):
-            compile_graph(snap, ProviderConfig().with_assignment(
+            compile_graph(snap, s2_config().with_assignment(
                 N.RED_FLAG, ProviderAssignment(provider="external_model", model_version="x")))
     else:
         bad = spec.model_copy(update={"edges": tuple(e for e in spec.edges if e.src != "reasoning")})

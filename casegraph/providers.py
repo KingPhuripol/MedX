@@ -5,6 +5,8 @@
   logic as ``/api/gateway/invoke``) and writes exactly one audit record per call (hashes only).
 * ``rules`` providers are in-process pure functions, versioned by a rule-set version.
   The rule sets here are tiny test rule sets: PLACEHOLDER — not clinical.
+* Slice i2: the Red-flag default is the S4 engine rf-1.1.0 (``casegraph.triage_bridge``); the Pharma Agent
+  provider is resolved through the named hook :data:`PHARMA_HOOK` (default: the S2 placeholder).
 """
 
 from __future__ import annotations
@@ -134,10 +136,14 @@ def mock_gateways(
         "classifier": "cls-mock-0.1",
         "segmentation": "seg-mock-0.1",
     }
-    return {
+    gateways = {
         pid: LocalGateway(mock_provider(v), audit_sink=audit_sink, synthetic_only=pid == "external_model")
         for pid, v in versions.items()
     }
+    # i2: Reader:Text (S3 voice extraction + symptom extractor) calls registered mock tasks; their outputs
+    # report ``mock-0.1.0+<handler version>`` (MOCK label rule), so no version override here.
+    gateways.setdefault("voice_extract", LocalGateway(build_provider("mock", Settings()), audit_sink=audit_sink))
+    return gateways
 
 
 # ------------------------------------------------------------------ rule sets: PLACEHOLDER — not clinical
@@ -266,3 +272,37 @@ def pharma_rules(lists: list[MedicationList]) -> tuple[tuple[MedicationCheck, ..
                 issues.append(MedicationIssue(kind="dose_mismatch", medication=name,
                                               message=f"{PLACEHOLDER_LABEL}: doses differ {sorted(doses)}"))
     return tuple(checks), tuple(issues)
+
+
+# ------------------------------------------------------------------------------ Pharma Agent hook (i2)
+
+PharmaFn = Callable[[list[MedicationList]], tuple[tuple[MedicationCheck, ...], tuple[MedicationIssue, ...]]]
+PHARMA_HOOK = "pharma_agent"
+PLACEHOLDER_PHARMA_VERSION = "placeholder-pharma-0.2"
+
+
+@dataclass(frozen=True)
+class PharmaProvider:
+    fn: PharmaFn
+    label: str
+
+
+_PHARMA_PROVIDERS: dict[str, PharmaProvider] = {
+    PLACEHOLDER_PHARMA_VERSION: PharmaProvider(pharma_rules, PLACEHOLDER_LABEL),
+}
+
+
+def register_pharma_provider(version: str, fn: PharmaFn, *, label: str) -> None:
+    """Register a Pharma Agent provider on the ``pharma_agent`` hook under ``version``.
+
+    A node assigned ``rules``/<version> runs it with no Executor change (the S5 swap is a follow-up
+    slice). Re-registering a version with a different function raises.
+    """
+    current = _PHARMA_PROVIDERS.get(version)
+    if current is not None and current.fn is not fn:
+        raise ValueError(f"pharma provider {version!r} is already registered")
+    _PHARMA_PROVIDERS[version] = PharmaProvider(fn, label)
+
+
+def resolve_pharma(version: str) -> PharmaProvider | None:
+    return _PHARMA_PROVIDERS.get(version)
