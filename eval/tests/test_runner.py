@@ -145,7 +145,7 @@ def test_runner_rerun_same_inputs_ok(tmp_path, ledger):
     before = {f: sha(out / f) for f in OUTPUT_FILES}
     assert run_cli(ledger, m, out) == 0  # same inputs, same directory: identical bytes
     assert {f: sha(out / f) for f in OUTPUT_FILES} == before
-    assert len(ledger.runs("s8-toy-test-0001")) == 2
+    assert len(ledger.runs("s8-toy-test-0001")) == 1  # s6r (D-s6r-1): an identical test re-run is a re-render
     # a differing existing results file is never overwritten
     (out / "results.md").write_text("tampered")
     assert run_cli(ledger, m, out) != 0
@@ -216,7 +216,7 @@ def test_ledgers_append_only(tmp_path, ledger):
     snap()
     run_cli(ledger, m2, tmp_path / "o2")
     snap()
-    run_cli(ledger, m1, tmp_path / "o1")
+    run_cli(ledger, m1, tmp_path / "o1")  # s6r (D-s6r-1): identical test re-run = re-render, no run line
     snap()
     run_cli(ledger, m1, tmp_path / "o3", comparator=None)  # refused (different inputs), ledger unchanged
     snap()
@@ -224,7 +224,7 @@ def test_ledgers_append_only(tmp_path, ledger):
         for x, y in zip(a, b):
             assert y.startswith(x)  # earlier lines are never rewritten
     assert snapshots[-1] == snapshots[-2]
-    assert len(ledger._read(ledger.frozen_path)) == 2 and len(ledger._read(ledger.runs_path)) == 3
+    assert len(ledger._read(ledger.frozen_path)) == 2 and len(ledger._read(ledger.runs_path)) == 2
     ledger.verify()  # s8r: still a valid hash chain after every append
     # the committed eval/ledger/ is never written by tests
     assert {p: p.read_bytes() for p in (EVAL_DIR / "ledger").glob("*.jsonl")} == committed

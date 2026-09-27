@@ -445,6 +445,17 @@ def render_all(results: dict[str, Any]) -> dict[str, bytes]:
     }
 
 
+def rerender_of(m: dict[str, Any], ledger: Ledger, digest: str, pred_sha: str, cmp_sha: str | None
+                ) -> dict[str, Any] | None:
+    """Slice s6r: on the test split, identical manifest + predictions + comparator hashes to an existing run line
+    make a re-render (report only, no second result). Dev keeps the s8 rule (every run appends a line)."""
+    if m["split"] != "test":
+        return None
+    same = [e for e in ledger.runs(m["evaluation_id"])
+            if (e["manifest_sha256"], e["predictions_sha256"], e.get("comparator_sha256")) == (digest, pred_sha, cmp_sha)]
+    return same[0] if same else None
+
+
 def run(manifest_path: str | os.PathLike[str], predictions_path: str | os.PathLike[str],
         out_dir: str | os.PathLike[str], comparator_path: str | os.PathLike[str] | None = None,
         ledger: Ledger | None = None) -> dict[str, Any]:
@@ -471,6 +482,10 @@ def run(manifest_path: str | os.PathLike[str], predictions_path: str | os.PathLi
     out.mkdir(parents=True, exist_ok=True)
     for name, data in files.items():
         (out / name).write_bytes(data)
+    prior = rerender_of(m, ledger, digest, pred_sha, cmp_sha)
+    if prior is not None:
+        print(f"re-render of run seq {prior['seq']}; no ledger line appended")
+        return results
     ledger.append_run({
         "evaluation_id": m["evaluation_id"],
         "split": m["split"],
