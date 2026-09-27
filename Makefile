@@ -12,7 +12,7 @@ API_PORT ?= 8000
 WEB_PORT ?= 3000
 export API_PORT WEB_PORT
 
-.PHONY: install test dev e2e test-pg clean data audit eval-voice research-dry-run triage-eval
+.PHONY: install test dev e2e test-pg clean data audit eval-voice research-dry-run triage-eval care-eval
 
 SEED ?= 20260926
 OUT ?= data/synthetic/v1
@@ -80,6 +80,17 @@ eval-voice: install
 ## s4 System Evaluation on synthetic fixtures -> slices/s4/eval/metrics_v1.json (offline, mock provider).
 triage-eval: install
 	$(PY) -m app.triage.evaluate
+
+## s6 System Evaluation (mock baseline, synthetic, offline): SPLIT=dev|test -> slices/s6/eval/results_$(SPLIT)/.
+## Needs `make data` at the default seed (dataset tree hash must equal the manifest). The test manifest must be
+## frozen and committed first; the test split runs once. Pages: make dev API_PORT=8106 WEB_PORT=3106 -> /physician/care
+SPLIT ?= dev
+S6_EVAL := slices/s6/eval
+care-eval: install
+	$(PY) -m app.care.evaluate --split $(SPLIT)
+	$(PY) -m eval --ledger-dir $(S6_EVAL)/ledger run --manifest $(S6_EVAL)/manifest_$(SPLIT).json \
+	  --predictions $(S6_EVAL)/predictions_$(SPLIT).jsonl --comparator $(S6_EVAL)/comparator_$(SPLIT).jsonl \
+	  --out $(S6_EVAL)/results_$(SPLIT)
 
 clean:
 	rm -rf $(VENV) web/node_modules web/.next backend/dev.db
