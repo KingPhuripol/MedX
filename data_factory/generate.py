@@ -17,7 +17,10 @@ from pathlib import Path
 
 from casegraph import evidence_adapter
 
-GENERATOR_VERSION = "1.2.0"
+GENERATOR_VERSION = "1.2.1"
+# v1.2.1 (slice s6r) is additive: a held-out mode (``--heldout``) with its own identity namespace that writes only
+# the test split. At any seed without ``--heldout`` every inputs/** file is byte-identical to v1.2.0 and the gold is
+# identical except ``label_version``.
 # v1.2.0 adds gold labels only (`care`); every inputs/** file stays byte-identical to v1.1.1, so input items
 # keep the item version they were generated with.
 ITEM_VERSION = "1.1.1"
@@ -29,6 +32,10 @@ SPLITS = ("train", "dev", "test")
 N_PATIENTS, N_REVISIT = 180, 20
 SPLIT_SIZES = {"train": 108, "dev": 36, "test": 36}
 REVISIT_SPLIT = {"train": 12, "dev": 4, "test": 4}  # stratify revisit patients so case shares stay 60/20/20
+# s6r held-out set: 72 patients (8 revisit, 80 cases), test split only, patients SYNH-NNNN, cases SYNHE-NNNN
+# (disjoint by construction from SYNP-/SYNE-). Fixed in slices/s6r/SPEC.md before any held-out data existed.
+HELDOUT = {"n_patients": 72, "n_revisit": 8, "patient_prefix": "SYNH", "case_prefix": "SYNHE",
+           "split_sizes": {"train": 0, "dev": 0, "test": 72}, "revisit_split": {"train": 0, "dev": 0, "test": 8}}
 
 # Scenario quotas (fractions, spread evenly over each split's shuffled case order). Not used by the split.
 QUOTAS = {
@@ -114,31 +121,34 @@ def source_code_sha256() -> str:
 
 
 # ---------------------------------------------------------------- roster and split
-def make_roster(seed: int, main: random.Random) -> list[dict]:
-    revisit = set(main.sample(range(N_PATIENTS), N_REVISIT))
+def make_roster(seed: int, main: random.Random, n_patients: int = N_PATIENTS, n_revisit: int = N_REVISIT,
+                patient_prefix: str = "SYNP", case_prefix: str = "SYNE") -> list[dict]:
+    revisit = set(main.sample(range(n_patients), n_revisit))
     roster, n_case = [], 0
-    for i in range(N_PATIENTS):
-        ref = f"SYNP-{i + 1:04d}"
+    for i in range(n_patients):
+        ref = f"{patient_prefix}-{i + 1:04d}"
         prng = random.Random(f"{seed}:{ref}")
         day0 = prng.randint(0, 300)
         days = [day0] + ([day0 + prng.randint(14, 60)] if i in revisit else [])
         cases = []
         for d in days:
             n_case += 1
-            cases.append({"case_id": f"SYNE-{n_case:04d}", "day": d})
+            cases.append({"case_id": f"{case_prefix}-{n_case:04d}", "day": d})
         roster.append({"patient_ref": ref, "sex": prng.choice(["female", "male"]), "age": prng.randint(18, 90),
                        "cases": cases})
     return roster
 
 
-def make_splits(main: random.Random, roster: list[dict]) -> dict[str, str]:
+def make_splits(main: random.Random, roster: list[dict], sizes: dict | None = None,
+                revisit_sizes: dict | None = None) -> dict[str, str]:
+    sizes, revisit_sizes = sizes or SPLIT_SIZES, revisit_sizes or REVISIT_SPLIT
     splits: dict[str, str] = {}
     for multi in (True, False):
         refs = [p["patient_ref"] for p in roster if (len(p["cases"]) > 1) == multi]
         main.shuffle(refs)
         start = 0
         for s in SPLITS:
-            n = REVISIT_SPLIT[s] if multi else SPLIT_SIZES[s] - REVISIT_SPLIT[s]
+            n = revisit_sizes[s] if multi else sizes[s] - revisit_sizes[s]
             splits.update({r: s for r in refs[start:start + n]})
             start += n
     return dict(sorted(splits.items()))
@@ -676,12 +686,18 @@ def validate_item(it: dict) -> None:
         raise ValueError(f"{it['item_id']}: provenance must be 'synthetic'")
 
 
-def generate(seed: int, out: Path, splits_only: bool = False, quotas: dict | None = None) -> dict | None:
+def generate(seed: int, out: Path, splits_only: bool = False, quotas: dict | None = None,
+             heldout: bool = False) -> dict | None:
     out = Path(out)
     tpl = load_templates()
     main = random.Random(seed)
-    roster = make_roster(seed, main)
-    splits = make_splits(main, roster)
+    if heldout:
+        h = HELDOUT
+        roster = make_roster(seed, main, h["n_patients"], h["n_revisit"], h["patient_prefix"], h["case_prefix"])
+        splits = make_splits(main, roster, h["split_sizes"], h["revisit_split"])
+    else:
+        roster = make_roster(seed, main)
+        splits = make_splits(main, roster)
     _write(out / "splits.json", dumps(splits))  # written before any case exists
     if splits_only:
         return None
@@ -709,9 +725,9 @@ def generate(seed: int, out: Path, splits_only: bool = False, quotas: dict | Non
            b"".join(json.dumps(r, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode() + b"\n"
                     for r in all_injections))
     counts = summarize(plans, golds, all_injections, splits)
-    _write(out / "DATACARD.md", datacard(seed, counts).encode())
+    _write(out / "DATACARD.md", (datacard(seed, counts) + (HELDOUT_CARD.format(seed=seed) if heldout else "")).encode())
     _write(out / "gold" / "README.md", GOLD_README.encode())
-    return write_manifest(out, seed, counts)
+    return write_manifest(out, seed, counts, heldout)
 
 
 def summarize(plans, golds, injections, splits) -> dict:
@@ -825,13 +841,22 @@ Obstetric-complaint cases carry no drug with ATC `C09*` or `C10AA*` in any list 
 """
 
 
-def write_manifest(out: Path, seed: int, counts: dict) -> dict:
+HELDOUT_CARD = """
+## Held-out mode (v1.2.1, slice s6r)
+Fresh held-out set for `s6-care-test-0002`: seed `{seed}`, 72 patients (8 revisit), 80 cases, `test` split only,
+patients `SYNH-NNNN` and cases `SYNHE-NNNN` (disjoint from every `SYNP-`/`SYNE-` identity). Same templates and
+quotas as v1. Generated after `care-rules-1.1.0` was committed; evaluated once against a frozen manifest.
+"""
+
+
+def write_manifest(out: Path, seed: int, counts: dict, heldout: bool = False) -> dict:
     files = {}
     for p in sorted(out.rglob("*")):
         rel = p.relative_to(out).as_posix()
         if p.is_file() and rel != "manifest.json" and not rel.endswith("audit_report.json"):
             files[rel] = hashlib.sha256(p.read_bytes()).hexdigest()
     manifest = {"seed": seed, "generator_version": GENERATOR_VERSION, "source_code_sha256": source_code_sha256(),
+                **({"heldout": True, "heldout_spec": HELDOUT} if heldout else {}),
                 "counts": counts, "split_sizes": counts["patients_per_split"],
                 "model_inputs_glob": MODEL_INPUTS_GLOB, "audit_only_globs": AUDIT_ONLY_GLOBS, "files": files,
                 "tree_sha256": tree_sha256(files, MODEL_INPUTS_GLOB, AUDIT_ONLY_GLOBS)}
