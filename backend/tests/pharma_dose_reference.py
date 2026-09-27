@@ -36,7 +36,12 @@ TIMES_OF_DAY = {"1": 1, "2": 2, "3": 3, "4": 4}
 AFTER_HALF_THAI = ("ก่อน", "หลัง", "พร้อม", "เช้า", "กลางวัน", "เที่ยง", "เย็น", "ค่ำ", "ตอน", "เวลา", "เมื่อ", "วันละ", "ทุก")
 AFTER_HALF_LATIN = ("od", "bd", "bid", "tid", "qid", "qd", "hs", "prn", "po", "ac", "pc", "daily", "once", "twice", "thrice",
                     "every", "before", "after", "with")
-TAIL_OK = " .,;:()[]+&"  # rev 3 R1 (c): the only characters an anchor's tail may hold
+TAIL_OK = " .,;:()[]+&"
+# rev 3 D1: daily-total / divided-dose markers.
+DAILY_THAI = ("แบ่ง", "รวม", "ทั้งหมด", "ทั้งวัน")
+DAILY_PER_OBJECTS = ("วัน", "สัปดาห์", "อาทิตย์", "เดือน", "กก", "กิโล")
+DAILY_PER_PERIODS = ("วัน", "สัปดาห์", "อาทิตย์", "เดือน")
+DAILY_LATIN = ("divided", "divide", "split", "total", "doses")  # rev 3 R1 (c): the only characters an anchor's tail may hold
 PERIODS_AFTER_A = ("day", "week", "month")  # rev 3 R1 (b): "a day", "a week", "a month"
 HALF = "ครึ่ง"
 TIME_TH = ("ชั่วโมง", "ชม", "ช.ม.", "นาที")  # T1: text right after ครึ่ง starting with one of these is a time
@@ -444,6 +449,32 @@ def _variable(text: str, pairs: list[tuple[str, str]]) -> bool:
     return any(w in text for w in THAI_VARIABLE)
 
 
+def daily_marker(text: str) -> bool:
+    """rev 3 D1: TH markers in the line with whitespace removed, "วันละ" + strength, or an EN marker word."""
+    s, pairs, ends = _scan(text)
+    flat = s.replace(" ", "")
+    if any(m in flat for m in DAILY_THAI):
+        return True
+    at = flat.find("ต่อ")
+    while at >= 0:
+        after = flat[at + 3:]
+        period = ""
+        for w in DAILY_PER_PERIODS:
+            if after.startswith(w):
+                period = w
+        continues = period and after[len(period):len(period) + 2] == "ละ"  # "กินต่อ วันละ ..." = continue
+        if not continues and any(after.startswith(o) for o in DAILY_PER_OBJECTS):
+            return True
+        at = flat.find("ต่อ", at + 1)
+    walk = _Walk(pairs, s, ends)
+    for j, (kind, word) in enumerate(pairs):
+        if kind == "W" and word in DAILY_LATIN:
+            return True
+        if word == "วันละ" and walk.strength_at(j + 1):
+            return True
+    return False
+
+
 def _walk(text: str) -> tuple[list[tuple[str, str]], _Walk]:
     s, pairs, ends = _scan(text)
     walk = _Walk(pairs, s, ends)
@@ -464,7 +495,7 @@ def reference_parse(text: str) -> tuple[str, float | None, str | None, float | N
         reason = "liquid_volume"
     elif len(walk.strengths) > 1:
         reason = "multiple_strengths"
-    elif walk.per_unit:
+    elif walk.per_unit or daily_marker(text):
         reason = "per_unit_amount"
     elif any(walk.t(j) in RANGE_LINKS and walk.numericish(j - 1) and walk.numericish(j + 1) for j in leftover):
         reason = "range"

@@ -71,6 +71,18 @@ QF = {
     "en": frozenset({"od", "bd", "bid", "tid", "qid", "qd", "hs", "prn", "po", "ac", "pc", "daily", "once", "twice",
                      "thrice", "every", "before", "after", "with"}),
 }
+# D1 (rev 3): daily-total or divided-dose markers give per_unit_amount (the amount is a total to be split).
+# TH markers are searched with all whitespace removed. "ต่อ" + a period word + "ละ" ("กินต่อ วันละ 1 เม็ด" =
+# continue, once daily) is not a marker. "วันละ ␣? S1" is a marker too. EN markers are whole Latin words.
+D1_LEXICON = {
+    "th": ("แบ่ง", "รวม", "ทั้งหมด", "ทั้งวัน"),
+    "th_per": "ต่อ",
+    "th_per_objects": ("วัน", "สัปดาห์", "อาทิตย์", "เดือน", "กก", "กิโล"),
+    "th_per_periods": ("วัน", "สัปดาห์", "อาทิตย์", "เดือน"),
+    "th_period_follower": "ละ",
+    "th_before_strength": "วันละ",
+    "en": frozenset({"divided", "divide", "split", "total", "doses"}),
+}
 _UFRACTIONS = {"½": Fraction(1, 2), "¼": Fraction(1, 4), "¾": Fraction(3, 4)}
 _SLASH_FRACTIONS = {("1", "2"): Fraction(1, 2), ("1", "4"): Fraction(1, 4), ("3", "4"): Fraction(3, 4)}
 _NUM_TOKEN = re.compile(r"[0-9]+(?:\.[0-9]+)?")
@@ -401,6 +413,28 @@ def _r1(toks: list[Token], i: int) -> Match | None:
     return None
 
 
+def _d1_th_at(compact: str) -> bool:
+    """A TH D1 marker at the start of ``compact`` (whitespace already removed)."""
+    if compact.startswith(D1_LEXICON["th"]):
+        return True
+    if not compact.startswith(D1_LEXICON["th_per"]):
+        return False
+    obj = compact[len(D1_LEXICON["th_per"]):]
+    period = next((w for w in D1_LEXICON["th_per_periods"] if obj.startswith(w)), None)
+    if period and obj[len(period):].startswith(D1_LEXICON["th_period_follower"]):
+        return False
+    return obj.startswith(D1_LEXICON["th_per_objects"])
+
+
+def _d1(toks: list[Token], i: int) -> Match | None:
+    """D1 (rev 3): a daily-total or divided-dose marker that starts inside token ``i``. Consumes nothing."""
+    t = toks[i]
+    if (t.kind == "WORD" and t.text in D1_LEXICON["en"]) or (t.text == D1_LEXICON["th_before_strength"] and _s1(toks, i + 1)):
+        return Match("D1", i, i)
+    compact = "".join(x.text for x in toks[i:])  # tokens hold every non-whitespace character
+    return Match("D1", i, i) if any(_d1_th_at(compact[k:]) for k in range(len(t.text))) else None
+
+
 def _t1(toks: list[Token], i: int) -> Match | None:
     """T1: "ครึ่ง" + TW is a time, never a quantity (right after "INT เม็ด" the QF rule makes it ambiguous)."""
     if _text(toks, i) != "ครึ่ง" or not _is_tw(toks, i + 1):
@@ -441,11 +475,12 @@ def _f3(toks: list[Token], i: int) -> Match | None:
 
 # The complete, closed production table (§G2). Nothing else reads a numeric-ish token.
 DOSE_GRAMMAR: dict[str, Callable[[list[Token], int], Match | None]] = {
-    "S1": _s1, "S2": _s2, "S3": _s3, "L1": _l1, "R1": _r1,
+    "S1": _s1, "S2": _s2, "S3": _s3, "L1": _l1, "R1": _r1, "D1": _d1,
     "Q1": _q1, "Q2": _q2, "Q3": _q3, "Q4": _q4, "Q5": _q5, "Q6": _q6, "Q7": _q7,
     "T1": _t1, "F1": _f1, "F2": _f2, "F3": _f3,
 }
 _QUANTITY_PIDS = frozenset({"Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7"})
+_FLAG_PIDS = frozenset({"R1", "D1"})  # checked separately (R1 on anchors, D1 at every token); they consume nothing
 
 # Variable regimen: an exception, alternation, or a weekday-specific dose. Checked before all productions.
 _WEEKDAYS = r"mon|tue|tues|wed|wednes|thu|thur|thurs|fri|sat|satur|sun"
@@ -485,7 +520,7 @@ def read_dose(raw: str) -> DoseParse:
     matches: list[Match] = []
     i = 0
     while i < len(toks):
-        found = [m for pid, fn in DOSE_GRAMMAR.items() if pid != "R1" and (m := fn(toks, i))]
+        found = [m for pid, fn in DOSE_GRAMMAR.items() if pid not in _FLAG_PIDS and (m := fn(toks, i))]
         if found:
             best = max(found, key=lambda m: m.end)  # a tie keeps table order
             matches.append(best)
@@ -496,6 +531,7 @@ def read_dose(raw: str) -> DoseParse:
     # R1 is checked on every anchor of the productions that fired; it flags and consumes nothing.
     tails = [r for m in matches if m.last is not None and (r := _r1(toks, m.last))]
     per_unit = [r for r in tails if not r.broken]
+    daily = [m for k in range(len(toks)) if (m := _d1(toks, k))]
     # Q4b shape whose "ครึ่ง" is not followed by a QF item: half a tablet or not, so no value is chosen.
     half_unfollowed = any(_half_shape(toks, k) and not _qf(toks, k + 3) for k in range(len(toks)))
     numeric = numeric_ish(toks)
@@ -510,7 +546,7 @@ def read_dose(raw: str) -> DoseParse:
         reason = "liquid_volume"
     elif len(strengths) > 1:
         reason = "multiple_strengths"
-    elif per_unit:
+    elif per_unit or daily:
         reason = "per_unit_amount"
     elif any(toks[k].text in _RANGE_CONNECTORS and 0 < k < len(toks) - 1 and numeric[k - 1] and numeric[k + 1]
              for k in left):
@@ -530,7 +566,7 @@ def read_dose(raw: str) -> DoseParse:
             status, value = "resolved", float(v)
         else:
             status = "not_stated"
-    return DoseParse(tuple(toks), tuple(matches + tails), consumed, tuple(numeric), status, reason, value, unit, quantity)
+    return DoseParse(tuple(toks), tuple(matches + tails + daily), consumed, tuple(numeric), status, reason, value, unit, quantity)
 
 
 # ================================================================ frequency mapping (unchanged since s5r2)

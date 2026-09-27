@@ -236,8 +236,8 @@ def _rev3_classes() -> dict[str, tuple[str, list]]:
     slash = [(slot, text.format(c)) for c in SLASH_POINTS for slot, text in _SLASH_CONTEXTS]
     dotted = [("strength", f"1000 {u}{t}") for u in _DOTTED for t in _DOTTED_TAILS]
     dotted += [("quantity", f"2 {w}{t}") for w in _DOTTED_QW for t in _DOTTED_TAILS] + _DOTTED_CONTROLS * 6
-    daily = ([("tail", m) for m in _D1_AFTER] + [("pre", m) for m in _D1_BEFORE] + [("dose", m) for m in _D1_STRENGTH]
-             + _D1_CONTROLS)
+    daily = ([("tail", (m, ("D1",))) for m in _D1_AFTER] + [("pre", (m, ("D1",))) for m in _D1_BEFORE]
+             + [("dose", (m, ("D1", "S1"))) for m in _D1_STRENGTH] + _D1_CONTROLS)
     q4b = [("last", (q + sep + f, ("Q4",))) for q in _Q4B for f in _QF_OK for sep in ("", " ")]
     q4b += [("last", q + sep + f) for q in _Q4B for f in _QF_BAD for sep in ("", " ")]
     return {"invisible": ("*", inv), "slash_like": ("*", slash), "dotted_tail": ("*", dotted),

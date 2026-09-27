@@ -37,7 +37,7 @@ def _dose(text: str) -> tuple:
 
 
 def test_grammar_table_closed():
-    assert set(DOSE_GRAMMAR) == {"S1", "S2", "S3", "L1", "R1", "Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "T1",
+    assert set(DOSE_GRAMMAR) == {"S1", "S2", "S3", "L1", "R1", "D1", "Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "T1",
                                  "F1", "F2", "F3"}
 
 
@@ -270,6 +270,10 @@ POSITIVE = {  # id: (text, (status, reason, value, unit, quantity), frequency_co
     "T1-H9": ("วาร์ฟาริน 3 มก. ครึ่งเม็ด ครึ่งชั่วโมงก่อนอาหาร", (R, None, 3.0, "mg", 0.5), None, "T1"),
     "T1-H10": ("วาร์ฟาริน 3 มก. 1 เม็ดครึ่ง ครึ่งชั่วโมงก่อนอาหาร", (R, None, 3.0, "mg", 1.5), None, "Q4"),
     "U12-F2-per": ("Metformin 500 mg 2 times per day", (R, None, 500.0, "mg", None), "q12h", "F2"),
+    # rev 3: D1 (daily-total or divided-dose marker)
+    "D1-th": ("เมทฟอร์มิน 1000 มก. แบ่งวันละ 2 ครั้ง", ("unverifiable", "per_unit_amount", None, None, None), "q12h", "D1"),
+    "D1-th-before": ("เมทฟอร์มิน วันละ 1000 มก.", ("unverifiable", "per_unit_amount", None, None, None), None, "D1"),
+    "D1-en": ("Metformin 1000 mg divided bid", ("unverifiable", "per_unit_amount", None, None, None), "q12h", "D1"),
     "V5-Q3-bound": ("Warfarin 3 mg 9 1/2 tab", (R, None, 3.0, "mg", 9.5), None, "Q3"),
 }
 
