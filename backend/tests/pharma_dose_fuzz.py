@@ -19,7 +19,7 @@ from fractions import Fraction
 from .pharma_dose_reference import reference_parse
 
 SEED = 5303
-N_PHRASES = 3000
+N_PHRASES = 4000
 Parsed = tuple[str, float | None, str | None, float | None, str | None]
 
 
@@ -189,6 +189,63 @@ ADVERSARIAL: dict[str, tuple[str, list]] = {
     "qv_over": ("quantity", ["30 1/2 tabs", "11 1/2 tab", "10 1/2 tab", "15 ½ tab", "39 3/4 tabs", "12 เม็ดครึ่ง",
                              "20เม็ดครึ่ง", "11 เม็ด ครึ่ง", "12x2", "15 x 1", "10.5x2", "11 3/4 เม็ด", "40 1/2 tabs"]),
 }
+
+# ---- rev 3 classes (s5r3 §F). Written with \uXXXX escapes: no invisible character is stored literally.
+# INVISIBLE code points: every listed category (Cc Cf Co Cs Cn) and every explicit range.
+INVISIBLE_POINTS = ["\u0007", "\u007f", "\u200b", "\u200c", "\u200d", "\u2060", "\ufeff", "\u00ad", "\u2066",
+                    "\u180e", "\U000e0041", "\ue000", "\ud800", "\u0378", "\u0e3b", "\u034f", "\u115f", "\u1160",
+                    "\u17b4", "\u180b", "\u180f", "\u2800", "\u3164", "\ufe0f", "\uffa0", "\U000e0100"]
+_TW = ["ชั่วโมง", "ชม.", "นาที", "ชม", " hr", " minutes"]
+# SLASH-LIKE code points (a fixed list of more than 12, including the ASCII "/").
+SLASH_POINTS = ["/", "\\", "\u2044", "\u2215", "\u2216", "\uff0f", "\uff3c", "\u29f8", "\ufe68", "\u29f9", "\u2afd",
+                "\u2e4a", "\ua718", "\u0338", "\U0001f67c", "\u2298"]
+_SLASH_CONTEXTS = [("strength", "1000 mg{}day"), ("strength", "5 มก.{}กก."), ("strength", "1000 mg {} day"),
+                   ("quantity", "2 tabs{}day"), ("quantity", "1 เม็ด{}วัน"),  # anchor tail
+                   ("quantity", "1{}2 tab"), ("quantity", "1 1{}2 เม็ด"),  # fraction
+                   ("tail", "ก่อนอาหาร{}หลังอาหาร"), ("pre", "HCTZ{}plus")]  # between two words
+_DOTTED = ["mg.", "mcg.", "g.", "ml."]
+_DOTTED_QW = ["tab.", "tabs.", "cap."]
+_DOTTED_TAILS = ["/day", "\uff0fday", "\\kg", "\u2215d", " per day", "per dose", " ต่อวัน", "ต่อ กก.", " a day", " aweek",
+                 " a month", " (per day)", "| day", "* bid", '" bid', "' bid", "# od", "= day", "_bid", "\u0e48 bid"]
+_DOTTED_CONTROLS = [("strength", ("500 mg. bid", ("S1",))), ("strength", ("20 mcg. od", ("S1",))),
+                    ("quantity", ("1 tab. od", ("Q1",))), ("quantity", ("2 caps. bid", ("Q1",))),
+                    ("dose", ("500 mg (1 tab) bid", ("S1", "Q1"))), ("dose", ("3 mg; 1 tab, od", ("S1", "Q1")))]
+# D1 markers: TH (joined and spaced, before and after the strength), "วันละ S1", EN words; controls that resolve.
+_D1_AFTER = ["แบ่งวันละ 2 ครั้ง", "แบ่ง วันละ 2 ครั้ง", "แบ่งให้วันละ 2 ครั้ง", "รวมวันละ 2 ครั้ง", "รวม วันละ 3 ครั้ง",
+             "ทั้งหมดต่อวัน", "ทั้งหมด ต่อ วัน", "ทั้งวัน", "หลังอาหาร ต่อวัน", "ต่อ สัปดาห์", "ต่ออาทิตย์", "ต่อ เดือน",
+             "ต่อ กก.", "ต่อกิโล", "divided bid", "in 2 divided doses", "divide tid", "split bid", "Split BID", "2 doses",
+             "DIVIDED q12h", "total"]
+_D1_BEFORE = ["รวม", "ทั้งหมด", "แบ่ง", "total", "Total", "ทั้ง วัน"]
+_D1_STRENGTH = ["วันละ 1000 มก.", "วันละ1000มก.", "วันละ 500 mg", "วันละ  250 มิลลิกรัม"]
+_D1_CONTROLS = [("frequency", ("วันละ 2 ครั้ง", ("F3",))), ("frequency", ("วันละครั้ง", ("F3",))),
+                ("quantity", ("ครั้งละ 1 เม็ด", ("Q6",))), ("tail", "กินต่อ วันละ 1 ครั้ง"), ("tail", "ต่อ วันละ 1 ครั้ง")]
+# Q4b + QF item (must resolve), and Q4b + anything else (ambiguous_quantity or a higher reason).
+_Q4B = ["1 เม็ดครึ่ง", "2เม็ดครึ่ง", "1 แคปซูลครึ่ง", "1 เม็ด ครึ่ง", "3เม็ด ครึ่ง"]
+_QF_OK = ["", "ครึ่งชั่วโมงก่อนอาหาร", "ครึ่ง ชม.", "q8h", "ทุก 6 ชั่วโมง", "twice daily", "2 times a day", "วันละ 2 ครั้ง",
+          "ก่อนนอน", "หลังอาหาร", "พร้อมอาหาร", "เช้า", "กลางวัน", "เที่ยง", "เย็น", "ค่ำ", "ตอนเช้า", "เวลาปวด", "เมื่อปวด",
+          "od", "bd", "bid", "tid", "qid", "qd", "hs", "prn", "po", "ac", "pc", "daily", "once daily", "thrice daily",
+          "every 8 hours", "before meals", "after food", "with food", "สัปดาห์ละ 1 ครั้ง"]
+_QF_BAD = ["ชัวโมง", "ช.ม ก่อนอาหาร", "mn ac", "(ก่อนอาหาร)", ", วันละ 1 ครั้ง", "30 นาทีก่อนอาหาร", "\u200bชั่วโมง",
+           "\uff0fวัน", "\u2060หลังอาหาร", "ยา", "foo", "x2", "tablet", "นาน 5 วัน", "1", "ชั่วโมงก่อนอาหาร", "hr", "min",
+           "q", "[od]"]
+
+
+def _rev3_classes() -> dict[str, tuple[str, list]]:
+    inv = [("insert", c) for c in INVISIBLE_POINTS]
+    inv += [("quantity", f"{q}{c}{tw}") for c in INVISIBLE_POINTS for q, tw in (("1 เม็ดครึ่ง", _TW[0]), ("2เม็ดครึ่ง", _TW[2]))]
+    slash = [(slot, text.format(c)) for c in SLASH_POINTS for slot, text in _SLASH_CONTEXTS]
+    dotted = [("strength", f"1000 {u}{t}") for u in _DOTTED for t in _DOTTED_TAILS]
+    dotted += [("quantity", f"2 {w}{t}") for w in _DOTTED_QW for t in _DOTTED_TAILS] + _DOTTED_CONTROLS * 6
+    daily = ([("tail", m) for m in _D1_AFTER] + [("pre", m) for m in _D1_BEFORE] + [("dose", m) for m in _D1_STRENGTH]
+             + _D1_CONTROLS)
+    q4b = [("last", (q + sep + f, ("Q4",))) for q in _Q4B for f in _QF_OK for sep in ("", " ")]
+    q4b += [("last", q + sep + f) for q in _Q4B for f in _QF_BAD for sep in ("", " ")]
+    return {"invisible": ("*", inv), "slash_like": ("*", slash), "dotted_tail": ("*", dotted),
+            "daily_total": ("*", daily), "q4b_follower": ("*", q4b)}
+
+
+REV3_CLASSES = _rev3_classes()
+ADVERSARIAL.update(REV3_CLASSES)
 _NO_JOIN = set(".,/-–—~")
 
 
@@ -205,31 +262,49 @@ def _join(rng: random.Random, left: str, right: str) -> str:
 
 def generate(seed: int = SEED, n: int = N_PHRASES) -> list[Phrase]:
     rng = random.Random(seed)
-    classes = list(ADVERSARIAL)
+    # Round-robin over the classes; each rev-3 class has 3 turns per round (they carry many sub-forms).
+    classes = list(ADVERSARIAL) + [c for c in REV3_CLASSES for _ in range(2)]
+    turns: collections.Counter = collections.Counter()
     out: list[Phrase] = []
     for k in range(n):
         lang = rng.choice(["en", "th"])
         name = rng.choice(NAMES[lang if rng.random() < 0.8 else ("th" if lang == "en" else "en")])
-        slots = {"strength": strength(rng, lang), "quantity": quantity(rng, lang),
+        slots = {"pre": Segment(""), "strength": strength(rng, lang), "quantity": quantity(rng, lang),
                  "frequency": frequency(rng, lang), "tail": rng.choice(TAILS)}
+        insert = None
         if k % 2:  # every other phrase carries one adversarial segment (round-robin over the classes)
             cls = classes[(k // 2) % len(classes)]
-            slot, choice = ADVERSARIAL[cls][0], rng.choice(ADVERSARIAL[cls][1])
-            if "|" in slot:  # per-choice slot
+            slot, choices = ADVERSARIAL[cls]
+            if cls in REV3_CLASSES:  # cycle, so every rev-3 sub-form is generated
+                choice = choices[turns[cls] % len(choices)]
+                turns[cls] += 1
+            else:
+                choice = rng.choice(choices)
+            if "|" in slot or slot == "*":  # per-choice slot
                 slot, choice = choice
             text, pids = choice if isinstance(choice, tuple) else (choice, ())
             if cls in ("th_half_time", "per_unit") and not pids:
                 pids = ("T1",) if cls == "th_half_time" else ("R1",)
-            slots[slot] = Segment(text, pids, adversarial=cls, lang=("th" if any("฀" <= c <= "๿" for c in text)
-                                                                       else "en") if slot == "quantity" else None)
+            if slot == "last":  # the segment ends the entry; it carries the only quantity
+                slots["quantity"], slot = Segment(""), "tail"
+            elif slot == "dose":  # the segment carries the strength and the only quantity
+                slots["quantity"], slot = Segment(""), "strength"
+            if slot == "insert":
+                insert = Segment(text, pids, adversarial=cls)
+            else:
+                slots[slot] = Segment(text, pids, adversarial=cls, lang=("th" if any("\u0e00" <= c <= "\u0e7f" for c in text)
+                                                                           else "en") if slot == "quantity" else None)
         text = name
         for seg in slots.values():
             text = _join(rng, text, seg.text)
-        segs = list(slots.values())
+        if insert is not None:  # one character at a random position
+            at = rng.randrange(len(text) + 1)
+            text = text[:at] + insert.text + text[at:]
+        segs = list(slots.values()) + ([insert] if insert else [])
         phrase = Phrase(text, [p for s in segs for p in s.productions], [s.adversarial for s in segs if s.adversarial])
         q = slots["quantity"]
         phrase.quantity_lang = q.lang if q.text else None
-        if (not phrase.adversarial and q.quantity is not None
+        if (not phrase.adversarial and q.quantity is not None and not slots["pre"].text
                 and slots["strength"].productions in ((), ("S1",), ("S2",))):
             phrase.single_quantity = q.quantity
         out.append(phrase)

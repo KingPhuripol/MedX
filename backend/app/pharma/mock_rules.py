@@ -69,7 +69,32 @@ _NUM_TOKEN = re.compile(r"[0-9]+(?:\.[0-9]+)?")
 
 
 def _is_thai(ch: str) -> bool:
-    return "฀" <= ch <= "๿"
+    return "\u0e00" <= ch <= "\u0e7f"
+
+
+# G1 INVISIBLE (rev 3): a character in one of these general categories, or on the explicit list. Each one is its
+# own OTHER token, numeric-ish wherever it appears, and never consumed, so the dose can never be ``resolved``.
+INVISIBLE_CATEGORIES = frozenset({"Cc", "Cf", "Co", "Cs", "Cn"})
+INVISIBLE_EXTRA = frozenset({
+    0x034F, 0x115F, 0x1160, 0x17B4, 0x17B5, 0x180B, 0x180C, 0x180D, 0x180F, 0x2800, 0x3164, 0xFFA0,
+    *range(0xFE00, 0xFE0F + 1), *range(0xE0100, 0xE01EF + 1),
+})
+
+
+def is_invisible(ch: str) -> bool:
+    return unicodedata.category(ch) in INVISIBLE_CATEGORIES or ord(ch) in INVISIBLE_EXTRA
+
+
+def is_slash_like(ch: str) -> bool:
+    """G1 SLASH-LIKE (rev 3): Unicode name contains SOLIDUS or SLASH, or U+2216 SET MINUS. Numeric-ish everywhere;
+    only an ASCII "/" inside FRAC, S2 or L1 is ever consumed."""
+    name = unicodedata.name(ch, "")
+    return "SOLIDUS" in name or "SLASH" in name or ch == "\u2216"
+
+
+def _never_consumed(t: "Token") -> bool:
+    """A single INVISIBLE or SLASH-LIKE character token (an ASCII "/" only counts as consumed inside FRAC/S2/L1)."""
+    return len(t.text) == 1 and (is_invisible(t.text) or is_slash_like(t.text))
 
 
 @dataclass(frozen=True)
@@ -98,6 +123,12 @@ def tokenise(raw: str) -> list[Token]:
         c = s[i]
         if c.isspace():
             i += 1
+        elif is_invisible(c):  # before every other class: Thai unassigned code points and Hangul fillers included
+            toks.append(Token("OTHER", c, i, i + 1))
+            i += 1
+        elif is_slash_like(c):
+            toks.append(Token("SYM", c, i, i + 1))
+            i += 1
         elif "0" <= c <= "9":
             m = _NUM_TOKEN.match(s, i)
             toks.append(Token("NUM", m.group(), i, m.end()))
@@ -119,7 +150,7 @@ def tokenise(raw: str) -> list[Token]:
                 i += 1
         elif c.isalpha():
             j = i
-            while j < len(s) and s[j].isalpha() and not _is_thai(s[j]):
+            while j < len(s) and s[j].isalpha() and not _is_thai(s[j]) and not is_invisible(s[j]) and not is_slash_like(s[j]):
                 j += 1
             toks.append(Token("SYM" if s[i:j] == "x" else "WORD", s[i:j], i, j))
             i = j
@@ -134,10 +165,11 @@ def _is_number(t: Token) -> bool:
 
 
 def numeric_ish(toks: list[Token]) -> list[bool]:
-    """G1: numbers, number words, strength units and quantity words; a symbol or connector next to a number."""
-    out = [_is_number(t) or t.text in _UNITS or t.text in QUANTITY_WORDS for t in toks]
+    """G1: numbers, number words, strength units and quantity words; every INVISIBLE and SLASH-LIKE character;
+    any other symbol or connector next to a number."""
+    out = [_is_number(t) or t.text in _UNITS or t.text in QUANTITY_WORDS or _never_consumed(t) for t in toks]
     for i, t in enumerate(toks):
-        if t.kind == "SYM" or t.text in _CONNECTORS:
+        if (t.kind == "SYM" or t.text in _CONNECTORS) and not _never_consumed(t):
             out[i] = any(0 <= j < len(toks) and _is_number(toks[j]) for j in (i - 1, i + 1))
     return out
 
@@ -415,7 +447,7 @@ def read_dose(raw: str) -> DoseParse:
             i = best.end
         else:
             i += 1
-    consumed = frozenset(k for m in [*matches, *per_unit] for k in range(m.start, m.end))
+    consumed = frozenset(k for m in matches for k in range(m.start, m.end))  # R1 flags; it consumes nothing
     numeric = numeric_ish(toks)
     left = [k for k in range(len(toks)) if numeric[k] and k not in consumed]
     strengths = {s for m in matches for s in m.strengths}

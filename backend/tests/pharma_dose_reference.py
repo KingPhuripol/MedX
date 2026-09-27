@@ -45,6 +45,31 @@ def _thai(ch: str) -> bool:
     return 0x0E00 <= ord(ch) <= 0x0E7F
 
 
+# rev 3 G1: hidden characters. General category Cc/Cf/Co/Cs/Cn, or one of these code points / inclusive ranges.
+HIDDEN_KINDS = ("Cc", "Cf", "Co", "Cs", "Cn")
+HIDDEN_RANGES = ((0x034F, 0x034F), (0x115F, 0x1160), (0x17B4, 0x17B5), (0x180B, 0x180D), (0x180F, 0x180F),
+                 (0x2800, 0x2800), (0x3164, 0x3164), (0xFE00, 0xFE0F), (0xFFA0, 0xFFA0), (0xE0100, 0xE01EF))
+
+
+def hidden(ch: str) -> bool:
+    if unicodedata.category(ch) in HIDDEN_KINDS:
+        return True
+    cp = ord(ch)
+    return any(lo <= cp <= hi for lo, hi in HIDDEN_RANGES)
+
+
+def slashy(ch: str) -> bool:
+    """rev 3 G1: any character named ...SOLIDUS... or ...SLASH..., plus SET MINUS."""
+    if ord(ch) == 0x2216:
+        return True
+    words = unicodedata.name(ch, "").split()
+    return any("SOLIDUS" in w or "SLASH" in w for w in words)
+
+
+def _latin_letter(ch: str) -> bool:
+    return ch.isalpha() and not _thai(ch) and not hidden(ch) and not slashy(ch)
+
+
 def _time_follows(s: str, pos: int) -> bool:
     """Is the text at ``pos`` (one optional space skipped) a Thai time word, or an EN time word?"""
     rest = s[pos + 1:] if s[pos:pos + 1] == " " else s[pos:]
@@ -52,7 +77,7 @@ def _time_follows(s: str, pos: int) -> bool:
         if rest[:len(prefix)] == prefix:
             return True
     end = 0
-    while end < len(rest) and rest[end].isalpha() and not _thai(rest[end]):
+    while end < len(rest) and _latin_letter(rest[end]):
         end += 1
     return rest[:end] in TIME_EN
 
@@ -68,6 +93,14 @@ def scan(text: str) -> list[tuple[str, str]]:
         if ch == " ":
             pos += 1
             thai_other = False
+            continue
+        if hidden(ch):  # its own pair, never consumed
+            out.append(("I", ch))
+            pos, thai_other = pos + 1, False
+            continue
+        if slashy(ch):  # its own pair; only an ASCII "/" inside FRAC, S2 or L1 is consumed
+            out.append(("L", ch))
+            pos, thai_other = pos + 1, False
             continue
         if ch in "0123456789":
             end = pos
@@ -109,7 +142,7 @@ def scan(text: str) -> list[tuple[str, str]]:
         thai_other = False
         if ch.isalpha():
             end = pos
-            while end < len(s) and s[end].isalpha() and not _thai(s[end]):
+            while end < len(s) and _latin_letter(s[end]):
                 end += 1
             word = s[pos:end]
             out.append(("S" if word == "x" else "W", word))
@@ -225,7 +258,6 @@ class _Walk:
             if (self.t(j) in UNIT_OF or self.t(j) in QW) and self.t(j + 1) in PER_WORDS and j + 2 < len(self.p):
                 if not self.liquid_len(j - 1):
                     self.per_unit = True
-                    self.take(j, 3)
 
     # -- the cascade
     def step(self, i: int) -> int:
@@ -313,6 +345,8 @@ class _Walk:
         return self.k(i) in ("N", "U", "H") or self.t(i) in EN_WORDS or (self.k(i) == "T" and self.t(i) in TH_WORDS)
 
     def numericish(self, i: int) -> bool:
+        if self.k(i) in ("I", "L"):  # hidden and slash-like characters: numeric-ish wherever they appear
+            return True
         if self.k(i) == "S" or self.t(i) in LINKS:
             return self.numberlike(i - 1) or self.numberlike(i + 1)
         return self.numberlike(i) or self.t(i) in UNIT_OF or self.t(i) in QW
