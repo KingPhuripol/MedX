@@ -6,12 +6,12 @@ deterministic policy, and calls the LLM only through the Model Gateway.
 
 from __future__ import annotations
 
-from ..gateway import register_mock_task
+from ..gateway import mock_tasks
 from .db import create_voice_schema
-from .mock_rules import extract
+from .mock_rules import EXTRACTOR_VERSION, extract
 from .models import EXTRACT_TASK
 from .router import router
 
-register_mock_task(EXTRACT_TASK, extract)
+mock_tasks.register(EXTRACT_TASK, extract, version=EXTRACTOR_VERSION)
 
 __all__ = ["create_voice_schema", "router"]

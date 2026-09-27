@@ -243,11 +243,15 @@ def test_reasoning_missing_keys_schema_invalid(env, absent):
 
 
 def _meds(pid, iid, *meds):
-    from casegraph.data import Medication, MedicationList
+    from casegraph.data import MedicationEntry, MedicationList
+
+    def entry(m):  # i2: s1 MedicationEntry shape; "500 mg" -> dose_value/dose_unit
+        value, unit = m["dose"].split() if m.get("dose") else (None, None)
+        return MedicationEntry(generic_name=m["name"], dose_value=value and float(value), dose_unit=unit)
 
     return MedicationList(item_id=iid, patient_ref=pid, event_time=DAY + 8 * H, available_at_time=DAY + 8 * H,
                           source="synthetic-fixture", provenance="casegraph/tests", version="1",
-                          data_class="synthetic", medications=tuple(Medication(**m) for m in meds))
+                          data_class="synthetic", list_source="home_list", entries=tuple(entry(m) for m in meds))
 
 
 def test_pharma_missing_dose_not_evaluated(env):

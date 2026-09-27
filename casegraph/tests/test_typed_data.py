@@ -20,16 +20,22 @@ PAYLOAD = {
     d.CTVolume: {"uri": "synthetic://ct", "shape": (8, 8, 8), "sha256": SHA_A},
     d.MRIVolume: {"uri": "synthetic://mri", "shape": (8, 8, 8), "sha256": SHA_A},
     d.CXRImage: {"uri": "synthetic://cxr", "shape": (8, 8), "sha256": SHA_A},
-    d.Vitals: {"values": {"hr": 80.0}},
-    d.LabSeries: {"results": (d.LabResult(name="wbc", value=5, unit="u"),)},
-    d.MedicationList: {"medications": (d.Medication(name="x"),)},
+    d.Vitals: {"hr": 80.0},
+    d.LabSeries: {"results": (d.LabResult(test="wbc", value=5, unit="u"),)},
+    d.MedicationList: {"list_source": "home_list", "entries": (d.MedicationEntry(generic_name="x"),)},
+    # i2: the s1 dataset types joined casegraph.data (one evidence type system)
+    d.IntakeTranscript: {"turns": (d.Turn(turn_index=0, speaker="patient", text="synthetic", spoken_at=DAY),)},
+    d.VoiceIntakeFacts: {"facts": ()},
+    d.Demographics: {"age_years": 40, "sex": "female"},
+    d.AllergyList: {"status": "unknown", "entries": ()},
 }
 REQUIRED = ["event_time", "available_at_time", "source", "version", "data_class"]
 HIDDEN = {"reasoning", "thought", "thoughts", "chain_of_thought", "rationale_hidden", "cot", "scratchpad"}
 
 
 def test_seven_evidence_types_subclass_evidence_item():
-    assert set(PAYLOAD) == set(d.EVIDENCE_TYPES) and len(d.EVIDENCE_TYPES) == 7
+    # i2: 7 s2 types + IntakeTranscript, VoiceIntakeFacts, Demographics, AllergyList (one type system)
+    assert set(PAYLOAD) == set(d.EVIDENCE_TYPES) and len(d.EVIDENCE_TYPES) == 11
     assert all(issubclass(cls, EvidenceItem) for cls in d.EVIDENCE_TYPES)
     assert all(issubclass(cls, TypedData) for cls in d.DERIVED_TYPES)
 
@@ -184,9 +190,9 @@ def test_rule_result_invariants():
 def test_non_finite_values_rejected(bad):
     for key in ("hr", "sbp", "spo2", "temp_c", "rr"):
         with pytest.raises(ValidationError, match="finite"):
-            d.Vitals(**COMMON, values={"hr": 80.0, key: bad})
+            d.Vitals(**COMMON, **{"hr": 80.0, key: bad})
     with pytest.raises(ValidationError, match="finite"):
-        d.LabResult(name="wbc", value=bad, unit="u")
+        d.LabResult(test="wbc", value=bad, unit="u")
     with pytest.raises(ValidationError, match="finite"):
         d.load_evidence([{**COMMON, "data_type": "Vitals", "event_time": DAY.isoformat(),
-                          "available_at_time": (DAY + H).isoformat(), "values": {"spo2": bad}}])
+                          "available_at_time": (DAY + H).isoformat(), "spo2": bad}])

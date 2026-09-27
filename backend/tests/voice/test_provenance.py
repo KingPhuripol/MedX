@@ -10,8 +10,7 @@ from app.config import Settings
 from app.gateway import build_provider
 from app.voice.db import voice_facts, voice_turns
 from app.voice.mock_rules import EXTRACTOR_VERSION
-from app.voice.models import IntakeEvidence
-from casegraph import EvidenceItem
+from casegraph.data import EVIDENCE_ADAPTER, Evidence
 
 from .helpers import StubProvider, VoiceAPI, fixture, simulate_all
 
@@ -122,25 +121,31 @@ def test_turn_time_validation(client, login, app, case):
     assert len(api.get().json()["turns"]) == before
 
 
-def test_intake_evidence_validates_as_evidence_item(app):
+def test_s3_finish_evidence_loads(app):
+    """i2 (C6): S3 finish evidence validates as casegraph.data types (VoiceIntakeFacts + IntakeTranscript).
+
+    Replaces the s3 ``test_intake_evidence_validates_as_evidence_item`` (IntakeEvidence is retired).
+    """
     runs = simulate_all(app)
     n = 0
     for run in runs:
-        turns = {t["turn_id"]: t for t in run.finish["evidence"][-1]["payload"]["turns"]}
-        for item in run.finish["evidence"]:
-            base = {k: item[k] for k in EvidenceItem.model_fields}
-            EvidenceItem.model_validate(base)
-            IntakeEvidence.model_validate(item)
-            assert item["data_type"] == "ClinicalText"
-            assert item["source"] == "voice_agent.cascade"
-            assert item["patient_ref"].startswith("SYN-")
-            if item["payload"]["kind"] == "intake_fact":
-                span = item["payload"]["fact"]["span_turn_ids"]
-                assert _dt(item["available_at_time"]) == max(_dt(turns[t]["ended_at"]) for t in span)
-                assert item["provenance"].startswith(f"voice_session/{run.session_id}/turns/")
-                assert ";gw/" in item["provenance"] and ";extractor/" in item["provenance"]
-            else:
-                assert _dt(item["available_at_time"]) == max(_dt(t["ended_at"]) for t in turns.values())
-                assert item["payload"]["missing_fields"] == run.finish["missing_fields"]
+        items = [EVIDENCE_ADAPTER.validate_python(i) for i in run.finish["evidence"]]
+        assert all(isinstance(i, Evidence) for i in items)
+        by_type = {i.data_type: i for i in items}
+        assert set(by_type) <= {"VoiceIntakeFacts", "IntakeTranscript"} and len(items) == len(by_type)
+        tx = by_type["IntakeTranscript"]
+        turns = {t.turn_id: t for t in tx.turns}
+        assert tx.available_at_time == max(t.ended_at for t in tx.turns)
+        facts = by_type.get("VoiceIntakeFacts")
+        for item in items:
+            assert item.source == "voice_agent.cascade" and item.patient_ref.startswith("SYN-")
+            assert item.data_class == "synthetic"
+            assert item.provenance.startswith(f"voice_session/{run.session_id}/")
             n += 1
+        if facts is not None:
+            assert list(facts.missing_fields) == run.finish["missing_fields"]
+            for f in facts.facts:
+                assert f.available_at_time == max(turns[t].ended_at for t in f.span_turn_ids)
+                assert f.request_sha256 and f.extractor
+                assert f.available_at_time <= facts.available_at_time
     assert n > 15

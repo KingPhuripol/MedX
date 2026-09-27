@@ -58,9 +58,8 @@ def test_missing_allergy_stays_missing(client, login, app):
     assert statuses["allergy_status"]["not_elicited"] is True
     assert "allergy_status" in done["missing_fields"]
     assert all(f["field"] != "allergy_status" for f in done["facts"])
-    for item in done["evidence"]:
-        fact = item["payload"].get("fact")
-        assert not (fact and fact["field"] == "allergy_status")
+    for item in done["evidence"]:  # i2: facts live in the VoiceIntakeFacts item
+        assert all(f["field"] != "allergy_status" for f in item.get("facts", []))
 
 
 DURATIONS = {

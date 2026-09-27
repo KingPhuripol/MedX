@@ -171,7 +171,8 @@ def test_llm_downgrade_is_held_and_visible(client, login, app):
     done = api.finish().json()
     latest = {f["field"]: f for f in done["facts"]}
     assert latest["allergy_status"]["value"] == "present"
-    assert done["evidence"][-1]["payload"]["allergy_conflict"] is True
+    # i2: session facts are one VoiceIntakeFacts item (casegraph.data)
+    assert next(i for i in done["evidence"] if i["data_type"] == "VoiceIntakeFacts")["allergy_conflict"] is True
 
 
 def test_named_allergens_imply_present_status():
@@ -276,10 +277,10 @@ def test_hedged_then_clear_denial_never_ends_present(client, login, app):
     assert status["value"] != "present"
     assert (status["state"], status["value"]) in {("KNOWN", "none"), ("UNKNOWN", None)}
     assert "allergens" not in latest
-    assert done["evidence"][-1]["payload"]["allergy_conflict"] is False
-    for item in done["evidence"]:
-        fact = item["payload"].get("fact")
-        assert not (fact and fact["field"] == "allergy_status" and fact["value"] == "present")
+    facts_item = next(i for i in done["evidence"] if i["data_type"] == "VoiceIntakeFacts")
+    assert facts_item["allergy_conflict"] is False
+    for fact in facts_item["facts"]:
+        assert not (fact["field"] == "allergy_status" and fact["value"] == "present")
 
 
 # B2: a drug named in the same turn is recorded; a denial beside it never empties the list.

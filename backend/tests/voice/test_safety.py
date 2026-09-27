@@ -36,7 +36,8 @@ def _web_intake_files() -> list[Path]:
 def _agent_texts(runs) -> list[tuple[str, str]]:
     out = []
     for run in runs:
-        for t in run.finish["evidence"][-1]["payload"]["turns"]:
+        transcript = next(i for i in run.finish["evidence"] if i["data_type"] == "IntakeTranscript")
+        for t in transcript["turns"]:  # i2: IntakeTranscript item
             if t["speaker"] == "agent":
                 out.append((t["turn_id"], t["text"]))
     return out

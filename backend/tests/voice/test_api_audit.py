@@ -12,7 +12,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 
 from app.config import Settings
-from app.gateway import CONTRACT_VERSION, MOCK_LABEL, GatewayRequest, build_provider, register_mock_task
+from app.gateway import CONTRACT_VERSION, MOCK_LABEL, GatewayRequest, build_provider, mock_tasks
 from app.gateway.contract import canonical_sha256
 from app.voice.audio import ASRResult, LocalStubASR, LocalStubTTS, asr_to_turn
 from app.voice.models import AddTurnBody, EXTRACT_TASK
@@ -263,6 +263,10 @@ def test_audio_stubs_local_only():
     assert asr_to_turn(ok, "patient", t0, t0 + timedelta(seconds=2)) == typed
 
 
+def _unlabelled(inputs):
+    return {"label": "clinical!", "x": 1}
+
+
 def test_mock_task_registry_backcompat():
     provider = build_provider("mock", Settings())
     req = GatewayRequest(task="echo", inputs={"note": "synthetic fixture"}, data_class="synthetic")
@@ -280,6 +284,7 @@ def test_mock_task_registry_backcompat():
     assert r1 == r2 and r1.output["label"] == MOCK_LABEL
     assert [f["value"] for f in r1.output["facts"]] == ["fever"]
     # A registered handler cannot drop the mock label.
-    register_mock_task("test.unlabelled", lambda inputs: {"label": "clinical!", "x": 1})
+    mock_tasks.register("test.unlabelled", _unlabelled, version="test-0")
     lreq = GatewayRequest(task="test.unlabelled", inputs={}, data_class="synthetic")
-    assert provider.invoke(lreq, canonical_sha256(lreq)).output == {"label": MOCK_LABEL, "x": 1}
+    out = provider.invoke(lreq, canonical_sha256(lreq))
+    assert out.output == {"label": MOCK_LABEL, "x": 1} and out.model_version == "mock-0.1.0+test-0"

@@ -233,8 +233,8 @@ def test_suggestion_requires_screening_field(cls, payload):
 def test_rule_treats_non_finite_as_missing(bad):
     item = vitals("SYN-NF", "nf-vitals", DAY, DAY, **NORMAL)
     # model_construct bypasses validation (S2R-A10): the rule must still not read the value as normal
-    corrupted = d.Vitals.model_construct(**{**dict(item), "values": {**NORMAL, "spo2": bad}})
-    assert math.isnan(corrupted.values["spo2"]) or math.isinf(corrupted.values["spo2"])
+    corrupted = d.Vitals.model_construct(**{**dict(item), **NORMAL, "spo2": bad})
+    assert math.isnan(corrupted.spo2) or math.isinf(corrupted.spo2)
     results, alerts = red_flag_rules([corrupted])
     by_rule = {r.rule_id: r for r in results}
     assert by_rule["RF-PH-001"].status == "not_evaluated"

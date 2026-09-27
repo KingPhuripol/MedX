@@ -19,6 +19,9 @@ from sqlalchemy import Connection, Engine, func, select
 
 from ..audit import write_audit
 from ..deps import CurrentUser
+from casegraph.data import Evidence, IntakeTranscript, VoiceFact, VoiceIntakeFacts
+from casegraph.data import Turn as CGTurn
+
 from ..gateway import MOCK_LABEL, GatewayRequest, Provider, invoke_audited
 from .db import voice_extractions, voice_facts, voice_sessions, voice_turns
 from .models import (
@@ -34,7 +37,6 @@ from .models import (
     ExtractedFact,
     ExtractOutput,
     FieldStatus,
-    IntakeEvidence,
     IntakeFact,
     NextAction,
     StartSessionBody,
@@ -509,32 +511,44 @@ def facts_as_of(ctx: VoiceContext, session_id: str, as_of: datetime | None) -> d
 
 
 def build_evidence(session: Any, turns: list[dict], facts: list[IntakeFact], missing: list[str],
-                   reason: str, allergy_conflict: bool = False) -> list[IntakeEvidence]:
-    sid, ref = session["session_id"], session["patient_ref"]
-    items: list[IntakeEvidence] = []
-    for fact in latest_by_field(facts).values():
-        items.append(IntakeEvidence(
-            data_type="ClinicalText", patient_ref=ref, event_time=fact.event_time,
-            available_at_time=fact.available_at_time, source=EVIDENCE_SOURCE,
-            provenance=f"voice_session/{sid}/turns/{','.join(fact.span_turn_ids)};"
-                       f"gw/{fact.request_sha256};extractor/{fact.extractor}",
+                   reason: str, allergy_conflict: bool = False) -> list[Evidence]:
+    """Session evidence in the single Case Graph type system (slice i2).
+
+    The latest fact per field becomes one ``VoiceIntakeFacts`` item and the turns become one
+    ``IntakeTranscript`` item (both ClinicalText family, PROPOSAL 3.1). Every fact keeps its own
+    ``available_at_time``, cited turn ids, gateway request hash and extractor version.
+    """
+    sid, ref, dc = session["session_id"], session["patient_ref"], session["data_class"]
+    latest = list(latest_by_field(facts).values())
+    items: list[Evidence] = []
+    if latest or turns:
+        times = [f.available_at_time for f in latest] or [max(_dt(t["ended_at"]) for t in turns)]
+        events = [f.event_time for f in latest] or [_dt(turns[0]["started_at"])]
+        items.append(VoiceIntakeFacts(
+            item_id=f"voice:{sid}:facts", patient_ref=ref, data_class=dc, event_time=min(events),
+            available_at_time=max(times), source=EVIDENCE_SOURCE,
+            provenance=f"voice_session/{sid}/facts;extractor/{','.join(sorted({f.extractor for f in latest}))}",
             version=VOICE_VERSION,
-            payload={"kind": "intake_fact", "label": MOCK_LABEL if fact.provider == "mock" else None,
-                     "fact": fact.model_dump(mode="json")},
+            facts=tuple(VoiceFact(
+                field=f.field, state=f.state, value=f.value, value_text=f.value_text,
+                span_turn_ids=tuple(f.span_turn_ids), event_time=f.event_time,
+                available_at_time=f.available_at_time, fact_id=f.fact_id, session_id=f.session_id,
+                extractor=f.extractor, provider=f.provider, model_version=f.model_version,
+                request_sha256=f.request_sha256, supersedes_fact_id=f.supersedes_fact_id,
+                label=MOCK_LABEL if f.provider == "mock" else None,
+            ) for f in latest),
+            missing_fields=tuple(missing), handoff_reason=reason, allergy_conflict=allergy_conflict,
         ))
     if turns:
-        items.append(IntakeEvidence(
-            data_type="ClinicalText", patient_ref=ref, event_time=_dt(turns[0]["started_at"]),
-            available_at_time=max(_dt(t["ended_at"]) for t in turns), source=EVIDENCE_SOURCE,
+        items.append(IntakeTranscript(
+            item_id=f"voice:{sid}:transcript", patient_ref=ref, data_class=dc,
+            event_time=_dt(turns[0]["started_at"]), available_at_time=max(_dt(t["ended_at"]) for t in turns),
+            source=EVIDENCE_SOURCE,
             provenance=f"voice_session/{sid}/turns/{turns[0]['turn_id']}..{turns[-1]['turn_id']};transcript",
             version=VOICE_VERSION,
-            payload={
-                "kind": "transcript",
-                "turns": [_turn_model(t).model_dump(mode="json") for t in turns],
-                "missing_fields": missing,
-                "handoff_reason": reason,
-                "allergy_conflict": allergy_conflict,
-            },
+            turns=tuple(CGTurn(turn_index=t["seq"], speaker=t["speaker"], text=t["text"],
+                               spoken_at=_dt(t["started_at"]), ended_at=_dt(t["ended_at"]), turn_id=t["turn_id"])
+                        for t in turns),
         ))
     return items
 

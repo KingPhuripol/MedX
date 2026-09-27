@@ -64,13 +64,16 @@ def _leaf(cond: dict[str, Any], snap: Snapshot) -> _Result:
             return _Result(None, missing=(f"symptom.{cond['symptom']}",))
         return _Result(state == "present", (fact_id,) if state == "present" else ())
     kind = f"vital.{cond['vital']}" if "vital" in cond else cond["field"]
-    fact = snap.get(kind)
-    if fact is None:
+    if kind in snap.flagged:  # i2: a conflicting same-timestamp value is unknown, never guessed
+        return _Result(None, missing=(f"conflict:{kind}",))
+    facts = snap.values(kind)
+    if not facts:
         if "missing_as" in cond:  # an explicit "not known" value, e.g. pregnancy status
             return _Result(bool(op(cond["missing_as"], cond["value"])))
         return _Result(None, missing=(kind,))
-    hit = bool(op(fact.value, cond["value"]))
-    return _Result(hit, (fact.fact_id,) if hit else ())
+    # i2: tied same-timestamp values of hr/rr/sbp/dbp/temp_c are all checked; true if any hits.
+    hits = tuple(f.fact_id for f in facts if op(f.value, cond["value"]))
+    return _Result(bool(hits), hits)
 
 
 def evaluate_condition(cond: dict[str, Any], snap: Snapshot) -> _Result:

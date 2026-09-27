@@ -109,8 +109,9 @@ def test_all_items_schema_valid(dataset):
     for c in dataset.cases.values():
         for doc in (c["journey"], *c["snapshots"].values()):
             for it in doc["items"]:
-                obj = casegraph.evidence_adapter.validate_python(it)
-                assert isinstance(obj, casegraph.TimedEvidence) and type(obj).model_config["extra"] == "forbid"
+                # i2: one evidence type system (casegraph.data); data_class comes from the manifest
+                obj = casegraph.EVIDENCE_ADAPTER.validate_python({**it, "data_class": dataset.manifest["data_class"]})
+                assert isinstance(obj, casegraph.Evidence) and type(obj).model_config["extra"] == "forbid"
                 assert it["provenance"] == "synthetic" and it["source"] and it["version"]
                 assert it["item_id"] and it["encounter_ref"] == c["journey"]["case_id"]
                 assert all(t(it[f]).tzinfo is not None for f in ("event_time", "observed_at", "available_at_time"))

@@ -7,8 +7,6 @@ from typing import Any, Literal
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
-from casegraph import EvidenceItem
-
 VOICE_VERSION = "s3-0.1.0"
 EXTRACT_TASK = "voice.intake_extract"
 
@@ -89,12 +87,6 @@ class NextAction(_Strict):
     utterance_th: str
     reason: HandoffReason | None
     missing_fields: list[str] = Field(default_factory=list)
-
-
-class IntakeEvidence(EvidenceItem):
-    """ClinicalText-like evidence. Base fields are exactly ``casegraph.EvidenceItem``; ``payload`` is extra."""
-
-    payload: dict[str, Any]
 
 
 # ---- extractor output (validated before anything is written) ----

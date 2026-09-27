@@ -10,7 +10,7 @@ from casegraph.data import (
     CXRImage,
     LabResult,
     LabSeries,
-    Medication,
+    MedicationEntry,
     MedicationList,
     MRIVolume,
     Vitals,
@@ -38,12 +38,12 @@ def text(pid, iid, event, avail, body="Synthetic note: cough for 3 days.", **kw)
 
 def vitals(pid, iid, event, avail, **values):
     values = values or {"hr": 88.0, "sbp": 124.0, "spo2": 97.0, "rr": 16.0, "temp_c": 37.2}
-    return Vitals(**_common(pid, iid, event, avail), values=values)
+    return Vitals(**_common(pid, iid, event, avail), **values)
 
 
 def labs(pid, iid, event, avail):
     return LabSeries(**_common(pid, iid, event, avail),
-                     results=(LabResult(name="wbc", value=9.1, unit="10^9/L"), LabResult(name="crp", value=12, unit="mg/L")))
+                     results=(LabResult(test="wbc", value=9.1, unit="10^9/L"), LabResult(test="crp", value=12, unit="mg/L")))
 
 
 def cxr(pid, iid, event, avail):
@@ -59,12 +59,13 @@ def mri(pid, iid, event, avail):
 
 
 def medlist(pid, iid, event, avail):
+    # i2: s1 MedicationEntry shape (the s2 ``Medication``/``list_source`` per entry is retired)
     meds = (
-        Medication(name="Paracetamol", dose="500 mg", frequency="q6h", list_source="patient"),
-        Medication(name="paracetamol", dose="1 g", frequency="q6h", list_source="clinic"),
-        Medication(name="Amlodipine", dose="5 mg", frequency="daily", list_source="clinic"),
+        MedicationEntry(generic_name="Paracetamol", dose_value=500, dose_unit="mg", frequency="q6h"),
+        MedicationEntry(generic_name="paracetamol", dose_value=1, dose_unit="g", frequency="q6h"),
+        MedicationEntry(generic_name="Amlodipine", dose_value=5, dose_unit="mg", frequency="daily"),
     )
-    return MedicationList(**_common(pid, iid, event, avail), medications=meds)
+    return MedicationList(**_common(pid, iid, event, avail), list_source="home_list", entries=meds)
 
 
 # F1: T1 has text + vitals; T2 adds CXR + medication list (Fig. 3.2).

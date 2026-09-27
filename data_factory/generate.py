@@ -15,7 +15,7 @@ from datetime import datetime, timedelta, timezone
 from fractions import Fraction
 from pathlib import Path
 
-from casegraph import evidence_adapter
+from casegraph.data import EVIDENCE_ADAPTER
 
 GENERATOR_VERSION = "1.1.1"
 PKG_DIR = Path(__file__).resolve().parent
@@ -615,8 +615,12 @@ def _write(path: Path, data: bytes) -> None:
     path.write_bytes(data)
 
 
+DATA_CLASS = "synthetic"  # written to manifest.json; the S1r loader takes data_class from there (slice i2)
+
+
 def validate_item(it: dict) -> None:
-    evidence_adapter.validate_python(it)
+    # Items carry no data_class; the loader adds it from the manifest, so validate exactly that shape.
+    EVIDENCE_ADAPTER.validate_python({**it, "data_class": DATA_CLASS})
     if it["provenance"] != "synthetic":
         raise ValueError(f"{it['item_id']}: provenance must be 'synthetic'")
 
@@ -758,7 +762,8 @@ def write_manifest(out: Path, seed: int, counts: dict) -> dict:
         rel = p.relative_to(out).as_posix()
         if p.is_file() and rel != "manifest.json" and not rel.endswith("audit_report.json"):
             files[rel] = hashlib.sha256(p.read_bytes()).hexdigest()
-    manifest = {"seed": seed, "generator_version": GENERATOR_VERSION, "source_code_sha256": source_code_sha256(),
+    manifest = {"seed": seed, "generator_version": GENERATOR_VERSION, "data_class": DATA_CLASS,
+                "source_code_sha256": source_code_sha256(),
                 "counts": counts, "split_sizes": counts["patients_per_split"],
                 "model_inputs_glob": MODEL_INPUTS_GLOB, "audit_only_globs": AUDIT_ONLY_GLOBS, "files": files,
                 "tree_sha256": tree_sha256(files, MODEL_INPUTS_GLOB, AUDIT_ONLY_GLOBS)}

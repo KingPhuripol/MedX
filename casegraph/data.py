@@ -38,6 +38,11 @@ def most_restrictive(classes: list[str] | tuple[str, ...] | set[str]) -> str:
 
 
 # --------------------------------------------------------------------------------------- evidence
+#
+# Slice i2: this module is the ONLY evidence hierarchy. The s1 concrete types (IntakeTranscript,
+# Demographics, Vitals, LabSeries, MedicationList, AllergyList) live here; ``casegraph/evidence.py`` and
+# the s3 ``IntakeEvidence`` are retired. ``encounter_ref``/``observed_at`` are kept when a source has them
+# (the S1r loader requires both), so an S1r item round-trips losslessly with only ``data_class`` added.
 
 
 class Evidence(EvidenceItem):
@@ -45,20 +50,102 @@ class Evidence(EvidenceItem):
 
     item_id: str = Field(min_length=1)
     data_class: DataClassName
+    encounter_ref: str | None = Field(default=None, min_length=1)
+    observed_at: AwareDatetime | None = None
 
     @model_validator(mode="after")
     def _available_not_before_event(self) -> "Evidence":
         if self.available_at_time < self.event_time:
             raise ValueError("available_at_time must not be earlier than event_time")
+        if self.observed_at is not None and not (self.event_time <= self.observed_at <= self.available_at_time):
+            raise ValueError("require event_time <= observed_at <= available_at_time")
         return self
 
     def content_sha256(self) -> str:
         return sha256_json(self.model_dump(mode="json"))
 
 
-class ClinicalText(Evidence):
+class _ClinicalTextFamily(Evidence):
+    """Free-text evidence family (PROPOSAL 3.1: transcripts and extracted facts enter as ClinicalText)."""
+
+
+class ClinicalText(_ClinicalTextFamily):
+    """A free-text clinical note."""
+
     data_type: Literal["ClinicalText"] = "ClinicalText"
     text: str = Field(min_length=1)
+
+
+class Turn(TypedData):
+    """One dialogue turn. ``spoken_at`` is when it started; ``ended_at``/``turn_id`` when the source has them."""
+
+    turn_index: int = Field(ge=0)
+    speaker: Literal["nurse", "patient", "relative", "agent"]
+    text: str = Field(min_length=1)
+    spoken_at: AwareDatetime
+    ended_at: AwareDatetime | None = None
+    turn_id: str | None = Field(default=None, min_length=1)
+
+
+class IntakeTranscript(_ClinicalTextFamily):
+    """A Voice Agent / front-door intake transcript (ClinicalText family)."""
+
+    data_type: Literal["IntakeTranscript"] = "IntakeTranscript"
+    language: str = Field(default="th", min_length=2)
+    turns: tuple[Turn, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _turns_in_window(self) -> "IntakeTranscript":
+        for t in self.turns:
+            end = t.ended_at or t.spoken_at
+            if t.spoken_at < self.event_time or end > self.available_at_time or end < t.spoken_at:
+                raise ValueError(f"turn {t.turn_index} lies outside [event_time, available_at_time]")
+        return self
+
+
+class VoiceFact(TypedData):
+    """One extracted intake fact. ``field`` is an S3 field name, or an S4 fact kind for hand-authored fixtures."""
+
+    field: str = Field(min_length=1, max_length=64)
+    state: Literal["KNOWN", "UNKNOWN", "REFUSED"]
+    value: Any
+    value_text: str = Field(min_length=1, max_length=500)
+    span_turn_ids: tuple[str, ...] = ()
+    event_time: AwareDatetime
+    available_at_time: AwareDatetime
+    fact_id: str | None = None
+    session_id: str | None = None
+    extractor: str | None = None
+    provider: str | None = None
+    model_version: str | None = None
+    request_sha256: str | None = None
+    supersedes_fact_id: str | None = None
+    label: str | None = None
+
+
+class VoiceIntakeFacts(_ClinicalTextFamily):
+    """Session-level extracted facts from a Voice Agent session (ClinicalText family)."""
+
+    data_type: Literal["VoiceIntakeFacts"] = "VoiceIntakeFacts"
+    facts: tuple[VoiceFact, ...]
+    missing_fields: tuple[str, ...] = ()
+    handoff_reason: str | None = None
+    allergy_conflict: bool = False
+
+    @model_validator(mode="after")
+    def _facts_available(self) -> "VoiceIntakeFacts":
+        if any(f.available_at_time > self.available_at_time for f in self.facts):
+            raise ValueError("a fact is available after its VoiceIntakeFacts item")
+        return self
+
+
+CLINICAL_TEXT_TYPES: tuple[str, ...] = ("ClinicalText", "IntakeTranscript", "VoiceIntakeFacts")
+
+
+class Demographics(Evidence):
+    data_type: Literal["Demographics"] = "Demographics"
+    age_years: int | None = Field(default=None, ge=0, le=130)
+    sex: Literal["female", "male"] | None = None
 
 
 class _ImagingRef(Evidence):
@@ -84,17 +171,48 @@ class CXRImage(_ImagingRef):
 # NaN / +-inf are rejected at validation (s2r): every comparison against NaN is False, so a corrupted
 # reading would otherwise pass every threshold rule as "normal".
 FiniteFloat = Annotated[float, Field(allow_inf_nan=False)]
+NUMERIC_VITALS: tuple[str, ...] = ("sbp", "dbp", "hr", "rr", "temp_c", "spo2", "capillary_glucose_mg_dl")
 
 
 class Vitals(Evidence):
+    """Named, nullable, finite vital signs. A missing measurement is ``None``, never 0 (data rule 6).
+
+    ``consciousness`` is ACVPU. ``new_confusion`` is only set when a source records it explicitly
+    (``C`` already means new confusion); ``on_oxygen`` is kept but has no S4 counterpart.
+    """
+
     data_type: Literal["Vitals"] = "Vitals"
-    values: dict[str, FiniteFloat] = Field(min_length=1)  # e.g. hr, sbp, spo2, rr, temp_c
+    sbp: FiniteFloat | None = None
+    dbp: FiniteFloat | None = None
+    hr: FiniteFloat | None = None
+    rr: FiniteFloat | None = None
+    temp_c: FiniteFloat | None = None
+    spo2: FiniteFloat | None = None
+    consciousness: Literal["A", "C", "V", "P", "U"] | None = None
+    new_confusion: bool | None = None
+    on_oxygen: bool | None = None
+    capillary_glucose_mg_dl: FiniteFloat | None = None
+
+    @model_validator(mode="after")
+    def _consistent_confusion(self) -> "Vitals":
+        if self.consciousness == "C" and self.new_confusion is False:
+            raise ValueError("consciousness C means new confusion; new_confusion=false contradicts it")
+        return self
+
+    def readings(self) -> dict[str, Any]:
+        """Recorded (non-null) values by name."""
+        names = (*NUMERIC_VITALS, "consciousness", "new_confusion", "on_oxygen")
+        return {k: getattr(self, k) for k in names if getattr(self, k) is not None}
 
 
 class LabResult(TypedData):
-    name: str = Field(min_length=1)
+    test: str = Field(min_length=1)
     value: FiniteFloat
     unit: str = Field(min_length=1)
+    ref_low: FiniteFloat | None = None
+    ref_high: FiniteFloat | None = None
+    collected_at: AwareDatetime | None = None
+    resulted_at: AwareDatetime | None = None
 
 
 class LabSeries(Evidence):
@@ -102,20 +220,50 @@ class LabSeries(Evidence):
     results: tuple[LabResult, ...] = Field(min_length=1)
 
 
-class Medication(TypedData):
-    name: str = Field(min_length=1)
-    dose: str | None = None
-    frequency: str | None = None
-    list_source: str | None = None  # which medication list/source reported it
+class MedicationEntry(TypedData):
+    generic_name: str = Field(min_length=1)
+    atc_code: str | None = Field(default=None, pattern=r"^[A-Z]\d{2}[A-Z]{2}\d{2}$")
+    dose_value: FiniteFloat | None = Field(default=None, gt=0)
+    dose_unit: str | None = Field(default=None, min_length=1)
+    frequency: str | None = Field(default=None, min_length=1)
+    route: str | None = Field(default=None, min_length=1)
+
+    @property
+    def dose(self) -> str | None:
+        """Dose as one string for the placeholder Pharma rules; None when value or unit is missing."""
+        if self.dose_value is None or self.dose_unit is None:
+            return None
+        return f"{self.dose_value:g} {self.dose_unit}"
 
 
 class MedicationList(Evidence):
     data_type: Literal["MedicationList"] = "MedicationList"
-    medications: tuple[Medication, ...]
+    list_source: str = Field(min_length=1)  # e.g. home_list, patient_reported, new_order
+    entries: tuple[MedicationEntry, ...]
+    derived_from: str | None = None
+
+
+class AllergyEntry(TypedData):
+    substance: str = Field(min_length=1)
+    atc_class: str | None = Field(default=None, min_length=1)
+    reaction: str | None = Field(default=None, min_length=1)
+
+
+class AllergyList(Evidence):
+    data_type: Literal["AllergyList"] = "AllergyList"
+    status: Literal["known", "no_known_allergy", "unknown"]
+    entries: tuple[AllergyEntry, ...]
+
+    @model_validator(mode="after")
+    def _entries(self) -> "AllergyList":
+        if (self.status == "known") != bool(self.entries):
+            raise ValueError("entries must be non-empty iff status == 'known'")
+        return self
 
 
 EVIDENCE_TYPES: tuple[type[Evidence], ...] = (
-    ClinicalText, CTVolume, MRIVolume, CXRImage, Vitals, LabSeries, MedicationList,
+    ClinicalText, IntakeTranscript, VoiceIntakeFacts, Demographics, CTVolume, MRIVolume, CXRImage, Vitals,
+    LabSeries, MedicationList, AllergyList,
 )
 
 
@@ -131,9 +279,56 @@ class Derived(TypedData):
     model_version: str = Field(min_length=1)
 
 
+class TurnRef(TypedData):
+    """A cited transcript turn (slice i2): which item, which turn, and when it was spoken."""
+
+    item_id: str = Field(min_length=1)
+    turn_index: int = Field(ge=0)
+    spoken_at: AwareDatetime
+
+
+class SymptomFact(TypedData):
+    """A typed symptom fact from Reader:Text (slice i2). ``name`` is an rf-1.1.0 ``symptom.*`` name.
+
+    ``present``/``absent`` always cite the turn(s) or the source item that support them; an unmentioned
+    symptom has no fact at all (unknown), never ``absent``.
+    """
+
+    name: str = Field(pattern=r"^[a-z][a-z0-9_]{0,47}$")
+    state: Literal["present", "absent", "unknown"]
+    onset: Literal["sudden", "gradual", "unknown"] = "unknown"
+    duration: str | None = None
+    evidence_turns: tuple[TurnRef, ...] = ()
+    source_item: str | None = None  # pass-through facts (VoiceIntakeFacts) cite their item instead of turns
+    source_refs: tuple[str, ...] = ()  # lexicon rule citations of the matched terms
+    available_at_time: AwareDatetime
+
+    @model_validator(mode="after")
+    def _cited(self) -> "SymptomFact":
+        if self.state != "unknown" and not (self.evidence_turns or self.source_item):
+            raise ValueError(f"{self.name}: a {self.state} fact must cite a turn or a source item")
+        if self.evidence_turns and not self.source_refs:
+            raise ValueError(f"{self.name}: a transcript fact must carry the lexicon source_refs")
+        return self
+
+
+class IntakeValue(TypedData):
+    """A non-symptom intake fact (S3 field or S4 fact kind) carried by Reader:Text Findings."""
+
+    kind: str = Field(min_length=1, max_length=64)  # e.g. chief_complaint, onset_duration, allergy_status
+    state: Literal["KNOWN", "UNKNOWN", "REFUSED"]
+    value: Any
+    value_text: str = Field(min_length=1, max_length=500)
+    evidence_turns: tuple[TurnRef, ...] = ()
+    source_item: str | None = None
+    available_at_time: AwareDatetime
+
+
 class Findings(Derived):
     source_data_types: tuple[str, ...] = Field(min_length=1)
     statements: tuple[str, ...]
+    facts: tuple[SymptomFact, ...] = ()
+    intake: tuple[IntakeValue, ...] = ()
 
 
 class ImageTokens(Derived):
@@ -343,10 +538,12 @@ class ConfirmedEvidence(Evidence):
 
 
 AnyEvidence = Annotated[
-    Union[ClinicalText, CTVolume, MRIVolume, CXRImage, Vitals, LabSeries, MedicationList, ConfirmedEvidence],
+    Union[ClinicalText, IntakeTranscript, VoiceIntakeFacts, Demographics, CTVolume, MRIVolume, CXRImage,  # noqa: UP007
+          Vitals, LabSeries, MedicationList, AllergyList, ConfirmedEvidence],
     Field(discriminator="data_type"),
 ]
 EVIDENCE_LIST = TypeAdapter(list[AnyEvidence])
+EVIDENCE_ADAPTER = TypeAdapter(AnyEvidence)
 
 
 def dump_evidence(items: list[Evidence] | tuple[Evidence, ...]) -> list[dict[str, Any]]:

@@ -30,6 +30,7 @@ class _Ranked(BaseModel):
 
 class _Output(BaseModel):
     model_config = ConfigDict(extra="forbid")
+    label: str | None = None  # MOCK label rule (slice i2): every mock output carries it
     ranking: list[_Ranked] = Field(max_length=len(CODES))
 
 
@@ -80,8 +81,10 @@ def _uncertainty(top: list[DepartmentEntry]) -> str:
 
 def suggest(snap: Snapshot, invoke: InvokeFn) -> DepartmentSuggestion:
     missing = snap.missing_required()
-    if missing:  # validate before the provider: abstain and list what is missing
-        return _empty("abstained", "required_information_missing", missing, None)
+    conflicts = snap.conflict_required()  # i2: a flagged same-timestamp conflict abstains too
+    if missing or conflicts:  # validate before the provider: abstain and list what is missing
+        reason = "required_information_missing" if missing else "conflicting_information"
+        return _empty("abstained", reason, missing + conflicts, None)
 
     resp = invoke(build_request(snap))
     if resp.status == "rejected":

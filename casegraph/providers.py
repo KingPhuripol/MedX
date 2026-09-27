@@ -143,14 +143,19 @@ def mock_gateways(
 # ------------------------------------------------------------------ rule sets: PLACEHOLDER — not clinical
 
 
+def _fmt(value: object) -> str:
+    return f"{value:g}" if isinstance(value, float) else str(value)
+
+
 def vitals_reader_rules(items: list[Vitals | LabSeries]) -> tuple[str, ...]:
     """Structured statements from vitals/labs. Pure; version ``placeholder-vitals-reader-0.1``."""
     out: list[str] = []
     for item in sorted(items, key=lambda i: i.item_id):
         if isinstance(item, Vitals):
-            out += [f"{item.item_id}: {k}={item.values[k]:g}" for k in sorted(item.values)]
+            readings = item.readings()
+            out += [f"{item.item_id}: {k}={_fmt(readings[k])}" for k in sorted(readings)]
         else:
-            out += [f"{item.item_id}: {r.name}={r.value:g} {r.unit}" for r in item.results]
+            out += [f"{item.item_id}: {r.test}={r.value:g} {r.unit}" for r in item.results]
     return tuple(out)
 
 
@@ -191,8 +196,8 @@ def _finite_readings(vitals: list[Vitals], key: str) -> list[tuple[str, float]]:
     return [
         (item.item_id, float(value))
         for item in sorted(vitals, key=lambda i: i.item_id)
-        for k, value in item.values.items()
-        if k == key and isinstance(value, (int, float)) and math.isfinite(value)
+        if isinstance(value := getattr(item, key, None), (int, float)) and not isinstance(value, bool)
+        and math.isfinite(value)
     ]
 
 
@@ -236,8 +241,8 @@ def pharma_rules(lists: list[MedicationList]) -> tuple[tuple[MedicationCheck, ..
     """
     seen: dict[str, list[tuple[str | None, str]]] = {}
     for ml in sorted(lists, key=lambda i: i.item_id):
-        for m in ml.medications:
-            seen.setdefault(m.name.strip().lower(), []).append((m.dose, ml.item_id))
+        for m in ml.entries:
+            seen.setdefault(m.generic_name.strip().lower(), []).append((m.dose, ml.item_id))
     checks: list[MedicationCheck] = []
     issues: list[MedicationIssue] = []
     for name in sorted(seen):

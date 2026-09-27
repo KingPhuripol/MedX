@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from datetime import datetime
 from typing import Any, Literal
@@ -122,8 +123,56 @@ class Vitals(_Strict):
     capillary_glucose_mg_dl: VitalReading | None = None
 
 
+# ---- same-timestamp conflicts (slice i2, S4 MEDIUM condition) ----
+# When facts of one kind share the latest available_at_time and disagree:
+#  * kinds with a direction resolve to the worst value (min, or an ordinal from least to most severe);
+#  * hr/rr/sbp/dbp/temp_c keep every tied value and a rule leaf is true if any tied value hits;
+#  * any other kind is flagged: it is treated as unknown and the department suggestion abstains.
+# Across different timestamps the latest fact still wins (S4 behaviour; D-I2-3 reports it).
+WORST_MIN = frozenset({"vital.spo2", "vital.capillary_glucose_mg_dl"})
+WORST_ORDINAL: dict[str, tuple[Any, ...]] = {
+    "vital.avpu": ("A", "V", "P", "U"),
+    "vital.new_confusion": (False, True),
+    "pregnancy_status": ("negative", "unknown", "positive"),
+}
+SYMPTOM_ORDER = ("absent", "unknown", "present")
+ANY_HIT = frozenset({"vital.hr", "vital.rr", "vital.sbp", "vital.dbp", "vital.temp_c"})
+
+
+class Conflict(_Strict):
+    kind: str
+    available_at_time: datetime
+    values: list[Any]
+    fact_ids: list[str]
+    resolution: Literal["worst", "any_hit", "flagged"]
+    resolved_value: Any = None
+    resolved_fact_id: str | None = None
+
+
+def _resolution(kind: str) -> str:
+    if kind in WORST_MIN or kind in WORST_ORDINAL or kind.startswith("symptom."):
+        return "worst"
+    return "any_hit" if kind in ANY_HIT else "flagged"
+
+
+def _severity(kind: str, value: Any) -> float:
+    """Larger is worse."""
+    if kind in WORST_MIN:
+        return -float(value)
+    order = SYMPTOM_ORDER if kind.startswith("symptom.") else WORST_ORDINAL[kind]
+    return float(order.index(value))
+
+
+def _canon(value: Any) -> str:
+    return json.dumps(value, sort_keys=True)
+
+
 class Snapshot:
-    """Facts with ``available_at_time <= as_of``; the latest fact wins per kind."""
+    """Facts with ``available_at_time <= as_of``; the latest fact wins per kind.
+
+    Same-timestamp disagreements at the latest time are resolved or flagged (``conflicts``); the result
+    does not depend on the order of the facts.
+    """
 
     def __init__(self, case: Case, as_of: datetime) -> None:
         if as_of.tzinfo is None:
@@ -134,11 +183,52 @@ class Snapshot:
             (f for f in case.facts if f.available_at_time <= as_of),
             key=lambda f: (f.available_at_time, f.fact_id),
         )
-        self.by_kind: dict[str, IntakeFact] = {f.kind: f for f in visible}
+        groups: dict[str, list[IntakeFact]] = {}
+        for f in visible:
+            groups.setdefault(f.kind, []).append(f)
+        self.by_kind: dict[str, IntakeFact] = {}
+        self.tied: dict[str, list[IntakeFact]] = {}
+        self.flagged: dict[str, Conflict] = {}
+        self.superseded: dict[str, list[str]] = {}  # kind -> earlier fact ids with a different value
+        conflicts: list[Conflict] = []
+        for kind in sorted(groups):
+            facts = groups[kind]
+            latest_t = facts[-1].available_at_time
+            tied = [f for f in facts if f.available_at_time == latest_t]
+            chosen = tied[-1]
+            earlier = [f.fact_id for f in facts if f.available_at_time < latest_t and _canon(f.value) != _canon(chosen.value)]
+            if earlier:
+                self.superseded[kind] = earlier
+            values = sorted({_canon(f.value) for f in tied})
+            if len(values) == 1:
+                self.by_kind[kind] = chosen
+                continue
+            how = _resolution(kind)
+            conflict = dict(kind=kind, available_at_time=latest_t, values=[json.loads(v) for v in values],
+                            fact_ids=sorted(f.fact_id for f in tied), resolution=how)
+            if how == "worst":
+                worst = max(tied, key=lambda f: (_severity(kind, f.value), f.fact_id))
+                self.by_kind[kind] = worst
+                conflicts.append(Conflict(**conflict, resolved_value=worst.value, resolved_fact_id=worst.fact_id))
+            elif how == "any_hit":
+                self.by_kind[kind] = chosen
+                self.tied[kind] = sorted(tied, key=lambda f: f.fact_id)
+                conflicts.append(Conflict(**conflict))
+            else:
+                self.flagged[kind] = Conflict(**conflict)
+                conflicts.append(self.flagged[kind])
+        self.conflicts: list[Conflict] = conflicts
         self.fact_ids: frozenset[str] = frozenset(f.fact_id for f in visible)
 
     def get(self, kind: str) -> IntakeFact | None:
         return self.by_kind.get(kind)
+
+    def values(self, kind: str) -> list[IntakeFact]:
+        """Every fact a rule leaf must check: all tied values (any-hit kinds) or the single latest one."""
+        if kind in self.tied:
+            return list(self.tied[kind])
+        fact = self.by_kind.get(kind)
+        return [fact] if fact is not None else []
 
     def symptom(self, name: str) -> tuple[SymptomState, str | None]:
         fact = self.by_kind.get(f"symptom.{name}")
@@ -157,7 +247,11 @@ class Snapshot:
         return Vitals(**readings)
 
     def missing_required(self) -> list[str]:
-        return [label for label, kind in REQUIRED_FIELDS if kind not in self.by_kind]
+        """Required fields with no fact. A conflicting field is not missing; see ``conflict_required``."""
+        return [label for label, kind in REQUIRED_FIELDS if kind not in self.by_kind and kind not in self.flagged]
+
+    def conflict_required(self) -> list[str]:
+        return [f"conflict:{kind}" for kind in sorted(self.flagged)]
 
 
 # ---- outputs ----
@@ -213,6 +307,9 @@ class TriageAssessment(_Strict):
     not_evaluable: list[NotEvaluable]
     escalation_required: bool
     department: DepartmentSuggestion
+    conflicts: list[Conflict] = Field(default_factory=list)  # i2: same-timestamp conflicts, shown at review
+    graph_id: str | None = None  # i2: the executed Case Graph behind this assessment
+    screening: dict[str, Any] | None = None  # i2: RedFlagScreening block of that graph
     review_status: Literal["pending_review", "confirmed", "edited", "rejected"] = "pending_review"
     confirmed_department: str | None = None
     output_label: str = "Suggestion for nurse review"
