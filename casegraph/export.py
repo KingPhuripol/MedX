@@ -6,6 +6,10 @@ Import followed by export is byte-identical.
 
 s2r (``casegraph-export/0.2``): a required graph-level ``red_flag_screening`` summary. Importing any
 other schema version raises :class:`ExportVersionError`; a missing summary is never defaulted.
+
+i2 (``casegraph-export/0.3``, D-I2-5): the screening block carries rule set, label, scope, counts and vital
+readings; Alerts list exactly their declared rules; Reasoning's DepartmentSuggestion is the S4 structure.
+``import_graph`` re-validates every Alerts output and checks ``output_sha256`` of every node.
 """
 
 from __future__ import annotations
@@ -15,10 +19,10 @@ from typing import Any, Literal
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
-from .data import RedFlagScreening
+from .data import Alerts, RedFlagScreening, sha256_json
 from .types import NodeType
 
-SCHEMA_VERSION = "casegraph-export/0.2"
+SCHEMA_VERSION = "casegraph-export/0.3"
 
 
 class ExportVersionError(ValueError):
@@ -132,12 +136,25 @@ def to_json(model: BaseModel) -> str:
     return json.dumps(model.model_dump(mode="json"), sort_keys=True, indent=2, ensure_ascii=False) + "\n"
 
 
+class ImportValidationError(ValueError):
+    """An imported graph whose node outputs do not match their hashes, or whose Alerts are invalid."""
+
+
 def import_graph(text: str | bytes) -> ExportedGraph:
     data = json.loads(text)
     version = data.get("schema_version") if isinstance(data, dict) else None
     if version != SCHEMA_VERSION:
         raise ExportVersionError(f"unsupported export schema {version!r}; expected {SCHEMA_VERSION}")
-    return ExportedGraph.model_validate_json(text)
+    graph = ExportedGraph.model_validate_json(text)
+    for n in graph.nodes:
+        if n.output_sha256 is not None and sha256_json(n.output) != n.output_sha256:
+            raise ImportValidationError(f"{n.id}: output does not match output_sha256")
+        if n.type is NodeType.RED_FLAG and n.output is not None and "Alerts" in n.output:
+            try:
+                Alerts.model_validate(n.output["Alerts"])
+            except ValueError as exc:
+                raise ImportValidationError(f"{n.id}: invalid Alerts output: {exc}") from None
+    return graph
 
 
 def inspect_lines(graph: ExportedGraph) -> list[str]:
@@ -146,6 +163,7 @@ def inspect_lines(graph: ExportedGraph) -> list[str]:
         f"version={graph.version} parent={graph.parent_version} snapshot={graph.snapshot_id[:12]}"
     ]
     rfs = graph.red_flag_screening
+    lines.append(f"screening status={rfs.status} {rfs.summary()} label={rfs.label!r}")
     if rfs.status == "partially_evaluated":
         lines.append(f"!! {rfs.banner} not_evaluated={list(rfs.rules_not_evaluated)} missing={list(rfs.missing_inputs)}")
     elif not rfs.performed:

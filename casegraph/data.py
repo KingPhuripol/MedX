@@ -321,6 +321,7 @@ class IntakeValue(TypedData):
     value_text: str = Field(min_length=1, max_length=500)
     evidence_turns: tuple[TurnRef, ...] = ()
     source_item: str | None = None
+    span_text: str | None = Field(default=None, max_length=2000)  # NFC text of the cited turns
     available_at_time: AwareDatetime
 
 
@@ -342,6 +343,11 @@ class Alert(TypedData):
     rule_id: str = Field(min_length=1)
     severity: Literal["urgent", "warning"]
     message: str = Field(min_length=1)
+    # rf-1.1.0 (slice i2): the S4 rule names/messages and the fact ids that made the rule fire
+    name_en: str | None = None
+    name_th: str | None = None
+    message_th: str | None = None
+    evidence_refs: tuple[str, ...] = ()
 
 
 # ------------------------------------------------------------------ screening status (s2r, v1.1)
@@ -404,8 +410,50 @@ def _check_aggregate(status: str, results: Sequence[_CheckResult], missing: tupl
         raise ValueError("missing_inputs must include every result's missing inputs")
 
 
+# Declared rule sets (slice i2, S2r MEDIUM): an Alerts output lists exactly these rule ids, once each.
+# rf-1.1.0 is the S4 engine (``app/triage/rules/redflag_rules_v1.json``; equality is tested there).
+RF_110 = "rf-1.1.0"
+PLACEHOLDER_RULE_SET = "placeholder-redflag-0.2"
+DECLARED_RULES: dict[str, tuple[str, ...]] = {
+    PLACEHOLDER_RULE_SET: ("RF-PH-001", "RF-PH-002", "RF-PH-003", "RF-PH-004"),
+    RF_110: ("RF-SPO2", "RF-RR", "RF-SBP", "RF-HR", "RF-CONSC", "RF-TEMP", "RF-QSOFA", "RF-CHEST", "RF-STROKE",
+             "RF-THUNDER", "RF-ANAPH", "RF-SUICIDE", "RF-GIBLEED", "RF-ECTOPIC", "RF-MENING", "RF-HYPOGLY"),
+}
+RULE_SET_LABELS: dict[str, str] = {
+    PLACEHOLDER_RULE_SET: PLACEHOLDER_LABEL,
+    RF_110: "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+}
+RULE_SET_SCOPES: dict[str, str] = {
+    PLACEHOLDER_RULE_SET: "placeholder-redflag-0.2: 4 placeholder vitals thresholds only; PLACEHOLDER — not clinical",
+    RF_110: ("rf-1.1.0: 16 declared rules over vitals within their freshness windows and symptoms mentioned in "
+             "the intake transcript; an unmentioned symptom is unknown, not absent"),
+}
+
+
+class VitalReadingInfo(TypedData):
+    """One vital as the Red-flag node saw it: value, when it was read, its age at T and freshness (C1)."""
+
+    vital: str = Field(min_length=1)
+    value: Any
+    read_at: AwareDatetime
+    age_min: float = Field(ge=0)
+    window_min: float = Field(gt=0)
+    fresh: bool
+    item_id: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _fresh(self) -> "VitalReadingInfo":
+        if self.fresh != (self.age_min <= self.window_min):
+            raise ValueError(f"{self.vital}: fresh must equal age_min <= window_min")
+        return self
+
+
 class Alerts(Derived):
-    """Red-flag output v1.1. Cannot be constructed as ``evaluated`` unless every rule was evaluated."""
+    """Red-flag output v1.2. Cannot be constructed as ``evaluated`` unless every rule was evaluated.
+
+    Slice i2: ``rule_results`` must list exactly the declared rules of ``rule_set_version`` (no missing,
+    extra or duplicate id). ``readings``/``conflicts``/``unmappable`` record what the screen actually read.
+    """
 
     status: ScreeningStatus
     alerts: tuple[Alert, ...]
@@ -415,9 +463,22 @@ class Alerts(Derived):
     missing_inputs: tuple[str, ...]
     rule_set_version: str
     label: str = PLACEHOLDER_LABEL
+    scope: str | None = None
+    readings: tuple[VitalReadingInfo, ...] = ()
+    conflicts: tuple[dict[str, Any], ...] = ()
+    unmappable: tuple[str, ...] = ()
 
     @model_validator(mode="after")
     def _invariant(self) -> "Alerts":
+        declared = DECLARED_RULES.get(self.rule_set_version)
+        if declared is None:
+            raise ValueError(f"undeclared rule set {self.rule_set_version!r}")
+        ids = [r.rule_id for r in self.rule_results]
+        if len(ids) != len(set(ids)):
+            raise ValueError("rule_results has a duplicate rule id")
+        if set(ids) != set(declared):
+            raise ValueError(f"rule_results must equal the declared rules of {self.rule_set_version}: "
+                             f"missing={sorted(set(declared) - set(ids))} extra={sorted(set(ids) - set(declared))}")
         _check_aggregate(self.status, self.rule_results, self.missing_inputs)
         done = sorted(r.rule_id for r in self.rule_results if r.status == "evaluated")
         if list(self.rules_evaluated) != done:
@@ -441,7 +502,11 @@ def banner_for(status: str) -> str | None:
 
 
 class RedFlagScreening(TypedData):
-    """Red-flag screening summary carried by the Human Checkpoint payload and the graph export."""
+    """Red-flag screening block carried by the Human Checkpoint payload and the graph export (v1.2, slice i2).
+
+    It states which rule set ran, its label and scope, and counts; it is never a "no red flags" statement.
+    An evaluated screen with 0 alerts reads "0 of <n_declared> declared rules fired" (:meth:`summary`).
+    """
 
     status: RedFlagScreeningStatus
     performed: bool
@@ -449,23 +514,52 @@ class RedFlagScreening(TypedData):
     rules_evaluated: tuple[str, ...]
     rules_not_evaluated: tuple[str, ...]
     missing_inputs: tuple[str, ...]
+    rule_set_version: str = Field(min_length=1)
+    label: str = Field(min_length=1)
+    scope: str = Field(min_length=1)
+    n_declared: int = Field(ge=0)
+    n_evaluated: int = Field(ge=0)
+    n_not_evaluated: int = Field(ge=0)
+    n_fired: int = Field(ge=0)
+    readings: tuple[VitalReadingInfo, ...] = ()
+    conflicts: tuple[dict[str, Any], ...] = ()
 
     @model_validator(mode="after")
     def _consistent(self) -> "RedFlagScreening":
         if self.performed != (self.status == "evaluated") or self.banner != banner_for(self.status):
             raise ValueError("performed/banner inconsistent with status")
+        if (self.n_evaluated, self.n_not_evaluated) != (len(self.rules_evaluated), len(self.rules_not_evaluated)):
+            raise ValueError("counts must match the rule lists")
+        if self.n_evaluated + self.n_not_evaluated != self.n_declared or self.n_fired > self.n_evaluated:
+            raise ValueError("n_evaluated + n_not_evaluated must equal n_declared, and n_fired <= n_evaluated")
         return self
 
+    def summary(self) -> str:
+        """One line for any render. Never "no red flags": it states what fired out of what was declared."""
+        text = (f"{self.n_fired} of {self.n_declared} declared rules fired ({self.n_evaluated} evaluated, "
+                f"{self.n_not_evaluated} not evaluated); {self.rule_set_version}; {self.scope}")
+        return f"{self.banner}: {text}" if self.banner else text
+
     @classmethod
-    def from_alerts(cls, alerts: dict[str, Any] | None, declared_rules: Sequence[str]) -> "RedFlagScreening":
+    def from_alerts(cls, alerts: dict[str, Any] | None, rule_set_version: str) -> "RedFlagScreening":
         """From an Alerts output dict; ``None`` (Red-flag absent or errored) is ``unavailable``."""
         if alerts is None:
+            declared = DECLARED_RULES.get(rule_set_version, ())
             return cls(status="unavailable", performed=False, banner=banner_for("unavailable"), rules_evaluated=(),
-                       rules_not_evaluated=tuple(sorted(declared_rules)), missing_inputs=("Alerts",))
+                       rules_not_evaluated=tuple(sorted(declared)), missing_inputs=("Alerts",),
+                       rule_set_version=rule_set_version,
+                       label=RULE_SET_LABELS.get(rule_set_version, PLACEHOLDER_LABEL),
+                       scope=RULE_SET_SCOPES.get(rule_set_version, rule_set_version),
+                       n_declared=len(declared), n_evaluated=0, n_not_evaluated=len(declared), n_fired=0)
         checked = Alerts.model_validate(alerts)  # re-validates the construction invariant
+        v = checked.rule_set_version
         return cls(status=checked.status, performed=checked.status == "evaluated", banner=banner_for(checked.status),
                    rules_evaluated=checked.rules_evaluated, rules_not_evaluated=checked.rules_not_evaluated,
-                   missing_inputs=checked.missing_inputs)
+                   missing_inputs=checked.missing_inputs, rule_set_version=v, label=checked.label,
+                   scope=checked.scope or RULE_SET_SCOPES.get(v, v), n_declared=len(checked.rule_results),
+                   n_evaluated=len(checked.rules_evaluated), n_not_evaluated=len(checked.rules_not_evaluated),
+                   n_fired=sum(1 for r in checked.rule_results if r.fired), readings=checked.readings,
+                   conflicts=checked.conflicts)
 
 
 class CaseSummary(Derived):
@@ -473,9 +567,37 @@ class CaseSummary(Derived):
     red_flag_screening: RedFlagScreeningStatus  # required (s2r): never shown as if screening passed
 
 
+class DepartmentEntry(TypedData):
+    code: str = Field(min_length=1)
+    label_th: str
+    label_en: str
+    score: float = Field(ge=0, le=1)
+    evidence_refs: tuple[str, ...]
+
+
 class DepartmentSuggestion(Derived):
-    department: str | None  # None: the provider proposed none; never filled in by the graph
+    """The S4 ``department.suggest`` result (slice i2): status, top3, uncertainty, missing_information.
+
+    ``gateway_*``/``request_sha256`` describe the one department call (None when it abstained with no call).
+    """
+
+    status: Literal["suggested", "abstained", "error"]
+    top3: tuple[DepartmentEntry, ...] = Field(max_length=3)
+    uncertainty: Literal["low", "medium", "high"] | None
+    uncertainty_label: str
+    missing_information: tuple[str, ...]
+    reason: str | None
+    gateway_provider: str | None
+    gateway_model_version: str | None
+    contract_version: str | None
+    request_sha256: str | None
     red_flag_screening: RedFlagScreeningStatus
+
+    @model_validator(mode="after")
+    def _status(self) -> "DepartmentSuggestion":
+        if (self.status == "suggested") != bool(self.top3):
+            raise ValueError("top3 is non-empty iff status == 'suggested'")
+        return self
 
 
 class CareSuggestion(Derived):
