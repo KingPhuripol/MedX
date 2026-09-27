@@ -232,7 +232,9 @@ def test_suggestion_requires_screening_field(cls, payload):
 @pytest.mark.parametrize("bad", [math.nan, math.inf, -math.inf], ids=["nan", "inf", "-inf"])
 def test_rule_treats_non_finite_as_missing(bad):
     item = vitals("SYN-NF", "nf-vitals", DAY, DAY, **NORMAL)
-    corrupted = item.model_copy(update={"values": {**NORMAL, "spo2": bad}})  # bypasses validation
+    # model_construct bypasses validation (S2R-A10): the rule must still not read the value as normal
+    corrupted = d.Vitals.model_construct(**{**dict(item), "values": {**NORMAL, "spo2": bad}})
+    assert math.isnan(corrupted.values["spo2"]) or math.isinf(corrupted.values["spo2"])
     results, alerts = red_flag_rules([corrupted])
     by_rule = {r.rule_id: r for r in results}
     assert by_rule["RF-PH-001"].status == "not_evaluated"
@@ -260,3 +262,16 @@ def test_red_flag_rule_set_version_and_label(env):
     graph_new = _run(compile_case("F5", F5_T).snapshot.items, T=F5_T)
     assert graph_old.node("red_flag").cache_key != graph_new.node("red_flag").cache_key
     assert graph_old.node("reader_text").cache_key == graph_new.node("reader_text").cache_key
+
+
+def test_errored_findings_producer_blocks_evaluated_even_with_full_vitals():
+    """s2r: all 4 rules evaluated, but an errored Findings producer is a missing input -> never ``evaluated``."""
+    gateways = mock_gateways()
+    gateways["project_model"] = LocalGateway(
+        FakeProvider(model_version="proj-mock-0.1", mode="error", tasks={"reader_text"}))
+    graph = _run(_case("SYN-RF-FE", **NORMAL), gateways=gateways)
+    alerts, payload = _alerts(graph), _payload(graph)
+    assert alerts["rules_evaluated"] == ALL_RULES and "Findings" in alerts["missing_inputs"]
+    assert alerts["status"] == "partially_evaluated"
+    assert payload["red_flag_screening"]["performed"] is False
+    assert payload["escalation"] is True and "red_flag_partially_evaluated" in payload["escalation_reasons"]
