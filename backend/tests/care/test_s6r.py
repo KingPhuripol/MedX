@@ -219,7 +219,7 @@ def test_manifest_0002_matches_s6_metric_set(heldout_root, monkeypatch):
 def test_results_0002_complete():
     p = TEST_0002["results"] / "results.json"
     if not p.is_file():
-        pytest.skip("s6-care-test-0002 not run yet: freeze + single run pending decision D-s6r-2")
+        pytest.skip("s6-care-test-0002 not run yet: manifest_test_0002 must be frozen, then run once (S6R-A09)")
     res = json.loads(p.read_text("utf-8"))
     assert res["evaluation_id"] == "s6-care-test-0002" and res["frozen"] is True
     assert "System Evaluation" in json.dumps(res["labels"])
