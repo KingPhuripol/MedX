@@ -54,3 +54,6 @@ research/**/outputs/
 research/**/checkpoints/
 # s8r: evaluation ledgers are committed (tamper-evident, hash-chained)
 !eval/ledger/*.jsonl
+
+# e1: unfrozen (exploratory) dev iterations are scratch, never committed
+eval/results/e1/unfrozen/

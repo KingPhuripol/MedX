@@ -1,0 +1,637 @@
+{
+  "bootstrap": {
+    "ci_level": 0.95,
+    "method": "percentile",
+    "n_boot": 2000,
+    "rng": "numpy.random.Generator(PCG64(seed))",
+    "seed": 20260926,
+    "unit": "patient"
+  },
+  "comparator_sha256": null,
+  "dataset": {
+    "data_class": "synthetic",
+    "name": "s1r-synthetic",
+    "version": "s1r-1.1.1+tree:e76e38cc67d6317d82196f105cb9781bedf3451b9ba74a1585b19662d4d1162b"
+  },
+  "environment": {
+    "eval_version": "0.2.0",
+    "numpy_version": "2.5.3"
+  },
+  "evaluation_id": "e1-voice-test-v1",
+  "expert_review": {
+    "done": false,
+    "n_reviewers": 0
+  },
+  "frozen": true,
+  "frozen_entry_hash": "97cbdee3bbbec4c07b9310024015b2fccd52ab67964607a9fb0a36eb59abc818",
+  "labels": {
+    "banner": "System Evaluation, not clinical efficacy",
+    "research_prototype": "Research prototype - not for clinical use",
+    "synthetic_data": true
+  },
+  "manifest_sha256": "460389615be2190180e37c30b6bd1a593c380c40153e31814a54e97358b387b0",
+  "n_decision_points": 40,
+  "n_patients": 36,
+  "n_patients_in_split_list": 36,
+  "predictions_sha256": "ed5e514eebdb5d3c8ea30c5f71db6323df7787c43dca1857d2640fd5dbb8864e",
+  "rows": [
+    {
+      "ci_high": 1.0,
+      "ci_level": 0.95,
+      "ci_low": 1.0,
+      "comparisons": [],
+      "details": {
+        "component": "precision",
+        "fields": [
+          "chief_complaint",
+          "onset_duration",
+          "allergy_status"
+        ],
+        "normalization": "casefold + strip + collapse whitespace",
+        "scope": "field:chief_complaint"
+      },
+      "item": "Voice Agent",
+      "method": "percentile",
+      "metric": "field_prf",
+      "metric_id": "voice_cc_precision",
+      "n_boot": 2000,
+      "n_decision_points": 24,
+      "n_degenerate": 0,
+      "n_patients": 23,
+      "params": {
+        "component": "precision",
+        "field": "chief_complaint",
+        "fields": [
+          "chief_complaint",
+          "onset_duration",
+          "allergy_status"
+        ]
+      },
+      "point": 1.0,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "voice_cc",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 1.0,
+      "ci_level": 0.95,
+      "ci_low": 0.6956521739130435,
+      "comparisons": [],
+      "details": {
+        "component": "recall",
+        "fields": [
+          "chief_complaint",
+          "onset_duration",
+          "allergy_status"
+        ],
+        "normalization": "casefold + strip + collapse whitespace",
+        "scope": "field:chief_complaint"
+      },
+      "item": "Voice Agent",
+      "method": "percentile",
+      "metric": "field_prf",
+      "metric_id": "voice_cc_recall",
+      "n_boot": 2000,
+      "n_decision_points": 24,
+      "n_degenerate": 0,
+      "n_patients": 23,
+      "params": {
+        "component": "recall",
+        "field": "chief_complaint",
+        "fields": [
+          "chief_complaint",
+          "onset_duration",
+          "allergy_status"
+        ]
+      },
+      "point": 0.8636363636363636,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "voice_cc",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 1.0,
+      "ci_level": 0.95,
+      "ci_low": 0.8205128205128205,
+      "comparisons": [],
+      "details": {
+        "component": "f1",
+        "fields": [
+          "chief_complaint",
+          "onset_duration",
+          "allergy_status"
+        ],
+        "normalization": "casefold + strip + collapse whitespace",
+        "scope": "field:chief_complaint"
+      },
+      "item": "Voice Agent",
+      "method": "percentile",
+      "metric": "field_prf",
+      "metric_id": "voice_cc_f1",
+      "n_boot": 2000,
+      "n_decision_points": 24,
+      "n_degenerate": 0,
+      "n_patients": 23,
+      "params": {
+        "component": "f1",
+        "field": "chief_complaint",
+        "fields": [
+          "chief_complaint",
+          "onset_duration",
+          "allergy_status"
+        ]
+      },
+      "point": 0.926829268292683,
+      "primary": true,
+      "reason": null,
+      "seed": 20260926,
+      "task": "voice_cc",
+      "thresholds": [
+        {
+          "compared_value": 0.926829268292683,
+          "op": ">=",
+          "rule": "point",
+          "status": "met",
+          "value": 0.8
+        }
+      ],
+      "unstable": false
+    },
+    {
+      "ci_high": 1.0,
+      "ci_level": 0.95,
+      "ci_low": 1.0,
+      "comparisons": [],
+      "details": {
+        "component": "precision",
+        "fields": [
+          "chief_complaint",
+          "onset_duration",
+          "allergy_status"
+        ],
+        "normalization": "casefold + strip + collapse whitespace",
+        "scope": "field:onset_duration"
+      },
+      "item": "Voice Agent",
+      "method": "percentile",
+      "metric": "field_prf",
+      "metric_id": "voice_dur_precision",
+      "n_boot": 2000,
+      "n_decision_points": 40,
+      "n_degenerate": 0,
+      "n_patients": 36,
+      "params": {
+        "component": "precision",
+        "field": "onset_duration",
+        "fields": [
+          "chief_complaint",
+          "onset_duration",
+          "allergy_status"
+        ]
+      },
+      "point": 1.0,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "voice_intake",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 1.0,
+      "ci_level": 0.95,
+      "ci_low": 1.0,
+      "comparisons": [],
+      "details": {
+        "component": "recall",
+        "fields": [
+          "chief_complaint",
+          "onset_duration",
+          "allergy_status"
+        ],
+        "normalization": "casefold + strip + collapse whitespace",
+        "scope": "field:onset_duration"
+      },
+      "item": "Voice Agent",
+      "method": "percentile",
+      "metric": "field_prf",
+      "metric_id": "voice_dur_recall",
+      "n_boot": 2000,
+      "n_decision_points": 40,
+      "n_degenerate": 0,
+      "n_patients": 36,
+      "params": {
+        "component": "recall",
+        "field": "onset_duration",
+        "fields": [
+          "chief_complaint",
+          "onset_duration",
+          "allergy_status"
+        ]
+      },
+      "point": 1.0,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "voice_intake",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 1.0,
+      "ci_level": 0.95,
+      "ci_low": 1.0,
+      "comparisons": [],
+      "details": {
+        "component": "f1",
+        "fields": [
+          "chief_complaint",
+          "onset_duration",
+          "allergy_status"
+        ],
+        "normalization": "casefold + strip + collapse whitespace",
+        "scope": "field:onset_duration"
+      },
+      "item": "Voice Agent",
+      "method": "percentile",
+      "metric": "field_prf",
+      "metric_id": "voice_dur_f1",
+      "n_boot": 2000,
+      "n_decision_points": 40,
+      "n_degenerate": 0,
+      "n_patients": 36,
+      "params": {
+        "component": "f1",
+        "field": "onset_duration",
+        "fields": [
+          "chief_complaint",
+          "onset_duration",
+          "allergy_status"
+        ]
+      },
+      "point": 1.0,
+      "primary": true,
+      "reason": null,
+      "seed": 20260926,
+      "task": "voice_intake",
+      "thresholds": [
+        {
+          "compared_value": 1.0,
+          "op": ">=",
+          "rule": "point",
+          "status": "met",
+          "value": 0.8
+        }
+      ],
+      "unstable": false
+    },
+    {
+      "ci_high": 1.0,
+      "ci_level": 0.95,
+      "ci_low": 1.0,
+      "comparisons": [],
+      "details": {
+        "component": "precision",
+        "fields": [
+          "chief_complaint",
+          "onset_duration",
+          "allergy_status"
+        ],
+        "normalization": "casefold + strip + collapse whitespace",
+        "scope": "field:allergy_status"
+      },
+      "item": "Voice Agent",
+      "method": "percentile",
+      "metric": "field_prf",
+      "metric_id": "voice_allergy_precision",
+      "n_boot": 2000,
+      "n_decision_points": 40,
+      "n_degenerate": 0,
+      "n_patients": 36,
+      "params": {
+        "component": "precision",
+        "field": "allergy_status",
+        "fields": [
+          "chief_complaint",
+          "onset_duration",
+          "allergy_status"
+        ]
+      },
+      "point": 1.0,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "voice_intake",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 1.0,
+      "ci_level": 0.95,
+      "ci_low": 1.0,
+      "comparisons": [],
+      "details": {
+        "component": "recall",
+        "fields": [
+          "chief_complaint",
+          "onset_duration",
+          "allergy_status"
+        ],
+        "normalization": "casefold + strip + collapse whitespace",
+        "scope": "field:allergy_status"
+      },
+      "item": "Voice Agent",
+      "method": "percentile",
+      "metric": "field_prf",
+      "metric_id": "voice_allergy_recall",
+      "n_boot": 2000,
+      "n_decision_points": 40,
+      "n_degenerate": 0,
+      "n_patients": 36,
+      "params": {
+        "component": "recall",
+        "field": "allergy_status",
+        "fields": [
+          "chief_complaint",
+          "onset_duration",
+          "allergy_status"
+        ]
+      },
+      "point": 1.0,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "voice_intake",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 1.0,
+      "ci_level": 0.95,
+      "ci_low": 1.0,
+      "comparisons": [],
+      "details": {
+        "component": "f1",
+        "fields": [
+          "chief_complaint",
+          "onset_duration",
+          "allergy_status"
+        ],
+        "normalization": "casefold + strip + collapse whitespace",
+        "scope": "field:allergy_status"
+      },
+      "item": "Voice Agent",
+      "method": "percentile",
+      "metric": "field_prf",
+      "metric_id": "voice_allergy_f1",
+      "n_boot": 2000,
+      "n_decision_points": 40,
+      "n_degenerate": 0,
+      "n_patients": 36,
+      "params": {
+        "component": "f1",
+        "field": "allergy_status",
+        "fields": [
+          "chief_complaint",
+          "onset_duration",
+          "allergy_status"
+        ]
+      },
+      "point": 1.0,
+      "primary": true,
+      "reason": null,
+      "seed": 20260926,
+      "task": "voice_intake",
+      "thresholds": [
+        {
+          "compared_value": 1.0,
+          "op": ">=",
+          "rule": "point",
+          "status": "met",
+          "value": 0.8
+        }
+      ],
+      "unstable": false
+    },
+    {
+      "ci_high": 1.0,
+      "ci_level": 0.95,
+      "ci_low": 1.0,
+      "comparisons": [],
+      "details": {
+        "component": "precision",
+        "fields": [
+          "chief_complaint",
+          "onset_duration",
+          "allergy_status"
+        ],
+        "normalization": "casefold + strip + collapse whitespace",
+        "scope": "micro"
+      },
+      "item": "Voice Agent",
+      "method": "percentile",
+      "metric": "field_prf",
+      "metric_id": "voice_micro_precision",
+      "n_boot": 2000,
+      "n_decision_points": 40,
+      "n_degenerate": 0,
+      "n_patients": 36,
+      "params": {
+        "component": "precision",
+        "fields": [
+          "chief_complaint",
+          "onset_duration",
+          "allergy_status"
+        ]
+      },
+      "point": 1.0,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "voice_intake",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 1.0,
+      "ci_level": 0.95,
+      "ci_low": 0.9310259474223285,
+      "comparisons": [],
+      "details": {
+        "component": "recall",
+        "fields": [
+          "chief_complaint",
+          "onset_duration",
+          "allergy_status"
+        ],
+        "normalization": "casefold + strip + collapse whitespace",
+        "scope": "micro"
+      },
+      "item": "Voice Agent",
+      "method": "percentile",
+      "metric": "field_prf",
+      "metric_id": "voice_micro_recall",
+      "n_boot": 2000,
+      "n_decision_points": 40,
+      "n_degenerate": 0,
+      "n_patients": 36,
+      "params": {
+        "component": "recall",
+        "fields": [
+          "chief_complaint",
+          "onset_duration",
+          "allergy_status"
+        ]
+      },
+      "point": 0.9680851063829787,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "voice_intake",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 1.0,
+      "ci_level": 0.95,
+      "ci_low": 0.9642811355311356,
+      "comparisons": [],
+      "details": {
+        "component": "f1",
+        "fields": [
+          "chief_complaint",
+          "onset_duration",
+          "allergy_status"
+        ],
+        "normalization": "casefold + strip + collapse whitespace",
+        "scope": "micro"
+      },
+      "item": "Voice Agent",
+      "method": "percentile",
+      "metric": "field_prf",
+      "metric_id": "voice_micro_f1",
+      "n_boot": 2000,
+      "n_decision_points": 40,
+      "n_degenerate": 0,
+      "n_patients": 36,
+      "params": {
+        "component": "f1",
+        "fields": [
+          "chief_complaint",
+          "onset_duration",
+          "allergy_status"
+        ]
+      },
+      "point": 0.9837837837837838,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "voice_intake",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 0.0,
+      "ci_level": 0.95,
+      "ci_low": 0.0,
+      "comparisons": [],
+      "details": {},
+      "item": "Voice Agent",
+      "method": "percentile",
+      "metric": "accuracy",
+      "metric_id": "voice_allergy_false_none_rate",
+      "n_boot": 2000,
+      "n_decision_points": 22,
+      "n_degenerate": 0,
+      "n_patients": 18,
+      "params": {
+        "estimand": "false-none rate: share of cases with gold allergy known or MISSING where S3 records KNOWN none"
+      },
+      "point": 0.0,
+      "primary": true,
+      "reason": null,
+      "seed": 20260926,
+      "task": "voice_allergy_false_none",
+      "thresholds": [
+        {
+          "compared_value": 0.0,
+          "op": "<=",
+          "rule": "point",
+          "status": "met",
+          "value": 0
+        }
+      ],
+      "unstable": false
+    }
+  ],
+  "schema_version": "1.1",
+  "slice": "e1",
+  "split": "test",
+  "split_coverage": [
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 23,
+          "status": "provided"
+        }
+      ],
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 23,
+      "n_missing": 0,
+      "n_predicted": 23,
+      "population": null,
+      "task": "voice_cc"
+    },
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 36,
+          "status": "provided"
+        }
+      ],
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 36,
+      "n_missing": 0,
+      "n_predicted": 36,
+      "population": null,
+      "task": "voice_intake"
+    },
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 18,
+          "status": "provided"
+        }
+      ],
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 18,
+      "n_missing": 0,
+      "n_predicted": 18,
+      "population": null,
+      "task": "voice_allergy_false_none"
+    }
+  ],
+  "split_version": "fb9454a2bc7433b663c6d921ebd68d3a1897bdbffb02dc3849e9d37976c828e9",
+  "stamp": null
+}

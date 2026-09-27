@@ -12,7 +12,7 @@ API_PORT ?= 8000
 WEB_PORT ?= 3000
 export API_PORT WEB_PORT
 
-.PHONY: install test dev e2e test-pg clean data audit eval-voice research-dry-run triage-eval
+.PHONY: install test dev e2e test-pg clean data audit eval-voice research-dry-run triage-eval eval-e1-dev eval-e1-test
 
 SEED ?= 20260926
 OUT ?= data/synthetic/v1
@@ -80,6 +80,15 @@ eval-voice: install
 ## s4 System Evaluation on synthetic fixtures -> slices/s4/eval/metrics_v1.json (offline, mock provider).
 triage-eval: install
 	$(PY) -m app.triage.evaluate
+
+## e1 System Evaluation of S3 voice + S4 triage on S1r (needs `make data` output at the frozen tree sha).
+## Unfrozen dev runs go to eval/results/e1/unfrozen/ with a scratch ledger; frozen runs record in eval/ledger/.
+eval-e1-dev: $(VENV)/.installed
+	$(PY) -m eval.adapters run --split dev
+
+## Test split: refuses (exit 2, nothing written) unless all 4 e1 manifests are frozen; run once, then commit.
+eval-e1-test: $(VENV)/.installed
+	$(PY) -m eval.adapters run --split test
 
 clean:
 	rm -rf $(VENV) web/node_modules web/.next backend/dev.db
