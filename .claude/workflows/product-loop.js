@@ -85,6 +85,7 @@ ROLE: CHECKER (independent; you did not build this; never edit product code). Ch
 ROLE: REVIEWER (read-only judgement). Review commit ${build.commit} of slice ${A.id} against ${WT}/slices/${A.id}/SPEC.md and the proposal: clinical safety, claim boundary, proposal fit, code quality. Checker results: ${JSON.stringify(checks.map(c => c.metrics))}. List only real blockers.`,
     { label: `review:${r}#${rounds}`, phase: 'Review', agentType: r, schema: REVIEW })))).filter(Boolean)
   const blockers = reviews.filter(r => r.verdict === 'FAIL' || r.verdict === 'CRITICAL_FAIL').flatMap(r => r.blockers)
+  if (reviews.length < A.reviewers.length) { log('a reviewer returned no verdict; slice not done'); findings = ''; break }
   if (blockers.length) { findings = blockers.join('\n'); continue }
   done = true
 }
