@@ -45,7 +45,7 @@ def _fmt(v: Fraction) -> str:
 
 
 NAMES = {"en": ["Warfarin", "Metformin", "Paracetamol", "Amlodipine", "Omeprazole"],
-         "th": ["วาร์ฟาริน", "เมทฟอร์มิน", "พาราเซตามอล", "แอมโลดิปีน", "โอเมพราโซล"]}
+         "th": ["วาร์ฟาริน", "เมทฟอร์มิน", "พาราเซตามอล", "แอมโลดิปีน", "แอมลอดิปีน", "โอเมพราโซล"]}
 STRENGTH_VALUES = ["1", "2.5", "3", "5", "20", "81", "250", "500", "1000"]
 QV_VALUES = [Fraction(1), Fraction(2), Fraction(3), Fraction(1, 2), Fraction(3, 2), Fraction(5, 2), Fraction(10),
              Fraction(1, 4), Fraction(3, 4)]
@@ -63,7 +63,7 @@ def strength(rng: random.Random, lang: str) -> Segment:
     if roll < 0.29:
         return Segment("")
     v = rng.choice(STRENGTH_VALUES)
-    units = ["{} mg", "{}mg", "{} mcg", "{} units"] if lang == "en" else ["{} มก.", "{}มก.", "{} มิลลิกรัม", "{} มก"]
+    units = ["{} mg", "{}mg", "{} mcg", "{} units"] if lang == "en" else ["{} มก.", "{}มก.", "{} มิลลิกรัม", "{} มก", "{}มก"]
     return Segment(rng.choice(units).format(v), ("S1",))
 
 
@@ -157,6 +157,8 @@ ADVERSARIAL: dict[str, tuple[str, list[str]]] = {
     "duplicated_quantity": ("quantity", ["1 tab 1x2", "2 tabs 2 tabs"]),  # equal values: stays resolved
     "frequency_range": ("frequency", ["q4-6h"]),
     "times_range": ("frequency", ["1-2 times daily"]),
+    # Thai words that start with (or contain) an undotted unit: "มกราคม" = January, "มลพิษ" = pollution.
+    "thai_unit_prefix": ("strength", ["เริ่ม 5 มกราคม", "5มกราคม", "10 มลพิษ", "ตั้งแต่ 3 มกรา"]),
     "variable_regimen": ("tail", ["except Sunday", "alternating", "ยกเว้นวันอาทิตย์", "on Mondays"]),
 }
 _NO_JOIN = set(".,/-–—~")

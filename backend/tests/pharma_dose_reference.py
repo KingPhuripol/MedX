@@ -26,6 +26,7 @@ EN_WORDS = ("one", "two", "three", "four", "five", "six", "seven", "eight", "nin
 TH_WORDS = ("หนึ่ง", "สอง", "สาม", "สี่", "ห้า", "หก", "เจ็ด", "แปด", "เก้า", "สิบ", "ครึ่ง")
 THAI_LEXEMES = ("เม็ด", "แคปซูล", "ครั้งละ", "วันละ", "สัปดาห์ละ", "อาทิตย์ละ", "เดือนละ", "ครั้ง", "ทุก", "ชั่วโมง",
                 "ชม.", "มก.", "มก", "มิลลิกรัม", "กรัม", "ไมโครกรัม", "ยูนิต", "มล.", "มล", "และ", "หรือ", "ถึง") + TH_WORDS
+BARE_UNITS = ("มก", "มล")
 SYMBOL_CHARS = "/⁄.,-–—~x+&"
 LINKS = ("to", "or", "and", "ถึง", "หรือ", "และ")
 RANGE_LINKS = ("-", "–", "—", "~") + LINKS
@@ -70,9 +71,15 @@ def scan(text: str) -> list[tuple[str, str]]:
         if _thai(ch):
             hit = ""
             for lex in lexemes:
-                if s[pos:pos + len(lex)] == lex:
-                    hit = lex
-                    break
+                if s[pos:pos + len(lex)] != lex:
+                    continue
+                if lex in BARE_UNITS:  # undotted "มก"/"มล" is a unit only as a word of its own (not "มกราคม")
+                    before = s[pos - 1] if pos else " "
+                    after = s[pos + len(lex)] if pos + len(lex) < len(s) else " "
+                    if _thai(before) or _thai(after):
+                        continue
+                hit = lex
+                break
             if hit:
                 out.append(("T", hit))
                 pos, thai_other = pos + len(hit), False

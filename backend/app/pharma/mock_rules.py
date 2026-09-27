@@ -44,12 +44,15 @@ _EN_NUMBER_WORDS = frozenset(
     {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "half", "once", "twice", "thrice"}
 )
 _TH_NUMBER_WORDS = frozenset({"หนึ่ง", "สอง", "สาม", "สี่", "ห้า", "หก", "เจ็ด", "แปด", "เก้า", "สิบ", "ครึ่ง"})
-# Closed Thai lexicon, matched longest-first. "มก"/"มล" (no dot) are listed because S1 accepts them as units.
+# Closed Thai lexicon, matched longest-first. "มก"/"มล" (no dot) are listed because S1 accepts them as units, but
+# only as a standalone word (see _WORD_ONLY): Thai has no spaces, so they are also the start of "มกราคม" (January),
+# "มลพิษ" and the middle of "แอมลอดิปีน". The dotted forms carry their own boundary.
 _TH_LEXICON = tuple(sorted(
     {"เม็ด", "แคปซูล", "ครั้งละ", "วันละ", "สัปดาห์ละ", "อาทิตย์ละ", "เดือนละ", "ครั้ง", "ทุก", "ชั่วโมง", "ชม.",
      "มก.", "มก", "มิลลิกรัม", "กรัม", "ไมโครกรัม", "ยูนิต", "มล.", "มล", "และ", "หรือ", "ถึง"} | _TH_NUMBER_WORDS,
     key=len, reverse=True,
 ))
+_WORD_ONLY = frozenset({"มก", "มล"})  # lexemes that must not touch a Thai character on either side
 _SYMBOLS = frozenset("/⁄.,-–—~x+&")
 _CONNECTORS = frozenset({"to", "or", "and", "ถึง", "หรือ", "และ"})
 _RANGE_CONNECTORS = frozenset({"-", "–", "—", "~"}) | _CONNECTORS
@@ -96,7 +99,8 @@ def tokenise(raw: str) -> list[Token]:
             toks.append(Token("UFRAC", c, i, i + 1))
             i += 1
         elif _is_thai(c):
-            lexeme = next((w for w in _TH_LEXICON if s.startswith(w, i)), None)
+            lexeme = next((w for w in _TH_LEXICON if s.startswith(w, i) and not (w in _WORD_ONLY and (
+                (i > 0 and _is_thai(s[i - 1])) or (i + len(w) < len(s) and _is_thai(s[i + len(w)]))))), None)
             if lexeme:
                 toks.append(Token("TH", lexeme, i, i + len(lexeme)))
                 i += len(lexeme)

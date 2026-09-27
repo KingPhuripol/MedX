@@ -260,6 +260,60 @@ def test_fuzz_catches_piecewise_stub():
     assert any("1-2 tabs" in line or "1 to 2 tabs" in line for line in report.safety)  # upper end of a range
 
 
+# ---------------------------------------------------------------- CHK-SCOPE2-TH-PREFIX: undotted มก/มล only as a word
+
+TH_PREFIX = {
+    # "5 มกราคม" = 5 January, "มลพิษ" = pollution: no strength is stated, the stray 5 is not a dose.
+    "วาร์ฟาริน 1 เม็ด วันละ 1 ครั้ง เริ่ม 5 มกราคม": ("unverifiable", "unparsed_token", None, None, None),
+    "วาร์ฟาริน 1 เม็ด วันละ 1 ครั้ง เริ่ม 5มกราคม": ("unverifiable", "unparsed_token", None, None, None),
+    "น้ำเกลือ 1 เม็ด 5 มลพิษ": ("unverifiable", "unparsed_token", None, None, None),
+    "วาร์ฟาริน 1 เม็ด วันละ 1 ครั้ง": ("not_stated", None, None, None, 1.0),  # control line
+    # A drug name that contains "มล" is not a stray unit.
+    "แอมลอดิปีน 5 มก. 1 เม็ด": ("resolved", None, 5.0, "mg", 1.0),
+    # Undotted units still read when they stand alone.
+    "วาร์ฟาริน 3 มก 1 เม็ด": ("resolved", None, 3.0, "mg", 1.0),
+    "วาร์ฟาริน 3มก 1 เม็ด": ("resolved", None, 3.0, "mg", 1.0),
+    "ยาน้ำ 5 มล": ("resolved", None, 5.0, "ml", None),
+}
+
+
+@pytest.mark.parametrize("text", list(TH_PREFIX))
+def test_thai_word_starting_with_unit_is_not_a_unit(text):
+    assert _dose(text) == TH_PREFIX[text]
+    assert reference_parse(text) == (TH_PREFIX[text][0], *TH_PREFIX[text][2:])
+
+
+def test_thai_date_prefix_raises_missing_dose():
+    """Checker repro: home 'วาร์ฟาริน 1 เม็ด ... เริ่ม 5 มกราคม' vs order 'Warfarin 5 mg 1 tab od'."""
+    home = "วาร์ฟาริน 1 เม็ด วันละ 1 ครั้ง เริ่ม 5 มกราคม"
+    result = run(snapshot(home=[home], orders=["Warfarin 5 mg 1 tab od"]))
+    dose_issues = [i for i in of_type(result, "missing_field") if i["field"] == "dose"]
+    assert len(dose_issues) == 1
+    assert dose_issues[0]["detail"]["field_status"] in ("unverifiable", "not_stated")
+    assert dose_issues[0]["conflicting_sources"][0]["raw_span"] == home
+    assert of_type(result, "dose_mismatch") == []
+
+
+def test_thai_date_prefix_api_rules_only(client, login):
+    """Same repro through POST /api/pharma/reconcile, mode rules_only, as pharmacist1."""
+    login("pharmacist1")
+    snap = snapshot(home=["วาร์ฟาริน 1 เม็ด วันละ 1 ครั้ง เริ่ม 5 มกราคม"], orders=["Warfarin 5 mg 1 tab od"])
+    resp = client.post("/api/pharma/reconcile", json={"snapshot": snap.model_dump(mode="json"), "mode": "rules_only"})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert len([i for i in of_type(body, "missing_field") if i["field"] == "dose"]) == 1
+    assert of_type(body, "dose_mismatch") == []
+
+
+def test_fuzz_catches_substring_unit(monkeypatch):
+    """The fuzz must detect the pre-fix tokeniser, which matched undotted มก/มล inside any Thai word."""
+    from app.pharma import mock_rules
+
+    monkeypatch.setattr(mock_rules, "_WORD_ONLY", frozenset())
+    report = harness(entry_tuple(mock_rules.parse_entry), generate())
+    assert any("มกราคม" in line or "มลพิษ" in line or "มกรา" in line for line in report.safety), report.safety[:5]
+
+
 def test_reference_independent():
     path = Path(__file__).parent / "pharma_dose_reference.py"
     tree = ast.parse(path.read_text(encoding="utf-8"))
