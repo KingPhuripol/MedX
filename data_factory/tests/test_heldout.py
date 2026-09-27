@@ -103,14 +103,17 @@ def test_heldout_disjoint_from_all_splits(heldout, dataset):
     refs = set(heldout.splits)
     assert len(dataset.splits) == 180 and not refs & set(dataset.splits)
     assert not set(heldout.cases) & set(dataset.cases)
-    committed = set()
+    committed, own = set(), set()
     for p in REPO_ROOT.glob("slices/*/eval/**/*.jsonl"):
+        # The held-out run's own outputs (s6-care-test-0002) may only hold held-out ids; all other evidence none.
+        bucket = own if p.name.endswith("_test_0002.jsonl") else committed
         for line in p.read_text("utf-8").splitlines():
             if line.strip():
                 pid = json.loads(line).get("patient_id")
                 if pid:
-                    committed.add(pid)
+                    bucket.add(pid)
     assert committed and not refs & committed
+    assert own <= refs
 
 
 def test_heldout_case_mix(heldout, dataset):
