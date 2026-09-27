@@ -49,11 +49,11 @@ def rows(dataset):
 
 
 def test_inputs_unchanged_vs_v111(dataset):
-    assert GENERATOR_VERSION == "1.2.1" and ITEM_VERSION == "1.1.1"  # s6r: v1.2.1
+    assert GENERATOR_VERSION == "1.2.2" and ITEM_VERSION == "1.1.1"  # s6r: v1.2.2
     assert inputs_sha256(dataset.root) == V111_INPUTS_SHA256
     assert old_gold_sha256(dataset.root) == V111_OLD_GOLD_SHA256
     assert {c["gold"]["label_version"] for c in dataset.cases.values()} == {"1.2.1"}
-    assert dataset.manifest["generator_version"] == "1.2.1"
+    assert dataset.manifest["generator_version"] == "1.2.2" and dataset.manifest["output_version"] == "1.2.1"
 
 
 def test_care_required_inputs_canonical(dataset):

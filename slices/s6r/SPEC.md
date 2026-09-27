@@ -14,7 +14,7 @@
 | Dev evaluation ids | before = `s6-care-dev-0001` (committed, rules `care-rules-1.0.0`); after = `s6-care-dev-0002` (rules `care-rules-1.1.0`) |
 | New held-out evaluation id | `s6-care-test-0002` (manifest `slices/s6/eval/manifest_test_0002.json`, results `slices/s6/eval/results_test_0002/`, summary `slices/s6/eval/summary_test_0002.json`) |
 | Ledger | the existing slice ledger `slices/s6/eval/ledger/` (append only; history kept) |
-| Generator | `data_factory` `GENERATOR_VERSION = "1.2.1"` |
+| Generator | `data_factory` `GENERATOR_VERSION = "1.2.1"`; `1.2.2` for the held-out set after D-s6r-2 (held-out-only pregnancy quota; default-seed output byte-identical to 1.2.1) |
 | Held-out seed | **20260927** (unused anywhere in the repo at spec time; fixed here so no seed can be chosen after seeing data) |
 | Held-out size | **72 patients** (8 revisit), 80 cases, 160 decision points, split name `test`, same `QUOTAS` as v1. 72 is chosen, not 36, because the retired set had only 17 answered evaluable decision points (below the s6 minimum of 30) |
 | Held-out identity namespace | patients `SYNH-NNNN`, cases `SYNHE-NNNN`; path `data/synthetic/s6r-heldout` |
@@ -95,4 +95,14 @@ API_PORT=8106 WEB_PORT=3106 make e2e
 ## Decisions required
 
 - **D-s6r-1:** The s8 owner (สุปรียา) reviews the runner change (test-split identical re-run = re-render, no ledger line) and the edited count in `test_runner_rerun_same_inputs_ok`. It follows the owner decision, but it changes shared harness semantics.
+- **D-s6r-2 resolved by the orchestrator before any held-out result** (2026-09-27). The v1.2.1 held-out set had 7
+  pregnancy (obstetric-complaint) cases against 2 × 1 (v1 test) ± 2 in S6R-A07, because pregnancy was not a quota
+  key. No held-out prediction or result had been produced or seen, and `manifest_test_0002` was not frozen, so fixing
+  the case mix before the freeze is allowed. Ruling: pregnancy becomes a controlled quota key for held-out generation
+  only, target = 2 × v1 test count = **2** (`HELDOUT["pregnancy_cases"]`; later obstetric slots take a general
+  complaint); generator bumped to **v1.2.2**; the held-out set is regenerated with the **same seed 20260927**; the
+  default-seed (v1) output stays byte-identical (tree `518463d3…`, stamped `output_version` / `label_version`
+  1.2.1); the held-out audit is re-run; `manifest_test_0002.json` is rewritten from gold for the new `tree_sha256`
+  before the freeze. The pregnancy case-mix check is a normal (not xfail) test. This ruling adds no clinical-risk
+  acceptance and no approval.
 - The s6 decisions D1 (expert review), D2 (symptom red-flag wiring), D3 (`CareSuggestion` extension) and D4 (slice ledger vs main ledger) remain open.

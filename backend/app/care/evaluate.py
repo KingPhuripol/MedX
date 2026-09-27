@@ -169,7 +169,7 @@ def manifest(split: str, evaluation_id: str | None = None) -> dict[str, Any]:
         "manifest_version": "1.0",
         "evaluation_id": evaluation_id or f"s6-care-{split}-0001",
         "slice": "s6",
-        "dataset": {"name": f"{'s6r-heldout' if meta.get('heldout') else 's1r'}-synthetic-v{meta['generator_version']}",
+        "dataset": {"name": f"{'s6r-heldout' if meta.get('heldout') else 's1r'}-synthetic-v{meta.get('output_version', meta['generator_version'])}",
                     "version": meta["tree_sha256"],
                     "data_class": "synthetic"},
         "split": split,

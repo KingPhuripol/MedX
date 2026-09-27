@@ -1,4 +1,4 @@
-"""Slice s6r: generator v1.2.1 held-out mode (S6R-A06, A07, A08, A12). Synthetic data only."""
+"""Slice s6r: generator v1.2.1/v1.2.2 held-out mode (S6R-A06, A07, A08, A12). Synthetic data only."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ import sys
 import pytest
 
 from data_factory import audit
-from data_factory.generate import GENERATOR_VERSION, generate
+from data_factory.generate import GENERATOR_VERSION, HELDOUT, generate
 
 from .conftest import REPO_ROOT, Dataset, load
 from .test_care_gold import V111_INPUTS_SHA256, inputs_sha256
@@ -20,7 +20,10 @@ from .test_care_gold import V111_INPUTS_SHA256, inputs_sha256
 HELDOUT_SEED = 20260927
 # v1.2.0 at seed 20260926 (tree 19033a72...): sha over every gold file, *.json with `label_version` removed.
 V120_GOLD_SHA256 = "226bc07505c93228fdd935c35b21986f4a570034327a4f69a01a941f5c8ac5ae"
-QUOTA_KEYS = ("red_flag", "missing_info", "no_medication", "late_items", "near_miss", "text_near_miss")
+# v1.2.1 default-seed tree (the dataset of s6-care-dev-0002); v1.2.2 must keep it byte-identical.
+V121_TREE_SHA256 = "518463d363934997be2b96a70ea8387564c9c94934dbae2f8e0ade0528072010"
+QUOTA_KEYS = ("red_flag", "missing_info", "no_medication", "late_items", "near_miss", "text_near_miss",
+              "pregnancy")
 
 
 @pytest.fixture(scope="session")
@@ -55,11 +58,13 @@ def quota_counts(ds: Dataset, split: str) -> dict[str, int]:
 
 
 def test_inputs_unchanged_vs_v120(dataset):
-    assert GENERATOR_VERSION == "1.2.1"
+    assert GENERATOR_VERSION == "1.2.2"
     assert inputs_sha256(dataset.root) == V111_INPUTS_SHA256  # v1.2.0 inputs == v1.1.1 inputs (pinned in s6)
     assert gold_sha256_without_label_version(dataset.root) == V120_GOLD_SHA256
     assert {c["gold"]["label_version"] for c in dataset.cases.values()} == {"1.2.1"}
     assert "heldout" not in dataset.manifest
+    assert dataset.manifest["tree_sha256"] == V121_TREE_SHA256  # v1.2.2 default output byte-identical to v1.2.1
+    assert dataset.manifest["output_version"] == "1.2.1"
 
 
 def test_templates_unchanged():
@@ -76,9 +81,9 @@ def test_heldout_only_test_split(heldout):
 
 def test_heldout_seed_recorded(heldout):
     m = heldout.manifest
-    assert m["seed"] == HELDOUT_SEED and m["generator_version"] == "1.2.1" and m["heldout"] is True
+    assert m["seed"] == HELDOUT_SEED and m["generator_version"] == m["output_version"] == "1.2.2" and m["heldout"] is True
     card = (heldout.root / "DATACARD.md").read_text("utf-8")
-    assert f"seed `{HELDOUT_SEED}`" in card and "(1.2.1)" in card and "Held-out mode" in card
+    assert f"seed `{HELDOUT_SEED}`" in card and "(1.2.2)" in card and "Held-out mode" in card
 
 
 def test_heldout_size(heldout):
@@ -140,8 +145,8 @@ def test_audit_bans_care_gold_in_heldout_inputs(heldout, tmp_path):
     assert r.returncode != 0
 
 
-@pytest.mark.xfail(strict=True, reason="S6R-A07 pregnancy: held-out 7 vs 2x v1 test 1 (+-2). Pregnancy is not a QUOTAS "
-                   "key (it follows the complaint cycle and the roster); needs a planner/owner decision (D-s6r-2)")
-def test_heldout_case_mix_pregnancy(heldout, dataset):
-    v1, h = quota_counts(dataset, "test"), quota_counts(heldout, "test")
-    assert abs(h["pregnancy"] - 2 * v1["pregnancy"]) <= 2, (h["pregnancy"], v1["pregnancy"])
+def test_heldout_pregnancy_quota(heldout, dataset):
+    """D-s6r-2 (v1.2.2): the held-out pregnancy target is 2 x the v1 test count and is met exactly."""
+    v1 = quota_counts(dataset, "test")["pregnancy"]
+    assert HELDOUT["pregnancy_cases"] == 2 * v1
+    assert quota_counts(heldout, "test")["pregnancy"] == heldout.manifest["counts"]["pregnancy_cases"] == 2 * v1

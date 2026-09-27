@@ -17,7 +17,11 @@ from pathlib import Path
 
 from casegraph import evidence_adapter
 
-GENERATOR_VERSION = "1.2.1"
+GENERATOR_VERSION = "1.2.2"
+# v1.2.2 (slice s6r, ruling D-s6r-2) changes the held-out mode only: pregnancy becomes a controlled quota
+# (``HELDOUT["pregnancy_cases"]``). Default-mode output is byte-identical to v1.2.1 (same tree_sha256), so it keeps
+# the v1.2.1 stamp in gold ``label_version``, DATACARD and manifest ``output_version``.
+V1_OUTPUT_VERSION = "1.2.1"
 # v1.2.1 (slice s6r) is additive: a held-out mode (``--heldout``) with its own identity namespace that writes only
 # the test split. At any seed without ``--heldout`` every inputs/** file is byte-identical to v1.2.0 and the gold is
 # identical except ``label_version``.
@@ -35,7 +39,10 @@ REVISIT_SPLIT = {"train": 12, "dev": 4, "test": 4}  # stratify revisit patients 
 # s6r held-out set: 72 patients (8 revisit, 80 cases), test split only, patients SYNH-NNNN, cases SYNHE-NNNN
 # (disjoint by construction from SYNP-/SYNE-). Fixed in slices/s6r/SPEC.md before any held-out data existed.
 HELDOUT = {"n_patients": 72, "n_revisit": 8, "patient_prefix": "SYNH", "case_prefix": "SYNHE",
-           "split_sizes": {"train": 0, "dev": 0, "test": 72}, "revisit_split": {"train": 0, "dev": 0, "test": 8}}
+           "split_sizes": {"train": 0, "dev": 0, "test": 72}, "revisit_split": {"train": 0, "dev": 0, "test": 8},
+           # v1.2.2 (D-s6r-2): obstetric (pregnant) cases capped at 2 x the v1 test count (1); later obstetric slots
+           # take a general complaint. Fixed before any held-out prediction or result was seen.
+           "pregnancy_cases": 2}
 
 # Scenario quotas (fractions, spread evenly over each split's shuffled case order). Not used by the split.
 QUOTAS = {
@@ -155,7 +162,8 @@ def make_splits(main: random.Random, roster: list[dict], sizes: dict | None = No
 
 
 # ---------------------------------------------------------------- strata (after the split)
-def plan_cases(main: random.Random, roster: list[dict], splits: dict[str, str], tpl: dict, quotas: dict) -> list[dict]:
+def plan_cases(main: random.Random, roster: list[dict], splits: dict[str, str], tpl: dict, quotas: dict,
+               pregnancy_cap: int | None = None) -> list[dict]:
     q = {k: Fraction(v) for k, v in quotas.items()}
     complaints = tpl["complaints"]
     by_group = {g: [c for c in complaints if c["group"] == g and "near_miss_family" not in c]
@@ -173,7 +181,7 @@ def plan_cases(main: random.Random, roster: list[dict], splits: dict[str, str], 
     near = tpl["vitals_bands"]["near_miss_variants"]
     patients = {p["patient_ref"]: p for p in roster}
     ctr = dict.fromkeys(("rf", "vit", "swap", "miss", "host", "gen", "ob", "gyn", "yf", "of", "near", "inj",
-                         "var_q", "var_n", "var_a", "tnm", "ccm", "ccm_vit"), 0)
+                         "var_q", "var_n", "var_a", "tnm", "ccm", "ccm_vit", "preg"), 0)
     ctr_rule = dict.fromkeys(RULE_CYCLE, 0)
     ctr_unit = dict.fromkeys(RULE_CYCLE, 0)
     ctr_arr = dict.fromkeys(STRATA, 0)
@@ -252,6 +260,10 @@ def plan_cases(main: random.Random, roster: list[dict], splits: dict[str, str], 
                 if pat["sex"] == "female" and pat["age"] <= 45:
                     group = ("obstetric", "gynecologic", "obstetric", "general")[ctr["yf"] % 4]
                     ctr["yf"] += 1
+                    if group == "obstetric" and pregnancy_cap is not None:  # held-out only (v1.2.2)
+                        if ctr["preg"] >= pregnancy_cap:
+                            group = "general"
+                        ctr["preg"] += group == "obstetric"
                 elif pat["sex"] == "female":
                     group = "gynecologic" if ctr["of"] % 4 == 0 else "general"
                     ctr["of"] += 1
@@ -641,7 +653,8 @@ def care_gold(case: "_Case", journey: dict, T: str, snap: list[dict], flags: lis
             "ordered_after_T": ordered}
 
 
-def gold_for(case: _Case, journey: dict, injections: list[dict], rules: list[dict]) -> dict:
+def gold_for(case: _Case, journey: dict, injections: list[dict], rules: list[dict],
+             version: str = V1_OUTPUT_VERSION) -> dict:
     rows = []
     cc_dept = case.cc["department"]
     for label, T in zip(("T1", "T2"), journey["decision_times"]):
@@ -661,7 +674,7 @@ def gold_for(case: _Case, journey: dict, injections: list[dict], rules: list[dic
                      "red_flags": flags, "required_fields": case.fields, "medication_issues": issues,
                      "expected_action": action, "care": care_gold(case, journey, T, snap, flags, case.tpl)})
     return {"case_id": case.cid, "patient_ref": case.plan["patient_ref"], "split": case.plan["split"],
-            "label_version": GENERATOR_VERSION,
+            "label_version": version,
             "label_status": "synthetic reference labels from predeclared rules; not clinical ground truth; not expert-reviewed",
             "scenario": {k: case.plan[k] for k in ("complaint_id", "red_flag", "near_miss", "text_near_miss",
                                                    "arrival_tamtee", "pregnant", "missing", "has_meds",
@@ -701,7 +714,8 @@ def generate(seed: int, out: Path, splits_only: bool = False, quotas: dict | Non
     _write(out / "splits.json", dumps(splits))  # written before any case exists
     if splits_only:
         return None
-    plans = plan_cases(main, roster, splits, tpl, quotas or QUOTAS)
+    plans = plan_cases(main, roster, splits, tpl, quotas or QUOTAS, HELDOUT["pregnancy_cases"] if heldout else None)
+    version = GENERATOR_VERSION if heldout else V1_OUTPUT_VERSION
     patients = {p["patient_ref"]: p for p in roster}
     days = {c["case_id"]: c["day"] for p in roster for c in p["cases"]}
     rules = tpl["red_flags"]
@@ -717,7 +731,7 @@ def generate(seed: int, out: Path, splits_only: bool = False, quotas: dict | Non
             snap = {"case_id": case.cid, "encounter_ref": case.cid, "patient_ref": plan["patient_ref"],
                     "intake_point": "front_door", "as_of": T, "items": snapshot(journey, T)}
             _write(base / f"snapshot_{label}.json", dumps(snap))
-        gold = gold_for(case, journey, injections, rules)
+        gold = gold_for(case, journey, injections, rules, version)
         _write(out / "gold" / plan["split"] / f"{case.cid}.json", dumps(gold))
         all_injections += injections
         golds.append(gold)
@@ -725,9 +739,9 @@ def generate(seed: int, out: Path, splits_only: bool = False, quotas: dict | Non
            b"".join(json.dumps(r, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode() + b"\n"
                     for r in all_injections))
     counts = summarize(plans, golds, all_injections, splits)
-    _write(out / "DATACARD.md", (datacard(seed, counts) + (HELDOUT_CARD.format(seed=seed) if heldout else "")).encode())
+    _write(out / "DATACARD.md", (datacard(seed, counts, version) + (HELDOUT_CARD.format(seed=seed) if heldout else "")).encode())
     _write(out / "gold" / "README.md", GOLD_README.encode())
-    return write_manifest(out, seed, counts, heldout)
+    return write_manifest(out, seed, counts, heldout, version)
 
 
 def summarize(plans, golds, injections, splits) -> dict:
@@ -794,8 +808,8 @@ A "no red flag" row means only that no rule in the registry fires; it does not m
 """
 
 
-def datacard(seed: int, counts: dict) -> str:
-    return f"""# DATACARD — synthetic case factory v1 ({GENERATOR_VERSION})
+def datacard(seed: int, counts: dict, version: str = V1_OUTPUT_VERSION) -> str:
+    return f"""# DATACARD — synthetic case factory v1 ({version})
 
 **synthetic, not for clinical use, not expert-reviewed, system evaluation only.**
 
@@ -842,20 +856,24 @@ Obstetric-complaint cases carry no drug with ATC `C09*` or `C10AA*` in any list 
 
 
 HELDOUT_CARD = """
-## Held-out mode (v1.2.1, slice s6r)
+## Held-out mode (v1.2.1-v1.2.2, slice s6r)
 Fresh held-out set for `s6-care-test-0002`: seed `{seed}`, 72 patients (8 revisit), 80 cases, `test` split only,
 patients `SYNH-NNNN` and cases `SYNHE-NNNN` (disjoint from every `SYNP-`/`SYNE-` identity). Same templates and
-quotas as v1. Generated after `care-rules-1.1.0` was committed; evaluated once against a frozen manifest.
+quotas as v1, plus a pregnancy quota (v1.2.2, ruling D-s6r-2): at most 2 obstetric cases (2 x the v1 test count);
+later obstetric slots take a general complaint. Generated after `care-rules-1.1.0` was committed; evaluated once
+against a frozen manifest.
 """
 
 
-def write_manifest(out: Path, seed: int, counts: dict, heldout: bool = False) -> dict:
+def write_manifest(out: Path, seed: int, counts: dict, heldout: bool = False,
+                   version: str = V1_OUTPUT_VERSION) -> dict:
     files = {}
     for p in sorted(out.rglob("*")):
         rel = p.relative_to(out).as_posix()
         if p.is_file() and rel != "manifest.json" and not rel.endswith("audit_report.json"):
             files[rel] = hashlib.sha256(p.read_bytes()).hexdigest()
-    manifest = {"seed": seed, "generator_version": GENERATOR_VERSION, "source_code_sha256": source_code_sha256(),
+    manifest = {"seed": seed, "generator_version": GENERATOR_VERSION, "output_version": version,
+                "source_code_sha256": source_code_sha256(),
                 **({"heldout": True, "heldout_spec": HELDOUT} if heldout else {}),
                 "counts": counts, "split_sizes": counts["patients_per_split"],
                 "model_inputs_glob": MODEL_INPUTS_GLOB, "audit_only_globs": AUDIT_ONLY_GLOBS, "files": files,
