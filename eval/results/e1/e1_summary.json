@@ -41,16 +41,30 @@
    "x": 5
   },
   {
+   "interval": [
+    0.13636363636363635,
+    0.6842105263157895
+   ],
+   "interval_method": "bootstrap_percentile",
    "metric_id": "rf_case_recall",
-   "point": null,
+   "n": 22,
+   "point": 0.4090909090909091,
    "split": "test",
-   "verdict": "NOT RUN"
+   "verdict": "FAIL",
+   "x": 9
   },
   {
+   "interval": [
+    0.13043478260869565,
+    0.4827586206896552
+   ],
+   "interval_method": "bootstrap_percentile",
    "metric_id": "rf_rule_recall",
-   "point": null,
+   "n": 29,
+   "point": 0.3103448275862069,
    "split": "test",
-   "verdict": "NOT RUN"
+   "verdict": "FAIL",
+   "x": 9
   }
  ],
  "research_prototype": "Research prototype - not for clinical use",
@@ -2638,9 +2652,2542 @@
    }
   },
   "test": {
-   "reason": "the test split runs once, after all 4 e1 manifests are frozen and committed (spec scope 6)",
+   "comparators": {
+    "always_answer_fallback": {
+     "code": "E-MED",
+     "counts": {
+      "E-ENT": 16,
+      "E-EYE": 8,
+      "E-MED": 80,
+      "E-OBGYN": 22,
+      "E-ORTHO": 10,
+      "E-PSY": 10,
+      "E-SURG": 10
+     },
+     "rule": "most frequent E code among train DPs with department_evaluable and a mappable gold; ties -> lexicographic"
+    },
+    "s_star": {
+     "rule": "V = substrings (1-30 chars) of T1 patient turns + whitespace tokens + registry lexicon; max F1 on train for any text red flag at T1; ties: shorter, then lexicographic",
+     "s_star": "ทีค",
+     "tamtee_train": {
+      "f1": 0.3225806451612903,
+      "precision": 0.23809523809523808,
+      "recall": 0.5,
+      "support": 42
+     },
+     "train": {
+      "f1": 0.7222222222222223,
+      "n_candidates": 57531,
+      "n_cases": 120,
+      "n_positive": 20,
+      "precision": 0.8125,
+      "recall": 0.65,
+      "support": 16
+     }
+    }
+   },
+   "evaluation_ids": {
+    "triage": "e1-triage-test-v1",
+    "voice": "e1-voice-test-v1"
+   },
+   "expected_action_confusion": {
+    "columns": "system",
+    "matrix": {
+     "abstain": {
+      "abstain": 7,
+      "escalate": 0,
+      "suggest": 0
+     },
+     "escalate": {
+      "abstain": 8,
+      "escalate": 9,
+      "suggest": 5
+     },
+     "suggest": {
+      "abstain": 29,
+      "escalate": 0,
+      "suggest": 22
+     }
+    },
+    "rows": "gold"
+   },
+   "frozen": true,
+   "frozen_entry_hash": {
+    "triage": "c884b4178599bb283189140a1ffdd2209a1ce4c7cdb65197f8e81168b22dac5a",
+    "voice": "97cbdee3bbbec4c07b9310024015b2fccd52ab67964607a9fb0a36eb59abc818"
+   },
+   "manifest_sha256": {
+    "triage": "d9be1b73ce9c4b863a9c5a9f23bebc13fa8e8e349359e510918d1639f138f691",
+    "voice": "460389615be2190180e37c30b6bd1a593c380c40153e31814a54e97358b387b0"
+   },
+   "metric_rows": [
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 1.0,
+      "ci_low": 1.0,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.8235330881930345,
+      1.0
+     ],
+     "degenerate": true,
+     "degenerate_reasons": [
+      "ci_low == ci_high",
+      "x in {0, n}"
+     ],
+     "interval": [
+      0.8235330881930345,
+      1.0
+     ],
+     "interval_method": "clopper_pearson",
+     "item": "Voice Agent",
+     "metric": "field_prf",
+     "metric_id": "voice_cc_precision",
+     "n": 19,
+     "n_decision_points": 24,
+     "n_patients": 23,
+     "params": {
+      "component": "precision",
+      "field": "chief_complaint",
+      "fields": [
+       "chief_complaint",
+       "onset_duration",
+       "allergy_status"
+      ]
+     },
+     "point": 1.0,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "voice_cc",
+     "thresholds": [],
+     "wilson": [
+      0.8318207759473839,
+      1.0
+     ],
+     "x": 19
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 1.0,
+      "ci_low": 0.6956521739130435,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.6508779027425919,
+      0.9709441488712531
+     ],
+     "degenerate": false,
+     "degenerate_reasons": [],
+     "interval": [
+      0.6956521739130435,
+      1.0
+     ],
+     "interval_method": "bootstrap_percentile",
+     "item": "Voice Agent",
+     "metric": "field_prf",
+     "metric_id": "voice_cc_recall",
+     "n": 22,
+     "n_decision_points": 24,
+     "n_patients": 23,
+     "params": {
+      "component": "recall",
+      "field": "chief_complaint",
+      "fields": [
+       "chief_complaint",
+       "onset_duration",
+       "allergy_status"
+      ]
+     },
+     "point": 0.8636363636363636,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "voice_cc",
+     "thresholds": [],
+     "wilson": [
+      0.6666501283342828,
+      0.9525099628594474
+     ],
+     "x": 19
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 1.0,
+      "ci_low": 0.8205128205128205,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": null,
+     "degenerate": false,
+     "degenerate_reasons": [],
+     "exact_reason": "not a binomial proportion (F1 = 2TP / (2TP + FP + FN)); no exact interval",
+     "interval": [
+      0.8205128205128205,
+      1.0
+     ],
+     "interval_method": "bootstrap_percentile",
+     "item": "Voice Agent",
+     "metric": "field_prf",
+     "metric_id": "voice_cc_f1",
+     "n": 41,
+     "n_decision_points": 24,
+     "n_patients": 23,
+     "params": {
+      "component": "f1",
+      "field": "chief_complaint",
+      "fields": [
+       "chief_complaint",
+       "onset_duration",
+       "allergy_status"
+      ]
+     },
+     "point": 0.926829268292683,
+     "primary": true,
+     "proportion": false,
+     "reason": null,
+     "task": "voice_cc",
+     "thresholds": [
+      {
+       "compared_value": 0.926829268292683,
+       "op": ">=",
+       "rule": "point",
+       "status": "met",
+       "value": 0.8,
+       "verdict": "PASS"
+      }
+     ],
+     "wilson": null,
+     "x": 38
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 1.0,
+      "ci_low": 1.0,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.902606244085508,
+      1.0
+     ],
+     "degenerate": true,
+     "degenerate_reasons": [
+      "ci_low == ci_high",
+      "x in {0, n}"
+     ],
+     "interval": [
+      0.902606244085508,
+      1.0
+     ],
+     "interval_method": "clopper_pearson",
+     "item": "Voice Agent",
+     "metric": "field_prf",
+     "metric_id": "voice_dur_precision",
+     "n": 36,
+     "n_decision_points": 40,
+     "n_patients": 36,
+     "params": {
+      "component": "precision",
+      "field": "onset_duration",
+      "fields": [
+       "chief_complaint",
+       "onset_duration",
+       "allergy_status"
+      ]
+     },
+     "point": 1.0,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "voice_intake",
+     "thresholds": [],
+     "wilson": [
+      0.9035813714055364,
+      1.0
+     ],
+     "x": 36
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 1.0,
+      "ci_low": 1.0,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.902606244085508,
+      1.0
+     ],
+     "degenerate": true,
+     "degenerate_reasons": [
+      "ci_low == ci_high",
+      "x in {0, n}"
+     ],
+     "interval": [
+      0.902606244085508,
+      1.0
+     ],
+     "interval_method": "clopper_pearson",
+     "item": "Voice Agent",
+     "metric": "field_prf",
+     "metric_id": "voice_dur_recall",
+     "n": 36,
+     "n_decision_points": 40,
+     "n_patients": 36,
+     "params": {
+      "component": "recall",
+      "field": "onset_duration",
+      "fields": [
+       "chief_complaint",
+       "onset_duration",
+       "allergy_status"
+      ]
+     },
+     "point": 1.0,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "voice_intake",
+     "thresholds": [],
+     "wilson": [
+      0.9035813714055364,
+      1.0
+     ],
+     "x": 36
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 1.0,
+      "ci_low": 1.0,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": null,
+     "degenerate": true,
+     "degenerate_reasons": [
+      "ci_low == ci_high"
+     ],
+     "exact_reason": "not a binomial proportion (F1 = 2TP / (2TP + FP + FN)); no exact interval",
+     "interval": [
+      1.0,
+      1.0
+     ],
+     "interval_method": "bootstrap_percentile",
+     "item": "Voice Agent",
+     "metric": "field_prf",
+     "metric_id": "voice_dur_f1",
+     "n": 72,
+     "n_decision_points": 40,
+     "n_patients": 36,
+     "params": {
+      "component": "f1",
+      "field": "onset_duration",
+      "fields": [
+       "chief_complaint",
+       "onset_duration",
+       "allergy_status"
+      ]
+     },
+     "point": 1.0,
+     "primary": true,
+     "proportion": false,
+     "reason": null,
+     "task": "voice_intake",
+     "thresholds": [
+      {
+       "compared_value": 1.0,
+       "op": ">=",
+       "rule": "point",
+       "status": "met",
+       "value": 0.8,
+       "verdict": "PASS"
+      }
+     ],
+     "wilson": null,
+     "x": 72
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 1.0,
+      "ci_low": 1.0,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.902606244085508,
+      1.0
+     ],
+     "degenerate": true,
+     "degenerate_reasons": [
+      "ci_low == ci_high",
+      "x in {0, n}"
+     ],
+     "interval": [
+      0.902606244085508,
+      1.0
+     ],
+     "interval_method": "clopper_pearson",
+     "item": "Voice Agent",
+     "metric": "field_prf",
+     "metric_id": "voice_allergy_precision",
+     "n": 36,
+     "n_decision_points": 40,
+     "n_patients": 36,
+     "params": {
+      "component": "precision",
+      "field": "allergy_status",
+      "fields": [
+       "chief_complaint",
+       "onset_duration",
+       "allergy_status"
+      ]
+     },
+     "point": 1.0,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "voice_intake",
+     "thresholds": [],
+     "wilson": [
+      0.9035813714055364,
+      1.0
+     ],
+     "x": 36
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 1.0,
+      "ci_low": 1.0,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.902606244085508,
+      1.0
+     ],
+     "degenerate": true,
+     "degenerate_reasons": [
+      "ci_low == ci_high",
+      "x in {0, n}"
+     ],
+     "interval": [
+      0.902606244085508,
+      1.0
+     ],
+     "interval_method": "clopper_pearson",
+     "item": "Voice Agent",
+     "metric": "field_prf",
+     "metric_id": "voice_allergy_recall",
+     "n": 36,
+     "n_decision_points": 40,
+     "n_patients": 36,
+     "params": {
+      "component": "recall",
+      "field": "allergy_status",
+      "fields": [
+       "chief_complaint",
+       "onset_duration",
+       "allergy_status"
+      ]
+     },
+     "point": 1.0,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "voice_intake",
+     "thresholds": [],
+     "wilson": [
+      0.9035813714055364,
+      1.0
+     ],
+     "x": 36
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 1.0,
+      "ci_low": 1.0,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": null,
+     "degenerate": true,
+     "degenerate_reasons": [
+      "ci_low == ci_high"
+     ],
+     "exact_reason": "not a binomial proportion (F1 = 2TP / (2TP + FP + FN)); no exact interval",
+     "interval": [
+      1.0,
+      1.0
+     ],
+     "interval_method": "bootstrap_percentile",
+     "item": "Voice Agent",
+     "metric": "field_prf",
+     "metric_id": "voice_allergy_f1",
+     "n": 72,
+     "n_decision_points": 40,
+     "n_patients": 36,
+     "params": {
+      "component": "f1",
+      "field": "allergy_status",
+      "fields": [
+       "chief_complaint",
+       "onset_duration",
+       "allergy_status"
+      ]
+     },
+     "point": 1.0,
+     "primary": true,
+     "proportion": false,
+     "reason": null,
+     "task": "voice_intake",
+     "thresholds": [
+      {
+       "compared_value": 1.0,
+       "op": ">=",
+       "rule": "point",
+       "status": "met",
+       "value": 0.8,
+       "verdict": "PASS"
+      }
+     ],
+     "wilson": null,
+     "x": 72
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 1.0,
+      "ci_low": 1.0,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.9602735023081503,
+      1.0
+     ],
+     "degenerate": true,
+     "degenerate_reasons": [
+      "ci_low == ci_high",
+      "x in {0, n}"
+     ],
+     "interval": [
+      0.9602735023081503,
+      1.0
+     ],
+     "interval_method": "clopper_pearson",
+     "item": "Voice Agent",
+     "metric": "field_prf",
+     "metric_id": "voice_micro_precision",
+     "n": 91,
+     "n_decision_points": 40,
+     "n_patients": 36,
+     "params": {
+      "component": "precision",
+      "fields": [
+       "chief_complaint",
+       "onset_duration",
+       "allergy_status"
+      ]
+     },
+     "point": 1.0,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "voice_intake",
+     "thresholds": [],
+     "wilson": [
+      0.9594959960711198,
+      1.0
+     ],
+     "x": 91
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 1.0,
+      "ci_low": 0.9310259474223285,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.9095544642479634,
+      0.993369395633273
+     ],
+     "degenerate": false,
+     "degenerate_reasons": [],
+     "interval": [
+      0.9310259474223285,
+      1.0
+     ],
+     "interval_method": "bootstrap_percentile",
+     "item": "Voice Agent",
+     "metric": "field_prf",
+     "metric_id": "voice_micro_recall",
+     "n": 94,
+     "n_decision_points": 40,
+     "n_patients": 36,
+     "params": {
+      "component": "recall",
+      "fields": [
+       "chief_complaint",
+       "onset_duration",
+       "allergy_status"
+      ]
+     },
+     "point": 0.9680851063829787,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "voice_intake",
+     "thresholds": [],
+     "wilson": [
+      0.9103268539187764,
+      0.9890873725316923
+     ],
+     "x": 91
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 1.0,
+      "ci_low": 0.9642811355311356,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": null,
+     "degenerate": false,
+     "degenerate_reasons": [],
+     "exact_reason": "not a binomial proportion (F1 = 2TP / (2TP + FP + FN)); no exact interval",
+     "interval": [
+      0.9642811355311356,
+      1.0
+     ],
+     "interval_method": "bootstrap_percentile",
+     "item": "Voice Agent",
+     "metric": "field_prf",
+     "metric_id": "voice_micro_f1",
+     "n": 185,
+     "n_decision_points": 40,
+     "n_patients": 36,
+     "params": {
+      "component": "f1",
+      "fields": [
+       "chief_complaint",
+       "onset_duration",
+       "allergy_status"
+      ]
+     },
+     "point": 0.9837837837837838,
+     "primary": false,
+     "proportion": false,
+     "reason": null,
+     "task": "voice_intake",
+     "thresholds": [],
+     "wilson": null,
+     "x": 182
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 0.0,
+      "ci_low": 0.0,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.0,
+      0.15437251281557435
+     ],
+     "degenerate": true,
+     "degenerate_reasons": [
+      "ci_low == ci_high",
+      "x in {0, n}"
+     ],
+     "interval": [
+      0.0,
+      0.15437251281557435
+     ],
+     "interval_method": "clopper_pearson",
+     "item": "Voice Agent",
+     "metric": "accuracy",
+     "metric_id": "voice_allergy_false_none_rate",
+     "n": 22,
+     "n_decision_points": 22,
+     "n_patients": 18,
+     "params": {
+      "estimand": "false-none rate: share of cases with gold allergy known or MISSING where S3 records KNOWN none"
+     },
+     "point": 0.0,
+     "primary": true,
+     "proportion": true,
+     "reason": null,
+     "task": "voice_allergy_false_none",
+     "thresholds": [
+      {
+       "compared_value": 0.0,
+       "op": "<=",
+       "rule": "point",
+       "status": "met",
+       "value": 0,
+       "verdict": "PASS"
+      }
+     ],
+     "wilson": [
+      0.0,
+      0.1486548746086208
+     ],
+     "x": 0
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 0.6842105263157895,
+      "ci_low": 0.13636363636363635,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.20709312299714921,
+      0.6364530382702687
+     ],
+     "degenerate": false,
+     "degenerate_reasons": [],
+     "interval": [
+      0.13636363636363635,
+      0.6842105263157895
+     ],
+     "interval_method": "bootstrap_percentile",
+     "item": "Department suggestion",
+     "metric": "accuracy",
+     "metric_id": "rf_case_recall",
+     "n": 22,
+     "n_decision_points": 22,
+     "n_patients": 13,
+     "params": {
+      "estimand": "case-level red-flag recall: gold-positive DPs with >=1 S4 alert of any rule"
+     },
+     "point": 0.4090909090909091,
+     "primary": true,
+     "proportion": true,
+     "reason": null,
+     "task": "rf_case_recall",
+     "thresholds": [
+      {
+       "compared_value": 0.4090909090909091,
+       "op": ">=",
+       "rule": "point",
+       "status": "not met",
+       "value": 1.0,
+       "verdict": "FAIL"
+      }
+     ],
+     "wilson": [
+      0.23255816196471873,
+      0.6126518152368488
+     ],
+     "x": 9
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 0.4827586206896552,
+      "ci_low": 0.13043478260869565,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.15284593960863174,
+      0.5083233538099896
+     ],
+     "degenerate": false,
+     "degenerate_reasons": [],
+     "interval": [
+      0.13043478260869565,
+      0.4827586206896552
+     ],
+     "interval_method": "bootstrap_percentile",
+     "item": "Department suggestion",
+     "metric": "set_prf",
+     "metric_id": "rf_rule_recall",
+     "n": 29,
+     "n_decision_points": 22,
+     "n_patients": 13,
+     "params": {
+      "component": "recall",
+      "estimand": "rule-level recall pooled over gold (DP, rule) pairs; UNMAPPABLE pairs count as missed"
+     },
+     "point": 0.3103448275862069,
+     "primary": true,
+     "proportion": true,
+     "reason": null,
+     "task": "rf_rule_recall",
+     "thresholds": [
+      {
+       "compared_value": 0.3103448275862069,
+       "op": ">=",
+       "rule": "point",
+       "status": "not met",
+       "value": 1.0,
+       "verdict": "FAIL"
+      }
+     ],
+     "wilson": [
+      0.1727561674448322,
+      0.49230134233093154
+     ],
+     "x": 9
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 0.7,
+      "ci_low": 0.18181818181818182,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.21819685688513019,
+      0.6597936907197255
+     ],
+     "degenerate": false,
+     "degenerate_reasons": [],
+     "interval": [
+      0.18181818181818182,
+      0.7
+     ],
+     "interval_method": "bootstrap_percentile",
+     "item": "Department suggestion",
+     "metric": "set_prf",
+     "metric_id": "rf_rule_recall_mappable",
+     "n": 21,
+     "n_decision_points": 19,
+     "n_patients": 11,
+     "params": {
+      "component": "recall",
+      "estimand": "rule-level recall over mappable gold (DP, rule) pairs (secondary)"
+     },
+     "point": 0.42857142857142855,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "rf_rule_recall_mappable",
+     "thresholds": [],
+     "wilson": [
+      0.24469968925375965,
+      0.6345344563069328
+     ],
+     "x": 9
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 0.0,
+      "ci_low": 0.0,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.0,
+      0.6023646356164742
+     ],
+     "degenerate": true,
+     "degenerate_reasons": [
+      "ci_low == ci_high",
+      "x in {0, n}"
+     ],
+     "interval": [
+      0.0,
+      0.6023646356164742
+     ],
+     "interval_method": "clopper_pearson",
+     "item": "Department suggestion",
+     "metric": "accuracy",
+     "metric_id": "rf_rule_RF-ACUTE-CHEST-PAIN",
+     "n": 4,
+     "n_decision_points": 4,
+     "n_patients": 2,
+     "params": {
+      "estimand": "per-rule recall of RF-ACUTE-CHEST-PAIN: gold DPs where a mapped S4 rule fired"
+     },
+     "point": 0.0,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "rf_rule_RF-ACUTE-CHEST-PAIN",
+     "thresholds": [],
+     "wilson": [
+      0.0,
+      0.48989083645459713
+     ],
+     "x": 0
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 0.0,
+      "ci_low": 0.0,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.0,
+      0.8418861169915808
+     ],
+     "degenerate": true,
+     "degenerate_reasons": [
+      "ci_low == ci_high",
+      "x in {0, n}"
+     ],
+     "interval": [
+      0.0,
+      0.8418861169915808
+     ],
+     "interval_method": "clopper_pearson",
+     "item": "Department suggestion",
+     "metric": "accuracy",
+     "metric_id": "rf_rule_RF-ANAPHYLAXIS",
+     "n": 2,
+     "n_decision_points": 2,
+     "n_patients": 1,
+     "params": {
+      "estimand": "per-rule recall of RF-ANAPHYLAXIS: gold DPs where a mapped S4 rule fired"
+     },
+     "point": 0.0,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "rf_rule_RF-ANAPHYLAXIS",
+     "thresholds": [],
+     "wilson": [
+      0.0,
+      0.6576197724933468
+     ],
+     "x": 0
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 0.0,
+      "ci_low": 0.0,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.0,
+      0.6023646356164742
+     ],
+     "degenerate": true,
+     "degenerate_reasons": [
+      "ci_low == ci_high",
+      "x in {0, n}"
+     ],
+     "interval": [
+      0.0,
+      0.6023646356164742
+     ],
+     "interval_method": "clopper_pearson",
+     "item": "Department suggestion",
+     "metric": "accuracy",
+     "metric_id": "rf_rule_RF-FAST",
+     "n": 4,
+     "n_decision_points": 4,
+     "n_patients": 2,
+     "params": {
+      "estimand": "per-rule recall of RF-FAST: gold DPs where a mapped S4 rule fired"
+     },
+     "point": 0.0,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "rf_rule_RF-FAST",
+     "thresholds": [],
+     "wilson": [
+      0.0,
+      0.48989083645459713
+     ],
+     "x": 0
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 1.0,
+      "ci_low": 1.0,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.4781762498950184,
+      1.0
+     ],
+     "degenerate": true,
+     "degenerate_reasons": [
+      "ci_low == ci_high",
+      "x in {0, n}"
+     ],
+     "interval": [
+      0.4781762498950184,
+      1.0
+     ],
+     "interval_method": "clopper_pearson",
+     "item": "Department suggestion",
+     "metric": "accuracy",
+     "metric_id": "rf_rule_RF-NEWS-SINGLE3",
+     "n": 5,
+     "n_decision_points": 5,
+     "n_patients": 3,
+     "params": {
+      "estimand": "per-rule recall of RF-NEWS-SINGLE3: gold DPs where a mapped S4 rule fired"
+     },
+     "point": 1.0,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "rf_rule_RF-NEWS-SINGLE3",
+     "thresholds": [],
+     "wilson": [
+      0.5655175352168254,
+      1.0
+     ],
+     "x": 5
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 1.0,
+      "ci_low": 1.0,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.39763536438352554,
+      1.0
+     ],
+     "degenerate": true,
+     "degenerate_reasons": [
+      "ci_low == ci_high",
+      "x in {0, n}"
+     ],
+     "interval": [
+      0.39763536438352554,
+      1.0
+     ],
+     "interval_method": "clopper_pearson",
+     "item": "Department suggestion",
+     "metric": "accuracy",
+     "metric_id": "rf_rule_RF-QSOFA",
+     "n": 4,
+     "n_decision_points": 4,
+     "n_patients": 3,
+     "params": {
+      "estimand": "per-rule recall of RF-QSOFA: gold DPs where a mapped S4 rule fired"
+     },
+     "point": 1.0,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "rf_rule_RF-QSOFA",
+     "thresholds": [],
+     "wilson": [
+      0.5101091635454028,
+      1.0
+     ],
+     "x": 4
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 0.0,
+      "ci_low": 0.0,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.0,
+      0.8418861169915808
+     ],
+     "degenerate": true,
+     "degenerate_reasons": [
+      "ci_low == ci_high",
+      "x in {0, n}"
+     ],
+     "interval": [
+      0.0,
+      0.8418861169915808
+     ],
+     "interval_method": "clopper_pearson",
+     "item": "Department suggestion",
+     "metric": "accuracy",
+     "metric_id": "rf_rule_RF-THUNDERCLAP",
+     "n": 2,
+     "n_decision_points": 2,
+     "n_patients": 1,
+     "params": {
+      "estimand": "per-rule recall of RF-THUNDERCLAP: gold DPs where a mapped S4 rule fired"
+     },
+     "point": 0.0,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "rf_rule_RF-THUNDERCLAP",
+     "thresholds": [],
+     "wilson": [
+      0.0,
+      0.6576197724933468
+     ],
+     "x": 0
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 0.0,
+      "ci_low": 0.0,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.0,
+      0.06162100890391914
+     ],
+     "degenerate": true,
+     "degenerate_reasons": [
+      "ci_low == ci_high",
+      "x in {0, n}"
+     ],
+     "interval": [
+      0.0,
+      0.06162100890391914
+     ],
+     "interval_method": "clopper_pearson",
+     "item": "Department suggestion",
+     "metric": "accuracy",
+     "metric_id": "rf_fpr",
+     "n": 58,
+     "n_decision_points": 58,
+     "n_patients": 28,
+     "params": {
+      "estimand": "false-positive rate: gold-negative DPs with >=1 S4 alert of any rule"
+     },
+     "point": 0.0,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "rf_fpr",
+     "thresholds": [],
+     "wilson": [
+      0.0,
+      0.06211785578720287
+     ],
+     "x": 0
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 0.0,
+      "ci_low": 0.0,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.0,
+      0.06162100890391914
+     ],
+     "degenerate": true,
+     "degenerate_reasons": [
+      "ci_low == ci_high",
+      "x in {0, n}"
+     ],
+     "interval": [
+      0.0,
+      0.06162100890391914
+     ],
+     "interval_method": "clopper_pearson",
+     "item": "Department suggestion",
+     "metric": "accuracy",
+     "metric_id": "rf_fpr_mapped",
+     "n": 58,
+     "n_decision_points": 58,
+     "n_patients": 28,
+     "params": {
+      "estimand": "false-positive rate counting only S4 rules mapped to the S1r registry (secondary)"
+     },
+     "point": 0.0,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "rf_fpr_mapped",
+     "thresholds": [],
+     "wilson": [
+      0.0,
+      0.06211785578720287
+     ],
+     "x": 0
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 0.0,
+      "ci_low": 0.0,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.0,
+      0.45925812643990016
+     ],
+     "degenerate": true,
+     "degenerate_reasons": [
+      "ci_low == ci_high",
+      "x in {0, n}"
+     ],
+     "interval": [
+      0.0,
+      0.45925812643990016
+     ],
+     "interval_method": "clopper_pearson",
+     "item": "Department suggestion",
+     "metric": "accuracy",
+     "metric_id": "rf_text_t1_recall",
+     "n": 6,
+     "n_decision_points": 6,
+     "n_patients": 6,
+     "params": {
+      "estimand": "text red-flag recall at T1: any alert of RF-CHEST, RF-STROKE, RF-THUNDER, RF-ANAPH"
+     },
+     "point": 0.0,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "rf_text_t1_recall",
+     "thresholds": [],
+     "wilson": [
+      0.0,
+      0.39033428790216523
+     ],
+     "x": 0
+    },
+    {
+     "arm": "comparator:shortcut_s_star",
+     "bootstrap": {
+      "ci_high": 1.0,
+      "ci_low": 0.3333333333333333,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.22277809550351213,
+      0.9567281317072582
+     ],
+     "degenerate": false,
+     "degenerate_reasons": [],
+     "interval": [
+      0.3333333333333333,
+      1.0
+     ],
+     "interval_method": "bootstrap_percentile",
+     "item": "Department suggestion",
+     "metric": "accuracy",
+     "metric_id": "rf_text_t1_recall",
+     "n": 6,
+     "n_decision_points": 6,
+     "n_patients": 6,
+     "paired_difference_system_minus_comparator": {
+      "ci_high": -0.3333333333333333,
+      "ci_low": -1.0,
+      "n_degenerate": 0,
+      "point": -0.6666666666666666,
+      "reason": null,
+      "unstable": false
+     },
+     "params": {
+      "estimand": "text red-flag recall at T1: any alert of RF-CHEST, RF-STROKE, RF-THUNDER, RF-ANAPH"
+     },
+     "point": 0.6666666666666666,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "rf_text_t1_recall",
+     "wilson": [
+      0.299993315138392,
+      0.9032285888942195
+     ],
+     "x": 4
+    },
+    {
+     "arm": "comparator:shortcut_tamtee",
+     "bootstrap": {
+      "ci_high": 0.8333333333333334,
+      "ci_low": 0.16666666666666666,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.11811724875702523,
+      0.8818827512429748
+     ],
+     "degenerate": false,
+     "degenerate_reasons": [],
+     "interval": [
+      0.16666666666666666,
+      0.8333333333333334
+     ],
+     "interval_method": "bootstrap_percentile",
+     "item": "Department suggestion",
+     "metric": "accuracy",
+     "metric_id": "rf_text_t1_recall",
+     "n": 6,
+     "n_decision_points": 6,
+     "n_patients": 6,
+     "paired_difference_system_minus_comparator": {
+      "ci_high": -0.16666666666666666,
+      "ci_low": -0.8333333333333334,
+      "n_degenerate": 0,
+      "point": -0.5,
+      "reason": null,
+      "unstable": false
+     },
+     "params": {
+      "estimand": "text red-flag recall at T1: any alert of RF-CHEST, RF-STROKE, RF-THUNDER, RF-ANAPH"
+     },
+     "point": 0.5,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "rf_text_t1_recall",
+     "wilson": [
+      0.18761630648265054,
+      0.8123836935173494
+     ],
+     "x": 3
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 0.0,
+      "ci_low": 0.0,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.0,
+      0.10281792425901268
+     ],
+     "degenerate": true,
+     "degenerate_reasons": [
+      "ci_low == ci_high",
+      "x in {0, n}"
+     ],
+     "interval": [
+      0.0,
+      0.10281792425901268
+     ],
+     "interval_method": "clopper_pearson",
+     "item": "Department suggestion",
+     "metric": "accuracy",
+     "metric_id": "rf_text_t1_fpr",
+     "n": 34,
+     "n_decision_points": 34,
+     "n_patients": 31,
+     "params": {
+      "estimand": "text red-flag false-positive rate at T1 (same alert set)"
+     },
+     "point": 0.0,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "rf_text_t1_fpr",
+     "thresholds": [],
+     "wilson": [
+      0.0,
+      0.10151455415332371
+     ],
+     "x": 0
+    },
+    {
+     "arm": "comparator:shortcut_s_star",
+     "bootstrap": {
+      "ci_high": 0.08823529411764706,
+      "ci_low": 0.0,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.0007443642346902579,
+      0.1532676695603179
+     ],
+     "degenerate": false,
+     "degenerate_reasons": [],
+     "interval": [
+      0.0,
+      0.08823529411764706
+     ],
+     "interval_method": "bootstrap_percentile",
+     "item": "Department suggestion",
+     "metric": "accuracy",
+     "metric_id": "rf_text_t1_fpr",
+     "n": 34,
+     "n_decision_points": 34,
+     "n_patients": 31,
+     "paired_difference_system_minus_comparator": {
+      "ci_high": 0.0,
+      "ci_low": -0.08823529411764706,
+      "n_degenerate": 0,
+      "point": -0.029411764705882353,
+      "reason": null,
+      "unstable": false
+     },
+     "params": {
+      "estimand": "text red-flag false-positive rate at T1 (same alert set)"
+     },
+     "point": 0.029411764705882353,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "rf_text_t1_fpr",
+     "wilson": [
+      0.005210906276268953,
+      0.14915573292685924
+     ],
+     "x": 1
+    },
+    {
+     "arm": "comparator:shortcut_tamtee",
+     "bootstrap": {
+      "ci_high": 0.48484848484848486,
+      "ci_low": 0.18181818181818182,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.17388342749392122,
+      0.5052653008985049
+     ],
+     "degenerate": false,
+     "degenerate_reasons": [],
+     "interval": [
+      0.18181818181818182,
+      0.48484848484848486
+     ],
+     "interval_method": "bootstrap_percentile",
+     "item": "Department suggestion",
+     "metric": "accuracy",
+     "metric_id": "rf_text_t1_fpr",
+     "n": 34,
+     "n_decision_points": 34,
+     "n_patients": 31,
+     "paired_difference_system_minus_comparator": {
+      "ci_high": -0.18181818181818182,
+      "ci_low": -0.48484848484848486,
+      "n_degenerate": 0,
+      "point": -0.3235294117647059,
+      "reason": null,
+      "unstable": false
+     },
+     "params": {
+      "estimand": "text red-flag false-positive rate at T1 (same alert set)"
+     },
+     "point": 0.3235294117647059,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "rf_text_t1_fpr",
+     "wilson": [
+      0.19131643564025516,
+      0.49157105406091794
+     ],
+     "x": 11
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 0.5490696278511402,
+      "ci_low": 0.20408163265306123,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.23422415553661158,
+      0.5171223088306067
+     ],
+     "degenerate": false,
+     "degenerate_reasons": [],
+     "interval": [
+      0.20408163265306123,
+      0.5490696278511402
+     ],
+     "interval_method": "bootstrap_percentile",
+     "item": "Department suggestion",
+     "metric": "topk_accuracy",
+     "metric_id": "dept_top1",
+     "n": 49,
+     "n_decision_points": 49,
+     "n_patients": 23,
+     "params": {
+      "k": 1
+     },
+     "point": 0.3673469387755102,
+     "primary": true,
+     "proportion": true,
+     "reason": null,
+     "task": "dept",
+     "thresholds": [],
+     "wilson": [
+      0.24665172968683144,
+      0.5073293243920757
+     ],
+     "x": 18
+    },
+    {
+     "arm": "comparator:always_answer",
+     "bootstrap": {
+      "ci_high": 0.6981132075471698,
+      "ci_low": 0.32,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.36337825813878255,
+      0.6557525769123806
+     ],
+     "degenerate": false,
+     "degenerate_reasons": [],
+     "interval": [
+      0.32,
+      0.6981132075471698
+     ],
+     "interval_method": "bootstrap_percentile",
+     "item": "Department suggestion",
+     "metric": "topk_accuracy",
+     "metric_id": "dept_top1",
+     "n": 49,
+     "n_decision_points": 49,
+     "n_patients": 23,
+     "paired_difference_system_minus_comparator": {
+      "ci_high": -0.022727272727272763,
+      "ci_low": -0.26415094339622636,
+      "n_degenerate": 0,
+      "point": -0.14285714285714285,
+      "reason": null,
+      "unstable": false
+     },
+     "params": {
+      "k": 1
+     },
+     "point": 0.5102040816326531,
+     "primary": true,
+     "proportion": true,
+     "reason": null,
+     "task": "dept",
+     "wilson": [
+      0.3746756374046804,
+      0.644248896896942
+     ],
+     "x": 25
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 0.5918367346938775,
+      "ci_low": 0.24,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.2699670606312985,
+      0.5578706070573536
+     ],
+     "degenerate": false,
+     "degenerate_reasons": [],
+     "interval": [
+      0.24,
+      0.5918367346938775
+     ],
+     "interval_method": "bootstrap_percentile",
+     "item": "Department suggestion",
+     "metric": "topk_accuracy",
+     "metric_id": "dept_top3",
+     "n": 49,
+     "n_decision_points": 49,
+     "n_patients": 23,
+     "params": {
+      "k": 3
+     },
+     "point": 0.40816326530612246,
+     "primary": true,
+     "proportion": true,
+     "reason": null,
+     "task": "dept",
+     "thresholds": [
+      {
+       "compared_value": 0.40816326530612246,
+       "op": ">=",
+       "rule": "point",
+       "status": "not met",
+       "value": 0.8,
+       "verdict": "FAIL"
+      }
+     ],
+     "wilson": [
+      0.2821523852038687,
+      0.5475268060815286
+     ],
+     "x": 20
+    },
+    {
+     "arm": "comparator:always_answer",
+     "bootstrap": {
+      "ci_high": 0.7408392434988174,
+      "ci_low": 0.37254901960784315,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.4023054391098787,
+      0.693346247721041
+     ],
+     "degenerate": false,
+     "degenerate_reasons": [],
+     "interval": [
+      0.37254901960784315,
+      0.7408392434988174
+     ],
+     "interval_method": "bootstrap_percentile",
+     "item": "Department suggestion",
+     "metric": "topk_accuracy",
+     "metric_id": "dept_top3",
+     "n": 49,
+     "n_decision_points": 49,
+     "n_patients": 23,
+     "paired_difference_system_minus_comparator": {
+      "ci_high": -0.022727272727272707,
+      "ci_low": -0.26415094339622636,
+      "n_degenerate": 0,
+      "point": -0.1428571428571428,
+      "reason": null,
+      "unstable": false
+     },
+     "params": {
+      "k": 3
+     },
+     "point": 0.5510204081632653,
+     "primary": true,
+     "proportion": true,
+     "reason": null,
+     "task": "dept",
+     "wilson": [
+      0.413151082194979,
+      0.6814715893131335
+     ],
+     "x": 27
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 0.5957549099836333,
+      "ci_low": 0.25,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.2813579570178082,
+      0.5586601882187561
+     ],
+     "degenerate": false,
+     "degenerate_reasons": [],
+     "interval": [
+      0.25,
+      0.5957549099836333
+     ],
+     "interval_method": "bootstrap_percentile",
+     "item": "Abstention",
+     "metric": "coverage",
+     "metric_id": "abst_coverage",
+     "n": 53,
+     "n_decision_points": 53,
+     "n_patients": 25,
+     "params": {},
+     "point": 0.41509433962264153,
+     "primary": true,
+     "proportion": true,
+     "reason": null,
+     "task": "abstention",
+     "thresholds": [],
+     "wilson": [
+      0.29260908779813977,
+      0.549055778186556
+     ],
+     "x": 22
+    },
+    {
+     "arm": "comparator:always_answer",
+     "bootstrap": {
+      "ci_high": 1.0,
+      "ci_low": 1.0,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.9327654536936987,
+      1.0
+     ],
+     "degenerate": true,
+     "degenerate_reasons": [
+      "ci_low == ci_high",
+      "x in {0, n}"
+     ],
+     "interval": [
+      0.9327654536936987,
+      1.0
+     ],
+     "interval_method": "clopper_pearson",
+     "item": "Abstention",
+     "metric": "coverage",
+     "metric_id": "abst_coverage",
+     "n": 53,
+     "n_decision_points": 53,
+     "n_patients": 25,
+     "paired_difference_system_minus_comparator": {
+      "ci_high": -0.4042450900163667,
+      "ci_low": -0.75,
+      "n_degenerate": 0,
+      "point": -0.5849056603773585,
+      "reason": null,
+      "unstable": false
+     },
+     "params": {},
+     "point": 1.0,
+     "primary": true,
+     "proportion": true,
+     "reason": null,
+     "task": "abstention",
+     "wilson": [
+      0.9324180114234583,
+      1.0
+     ],
+     "x": 53
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 1.0,
+      "ci_low": 0.5714285714285714,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.5971542169221289,
+      0.9481327006875631
+     ],
+     "degenerate": false,
+     "degenerate_reasons": [],
+     "interval": [
+      0.5714285714285714,
+      1.0
+     ],
+     "interval_method": "bootstrap_percentile",
+     "item": "Abstention",
+     "metric": "selective_accuracy",
+     "metric_id": "abst_selective_top1",
+     "n": 22,
+     "n_decision_points": 53,
+     "n_patients": 25,
+     "params": {
+      "estimand": "top-1 accuracy among answered DPs; answering a NOT_EVALUABLE DP is wrong"
+     },
+     "point": 0.8181818181818182,
+     "primary": true,
+     "proportion": true,
+     "reason": null,
+     "task": "abstention",
+     "thresholds": [],
+     "wilson": [
+      0.6148339256287347,
+      0.9269311541657794
+     ],
+     "x": 18
+    },
+    {
+     "arm": "comparator:always_answer",
+     "bootstrap": {
+      "ci_high": 0.6538461538461539,
+      "ci_low": 0.29411764705882354,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.33302469567889437,
+      0.6136447928059012
+     ],
+     "degenerate": false,
+     "degenerate_reasons": [],
+     "interval": [
+      0.29411764705882354,
+      0.6538461538461539
+     ],
+     "interval_method": "bootstrap_percentile",
+     "item": "Abstention",
+     "metric": "selective_accuracy",
+     "metric_id": "abst_selective_top1",
+     "n": 53,
+     "n_decision_points": 53,
+     "n_patients": 25,
+     "paired_difference_system_minus_comparator": {
+      "ci_high": 0.5769230769230769,
+      "ci_low": 0.158225916453538,
+      "n_degenerate": 0,
+      "point": 0.34648370497427106,
+      "reason": null,
+      "unstable": false
+     },
+     "params": {
+      "estimand": "top-1 accuracy among answered DPs; answering a NOT_EVALUABLE DP is wrong"
+     },
+     "point": 0.4716981132075472,
+     "primary": true,
+     "proportion": true,
+     "reason": null,
+     "task": "abstention",
+     "wilson": [
+      0.3438224347819616,
+      0.603399187212937
+     ],
+     "x": 25
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 1.0,
+      "ci_low": 1.0,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.39763536438352554,
+      1.0
+     ],
+     "degenerate": true,
+     "degenerate_reasons": [
+      "ci_low == ci_high",
+      "x in {0, n}"
+     ],
+     "interval": [
+      0.39763536438352554,
+      1.0
+     ],
+     "interval_method": "clopper_pearson",
+     "item": "Abstention",
+     "metric": "accuracy",
+     "metric_id": "abst_rate_not_evaluable",
+     "n": 4,
+     "n_decision_points": 4,
+     "n_patients": 2,
+     "params": {
+      "estimand": "abstain rate on NOT_EVALUABLE DPs (secondary)"
+     },
+     "point": 1.0,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "abst_on_not_evaluable",
+     "thresholds": [],
+     "wilson": [
+      0.5101091635454028,
+      1.0
+     ],
+     "x": 4
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 0.7241379310344828,
+      "ci_low": 0.3657982261640799,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.4023054391098787,
+      0.693346247721041
+     ],
+     "degenerate": false,
+     "degenerate_reasons": [],
+     "interval": [
+      0.3657982261640799,
+      0.7241379310344828
+     ],
+     "interval_method": "bootstrap_percentile",
+     "item": "Abstention",
+     "metric": "accuracy",
+     "metric_id": "abst_false_abstain_rate",
+     "n": 49,
+     "n_decision_points": 49,
+     "n_patients": 23,
+     "params": {
+      "estimand": "false-abstain rate on the department population (secondary)"
+     },
+     "point": 0.5510204081632653,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "false_abstain",
+     "thresholds": [],
+     "wilson": [
+      0.413151082194979,
+      0.6814715893131335
+     ],
+     "x": 27
+    },
+    {
+     "arm": "system",
+     "bootstrap": {
+      "ci_high": 0.625,
+      "ci_low": 0.32926829268292684,
+      "n_degenerate": 0,
+      "unstable": false
+     },
+     "clopper_pearson": [
+      0.36213358167715304,
+      0.589772158623229
+     ],
+     "degenerate": false,
+     "degenerate_reasons": [],
+     "interval": [
+      0.32926829268292684,
+      0.625
+     ],
+     "interval_method": "bootstrap_percentile",
+     "item": "Abstention",
+     "metric": "accuracy",
+     "metric_id": "abst_expected_action_agreement",
+     "n": 80,
+     "n_decision_points": 80,
+     "n_patients": 36,
+     "params": {
+      "estimand": "3-class expected_action agreement (suggest/abstain/escalate) over every DP (secondary)"
+     },
+     "point": 0.475,
+     "primary": false,
+     "proportion": true,
+     "reason": null,
+     "task": "expected_action",
+     "thresholds": [],
+     "wilson": [
+      0.3692473329740758,
+      0.5830435735027006
+     ],
+     "x": 38
+    }
+   ],
+   "n_patients_in_split": 36,
+   "null_rows": [
+    {
+     "metric_id": "rf_rule_RF-NEWS-AGG5",
+     "n_decision_points": 8,
+     "point": null,
+     "reason": "UNMAPPABLE: S4 has no counterpart rule; its gold pairs count as missed in rf_rule_recall"
+    }
+   ],
+   "populations": [
+    {
+     "definition": "every case at T1 (onset_duration, allergy_status, micro-average)",
+     "n_excluded": {},
+     "n_patients_scored": 36,
+     "n_scored": 40,
+     "n_total": 40,
+     "population": "voice_intake",
+     "unit": "case"
+    },
+    {
+     "definition": "cases whose gold CC is mappable to S3 or MISSING (chief_complaint field)",
+     "n_excluded": {
+      "UNMAPPABLE": 16
+     },
+     "n_patients_scored": 23,
+     "n_scored": 24,
+     "n_total": 40,
+     "population": "voice_cc",
+     "unit": "case"
+    },
+    {
+     "definition": "cases with gold allergy known or MISSING",
+     "n_excluded": {
+      "gold_no_known_allergy": 18
+     },
+     "n_patients_scored": 18,
+     "n_scored": 22,
+     "n_total": 40,
+     "population": "voice_allergy_false_none",
+     "unit": "case"
+    },
+    {
+     "definition": "gold red-flag-positive DPs",
+     "n_excluded": {
+      "gold_negative (scored by rf_fpr)": 58
+     },
+     "n_patients_scored": 13,
+     "n_scored": 22,
+     "n_total": 80,
+     "population": "rf_case_recall",
+     "unit": "decision point"
+    },
+    {
+     "definition": "gold red-flag-negative DPs",
+     "n_excluded": {
+      "gold_positive (scored by rf_case_recall)": 22
+     },
+     "n_patients_scored": 28,
+     "n_scored": 58,
+     "n_total": 80,
+     "population": "rf_fpr",
+     "unit": "decision point"
+    },
+    {
+     "definition": "gold (DP, rule) pairs; UNMAPPABLE pairs scored as missed",
+     "n_excluded": {},
+     "n_patients_scored": 13,
+     "n_scored": 29,
+     "n_total": 29,
+     "population": "rf_rule_recall",
+     "unit": "(DP, rule) pair"
+    },
+    {
+     "definition": "gold (DP, rule) pairs with a mapped S4 rule",
+     "n_excluded": {
+      "UNMAPPABLE": 8
+     },
+     "n_patients_scored": 11,
+     "n_scored": 21,
+     "n_total": 29,
+     "population": "rf_rule_recall_mappable",
+     "unit": "(DP, rule) pair"
+    },
+    {
+     "definition": "gold DPs with RF-ACUTE-CHEST-PAIN",
+     "n_excluded": {},
+     "n_patients_scored": 2,
+     "n_scored": 4,
+     "n_total": 4,
+     "population": "rf_rule:RF-ACUTE-CHEST-PAIN",
+     "unit": "decision point"
+    },
+    {
+     "definition": "gold DPs with RF-ANAPHYLAXIS",
+     "n_excluded": {},
+     "n_patients_scored": 1,
+     "n_scored": 2,
+     "n_total": 2,
+     "population": "rf_rule:RF-ANAPHYLAXIS",
+     "unit": "decision point"
+    },
+    {
+     "definition": "gold DPs with RF-FAST",
+     "n_excluded": {},
+     "n_patients_scored": 2,
+     "n_scored": 4,
+     "n_total": 4,
+     "population": "rf_rule:RF-FAST",
+     "unit": "decision point"
+    },
+    {
+     "definition": "gold DPs with RF-NEWS-AGG5",
+     "n_excluded": {
+      "UNMAPPABLE": 8
+     },
+     "n_patients_scored": 0,
+     "n_scored": 0,
+     "n_total": 8,
+     "population": "rf_rule:RF-NEWS-AGG5",
+     "unit": "decision point"
+    },
+    {
+     "definition": "gold DPs with RF-NEWS-SINGLE3",
+     "n_excluded": {},
+     "n_patients_scored": 3,
+     "n_scored": 5,
+     "n_total": 5,
+     "population": "rf_rule:RF-NEWS-SINGLE3",
+     "unit": "decision point"
+    },
+    {
+     "definition": "gold DPs with RF-QSOFA",
+     "n_excluded": {},
+     "n_patients_scored": 3,
+     "n_scored": 4,
+     "n_total": 4,
+     "population": "rf_rule:RF-QSOFA",
+     "unit": "decision point"
+    },
+    {
+     "definition": "gold DPs with RF-THUNDERCLAP",
+     "n_excluded": {},
+     "n_patients_scored": 1,
+     "n_scored": 2,
+     "n_total": 2,
+     "population": "rf_rule:RF-THUNDERCLAP",
+     "unit": "decision point"
+    },
+    {
+     "definition": "T1 DPs with a gold text red flag",
+     "n_excluded": {
+      "T1 text-negative (scored by rf_text_t1_fpr)": 34,
+      "not T1": 40
+     },
+     "n_patients_scored": 6,
+     "n_scored": 6,
+     "n_total": 80,
+     "population": "rf_text_t1_recall",
+     "unit": "decision point"
+    },
+    {
+     "definition": "T1 DPs without a gold text red flag",
+     "n_excluded": {
+      "T1 text-positive (scored by rf_text_t1_recall)": 6,
+      "not T1": 40
+     },
+     "n_patients_scored": 31,
+     "n_scored": 34,
+     "n_total": 80,
+     "population": "rf_text_t1_fpr",
+     "unit": "decision point"
+    },
+    {
+     "definition": "DPs with department_evaluable and a gold department in E",
+     "n_excluded": {
+      "11": 6,
+      "12": 21,
+      "NOT_EVALUABLE": 4,
+      "UNMAPPABLE": 0
+     },
+     "n_patients_scored": 23,
+     "n_scored": 49,
+     "n_total": 80,
+     "population": "dept",
+     "unit": "decision point"
+    },
+    {
+     "definition": "department population",
+     "n_excluded": {
+      "11": 6,
+      "12": 21,
+      "NOT_EVALUABLE": 4,
+      "UNMAPPABLE": 0
+     },
+     "n_patients_scored": 23,
+     "n_scored": 49,
+     "n_total": 80,
+     "population": "false_abstain",
+     "unit": "decision point"
+    },
+    {
+     "definition": "department population + NOT_EVALUABLE DPs",
+     "n_excluded": {
+      "11": 6,
+      "12": 21
+     },
+     "n_patients_scored": 25,
+     "n_scored": 53,
+     "n_total": 80,
+     "population": "abstention",
+     "unit": "decision point"
+    },
+    {
+     "definition": "NOT_EVALUABLE DPs",
+     "n_excluded": {
+      "11": 6,
+      "12": 21,
+      "department population": 49
+     },
+     "n_patients_scored": 2,
+     "n_scored": 4,
+     "n_total": 80,
+     "population": "abst_on_not_evaluable",
+     "unit": "decision point"
+    },
+    {
+     "definition": "every DP (the 3-class label is defined on every DP)",
+     "n_excluded": {},
+     "n_patients_scored": 36,
+     "n_scored": 80,
+     "n_total": 80,
+     "population": "expected_action",
+     "unit": "decision point"
+    }
+   ],
+   "safety": {
+    "alerts_outside_s1r_registry": {
+     "RF-ECTOPIC": {
+      "dps": [],
+      "n_alerts": 0
+     },
+     "RF-GIBLEED": {
+      "dps": [],
+      "n_alerts": 0
+     },
+     "RF-HYPOGLY": {
+      "dps": [],
+      "n_alerts": 0
+     },
+     "RF-MENING": {
+      "dps": [],
+      "n_alerts": 0
+     },
+     "RF-SUICIDE": {
+      "dps": [],
+      "n_alerts": 0
+     }
+    },
+    "false_positive_dps_by_s4_rule": {},
+    "missed_gold_red_flag_dps": [
+     {
+      "T": "2030-02-11T11:48:33+07:00",
+      "case_id": "SYNE-0033",
+      "dp": "T1",
+      "rule": "RF-FAST"
+     },
+     {
+      "T": "2030-02-11T13:18:33+07:00",
+      "case_id": "SYNE-0033",
+      "dp": "T2",
+      "rule": "RF-FAST"
+     },
+     {
+      "T": "2030-04-23T17:49:02+07:00",
+      "case_id": "SYNE-0039",
+      "dp": "T2",
+      "rule": "RF-NEWS-AGG5"
+     },
+     {
+      "T": "2030-03-16T15:09:08+07:00",
+      "case_id": "SYNE-0101",
+      "dp": "T1",
+      "rule": "RF-NEWS-AGG5"
+     },
+     {
+      "T": "2030-03-16T16:39:08+07:00",
+      "case_id": "SYNE-0101",
+      "dp": "T2",
+      "rule": "RF-NEWS-AGG5"
+     },
+     {
+      "T": "2030-08-12T15:48:54+07:00",
+      "case_id": "SYNE-0125",
+      "dp": "T1",
+      "rule": "RF-ACUTE-CHEST-PAIN"
+     },
+     {
+      "T": "2030-08-12T17:18:54+07:00",
+      "case_id": "SYNE-0125",
+      "dp": "T2",
+      "rule": "RF-ACUTE-CHEST-PAIN"
+     },
+     {
+      "T": "2030-05-13T08:35:24+07:00",
+      "case_id": "SYNE-0131",
+      "dp": "T1",
+      "rule": "RF-FAST"
+     },
+     {
+      "T": "2030-05-13T10:05:24+07:00",
+      "case_id": "SYNE-0131",
+      "dp": "T2",
+      "rule": "RF-FAST"
+     },
+     {
+      "T": "2030-10-20T13:55:01+07:00",
+      "case_id": "SYNE-0141",
+      "dp": "T1",
+      "rule": "RF-THUNDERCLAP"
+     },
+     {
+      "T": "2030-10-20T15:25:01+07:00",
+      "case_id": "SYNE-0141",
+      "dp": "T2",
+      "rule": "RF-THUNDERCLAP"
+     },
+     {
+      "T": "2030-01-12T12:52:20+07:00",
+      "case_id": "SYNE-0187",
+      "dp": "T1",
+      "rule": "RF-ACUTE-CHEST-PAIN"
+     },
+     {
+      "T": "2030-01-12T14:22:20+07:00",
+      "case_id": "SYNE-0187",
+      "dp": "T2",
+      "rule": "RF-ACUTE-CHEST-PAIN"
+     }
+    ],
+    "missed_gold_red_flag_pairs": [
+     {
+      "T": "2030-01-18T11:12:47+07:00",
+      "case_id": "SYNE-0026",
+      "dp": "T1",
+      "reason": "UNMAPPABLE (no S4 counterpart)",
+      "rule": "RF-NEWS-AGG5"
+     },
+     {
+      "T": "2030-01-18T12:42:47+07:00",
+      "case_id": "SYNE-0026",
+      "dp": "T2",
+      "reason": "UNMAPPABLE (no S4 counterpart)",
+      "rule": "RF-NEWS-AGG5"
+     },
+     {
+      "T": "2030-02-11T11:48:33+07:00",
+      "case_id": "SYNE-0033",
+      "dp": "T1",
+      "reason": "no alert at this DP",
+      "rule": "RF-FAST"
+     },
+     {
+      "T": "2030-02-11T13:18:33+07:00",
+      "case_id": "SYNE-0033",
+      "dp": "T2",
+      "reason": "no alert at this DP",
+      "rule": "RF-FAST"
+     },
+     {
+      "T": "2030-04-23T17:49:02+07:00",
+      "case_id": "SYNE-0039",
+      "dp": "T2",
+      "reason": "UNMAPPABLE (no S4 counterpart)",
+      "rule": "RF-NEWS-AGG5"
+     },
+     {
+      "T": "2030-10-25T15:03:14+07:00",
+      "case_id": "SYNE-0042",
+      "dp": "T2",
+      "reason": "UNMAPPABLE (no S4 counterpart)",
+      "rule": "RF-NEWS-AGG5"
+     },
+     {
+      "T": "2030-03-16T15:09:08+07:00",
+      "case_id": "SYNE-0101",
+      "dp": "T1",
+      "reason": "UNMAPPABLE (no S4 counterpart)",
+      "rule": "RF-NEWS-AGG5"
+     },
+     {
+      "T": "2030-03-16T16:39:08+07:00",
+      "case_id": "SYNE-0101",
+      "dp": "T2",
+      "reason": "UNMAPPABLE (no S4 counterpart)",
+      "rule": "RF-NEWS-AGG5"
+     },
+     {
+      "T": "2030-08-12T15:48:54+07:00",
+      "case_id": "SYNE-0125",
+      "dp": "T1",
+      "reason": "no alert at this DP",
+      "rule": "RF-ACUTE-CHEST-PAIN"
+     },
+     {
+      "T": "2030-08-12T17:18:54+07:00",
+      "case_id": "SYNE-0125",
+      "dp": "T2",
+      "reason": "no alert at this DP",
+      "rule": "RF-ACUTE-CHEST-PAIN"
+     },
+     {
+      "T": "2030-05-13T08:35:24+07:00",
+      "case_id": "SYNE-0131",
+      "dp": "T1",
+      "reason": "no alert at this DP",
+      "rule": "RF-FAST"
+     },
+     {
+      "T": "2030-05-13T10:05:24+07:00",
+      "case_id": "SYNE-0131",
+      "dp": "T2",
+      "reason": "no alert at this DP",
+      "rule": "RF-FAST"
+     },
+     {
+      "T": "2030-04-01T09:29:16+07:00",
+      "case_id": "SYNE-0134",
+      "dp": "T1",
+      "reason": "other alert(s) only: RF-SBP",
+      "rule": "RF-ANAPHYLAXIS"
+     },
+     {
+      "T": "2030-04-01T09:29:16+07:00",
+      "case_id": "SYNE-0134",
+      "dp": "T1",
+      "reason": "UNMAPPABLE (no S4 counterpart)",
+      "rule": "RF-NEWS-AGG5"
+     },
+     {
+      "T": "2030-04-01T10:59:16+07:00",
+      "case_id": "SYNE-0134",
+      "dp": "T2",
+      "reason": "other alert(s) only: RF-SBP",
+      "rule": "RF-ANAPHYLAXIS"
+     },
+     {
+      "T": "2030-04-01T10:59:16+07:00",
+      "case_id": "SYNE-0134",
+      "dp": "T2",
+      "reason": "UNMAPPABLE (no S4 counterpart)",
+      "rule": "RF-NEWS-AGG5"
+     },
+     {
+      "T": "2030-10-20T13:55:01+07:00",
+      "case_id": "SYNE-0141",
+      "dp": "T1",
+      "reason": "no alert at this DP",
+      "rule": "RF-THUNDERCLAP"
+     },
+     {
+      "T": "2030-10-20T15:25:01+07:00",
+      "case_id": "SYNE-0141",
+      "dp": "T2",
+      "reason": "no alert at this DP",
+      "rule": "RF-THUNDERCLAP"
+     },
+     {
+      "T": "2030-01-12T12:52:20+07:00",
+      "case_id": "SYNE-0187",
+      "dp": "T1",
+      "reason": "no alert at this DP",
+      "rule": "RF-ACUTE-CHEST-PAIN"
+     },
+     {
+      "T": "2030-01-12T14:22:20+07:00",
+      "case_id": "SYNE-0187",
+      "dp": "T2",
+      "reason": "no alert at this DP",
+      "rule": "RF-ACUTE-CHEST-PAIN"
+     }
+    ]
+   },
    "split": "test",
-   "status": "not_run"
+   "stamp": null,
+   "status": "run",
+   "threshold_verdicts": [
+    {
+     "compared_value": 0.926829268292683,
+     "metric_id": "voice_cc_f1",
+     "rule": ">= 0.8 on point",
+     "verdict": "PASS"
+    },
+    {
+     "compared_value": 1.0,
+     "metric_id": "voice_dur_f1",
+     "rule": ">= 0.8 on point",
+     "verdict": "PASS"
+    },
+    {
+     "compared_value": 1.0,
+     "metric_id": "voice_allergy_f1",
+     "rule": ">= 0.8 on point",
+     "verdict": "PASS"
+    },
+    {
+     "compared_value": 0.0,
+     "metric_id": "voice_allergy_false_none_rate",
+     "rule": "<= 0 on point",
+     "verdict": "PASS"
+    },
+    {
+     "compared_value": 0.4090909090909091,
+     "metric_id": "rf_case_recall",
+     "rule": ">= 1.0 on point",
+     "verdict": "FAIL"
+    },
+    {
+     "compared_value": 0.3103448275862069,
+     "metric_id": "rf_rule_recall",
+     "rule": ">= 1.0 on point",
+     "verdict": "FAIL"
+    },
+    {
+     "compared_value": 0.40816326530612246,
+     "metric_id": "dept_top3",
+     "rule": ">= 0.8 on point",
+     "verdict": "FAIL"
+    }
+   ],
+   "unmapped_counts": {
+    "chief_complaint_s1r_to_s3": {
+     "UNMAPPABLE codes met": {
+      "CC-ANXIETY": 1,
+      "CC-BLURRED": 1,
+      "CC-CARIES": 1,
+      "CC-DISCHARGE": 1,
+      "CC-EPISTAXIS": 1,
+      "CC-GUM": 1,
+      "CC-HEARTBURN": 1,
+      "CC-INSOMNIA": 1,
+      "CC-LOW-MOOD": 1,
+      "CC-RED-EYE": 1,
+      "CC-RF-FAST": 1,
+      "CC-RF-FAST-4": 1,
+      "CC-TNM-DEFICIT-2": 1,
+      "CC-TNM-NUMB-1": 1,
+      "CC-TNM-NUMB-2": 1,
+      "CC-TOOTHACHE": 1
+     },
+     "cases with UNMAPPABLE gold CC": 16
+    },
+    "consciousness": {
+     "C values mapped to avpu A + new_confusion": 1
+    },
+    "department_s1r": {
+     "11 (UNMAPPABLE, excluded)": 6,
+     "12 (scored by red-flag metrics)": 21,
+     "NOT_EVALUABLE (abstention only)": 4
+    },
+    "red_flag_s1r": {
+     "RF-NEWS-AGG5 gold pairs (UNMAPPABLE)": 8
+    },
+    "s3_cc_to_s4_symptom": {
+     "S3 CC codes with no S4 symptom (per case)": {
+      "chest_pain": 3,
+      "diarrhea": 2,
+      "fatigue": 3,
+      "nausea_vomiting": 1,
+      "rash": 3,
+      "runny_nose": 2
+     }
+    },
+    "s3_field_to_s4_fact": {
+     "S3 fields not KNOWN -> no S4 fact (per case, T1)": {
+      "chief_complaint:MISSING": 20,
+      "onset_duration:UNKNOWN": 4
+     }
+    },
+    "vitals_demographics": {
+     "null vital values (no fact)": 4,
+     "on_oxygen values not passed (UNMAPPABLE)": 120,
+     "pregnancy_status (no S1r item)": 80,
+     "unit": "per S4 case built (one per DP)"
+    }
+   },
+   "voice_s3_states": {
+    "allergy_status": {
+     "KNOWN": 36,
+     "MISSING": 4
+    },
+    "chief_complaint": {
+     "KNOWN": 20,
+     "MISSING": 20
+    },
+    "onset_duration": {
+     "KNOWN": 36,
+     "UNKNOWN": 4
+    }
+   }
   }
  }
 }

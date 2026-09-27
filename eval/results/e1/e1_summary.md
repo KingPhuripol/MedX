@@ -13,8 +13,8 @@ System Evaluation of the as-built S3 and S4 on synthetic S1r data; not clinical 
 |---|---|---|---|---|---|
 | dev | rf_case_recall | 5 / 24 | 0.2083 | [0.0000, 0.4545] (bootstrap_percentile) | FAIL |
 | dev | rf_rule_recall | 5 / 26 | 0.1923 | [0.0000, 0.3847] (bootstrap_percentile) | FAIL |
-| test | rf_case_recall | null / null | null | null (None) | NOT RUN |
-| test | rf_rule_recall | null / null | null | null (None) | NOT RUN |
+| test | rf_case_recall | 9 / 22 | 0.4091 | [0.1364, 0.6842] (bootstrap_percentile) | FAIL |
+| test | rf_rule_recall | 9 / 29 | 0.3103 | [0.1304, 0.4828] (bootstrap_percentile) | FAIL |
 
 Wilson and Clopper-Pearson intervals assume independent decision points; decision points of one patient are not independent, so they ignore patient clustering. They are shown next to the patient-level bootstrap CI and n_patients.
 
@@ -249,7 +249,223 @@ A bootstrap CI is degenerate when the S8r flag 'unstable' is set, ci_low == ci_h
 
 ## Split: test
 
-Not run: the test split runs once, after all 4 e1 manifests are frozen and committed (spec scope 6)
+- Evaluation IDs: e1-triage-test-v1, e1-voice-test-v1; frozen: yes
+- Patients in split: 36
+
+### Threshold verdicts (predeclared rule only)
+
+> **System Evaluation on synthetic data - not clinical performance**
+
+| Metric | Rule | Compared value | Verdict |
+|---|---|---|---|
+| voice_cc_f1 | >= 0.8 on point | 0.9268 | PASS |
+| voice_dur_f1 | >= 0.8 on point | 1.0000 | PASS |
+| voice_allergy_f1 | >= 0.8 on point | 1.0000 | PASS |
+| voice_allergy_false_none_rate | <= 0 on point | 0.0000 | PASS |
+| rf_case_recall | >= 1.0 on point | 0.4091 | FAIL |
+| rf_rule_recall | >= 1.0 on point | 0.3103 | FAIL |
+| dept_top3 | >= 0.8 on point | 0.4082 | FAIL |
+
+### Metric rows
+
+> **System Evaluation on synthetic data - not clinical performance**
+
+| Metric | Arm | Estimand | x / n | Point | Bootstrap 95% CI | Wilson | Clopper-Pearson | Reported interval (method) | n patients / n units | Paired diff (sys - comp) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| voice_cc_precision | system | component=precision, field=chief_complaint | 19 / 19 | 1.0000 | [1.0000, 1.0000] | [0.8318, 1.0000] | [0.8235, 1.0000] | [0.8235, 1.0000] (clopper_pearson) | 23 / 24 | - |
+| voice_cc_recall | system | component=recall, field=chief_complaint | 19 / 22 | 0.8636 | [0.6957, 1.0000] | [0.6667, 0.9525] | [0.6509, 0.9709] | [0.6957, 1.0000] (bootstrap_percentile) | 23 / 24 | - |
+| voice_cc_f1 | system | component=f1, field=chief_complaint | 38 / 41 | 0.9268 | [0.8205, 1.0000] | null | null | [0.8205, 1.0000] (bootstrap_percentile) | 23 / 24 | - |
+| voice_dur_precision | system | component=precision, field=onset_duration | 36 / 36 | 1.0000 | [1.0000, 1.0000] | [0.9036, 1.0000] | [0.9026, 1.0000] | [0.9026, 1.0000] (clopper_pearson) | 36 / 40 | - |
+| voice_dur_recall | system | component=recall, field=onset_duration | 36 / 36 | 1.0000 | [1.0000, 1.0000] | [0.9036, 1.0000] | [0.9026, 1.0000] | [0.9026, 1.0000] (clopper_pearson) | 36 / 40 | - |
+| voice_dur_f1 | system | component=f1, field=onset_duration | 72 / 72 | 1.0000 | [1.0000, 1.0000] | null | null | [1.0000, 1.0000] (bootstrap_percentile) | 36 / 40 | - |
+| voice_allergy_precision | system | component=precision, field=allergy_status | 36 / 36 | 1.0000 | [1.0000, 1.0000] | [0.9036, 1.0000] | [0.9026, 1.0000] | [0.9026, 1.0000] (clopper_pearson) | 36 / 40 | - |
+| voice_allergy_recall | system | component=recall, field=allergy_status | 36 / 36 | 1.0000 | [1.0000, 1.0000] | [0.9036, 1.0000] | [0.9026, 1.0000] | [0.9026, 1.0000] (clopper_pearson) | 36 / 40 | - |
+| voice_allergy_f1 | system | component=f1, field=allergy_status | 72 / 72 | 1.0000 | [1.0000, 1.0000] | null | null | [1.0000, 1.0000] (bootstrap_percentile) | 36 / 40 | - |
+| voice_micro_precision | system | component=precision | 91 / 91 | 1.0000 | [1.0000, 1.0000] | [0.9595, 1.0000] | [0.9603, 1.0000] | [0.9603, 1.0000] (clopper_pearson) | 36 / 40 | - |
+| voice_micro_recall | system | component=recall | 91 / 94 | 0.9681 | [0.9310, 1.0000] | [0.9103, 0.9891] | [0.9096, 0.9934] | [0.9310, 1.0000] (bootstrap_percentile) | 36 / 40 | - |
+| voice_micro_f1 | system | component=f1 | 182 / 185 | 0.9838 | [0.9643, 1.0000] | null | null | [0.9643, 1.0000] (bootstrap_percentile) | 36 / 40 | - |
+| voice_allergy_false_none_rate | system | false-none rate: share of cases with gold allergy known or MISSING where S3 records KNOWN none | 0 / 22 | 0.0000 | [0.0000, 0.0000] | [0.0000, 0.1487] | [0.0000, 0.1544] | [0.0000, 0.1544] (clopper_pearson) | 18 / 22 | - |
+| rf_case_recall | system | case-level red-flag recall: gold-positive DPs with >=1 S4 alert of any rule | 9 / 22 | 0.4091 | [0.1364, 0.6842] | [0.2326, 0.6127] | [0.2071, 0.6365] | [0.1364, 0.6842] (bootstrap_percentile) | 13 / 22 | - |
+| rf_rule_recall | system | rule-level recall pooled over gold (DP, rule) pairs; UNMAPPABLE pairs count as missed | 9 / 29 | 0.3103 | [0.1304, 0.4828] | [0.1728, 0.4923] | [0.1528, 0.5083] | [0.1304, 0.4828] (bootstrap_percentile) | 13 / 22 | - |
+| rf_rule_recall_mappable | system | rule-level recall over mappable gold (DP, rule) pairs (secondary) | 9 / 21 | 0.4286 | [0.1818, 0.7000] | [0.2447, 0.6345] | [0.2182, 0.6598] | [0.1818, 0.7000] (bootstrap_percentile) | 11 / 19 | - |
+| rf_rule_RF-ACUTE-CHEST-PAIN | system | per-rule recall of RF-ACUTE-CHEST-PAIN: gold DPs where a mapped S4 rule fired | 0 / 4 | 0.0000 | [0.0000, 0.0000] | [0.0000, 0.4899] | [0.0000, 0.6024] | [0.0000, 0.6024] (clopper_pearson) | 2 / 4 | - |
+| rf_rule_RF-ANAPHYLAXIS | system | per-rule recall of RF-ANAPHYLAXIS: gold DPs where a mapped S4 rule fired | 0 / 2 | 0.0000 | [0.0000, 0.0000] | [0.0000, 0.6576] | [0.0000, 0.8419] | [0.0000, 0.8419] (clopper_pearson) | 1 / 2 | - |
+| rf_rule_RF-FAST | system | per-rule recall of RF-FAST: gold DPs where a mapped S4 rule fired | 0 / 4 | 0.0000 | [0.0000, 0.0000] | [0.0000, 0.4899] | [0.0000, 0.6024] | [0.0000, 0.6024] (clopper_pearson) | 2 / 4 | - |
+| rf_rule_RF-NEWS-SINGLE3 | system | per-rule recall of RF-NEWS-SINGLE3: gold DPs where a mapped S4 rule fired | 5 / 5 | 1.0000 | [1.0000, 1.0000] | [0.5655, 1.0000] | [0.4782, 1.0000] | [0.4782, 1.0000] (clopper_pearson) | 3 / 5 | - |
+| rf_rule_RF-QSOFA | system | per-rule recall of RF-QSOFA: gold DPs where a mapped S4 rule fired | 4 / 4 | 1.0000 | [1.0000, 1.0000] | [0.5101, 1.0000] | [0.3976, 1.0000] | [0.3976, 1.0000] (clopper_pearson) | 3 / 4 | - |
+| rf_rule_RF-THUNDERCLAP | system | per-rule recall of RF-THUNDERCLAP: gold DPs where a mapped S4 rule fired | 0 / 2 | 0.0000 | [0.0000, 0.0000] | [0.0000, 0.6576] | [0.0000, 0.8419] | [0.0000, 0.8419] (clopper_pearson) | 1 / 2 | - |
+| rf_fpr | system | false-positive rate: gold-negative DPs with >=1 S4 alert of any rule | 0 / 58 | 0.0000 | [0.0000, 0.0000] | [0.0000, 0.0621] | [0.0000, 0.0616] | [0.0000, 0.0616] (clopper_pearson) | 28 / 58 | - |
+| rf_fpr_mapped | system | false-positive rate counting only S4 rules mapped to the S1r registry (secondary) | 0 / 58 | 0.0000 | [0.0000, 0.0000] | [0.0000, 0.0621] | [0.0000, 0.0616] | [0.0000, 0.0616] (clopper_pearson) | 28 / 58 | - |
+| rf_text_t1_recall | system | text red-flag recall at T1: any alert of RF-CHEST, RF-STROKE, RF-THUNDER, RF-ANAPH | 0 / 6 | 0.0000 | [0.0000, 0.0000] | [0.0000, 0.3903] | [0.0000, 0.4593] | [0.0000, 0.4593] (clopper_pearson) | 6 / 6 | - |
+| rf_text_t1_recall | comparator:shortcut_s_star | text red-flag recall at T1: any alert of RF-CHEST, RF-STROKE, RF-THUNDER, RF-ANAPH | 4 / 6 | 0.6667 | [0.3333, 1.0000] | [0.3000, 0.9032] | [0.2228, 0.9567] | [0.3333, 1.0000] (bootstrap_percentile) | 6 / 6 | -0.6667 [-1.0000, -0.3333] |
+| rf_text_t1_recall | comparator:shortcut_tamtee | text red-flag recall at T1: any alert of RF-CHEST, RF-STROKE, RF-THUNDER, RF-ANAPH | 3 / 6 | 0.5000 | [0.1667, 0.8333] | [0.1876, 0.8124] | [0.1181, 0.8819] | [0.1667, 0.8333] (bootstrap_percentile) | 6 / 6 | -0.5000 [-0.8333, -0.1667] |
+| rf_text_t1_fpr | system | text red-flag false-positive rate at T1 (same alert set) | 0 / 34 | 0.0000 | [0.0000, 0.0000] | [0.0000, 0.1015] | [0.0000, 0.1028] | [0.0000, 0.1028] (clopper_pearson) | 31 / 34 | - |
+| rf_text_t1_fpr | comparator:shortcut_s_star | text red-flag false-positive rate at T1 (same alert set) | 1 / 34 | 0.0294 | [0.0000, 0.0882] | [0.0052, 0.1492] | [0.0007, 0.1533] | [0.0000, 0.0882] (bootstrap_percentile) | 31 / 34 | -0.0294 [-0.0882, 0.0000] |
+| rf_text_t1_fpr | comparator:shortcut_tamtee | text red-flag false-positive rate at T1 (same alert set) | 11 / 34 | 0.3235 | [0.1818, 0.4848] | [0.1913, 0.4916] | [0.1739, 0.5053] | [0.1818, 0.4848] (bootstrap_percentile) | 31 / 34 | -0.3235 [-0.4848, -0.1818] |
+| dept_top1 | system | k=1 | 18 / 49 | 0.3673 | [0.2041, 0.5491] | [0.2467, 0.5073] | [0.2342, 0.5171] | [0.2041, 0.5491] (bootstrap_percentile) | 23 / 49 | - |
+| dept_top1 | comparator:always_answer | k=1 | 25 / 49 | 0.5102 | [0.3200, 0.6981] | [0.3747, 0.6442] | [0.3634, 0.6558] | [0.3200, 0.6981] (bootstrap_percentile) | 23 / 49 | -0.1429 [-0.2642, -0.0227] |
+| dept_top3 | system | k=3 | 20 / 49 | 0.4082 | [0.2400, 0.5918] | [0.2822, 0.5475] | [0.2700, 0.5579] | [0.2400, 0.5918] (bootstrap_percentile) | 23 / 49 | - |
+| dept_top3 | comparator:always_answer | k=3 | 27 / 49 | 0.5510 | [0.3725, 0.7408] | [0.4132, 0.6815] | [0.4023, 0.6933] | [0.3725, 0.7408] (bootstrap_percentile) | 23 / 49 | -0.1429 [-0.2642, -0.0227] |
+| abst_coverage | system |  | 22 / 53 | 0.4151 | [0.2500, 0.5958] | [0.2926, 0.5491] | [0.2814, 0.5587] | [0.2500, 0.5958] (bootstrap_percentile) | 25 / 53 | - |
+| abst_coverage | comparator:always_answer |  | 53 / 53 | 1.0000 | [1.0000, 1.0000] | [0.9324, 1.0000] | [0.9328, 1.0000] | [0.9328, 1.0000] (clopper_pearson) | 25 / 53 | -0.5849 [-0.7500, -0.4042] |
+| abst_selective_top1 | system | top-1 accuracy among answered DPs; answering a NOT_EVALUABLE DP is wrong | 18 / 22 | 0.8182 | [0.5714, 1.0000] | [0.6148, 0.9269] | [0.5972, 0.9481] | [0.5714, 1.0000] (bootstrap_percentile) | 25 / 53 | - |
+| abst_selective_top1 | comparator:always_answer | top-1 accuracy among answered DPs; answering a NOT_EVALUABLE DP is wrong | 25 / 53 | 0.4717 | [0.2941, 0.6538] | [0.3438, 0.6034] | [0.3330, 0.6136] | [0.2941, 0.6538] (bootstrap_percentile) | 25 / 53 | 0.3465 [0.1582, 0.5769] |
+| abst_rate_not_evaluable | system | abstain rate on NOT_EVALUABLE DPs (secondary) | 4 / 4 | 1.0000 | [1.0000, 1.0000] | [0.5101, 1.0000] | [0.3976, 1.0000] | [0.3976, 1.0000] (clopper_pearson) | 2 / 4 | - |
+| abst_false_abstain_rate | system | false-abstain rate on the department population (secondary) | 27 / 49 | 0.5510 | [0.3658, 0.7241] | [0.4132, 0.6815] | [0.4023, 0.6933] | [0.3658, 0.7241] (bootstrap_percentile) | 23 / 49 | - |
+| abst_expected_action_agreement | system | 3-class expected_action agreement (suggest/abstain/escalate) over every DP (secondary) | 38 / 80 | 0.4750 | [0.3293, 0.6250] | [0.3692, 0.5830] | [0.3621, 0.5898] | [0.3293, 0.6250] (bootstrap_percentile) | 36 / 80 | - |
+
+### Null rows
+
+> **System Evaluation on synthetic data - not clinical performance**
+
+| Metric | Point | n | Reason |
+|---|---|---|---|
+| rf_rule_RF-NEWS-AGG5 | null | 8 | UNMAPPABLE: S4 has no counterpart rule; its gold pairs count as missed in rf_rule_recall |
+
+### Populations (n_total = n_scored + excluded)
+
+> **System Evaluation on synthetic data - not clinical performance**
+
+| Population | Definition | Unit | n_total | n_scored | Excluded by reason | n patients |
+|---|---|---|---|---|---|---|
+| voice_intake | every case at T1 (onset_duration, allergy_status, micro-average) | case | 40 | 40 | none | 36 |
+| voice_cc | cases whose gold CC is mappable to S3 or MISSING (chief_complaint field) | case | 40 | 24 | UNMAPPABLE: 16 | 23 |
+| voice_allergy_false_none | cases with gold allergy known or MISSING | case | 40 | 22 | gold_no_known_allergy: 18 | 18 |
+| rf_case_recall | gold red-flag-positive DPs | decision point | 80 | 22 | gold_negative (scored by rf_fpr): 58 | 13 |
+| rf_fpr | gold red-flag-negative DPs | decision point | 80 | 58 | gold_positive (scored by rf_case_recall): 22 | 28 |
+| rf_rule_recall | gold (DP, rule) pairs; UNMAPPABLE pairs scored as missed | (DP, rule) pair | 29 | 29 | none | 13 |
+| rf_rule_recall_mappable | gold (DP, rule) pairs with a mapped S4 rule | (DP, rule) pair | 29 | 21 | UNMAPPABLE: 8 | 11 |
+| rf_rule:RF-ACUTE-CHEST-PAIN | gold DPs with RF-ACUTE-CHEST-PAIN | decision point | 4 | 4 | none | 2 |
+| rf_rule:RF-ANAPHYLAXIS | gold DPs with RF-ANAPHYLAXIS | decision point | 2 | 2 | none | 1 |
+| rf_rule:RF-FAST | gold DPs with RF-FAST | decision point | 4 | 4 | none | 2 |
+| rf_rule:RF-NEWS-AGG5 | gold DPs with RF-NEWS-AGG5 | decision point | 8 | 0 | UNMAPPABLE: 8 | 0 |
+| rf_rule:RF-NEWS-SINGLE3 | gold DPs with RF-NEWS-SINGLE3 | decision point | 5 | 5 | none | 3 |
+| rf_rule:RF-QSOFA | gold DPs with RF-QSOFA | decision point | 4 | 4 | none | 3 |
+| rf_rule:RF-THUNDERCLAP | gold DPs with RF-THUNDERCLAP | decision point | 2 | 2 | none | 1 |
+| rf_text_t1_recall | T1 DPs with a gold text red flag | decision point | 80 | 6 | T1 text-negative (scored by rf_text_t1_fpr): 34; not T1: 40 | 6 |
+| rf_text_t1_fpr | T1 DPs without a gold text red flag | decision point | 80 | 34 | T1 text-positive (scored by rf_text_t1_recall): 6; not T1: 40 | 31 |
+| dept | DPs with department_evaluable and a gold department in E | decision point | 80 | 49 | 11: 6; 12: 21; NOT_EVALUABLE: 4; UNMAPPABLE: 0 | 23 |
+| false_abstain | department population | decision point | 80 | 49 | 11: 6; 12: 21; NOT_EVALUABLE: 4; UNMAPPABLE: 0 | 23 |
+| abstention | department population + NOT_EVALUABLE DPs | decision point | 80 | 53 | 11: 6; 12: 21 | 25 |
+| abst_on_not_evaluable | NOT_EVALUABLE DPs | decision point | 80 | 4 | 11: 6; 12: 21; department population: 49 | 2 |
+| expected_action | every DP (the 3-class label is defined on every DP) | decision point | 80 | 80 | none | 36 |
+
+### Missed gold red flags: DPs with no alert at all
+
+> **System Evaluation on synthetic data - not clinical performance**
+
+| Case | DP | T | Gold rule |
+|---|---|---|---|
+| SYNE-0033 | T1 | 2030-02-11T11:48:33+07:00 | RF-FAST |
+| SYNE-0033 | T2 | 2030-02-11T13:18:33+07:00 | RF-FAST |
+| SYNE-0039 | T2 | 2030-04-23T17:49:02+07:00 | RF-NEWS-AGG5 |
+| SYNE-0101 | T1 | 2030-03-16T15:09:08+07:00 | RF-NEWS-AGG5 |
+| SYNE-0101 | T2 | 2030-03-16T16:39:08+07:00 | RF-NEWS-AGG5 |
+| SYNE-0125 | T1 | 2030-08-12T15:48:54+07:00 | RF-ACUTE-CHEST-PAIN |
+| SYNE-0125 | T2 | 2030-08-12T17:18:54+07:00 | RF-ACUTE-CHEST-PAIN |
+| SYNE-0131 | T1 | 2030-05-13T08:35:24+07:00 | RF-FAST |
+| SYNE-0131 | T2 | 2030-05-13T10:05:24+07:00 | RF-FAST |
+| SYNE-0141 | T1 | 2030-10-20T13:55:01+07:00 | RF-THUNDERCLAP |
+| SYNE-0141 | T2 | 2030-10-20T15:25:01+07:00 | RF-THUNDERCLAP |
+| SYNE-0187 | T1 | 2030-01-12T12:52:20+07:00 | RF-ACUTE-CHEST-PAIN |
+| SYNE-0187 | T2 | 2030-01-12T14:22:20+07:00 | RF-ACUTE-CHEST-PAIN |
+
+### Missed gold (DP, rule) pairs
+
+> **System Evaluation on synthetic data - not clinical performance**
+
+| Case | DP | T | Gold rule | Reason |
+|---|---|---|---|---|
+| SYNE-0026 | T1 | 2030-01-18T11:12:47+07:00 | RF-NEWS-AGG5 | UNMAPPABLE (no S4 counterpart) |
+| SYNE-0026 | T2 | 2030-01-18T12:42:47+07:00 | RF-NEWS-AGG5 | UNMAPPABLE (no S4 counterpart) |
+| SYNE-0033 | T1 | 2030-02-11T11:48:33+07:00 | RF-FAST | no alert at this DP |
+| SYNE-0033 | T2 | 2030-02-11T13:18:33+07:00 | RF-FAST | no alert at this DP |
+| SYNE-0039 | T2 | 2030-04-23T17:49:02+07:00 | RF-NEWS-AGG5 | UNMAPPABLE (no S4 counterpart) |
+| SYNE-0042 | T2 | 2030-10-25T15:03:14+07:00 | RF-NEWS-AGG5 | UNMAPPABLE (no S4 counterpart) |
+| SYNE-0101 | T1 | 2030-03-16T15:09:08+07:00 | RF-NEWS-AGG5 | UNMAPPABLE (no S4 counterpart) |
+| SYNE-0101 | T2 | 2030-03-16T16:39:08+07:00 | RF-NEWS-AGG5 | UNMAPPABLE (no S4 counterpart) |
+| SYNE-0125 | T1 | 2030-08-12T15:48:54+07:00 | RF-ACUTE-CHEST-PAIN | no alert at this DP |
+| SYNE-0125 | T2 | 2030-08-12T17:18:54+07:00 | RF-ACUTE-CHEST-PAIN | no alert at this DP |
+| SYNE-0131 | T1 | 2030-05-13T08:35:24+07:00 | RF-FAST | no alert at this DP |
+| SYNE-0131 | T2 | 2030-05-13T10:05:24+07:00 | RF-FAST | no alert at this DP |
+| SYNE-0134 | T1 | 2030-04-01T09:29:16+07:00 | RF-ANAPHYLAXIS | other alert(s) only: RF-SBP |
+| SYNE-0134 | T1 | 2030-04-01T09:29:16+07:00 | RF-NEWS-AGG5 | UNMAPPABLE (no S4 counterpart) |
+| SYNE-0134 | T2 | 2030-04-01T10:59:16+07:00 | RF-ANAPHYLAXIS | other alert(s) only: RF-SBP |
+| SYNE-0134 | T2 | 2030-04-01T10:59:16+07:00 | RF-NEWS-AGG5 | UNMAPPABLE (no S4 counterpart) |
+| SYNE-0141 | T1 | 2030-10-20T13:55:01+07:00 | RF-THUNDERCLAP | no alert at this DP |
+| SYNE-0141 | T2 | 2030-10-20T15:25:01+07:00 | RF-THUNDERCLAP | no alert at this DP |
+| SYNE-0187 | T1 | 2030-01-12T12:52:20+07:00 | RF-ACUTE-CHEST-PAIN | no alert at this DP |
+| SYNE-0187 | T2 | 2030-01-12T14:22:20+07:00 | RF-ACUTE-CHEST-PAIN | no alert at this DP |
+
+### Alerts on gold-negative DPs, by S4 rule
+
+> **System Evaluation on synthetic data - not clinical performance**
+
+| S4 rule | n | DPs |
+|---|---|---|
+| (none) |  |  |
+
+### Alerts from S4 rules outside the S1r registry (all DPs)
+
+> **System Evaluation on synthetic data - not clinical performance**
+
+| S4 rule | n alerts | DPs |
+|---|---|---|
+| RF-ECTOPIC | 0 | - |
+| RF-GIBLEED | 0 | - |
+| RF-HYPOGLY | 0 | - |
+| RF-MENING | 0 | - |
+| RF-SUICIDE | 0 | - |
+
+### expected_action confusion (rows gold, columns system)
+
+> **System Evaluation on synthetic data - not clinical performance**
+
+| gold \ system | abstain | escalate | suggest |
+|---|---|---|---|
+| abstain | 7 | 0 | 0 |
+| escalate | 8 | 9 | 5 |
+| suggest | 29 | 0 | 22 |
+
+### Unmapped items per mapping section
+
+> **System Evaluation on synthetic data - not clinical performance**
+
+| Section | Item | Count |
+|---|---|---|
+| chief_complaint_s1r_to_s3 | UNMAPPABLE codes met | {"CC-ANXIETY": 1, "CC-BLURRED": 1, "CC-CARIES": 1, "CC-DISCHARGE": 1, "CC-EPISTAXIS": 1, "CC-GUM": 1, "CC-HEARTBURN": 1, "CC-INSOMNIA": 1, "CC-LOW-MOOD": 1, "CC-RED-EYE": 1, "CC-RF-FAST": 1, "CC-RF-FAST-4": 1, "CC-TNM-DEFICIT-2": 1, "CC-TNM-NUMB-1": 1, "CC-TNM-NUMB-2": 1, "CC-TOOTHACHE": 1} |
+| chief_complaint_s1r_to_s3 | cases with UNMAPPABLE gold CC | 16 |
+| consciousness | C values mapped to avpu A + new_confusion | 1 |
+| department_s1r | 11 (UNMAPPABLE, excluded) | 6 |
+| department_s1r | 12 (scored by red-flag metrics) | 21 |
+| department_s1r | NOT_EVALUABLE (abstention only) | 4 |
+| red_flag_s1r | RF-NEWS-AGG5 gold pairs (UNMAPPABLE) | 8 |
+| s3_cc_to_s4_symptom | S3 CC codes with no S4 symptom (per case) | {"chest_pain": 3, "diarrhea": 2, "fatigue": 3, "nausea_vomiting": 1, "rash": 3, "runny_nose": 2} |
+| s3_field_to_s4_fact | S3 fields not KNOWN -> no S4 fact (per case, T1) | {"chief_complaint:MISSING": 20, "onset_duration:UNKNOWN": 4} |
+| vitals_demographics | null vital values (no fact) | 4 |
+| vitals_demographics | on_oxygen values not passed (UNMAPPABLE) | 120 |
+| vitals_demographics | pregnancy_status (no S1r item) | 80 |
+| vitals_demographics | unit | per S4 case built (one per DP) |
+
+### Comparators
+
+> **System Evaluation on synthetic data - not clinical performance**
+
+| Comparator | Definition | Train-split selection evidence |
+|---|---|---|
+| shortcut_s_star | contains('ทีค') | {"f1": 0.7222222222222223, "n_candidates": 57531, "n_cases": 120, "n_positive": 20, "precision": 0.8125, "recall": 0.65, "support": 16} |
+| shortcut_tamtee | contains('ทันที') | {"f1": 0.3225806451612903, "precision": 0.23809523809523808, "recall": 0.5, "support": 42} |
+| always_answer | S4 baseline.rank, fallback E-MED | {"E-ENT": 16, "E-EYE": 8, "E-MED": 80, "E-OBGYN": 22, "E-ORTHO": 10, "E-PSY": 10, "E-SURG": 10} |
+
+### S3 final field states (per case)
+
+> **System Evaluation on synthetic data - not clinical performance**
+
+| Field | States |
+|---|---|
+| allergy_status | {"KNOWN": 36, "MISSING": 4} |
+| chief_complaint | {"KNOWN": 20, "MISSING": 20} |
+| onset_duration | {"KNOWN": 36, "UNKNOWN": 4} |
 
 ## Not evaluated
 
