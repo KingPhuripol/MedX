@@ -12,7 +12,7 @@ from pydantic import ValidationError
 
 from .models import PhraseOutput
 
-TEMPLATE_VERSION = "template-1.2.0"
+TEMPLATE_VERSION = "template-1.3.0"
 SOURCE_LABELS = {
     "home_list": "home list",
     "patient_reported": "patient-reported list",
@@ -47,6 +47,7 @@ UNVERIFIABLE_WORDS = {
     "range": "a range or alternative between two amounts",
     "ambiguous_quantity": "conflicting quantities",
     "unparsed_token": "a dose form this checker does not read",
+    "per_unit_amount": "an amount per day, per weight or per other unit, not per dose",
 }
 _TYPE_TITLES = {
     "allergy_direct": "direct allergy match",

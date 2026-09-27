@@ -1,7 +1,7 @@
 """Seeded phrase generator and differential harness for the s5r3 dose grammar (spec §F).
 
 Standard library only. Phrases are synthetic unit-test inputs and belong to no evaluation split.
-The harness takes any ``text -> (dose_status, dose_value, dose_unit, quantity)`` callable, so the same
+The harness takes any ``text -> (dose_status, dose_value, dose_unit, quantity, reason)`` callable, so the same
 check can be run on an older parser (e.g. ``git show 1c1f476:backend/app/pharma/mock_rules.py``):
 
     from tests.pharma_dose_fuzz import generate, harness, entry_tuple
@@ -10,6 +10,7 @@ check can be run on an older parser (e.g. ``git show 1c1f476:backend/app/pharma/
 
 from __future__ import annotations
 
+import collections
 import random
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -19,7 +20,7 @@ from .pharma_dose_reference import reference_parse
 
 SEED = 5303
 N_PHRASES = 3000
-Parsed = tuple[str, float | None, str | None, float | None]
+Parsed = tuple[str, float | None, str | None, float | None, str | None]
 
 
 @dataclass(frozen=True)
@@ -119,10 +120,14 @@ def frequency(rng: random.Random, lang: str) -> Segment:
     return Segment(rng.choice(["od", "bid", "prn", "hs", "at bedtime"] if lang == "en" else ["เช้า-เย็น", "ก่อนนอน", "เวลาปวด"]))
 
 
-TAILS = ["", "prn", "pc", "po", "หลังอาหารเช้า", "หลังอาหาร"]
+# Valid tails, including T1 time phrases that are not directly after "INT เม็ด" (quantity unaffected).
+TAILS = [Segment(""), Segment("prn"), Segment("pc"), Segment("po"), Segment("หลังอาหารเช้า"), Segment("หลังอาหาร"),
+         Segment("ก่อนอาหารครึ่งชั่วโมง", ("T1",)), Segment("ก่อนอาหาร ครึ่ง ชม.", ("T1",)),
+         Segment("ก่อนอาหารครึ่ง hr", ("T1",))]
 
 # Adversarial classes: (slot, choices). Each phrase with an adversarial segment has exactly one.
-ADVERSARIAL: dict[str, tuple[str, list[str]]] = {
+# A choice is a text, or (text, productions) when the segment is also an instance of a production.
+ADVERSARIAL: dict[str, tuple[str, list]] = {
     "range_hyphen": ("quantity", ["1-2 tabs", "1 - 2 เม็ด"]),
     "range_en_dash": ("quantity", ["1–2 tabs", "1 – 2 เม็ด"]),
     "range_em_dash": ("quantity", ["1—2 tab"]),
@@ -160,6 +165,29 @@ ADVERSARIAL: dict[str, tuple[str, list[str]]] = {
     # Thai words that start with (or contain) an undotted unit: "มกราคม" = January, "มลพิษ" = pollution.
     "thai_unit_prefix": ("strength", ["เริ่ม 5 มกราคม", "5มกราคม", "10 มลพิษ", "ตั้งแต่ 3 มกรา"]),
     "variable_regimen": ("tail", ["except Sunday", "alternating", "ยกเว้นวันอาทิตย์", "on Mondays"]),
+    # rev 2: "ครึ่ง" + time word. Quantity slot = directly after "INT เม็ด" (conflict: ambiguous_quantity);
+    # tail slot = elsewhere (a time only).
+    "th_half_time": ("quantity|tail", [
+        ("quantity", "1 เม็ดครึ่งชั่วโมง"), ("quantity", "1 เม็ด ครึ่ง ชม."), ("quantity", "2เม็ดครึ่งนาที"),
+        ("quantity", "1 แคปซูล ครึ่งชม"), ("quantity", "ครั้งละ 1 เม็ดครึ่งชั่วโมง"), ("quantity", "วันละ 1 เม็ด ครึ่ง ช.ม."),
+        ("quantity", "1เม็ด ครึ่ง hr"), ("quantity", "1 เม็ดครึ่ง minutes"),
+        ("tail", "ครึ่ง ชม. ก่อนอาหาร"), ("tail", "หลังอาหาร ครึ่งนาที"), ("tail", "ครึ่งชม ก่อนนอน"),
+        ("tail", "ก่อนอาหาร ครึ่ง hour"),
+    ]),
+    # rev 2: UNIT or QW + / ⁄ per ต่อ + a unit of time, weight or dose (R1), plus L1 look-alikes (liquid_volume).
+    "per_unit": ("strength|quantity", [
+        ("strength", "1000 mg/day"), ("strength", "5 mg/kg"), ("strength", "5mg / kg"), ("strength", "500 mg per day"),
+        ("strength", "1000 มก./วัน"), ("strength", "1000 มก.ต่อวัน"), ("strength", "1000 มก. ต่อ วัน"),
+        ("strength", "100 units/ml"), ("strength", "2 mg⁄kg"), ("strength", "10 mcg / dose"), ("strength", "1 g/d"),
+        ("strength", "500 มก./ครั้ง"), ("strength", "5 มก/กก."), ("strength", "500-1000 mg/day"),
+        ("quantity", "2 tabs/day"), ("quantity", "2 เม็ด/วัน"), ("quantity", "1 tab per dose"),
+        ("quantity", "1 เม็ด ต่อ ครั้ง"), ("quantity", "½ tab/day"), ("quantity", "1 cap / d"), ("quantity", "2 เม็ดต่อวัน"),
+        ("strength", ("250 mg/5 ml", ("L1",))), ("strength", ("50 mcg/ml", ("L1",))),
+        ("strength", ("120 มก./5 มล.", ("L1",))), ("strength", ("125 mg / 5 ml 5 ml", ("L1",))),
+    ]),
+    # rev 2: Q3 / Q4b / Q5 totals in (10, 40] break the QV bound (unparsed_token, never 30.5).
+    "qv_over": ("quantity", ["30 1/2 tabs", "11 1/2 tab", "10 1/2 tab", "15 ½ tab", "39 3/4 tabs", "12 เม็ดครึ่ง",
+                             "20เม็ดครึ่ง", "11 เม็ด ครึ่ง", "12x2", "15 x 1", "10.5x2", "11 3/4 เม็ด", "40 1/2 tabs"]),
 }
 _NO_JOIN = set(".,/-–—~")
 
@@ -183,13 +211,17 @@ def generate(seed: int = SEED, n: int = N_PHRASES) -> list[Phrase]:
         lang = rng.choice(["en", "th"])
         name = rng.choice(NAMES[lang if rng.random() < 0.8 else ("th" if lang == "en" else "en")])
         slots = {"strength": strength(rng, lang), "quantity": quantity(rng, lang),
-                 "frequency": frequency(rng, lang), "tail": Segment(rng.choice(TAILS))}
+                 "frequency": frequency(rng, lang), "tail": rng.choice(TAILS)}
         if k % 2:  # every other phrase carries one adversarial segment (round-robin over the classes)
             cls = classes[(k // 2) % len(classes)]
-            slot, choices = ADVERSARIAL[cls]
-            text = rng.choice(choices)
-            slots[slot] = Segment(text, adversarial=cls, lang=("th" if any("฀" <= c <= "๿" for c in text)
-                                                                 else "en") if slot == "quantity" else None)
+            slot, choice = ADVERSARIAL[cls][0], rng.choice(ADVERSARIAL[cls][1])
+            if "|" in slot:  # per-choice slot
+                slot, choice = choice
+            text, pids = choice if isinstance(choice, tuple) else (choice, ())
+            if cls in ("th_half_time", "per_unit") and not pids:
+                pids = ("T1",) if cls == "th_half_time" else ("R1",)
+            slots[slot] = Segment(text, pids, adversarial=cls, lang=("th" if any("฀" <= c <= "๿" for c in text)
+                                                                       else "en") if slot == "quantity" else None)
         text = name
         for seg in slots.values():
             text = _join(rng, text, seg.text)
@@ -209,7 +241,7 @@ def entry_tuple(parse_entry: Callable[[str], dict]) -> Callable[[str], Parsed]:
 
     def parse(text: str) -> Parsed:
         e = parse_entry(text)
-        return e["dose_status"], e["dose_value"], e["dose_unit"], e["quantity"]
+        return e["dose_status"], e["dose_value"], e["dose_unit"], e["quantity"], e.get("dose_unverifiable_reason")
 
     return parse
 
@@ -217,20 +249,25 @@ def entry_tuple(parse_entry: Callable[[str], dict]) -> Callable[[str], Parsed]:
 @dataclass
 class Report:
     safety: list[str] = field(default_factory=list)  # resolved, but the reference disagrees
-    status: list[str] = field(default_factory=list)  # dose_status differs from the reference
+    status: list[str] = field(default_factory=list)  # dose_status or reason differs from the reference
     reference: list[str] = field(default_factory=list)  # reference differs from the generator's built value
+    over_ten: list[str] = field(default_factory=list)  # resolved with a quantity > 10 (QV bound)
+    safety_classes: collections.Counter = field(default_factory=collections.Counter)  # class/production -> misreads
 
 
 def harness(parse: Callable[[str], Parsed], phrases: list[Phrase]) -> Report:
     report = Report()
     for ph in phrases:
         ref = reference_parse(ph.text)
-        got = parse(ph.text)
+        got = tuple(parse(ph.text))
         line = f"{ph.text!r}: implementation={got} reference={ref} built={ph.productions}+{ph.adversarial}"
-        if got[0] == "resolved" and (ref[0] != "resolved" or tuple(got[1:]) != tuple(ref[1:])):
+        if got[0] == "resolved" and (ref[0] != "resolved" or got[1:4] != ref[1:4]):
             report.safety.append(line)
-        if got[0] != ref[0]:
+            report.safety_classes.update({*ph.productions, *ph.adversarial})
+        if (got[0], got[4]) != (ref[0], ref[4]):
             report.status.append(line)
+        if got[0] == "resolved" and got[3] is not None and got[3] > 10:
+            report.over_ten.append(line)
         if ph.single_quantity is not None and (ref[0] == "unverifiable" or ref[3] != float(ph.single_quantity)):
             report.reference.append(line + f" expected quantity {float(ph.single_quantity)}")
     return report

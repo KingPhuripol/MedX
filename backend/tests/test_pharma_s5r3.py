@@ -24,7 +24,8 @@ from .pharma_helpers import of_type, run, snapshot
 
 PHARMA_DIR = REPO_ROOT / "backend" / "app" / "pharma"
 RESULTS = REPO_ROOT / "slices" / "s5" / "eval" / "results.json"
-REASONS = ("variable_regimen", "liquid_volume", "multiple_strengths", "range", "ambiguous_quantity", "unparsed_token")
+REASONS = ("variable_regimen", "liquid_volume", "multiple_strengths", "range", "ambiguous_quantity", "unparsed_token",
+           "per_unit_amount")
 
 
 def _dose(text: str) -> tuple:
@@ -36,7 +37,8 @@ def _dose(text: str) -> tuple:
 
 
 def test_grammar_table_closed():
-    assert set(DOSE_GRAMMAR) == {"S1", "S2", "S3", "L1", "Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "F1", "F2", "F3"}
+    assert set(DOSE_GRAMMAR) == {"S1", "S2", "S3", "L1", "R1", "Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "T1",
+                                 "F1", "F2", "F3"}
 
 
 DELETED = ("DOSE_RE", "QTY_RE", "_QTY_NUM", "_MIXED_RE", "_STRAY_NUM_BEFORE_RE", "_QTY_WORD_RE", "TIMES_RE")
@@ -75,6 +77,135 @@ def test_probe_f1_f7(probe):
     assert _dose(text) == expected
     if freq:
         assert parse_entry(text)["frequency_code"] == freq
+
+
+# ---------------------------------------------------------------- A15-A18 rev 2 probe suites
+
+U = ("unverifiable",)
+AMB = ("unverifiable", "ambiguous_quantity", None, None, None)
+H_PROBES = {  # A15: Thai half-hour is a time, never a half tablet
+    "H1": ("วาร์ฟาริน 3 มก. 1 เม็ด ก่อนอาหารครึ่งชั่วโมง", ("resolved", None, 3.0, "mg", 1.0)),
+    "H2": ("วาร์ฟาริน 3 มก. 1 เม็ด ก่อนอาหาร ครึ่ง ชั่วโมง", ("resolved", None, 3.0, "mg", 1.0)),
+    "H3": ("วาร์ฟาริน 3 มก. 1 เม็ดครึ่งชั่วโมงก่อนอาหาร", AMB),
+    "H4": ("วาร์ฟาริน 3 มก. 1 เม็ด ครึ่งชั่วโมงก่อนอาหาร", AMB),
+    "H5": ("วาร์ฟาริน 3 มก. 1 เม็ด ครึ่ง ชม. ก่อนอาหาร", AMB),
+    "H6": ("วาร์ฟาริน 3 มก. ครั้งละ 1 เม็ดครึ่งชั่วโมงก่อนอาหาร", AMB),
+    "H7": ("วาร์ฟาริน 3 มก. วันละ 1 เม็ด ครึ่งชม ก่อนอาหาร", AMB),
+    "H8": ("วาร์ฟาริน 3 มก. 1 เม็ดครึ่งนาที", AMB),
+    "H9": ("วาร์ฟาริน 3 มก. ครึ่งเม็ด ครึ่งชั่วโมงก่อนอาหาร", ("resolved", None, 3.0, "mg", 0.5)),
+    "H10": ("วาร์ฟาริน 3 มก. 1 เม็ดครึ่ง ครึ่งชั่วโมงก่อนอาหาร", ("resolved", None, 3.0, "mg", 1.5)),
+    "H11": ("วาร์ฟาริน 3 มก. 1 เม็ดครึ่ง ก่อนนอน", ("resolved", None, 3.0, "mg", 1.5)),
+    "H12": ("วาร์ฟาริน 3 มก. 1 เม็ด ครึ่ง ก่อนนอน", ("resolved", None, 3.0, "mg", 1.5)),
+    "H13": ("วาร์ฟาริน 3 มก. 1 เม็ด ก่อนอาหารครึ่ง hr", ("resolved", None, 3.0, "mg", 1.0)),
+}
+PER = ("unverifiable", "per_unit_amount", None, None, None)
+U_PROBES = {  # A16: per-unit amounts are unverifiable; (text, expected, frequency_code)
+    "U1": ("Metformin 1000 mg/day", PER, None),
+    "U2": ("เมทฟอร์มิน 1000 มก./วัน", PER, None),
+    "U3": ("เมทฟอร์มิน 1000 มก.ต่อวัน", PER, None),
+    "U4": ("เมทฟอร์มิน 1000 มก. ต่อ วัน", PER, None),
+    "U5": ("Gentamicin 5 mg/kg q24h", PER, "q24h"),
+    "U6": ("Enoxaparin 1 mg / kg bid", PER, "q12h"),
+    "U7": ("Metformin 500 mg per day", PER, None),
+    "U8": ("Metformin 500 mg 2 tabs/day", PER, None),
+    "U9": ("เมทฟอร์มิน 500 มก. 2 เม็ด/วัน", PER, None),
+    "U10": ("Metformin 500-1000 mg/day", PER, None),
+    "U11": ("Paracetamol syrup 250 mg/5 ml 10 ml prn", ("unverifiable", "liquid_volume", None, None, None), "prn"),
+    "U12": ("Metformin 500 mg 2 times per day", ("resolved", None, 500.0, "mg", None), "q12h"),
+}
+UNPARSED = ("unverifiable", "unparsed_token", None, None, None)
+V_PROBES = {  # A17: QV <= 10 on every quantity production
+    "V1": ("Warfarin 3 mg 30 1/2 tabs", UNPARSED),
+    "V2": ("Warfarin 3 mg 30 ½ tab", UNPARSED),
+    "V3": ("Warfarin 3 mg 10 1/2 tab", UNPARSED),
+    "V4": ("วาร์ฟาริน 3 มก. 12 เม็ดครึ่ง", UNPARSED),
+    "V5": ("Warfarin 3 mg 9 1/2 tab", ("resolved", None, 3.0, "mg", 9.5)),
+    "V6": ("Warfarin 3 mg 12x2", UNPARSED),
+}
+W_PROBES = {  # A18: undotted มก/มล are units only as a word
+    "W1": ("วาร์ฟาริน 3 มก 1 เม็ด", ("resolved", None, 3.0, "mg", 1.0)),
+    "W2": ("Paracetamol syrup 120 มก/5 มล 5 มล", ("unverifiable", "liquid_volume", None, None, None)),
+    "W3": ("แอมลอดิปีน 5 มก. 1 เม็ด วันละครั้ง", ("resolved", None, 5.0, "mg", 1.0)),
+    "W4": ("Warfarin 3 mg 1 tab เริ่ม 5 มกราคม", UNPARSED),
+    "W5": ("ยา 5 มลพิษ 1 เม็ด", UNPARSED),
+}
+
+
+def _check_probe(text: str, expected: tuple) -> None:
+    assert _dose(text) == expected, text
+    status, reason, *dose = expected
+    assert reference_parse(text) == (status, *dose, reason), text  # the independent reference agrees
+    assert expected[4] is None or expected[4] <= 10
+
+
+@pytest.mark.parametrize("probe", list(H_PROBES))
+def test_probe_half_hour(probe):
+    _check_probe(*H_PROBES[probe])
+
+
+@pytest.mark.parametrize("probe", list(U_PROBES))
+def test_probe_per_unit(probe):
+    text, expected, freq = U_PROBES[probe]
+    _check_probe(text, expected)
+    assert parse_entry(text)["frequency_code"] == freq
+
+
+@pytest.mark.parametrize("probe", list(V_PROBES))
+def test_probe_qv_bound(probe):
+    _check_probe(*V_PROBES[probe])
+
+
+@pytest.mark.parametrize("probe", list(W_PROBES))
+def test_probe_undotted_unit(probe):
+    _check_probe(*W_PROBES[probe])
+
+
+def _half_spacings(text: str) -> set[str]:
+    """Every variant with 0 or 1 space on each side of every "ครึ่ง" (before it, and before the TW or QW after it)."""
+    parts = text.split("ครึ่ง")
+    parts = [parts[0].rstrip(" ")] + [p.strip(" ") for p in parts[1:-1]] + [parts[-1].lstrip(" ")]
+    variants = {""}
+    for k, part in enumerate(parts):
+        if k == 0:
+            variants = {part}
+            continue
+        after_prev = [""] if k == len(parts) - 1 and not part else ["", " "]
+        variants = {v + b + "ครึ่ง" + a + part for v in variants for b in ("", " ") for a in after_prev}
+    return variants
+
+
+def test_half_whitespace_equivalent():
+    fields = ("dose_status", "dose_unverifiable_reason", "dose_value", "dose_unit", "quantity", "frequency_code",
+              "frequency_status", "drug_name_raw")
+    for probe in [f"H{n}" for n in range(1, 13)]:
+        text, expected = H_PROBES[probe]
+        variants = _half_spacings(text)
+        assert len(variants) >= 4, probe
+        for v in variants:
+            e = parse_entry(v)
+            assert _dose(v) == expected, (probe, v)
+            assert tuple(e[f] for f in fields) == tuple(parse_entry(text)[f] for f in fields), (probe, v)
+    # A zero-width space is not whitespace: it breaks "เม็ดครึ่ง", so the result is fail-safe, never 1.5.
+    assert _dose("วาร์ฟาริน 3 มก. 1 เม็ด\u200bครึ่ง") == UNPARSED
+    for zw in ("\u200c", "\u200d", "\u2060", "\ufeff"):
+        assert _dose(f"วาร์ฟาริน 3 มก. 1 เม็ด{zw}ครึ่ง") == UNPARSED
+
+
+# T1/R1 segment removed from each probe; frequency must be the same with and without it.
+SEGMENTS = ("ครึ่งชั่วโมง", "ครึ่ง ชั่วโมง", "ครึ่ง ชม.", "ครึ่งชม", "ครึ่งนาที", "ครึ่ง hr", " ต่อ วัน", "ต่อวัน", "/วัน",
+            "/day", "/kg", " / kg", " per day")
+
+
+def test_t1_r1_frequency_neutral():
+    texts = [t for t, e in H_PROBES.values() if "ชั่วโมง" in t or "ชม" in t or "นาที" in t or " hr" in t]
+    texts += [t for t, e, _ in U_PROBES.values() if e == PER]
+    assert len(texts) >= 20
+    for text in texts:
+        seg = next(s for s in SEGMENTS if s in text)
+        stripped = " ".join(text.replace(seg, " ", 1).split())
+        got, base = parse_entry(text), parse_entry(stripped)
+        assert (got["frequency_code"], got["frequency_status"]) == (base["frequency_code"], base["frequency_status"]), (
+            text, stripped)
 
 
 # ---------------------------------------------------------------- A05 every production reads exactly
@@ -131,6 +262,15 @@ POSITIVE = {  # id: (text, (status, reason, value, unit, quantity), frequency_co
     "joined-strength-and-quantity": ("3mg 2tabs od", (R, None, 3.0, "mg", 2.0), "q24h", "Q1"),
     "equal-quantities": ("Metformin 500 mg 1 tab 1x2", (R, None, 500.0, "mg", 1.0), "q12h", "Q5"),
     "equal-strengths": ("Warfarin 3 mg 3 mg od", (R, None, 3.0, "mg", None), "q24h", "S1"),
+    # rev 2: R1 (per-unit amount) and T1 (Thai half-hour is a time)
+    "R1-en-day": ("Metformin 1000 mg/day", ("unverifiable", "per_unit_amount", None, None, None), None, "R1"),
+    "R1-th-tor": ("เมทฟอร์มิน 1000 มก.ต่อวัน", ("unverifiable", "per_unit_amount", None, None, None), None, "R1"),
+    "R1-en-qw": ("Metformin 500 mg 2 tabs/day", ("unverifiable", "per_unit_amount", None, None, None), None, "R1"),
+    "T1-H1": ("วาร์ฟาริน 3 มก. 1 เม็ด ก่อนอาหารครึ่งชั่วโมง", (R, None, 3.0, "mg", 1.0), None, "T1"),
+    "T1-H9": ("วาร์ฟาริน 3 มก. ครึ่งเม็ด ครึ่งชั่วโมงก่อนอาหาร", (R, None, 3.0, "mg", 0.5), None, "T1"),
+    "T1-H10": ("วาร์ฟาริน 3 มก. 1 เม็ดครึ่ง ครึ่งชั่วโมงก่อนอาหาร", (R, None, 3.0, "mg", 1.5), None, "Q4"),
+    "U12-F2-per": ("Metformin 500 mg 2 times per day", (R, None, 500.0, "mg", None), "q12h", "F2"),
+    "V5-Q3-bound": ("Warfarin 3 mg 9 1/2 tab", (R, None, 3.0, "mg", 9.5), None, "Q3"),
 }
 
 
@@ -169,6 +309,30 @@ NEGATIVE = {
     "เมทฟอร์มิน 500 มก. วันละ 2 เม็ด": "ambiguous_quantity",  # Q7 > 1: a daily total
     "Metformin 500 mg 2 tabs 1x2": "ambiguous_quantity",
     "Warfarin 3 mg 0 tab od": "unparsed_token",
+    # rev 2: H3-H8, U1-U10, V1-V4, V6, W4-W5
+    "วาร์ฟาริน 3 มก. 1 เม็ดครึ่งชั่วโมงก่อนอาหาร": "ambiguous_quantity",
+    "วาร์ฟาริน 3 มก. 1 เม็ด ครึ่งชั่วโมงก่อนอาหาร": "ambiguous_quantity",
+    "วาร์ฟาริน 3 มก. 1 เม็ด ครึ่ง ชม. ก่อนอาหาร": "ambiguous_quantity",
+    "วาร์ฟาริน 3 มก. ครั้งละ 1 เม็ดครึ่งชั่วโมงก่อนอาหาร": "ambiguous_quantity",
+    "วาร์ฟาริน 3 มก. วันละ 1 เม็ด ครึ่งชม ก่อนอาหาร": "ambiguous_quantity",
+    "วาร์ฟาริน 3 มก. 1 เม็ดครึ่งนาที": "ambiguous_quantity",
+    "Metformin 1000 mg/day": "per_unit_amount",
+    "เมทฟอร์มิน 1000 มก./วัน": "per_unit_amount",
+    "เมทฟอร์มิน 1000 มก.ต่อวัน": "per_unit_amount",
+    "เมทฟอร์มิน 1000 มก. ต่อ วัน": "per_unit_amount",
+    "Gentamicin 5 mg/kg q24h": "per_unit_amount",
+    "Enoxaparin 1 mg / kg bid": "per_unit_amount",
+    "Metformin 500 mg per day": "per_unit_amount",
+    "Metformin 500 mg 2 tabs/day": "per_unit_amount",
+    "เมทฟอร์มิน 500 มก. 2 เม็ด/วัน": "per_unit_amount",
+    "Metformin 500-1000 mg/day": "per_unit_amount",
+    "Warfarin 3 mg 30 1/2 tabs": "unparsed_token",
+    "Warfarin 3 mg 30 ½ tab": "unparsed_token",
+    "Warfarin 3 mg 10 1/2 tab": "unparsed_token",
+    "วาร์ฟาริน 3 มก. 12 เม็ดครึ่ง": "unparsed_token",
+    "Warfarin 3 mg 12x2": "unparsed_token",
+    "Warfarin 3 mg 1 tab เริ่ม 5 มกราคม": "unparsed_token",
+    "ยา 5 มลพิษ 1 เม็ด": "unparsed_token",
 }
 
 
@@ -180,13 +344,19 @@ def test_grammar_negative(text):
 PARTNER = {"warfarin": "Warfarin 3 mg od", "acetaminophen": "Paracetamol 500 mg q6h", "metformin": "Metformin 500 mg bid"}
 
 
-@pytest.mark.parametrize("reason", ["range", "unparsed_token", "ambiguous_quantity"])
+def _partnered(text: str) -> str | None:
+    """The formulary ingredient of a negative case, if it has a two-source partner line."""
+    found = load_formulary().resolve_name(parse_entry(text)["drug_name_raw"])
+    return found[0] if len(found) == 1 and found[0] in PARTNER else None
+
+
+@pytest.mark.parametrize("reason", ["range", "unparsed_token", "ambiguous_quantity", "per_unit_amount"])
 def test_negative_raises_missing_dose(reason):
-    cases = [t for t, r in NEGATIVE.items() if r == reason]
-    assert cases
+    cases = [t for t, r in NEGATIVE.items() if r == reason and _partnered(t)]
+    assert len(cases) >= 3, cases
     for text in cases:
         clean = run(snapshot(home=["Amlodipine 5 mg od"], orders=["Amlodipine 5 mg od"]))
-        [ingredient] = load_formulary().resolve_name(parse_entry(text)["drug_name_raw"])
+        ingredient = _partnered(text)
         result = run(snapshot(home=[text], orders=[PARTNER[ingredient]]))
         dose_issues = [i for i in of_type(result, "missing_field") if i["field"] == "dose"]
         assert len(dose_issues) == 1, text
@@ -233,8 +403,9 @@ def test_dose_fuzz_vs_reference():
 
     report = harness(entry_tuple(parse_entry), phrases)
     assert report.safety == [], "\n".join(report.safety[:20])  # 1. safety: 0 misreads
-    assert report.status == [], "\n".join(report.status[:20])  # 2. 100% dose_status agreement
+    assert report.status == [], "\n".join(report.status[:20])  # 2. 100% dose_status and reason agreement
     assert report.reference == [], "\n".join(report.reference[:20])  # 3. reference == generator's built value
+    assert report.over_ten == [], "\n".join(report.over_ten[:20])  # A17: no resolved quantity above 10
 
 
 def _piecewise_stub(text: str):
@@ -243,21 +414,23 @@ def _piecewise_stub(text: str):
     s = text.lower()
     strength = re.search(r"(\d+(?:\.\d+)?)\s*(mg|mcg|units?|มก\.?)", s)
     if not strength:
-        return "not_stated", None, None, None
+        return "not_stated", None, None, None, None
     qty = re.search(r"(\d+/\d+|\d+(?:\.\d+)?)\s*(?:tabs?|tablets?|caps?|เม็ด|แคปซูล)", s)
     unit = {"มก": "mg", "มก.": "mg", "units": "unit"}.get(strength.group(2), strength.group(2))
     quantity = None
     if qty:
         num, _, den = qty.group(1).partition("/")
         quantity = float(num) / float(den) if den and float(den) else float(num)
-    return "resolved", float(strength.group(1)), unit, quantity
+    return "resolved", float(strength.group(1)), unit, quantity, None
 
 
 def test_fuzz_catches_piecewise_stub():
     report = harness(_piecewise_stub, generate())
-    assert len(report.safety) >= 1
-    assert any("1 1/2 tab" in line or "1-1/2 tab" in line for line in report.safety)  # whole part dropped
-    assert any("1-2 tabs" in line or "1 to 2 tabs" in line for line in report.safety)  # upper end of a range
+    caught = report.safety_classes
+    assert caught["Q3"] >= 1, caught  # mixed number: whole part dropped
+    assert sum(n for c, n in caught.items() if c.startswith("range_")) >= 1, caught  # upper end of a range
+    for cls in ("th_half_time", "per_unit", "qv_over"):
+        assert caught[cls] >= 1, (cls, caught)
 
 
 # ---------------------------------------------------------------- CHK-SCOPE2-TH-PREFIX: undotted มก/มล only as a word
@@ -279,8 +452,9 @@ TH_PREFIX = {
 
 @pytest.mark.parametrize("text", list(TH_PREFIX))
 def test_thai_word_starting_with_unit_is_not_a_unit(text):
+    status, reason, *dose = TH_PREFIX[text]
     assert _dose(text) == TH_PREFIX[text]
-    assert reference_parse(text) == (TH_PREFIX[text][0], *TH_PREFIX[text][2:])
+    assert reference_parse(text) == (status, *dose, reason)
 
 
 def test_thai_date_prefix_raises_missing_dose():
@@ -380,6 +554,7 @@ def test_clean_fixtures_grammar_only():
                 trace = read_dose(normalise(entry["text"]))
                 assert trace.dose_status == "resolved" and trace.unconsumed_numeric == [], entry["text"]
                 assert trace.quantity == gold["quantity"], entry["text"]
+                assert not {m.pid for m in trace.matches} & {"R1", "T1"}, entry["text"]  # rev 2: no clean line hits them
                 entries += 1
     assert entries > 0
 
@@ -423,13 +598,14 @@ def test_reason_labels_complete():
     assert set(UNVERIFIABLE_WORDS) == set(REASONS)
     assert UNVERIFIABLE_WORDS["range"] == "a range or alternative between two amounts"
     assert UNVERIFIABLE_WORDS["unparsed_token"] == "a dose form this checker does not read"
+    assert UNVERIFIABLE_WORDS["per_unit_amount"] == "an amount per day, per weight or per other unit, not per dose"
     ts = (REPO_ROOT / "web" / "lib" / "pharma.ts").read_text(encoding="utf-8")
     block = ts.split("export const UNVERIFIABLE_REASONS")[1].split("};")[0]
     for reason in REASONS:
         assert f'  {reason}: "{UNVERIFIABLE_WORDS[reason]}",' in block, reason
 
 
-@pytest.mark.parametrize("reason", ["range", "unparsed_token"])
+@pytest.mark.parametrize("reason", ["range", "unparsed_token", "per_unit_amount"])
 def test_templates_pass_validation(reason):
     text = next(t for t, r in NEGATIVE.items() if r == reason)
     for snap in (snapshot(home=["Warfarin 3 mg od"], orders=[text]), snapshot(orders=[text])):
@@ -445,9 +621,9 @@ def test_templates_pass_validation(reason):
 # ---------------------------------------------------------------- A14 versions and truthful wording
 
 
-def test_versions_recorded():
+def test_versions_bumped():
     assert (MOCK_RULES_VERSION, DOSE_GRAMMAR_VERSION, TEMPLATE_VERSION, PIPELINE_VERSION) == (
-        "s5-mock-rules-2.0.0", "s5-dose-grammar-1.0.0", "template-1.2.0", "s5-pipeline-2.2.0")
+        "s5-mock-rules-2.1.0", "s5-dose-grammar-1.1.0", "template-1.3.0", "s5-pipeline-2.3.0")
     r = run(get_fixture("demo-quantity"))
     assert (r["extract_mock_version"], r["dose_grammar_version"], r["template_version"], r["pipeline_version"]) == (
         MOCK_RULES_VERSION, DOSE_GRAMMAR_VERSION, TEMPLATE_VERSION, PIPELINE_VERSION)

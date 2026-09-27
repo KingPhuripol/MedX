@@ -22,9 +22,9 @@ from typing import Any
 EXTRACT_TASK = "pharma.extract.v2"
 PHRASE_TASK = "pharma.phrase.v1"
 # Bumped when the deterministic parsing changes (recorded on every run).
-MOCK_RULES_VERSION = "s5-mock-rules-2.0.0"
+MOCK_RULES_VERSION = "s5-mock-rules-2.1.0"
 # Bumped when a lexeme, production or value constraint of DOSE_GRAMMAR changes (recorded on every run).
-DOSE_GRAMMAR_VERSION = "s5-dose-grammar-1.0.0"
+DOSE_GRAMMAR_VERSION = "s5-dose-grammar-1.1.0"
 
 # ================================================================ G1: lexicon and tokeniser
 
@@ -49,13 +49,20 @@ _TH_NUMBER_WORDS = frozenset({"หนึ่ง", "สอง", "สาม", "ส�
 # "มลพิษ" and the middle of "แอมลอดิปีน". The dotted forms carry their own boundary.
 _TH_LEXICON = tuple(sorted(
     {"เม็ด", "แคปซูล", "ครั้งละ", "วันละ", "สัปดาห์ละ", "อาทิตย์ละ", "เดือนละ", "ครั้ง", "ทุก", "ชั่วโมง", "ชม.",
-     "มก.", "มก", "มิลลิกรัม", "กรัม", "ไมโครกรัม", "ยูนิต", "มล.", "มล", "และ", "หรือ", "ถึง"} | _TH_NUMBER_WORDS,
+     "นาที", "ต่อ", "มก.", "มก", "มิลลิกรัม", "กรัม", "ไมโครกรัม", "ยูนิต", "มล.", "มล", "และ", "หรือ", "ถึง"}
+    | _TH_NUMBER_WORDS,
     key=len, reverse=True,
 ))
 _WORD_ONLY = frozenset({"มก", "มล"})  # lexemes that must not touch a Thai character on either side
 _SYMBOLS = frozenset("/⁄.,-–—~x+&")
 _CONNECTORS = frozenset({"to", "or", "and", "ถึง", "หรือ", "และ"})
 _RANGE_CONNECTORS = frozenset({"-", "–", "—", "~"}) | _CONNECTORS
+# R1: a strength or quantity followed by one of these is an amount per day / weight / other unit, not per dose.
+# "ต่อ" is matched as a lexicon prefix ("ต่อวัน" -> "ต่อ" + "วัน"); over-matching can only make a dose unverifiable.
+_PER = frozenset({"/", "⁄", "per", "ต่อ"})
+# T1: text directly after "ครึ่ง" that starts with one of these is a time ("half an hour"), never a half tablet.
+_TW_TH_PREFIXES = ("ชั่วโมง", "ชม", "ช.ม.", "นาที")
+_TW_EN = frozenset({"h", "hr", "hrs", "hour", "hours", "min", "mins", "minute", "minutes"})
 _UFRACTIONS = {"½": Fraction(1, 2), "¼": Fraction(1, 4), "¾": Fraction(3, 4)}
 _SLASH_FRACTIONS = {("1", "2"): Fraction(1, 2), ("1", "4"): Fraction(1, 4), ("3", "4"): Fraction(3, 4)}
 _NUM_TOKEN = re.compile(r"[0-9]+(?:\.[0-9]+)?")
@@ -148,6 +155,7 @@ class Match:
     anchor: int | None = None  # token index where dose text starts (drug-name boundary)
     freq_code: str | None = None  # Q5 only
     daily_total: bool = False  # Q7 with a value > 1
+    conflict: bool = False  # T1 whose "ครึ่ง" could also complete "INT เม็ด ครึ่ง" (Q4b)
 
 
 def _text(toks: list[Token], i: int) -> str | None:
@@ -243,16 +251,32 @@ def _q3(toks: list[Token], i: int) -> Match | None:
     if whole is None:
         return None
     got = _frac(toks, i + 2 if _text(toks, i + 1) in ("-", "and", "และ") else i + 1)
-    return _quantity("Q3", (whole + got[0], got[1]) if got else None, toks, i)
+    return _quantity("Q3", _bounded(whole + got[0], got[1]) if got else None, toks, i)
 
 
 def _q4(toks: list[Token], i: int) -> Match | None:
     if _text(toks, i) == "ครึ่ง" and _text(toks, i + 1) in _QW_TH:
         return Match("Q4", i, i + 2, quantity=Fraction(1, 2), anchor=i)
     whole = _int(toks, i)
-    if whole is not None and _text(toks, i + 1) in _QW_TH and _text(toks, i + 2) == "ครึ่ง":
-        return Match("Q4", i, i + 3, quantity=whole + Fraction(1, 2), anchor=i)
-    return None
+    if whole is None or _text(toks, i + 1) not in _QW_TH or _text(toks, i + 2) != "ครึ่ง" or _is_tw(toks, i + 3):
+        return None
+    got = _bounded(whole + Fraction(1, 2), i + 3)
+    return Match("Q4", i, got[1], quantity=got[0], anchor=i) if got else None
+
+
+def _is_tw(toks: list[Token], i: int) -> bool:
+    """TW: the text at token ``i`` (directly after "ครึ่ง", whitespace ignored) starts a time word."""
+    if not 0 <= i < len(toks):
+        return False
+    if toks[i].kind == "WORD":
+        return toks[i].text in _TW_EN
+    # Contiguous (unspaced) text from token i onwards, enough to test the longest prefix.
+    text, end = "", toks[i].start
+    for t in toks[i:i + 4]:
+        if t.start != end:
+            break
+        text, end = text + t.text, t.end
+    return text.startswith(_TW_TH_PREFIXES)
 
 
 _TIMES_CODE = {"1": "q24h", "2": "q12h", "3": "q8h", "4": "q6h"}
@@ -285,6 +309,23 @@ def _q7(toks: list[Token], i: int) -> Match | None:
     if m is not None and m.quantity > 1:  # a daily total, not a per-dose amount
         return Match("Q7", m.start, m.end, anchor=m.anchor, daily_total=True)
     return m
+
+
+def _r1(toks: list[Token], i: int) -> Match | None:
+    """R1: (UNIT | QW) (/ | ⁄ | per | ต่อ) X, unless the UNIT and "/" begin an L1 liquid."""
+    if _text(toks, i) not in _UNITS and _text(toks, i) not in QUANTITY_WORDS:
+        return None
+    if _text(toks, i + 1) not in _PER or i + 2 >= len(toks) or _l1(toks, i - 1):
+        return None
+    return Match("R1", i, i + 3)
+
+
+def _t1(toks: list[Token], i: int) -> Match | None:
+    """T1: "ครึ่ง" + TW is a time; it conflicts with Q4b when "INT เม็ด|แคปซูล" comes right before it."""
+    if _text(toks, i) != "ครึ่ง" or not _is_tw(toks, i + 1):
+        return None
+    conflict = _text(toks, i - 1) in _QW_TH and _int(toks, i - 2) is not None
+    return Match("T1", i, i + 2, anchor=i, conflict=conflict)
 
 
 _HOURS = ("h", "hr", "hrs", "hour", "hours")
@@ -320,9 +361,9 @@ def _f3(toks: list[Token], i: int) -> Match | None:
 
 # The complete, closed production table (§G2). Nothing else reads a numeric-ish token.
 DOSE_GRAMMAR: dict[str, Callable[[list[Token], int], Match | None]] = {
-    "S1": _s1, "S2": _s2, "S3": _s3, "L1": _l1,
+    "S1": _s1, "S2": _s2, "S3": _s3, "L1": _l1, "R1": _r1,
     "Q1": _q1, "Q2": _q2, "Q3": _q3, "Q4": _q4, "Q5": _q5, "Q6": _q6, "Q7": _q7,
-    "F1": _f1, "F2": _f2, "F3": _f3,
+    "T1": _t1, "F1": _f1, "F2": _f2, "F3": _f3,
 }
 _QUANTITY_PIDS = frozenset({"Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7"})
 
@@ -361,17 +402,20 @@ class DoseParse:
 def read_dose(raw: str) -> DoseParse:
     """Tokenise the whole line and apply ``DOSE_GRAMMAR`` left to right, longest match first."""
     toks = tokenise(raw)
+    # R1 is checked at every token: its UNIT or QW is also the tail of the S1/Q production that consumes it,
+    # and any R1 makes the dose unverifiable whatever else is read.
+    per_unit = [m for i in range(len(toks)) if (m := _r1(toks, i))]
     matches: list[Match] = []
     i = 0
     while i < len(toks):
-        found = [m for fn in DOSE_GRAMMAR.values() if (m := fn(toks, i))]
+        found = [m for pid, fn in DOSE_GRAMMAR.items() if pid != "R1" and (m := fn(toks, i))]
         if found:
             best = max(found, key=lambda m: m.end)  # a tie keeps table order
             matches.append(best)
             i = best.end
         else:
             i += 1
-    consumed = frozenset(k for m in matches for k in range(m.start, m.end))
+    consumed = frozenset(k for m in [*matches, *per_unit] for k in range(m.start, m.end))
     numeric = numeric_ish(toks)
     left = [k for k in range(len(toks)) if numeric[k] and k not in consumed]
     strengths = {s for m in matches for s in m.strengths}
@@ -384,10 +428,12 @@ def read_dose(raw: str) -> DoseParse:
         reason = "liquid_volume"
     elif len(strengths) > 1:
         reason = "multiple_strengths"
+    elif per_unit:
+        reason = "per_unit_amount"
     elif any(toks[k].text in _RANGE_CONNECTORS and 0 < k < len(toks) - 1 and numeric[k - 1] and numeric[k + 1]
              for k in left):
         reason = "range"
-    elif len(quantities) > 1 or any(m.daily_total for m in matches):
+    elif len(quantities) > 1 or any(m.daily_total or m.conflict for m in matches):
         reason = "ambiguous_quantity"
     elif left:
         reason = "unparsed_token"
@@ -402,7 +448,7 @@ def read_dose(raw: str) -> DoseParse:
             status, value = "resolved", float(v)
         else:
             status = "not_stated"
-    return DoseParse(tuple(toks), tuple(matches), consumed, tuple(numeric), status, reason, value, unit, quantity)
+    return DoseParse(tuple(toks), tuple(matches + per_unit), consumed, tuple(numeric), status, reason, value, unit, quantity)
 
 
 # ================================================================ frequency mapping (unchanged since s5r2)

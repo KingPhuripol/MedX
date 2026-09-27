@@ -4,7 +4,7 @@ Written from the spec, not from ``app.pharma.mock_rules``: it imports nothing fr
 regular expressions. Technique: a character scanner builds (kind, text) pairs, then one hand-written
 priority cascade walks them left to right (longer forms are tried before their prefixes).
 
-``reference_parse(text) -> (dose_status, dose_value, dose_unit, quantity)``.
+``reference_parse(text) -> (dose_status, dose_value, dose_unit, quantity, reason)``.
 """
 
 from __future__ import annotations
@@ -25,13 +25,17 @@ EN_WORDS = ("one", "two", "three", "four", "five", "six", "seven", "eight", "nin
             "thrice")
 TH_WORDS = ("หนึ่ง", "สอง", "สาม", "สี่", "ห้า", "หก", "เจ็ด", "แปด", "เก้า", "สิบ", "ครึ่ง")
 THAI_LEXEMES = ("เม็ด", "แคปซูล", "ครั้งละ", "วันละ", "สัปดาห์ละ", "อาทิตย์ละ", "เดือนละ", "ครั้ง", "ทุก", "ชั่วโมง",
-                "ชม.", "มก.", "มก", "มิลลิกรัม", "กรัม", "ไมโครกรัม", "ยูนิต", "มล.", "มล", "และ", "หรือ", "ถึง") + TH_WORDS
+                "ชม.", "นาที", "ต่อ", "มก.", "มก", "มิลลิกรัม", "กรัม", "ไมโครกรัม", "ยูนิต", "มล.", "มล", "และ", "หรือ", "ถึง") + TH_WORDS
 BARE_UNITS = ("มก", "มล")
 SYMBOL_CHARS = "/⁄.,-–—~x+&"
 LINKS = ("to", "or", "and", "ถึง", "หรือ", "และ")
 RANGE_LINKS = ("-", "–", "—", "~") + LINKS
 S3_JOINERS = ("+", ",", "&", "and", "และ")
 TIMES_OF_DAY = {"1": 1, "2": 2, "3": 3, "4": 4}
+PER_WORDS = ("/", "⁄", "per", "ต่อ")  # R1: amount per day / weight / other unit
+HALF = "ครึ่ง"
+TIME_TH = ("ชั่วโมง", "ชม", "ช.ม.", "นาที")  # T1: text right after ครึ่ง starting with one of these is a time
+TIME_EN = ("h", "hr", "hrs", "hour", "hours", "min", "mins", "minute", "minutes")
 EXCEPT_WORDS = ("except",)
 WEEKDAY_STEMS = ("mon", "tue", "tues", "wed", "wednes", "thu", "thur", "thurs", "fri", "sat", "satur", "sun")
 THAI_VARIABLE = ("ยกเว้น", "สลับ", "วันจันทร์", "วันอังคาร", "วันพุธ", "วันพฤหัส", "วันศุกร์", "วันเสาร์", "วันอาทิตย์")
@@ -39,6 +43,18 @@ THAI_VARIABLE = ("ยกเว้น", "สลับ", "วันจันทร
 
 def _thai(ch: str) -> bool:
     return 0x0E00 <= ord(ch) <= 0x0E7F
+
+
+def _time_follows(s: str, pos: int) -> bool:
+    """Is the text at ``pos`` (one optional space skipped) a Thai time word, or an EN time word?"""
+    rest = s[pos + 1:] if s[pos:pos + 1] == " " else s[pos:]
+    for prefix in TIME_TH:
+        if rest[:len(prefix)] == prefix:
+            return True
+    end = 0
+    while end < len(rest) and rest[end].isalpha() and not _thai(rest[end]):
+        end += 1
+    return rest[:end] in TIME_EN
 
 
 def scan(text: str) -> list[tuple[str, str]]:
@@ -81,8 +97,8 @@ def scan(text: str) -> list[tuple[str, str]]:
                 hit = lex
                 break
             if hit:
-                out.append(("T", hit))
                 pos, thai_other = pos + len(hit), False
+                out.append(("H" if hit == HALF and _time_follows(s, pos) else "T", hit))
             elif thai_other:
                 out[-1] = ("O", out[-1][1] + ch)
                 pos += 1
@@ -114,6 +130,8 @@ class _Walk:
         self.quantities: set[Fraction] = set()
         self.liquid = False
         self.daily_total = False
+        self.half_conflict = False  # "INT เม็ด ครึ่ง<time>": half a tablet or half an hour
+        self.per_unit = False
 
     # -- primitives
     def t(self, i: int) -> str:
@@ -138,6 +156,10 @@ class _Walk:
             return None
         f = Fraction(v)
         return f if Fraction(0) < f <= 10 and (f * 4).denominator == 1 else None
+
+    @staticmethod
+    def within(v: Fraction) -> bool:
+        return Fraction(0) < v <= 10 and (v * 4).denominator == 1
 
     def fraction(self, i: int) -> tuple[Fraction, int] | None:
         if self.t(i) == "½":
@@ -166,14 +188,14 @@ class _Walk:
     # -- quantity forms usable after ครั้งละ / วันละ: returns (value, length)
     def small_quantity(self, i: int) -> tuple[Fraction, int] | None:
         w = self.whole(i)
-        # N เม็ดครึ่ง
-        if w is not None and self.t(i + 1) in TH_QW and self.t(i + 2) == "ครึ่ง":
-            return w + Fraction(1, 2), 3
+        # N เม็ดครึ่ง (a ครึ่ง followed by a time word is kind "H" and never completes this)
+        if w is not None and self.t(i + 1) in TH_QW and self.k(i + 2) == "T" and self.t(i + 2) == HALF:
+            return (w + Fraction(1, 2), 3) if self.within(w + Fraction(1, 2)) else None
         # mixed number
         if w is not None:
             gap = 1 if self.t(i + 1) in ("-", "and", "และ") else 0
             fr = self.fraction(i + 1 + gap)
-            if fr and self.t(i + 1 + gap + fr[1]) in QW:
+            if fr and self.t(i + 1 + gap + fr[1]) in QW and self.within(w + fr[0]):
                 return w + fr[0], 1 + gap + fr[1] + 1
         if self.t(i) == "ครึ่ง" and self.t(i + 1) in TH_QW:
             return Fraction(1, 2), 2
@@ -185,19 +207,38 @@ class _Walk:
             return fr[0], fr[1] + 1
         return None
 
+    def liquid_len(self, i: int) -> int:
+        """L1: NUM MASS / NUM? VOL (NUM VOL)?; returns its length or 0."""
+        if self.k(i) != "N" or self.t(i + 1) not in MASS or self.t(i + 2) != "/":
+            return 0
+        j = i + 3 + (1 if self.k(i + 3) == "N" else 0)
+        if self.t(j) not in VOLUME:
+            return 0
+        j += 1
+        if self.k(j) == "N" and self.t(j + 1) in VOLUME:
+            j += 2
+        return j - i
+
+    def mark_per_unit(self) -> None:
+        """R1, checked at every pair: (UNIT | QW) then / ⁄ per ต่อ then any pair, unless it starts an L1."""
+        for j in range(len(self.p)):
+            if (self.t(j) in UNIT_OF or self.t(j) in QW) and self.t(j + 1) in PER_WORDS and j + 2 < len(self.p):
+                if not self.liquid_len(j - 1):
+                    self.per_unit = True
+                    self.take(j, 3)
+
     # -- the cascade
     def step(self, i: int) -> int:
         t, k = self.t(i), self.k(i)
+        if k == "H":  # T1: half an hour / half a minute is a time, never a quantity
+            if self.t(i - 1) in TH_QW and self.whole(i - 2) is not None:
+                self.half_conflict = True
+            return self.take(i, 1)
         if k == "N":
-            # L1: NUM MASS / NUM? VOL (NUM VOL)?
-            if self.t(i + 1) in MASS and self.t(i + 2) == "/":
-                j = i + 3 + (1 if self.k(i + 3) == "N" else 0)
-                if self.t(j) in VOLUME:
-                    j += 1
-                    if self.k(j) == "N" and self.t(j + 1) in VOLUME:
-                        j += 2
-                    self.liquid = True
-                    return self.take(i, j - i)
+            n_liquid = self.liquid_len(i)
+            if n_liquid:
+                self.liquid = True
+                return self.take(i, n_liquid)
             # S3 chain, else S1
             first = self.strength_at(i)
             if first:
@@ -269,7 +310,7 @@ class _Walk:
         return i + 1
 
     def numberlike(self, i: int) -> bool:
-        return self.k(i) in ("N", "U") or self.t(i) in EN_WORDS or (self.k(i) == "T" and self.t(i) in TH_WORDS)
+        return self.k(i) in ("N", "U", "H") or self.t(i) in EN_WORDS or (self.k(i) == "T" and self.t(i) in TH_WORDS)
 
     def numericish(self, i: int) -> bool:
         if self.k(i) == "S" or self.t(i) in LINKS:
@@ -289,30 +330,48 @@ def _variable(text: str, pairs: list[tuple[str, str]]) -> bool:
     return any(w in text for w in THAI_VARIABLE)
 
 
-def reference_parse(text: str) -> tuple[str, float | None, str | None, float | None]:
+def _walk(text: str) -> tuple[list[tuple[str, str]], _Walk]:
     pairs = scan(text)
     walk = _Walk(pairs)
     i = 0
     while i < len(pairs):
         i = walk.step(i)
+    walk.mark_per_unit()
+    return pairs, walk
+
+
+def reference_parse(text: str) -> tuple[str, float | None, str | None, float | None, str | None]:
+    pairs, walk = _walk(text)
     leftover = [j for j in range(len(pairs)) if walk.numericish(j) and not walk.used[j]]
-    if (_variable(text, pairs) or walk.liquid or len(walk.strengths) > 1 or leftover
-            or len(walk.quantities) > 1 or walk.daily_total):
-        return "unverifiable", None, None, None
+    if _variable(text, pairs):
+        reason = "variable_regimen"
+    elif walk.liquid:
+        reason = "liquid_volume"
+    elif len(walk.strengths) > 1:
+        reason = "multiple_strengths"
+    elif walk.per_unit:
+        reason = "per_unit_amount"
+    elif any(walk.t(j) in RANGE_LINKS and walk.numericish(j - 1) and walk.numericish(j + 1) for j in leftover):
+        reason = "range"
+    elif len(walk.quantities) > 1 or walk.daily_total or walk.half_conflict:
+        reason = "ambiguous_quantity"
+    elif leftover:
+        reason = "unparsed_token"
+    else:
+        reason = None
+    if reason:
+        return "unverifiable", None, None, None, reason
     quantity = float(next(iter(walk.quantities))) if walk.quantities else None
     if not walk.strengths:
-        return "not_stated", None, None, quantity
+        return "not_stated", None, None, quantity, None
     ((value, unit),) = walk.strengths
-    return "resolved", float(value), unit, quantity
+    return "resolved", float(value), unit, quantity, None
 
 
 def reference_reason_hint(text: str) -> str:
     """Diagnostic only (printed on failure): which unverifiable condition the reference saw."""
-    pairs = scan(text)
-    walk = _Walk(pairs)
-    i = 0
-    while i < len(pairs):
-        i = walk.step(i)
+    pairs, walk = _walk(text)
     left = [pairs[j][1] for j in range(len(pairs)) if walk.numericish(j) and not walk.used[j]]
     return (f"variable={_variable(text, pairs)} liquid={walk.liquid} strengths={sorted(walk.strengths)} "
-            f"quantities={sorted(walk.quantities)} daily_total={walk.daily_total} leftover={left}")
+            f"per_unit={walk.per_unit} quantities={sorted(walk.quantities)} daily_total={walk.daily_total} "
+            f"half_conflict={walk.half_conflict} leftover={left}")

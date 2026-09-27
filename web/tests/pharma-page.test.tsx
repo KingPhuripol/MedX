@@ -369,6 +369,7 @@ describe("pharmacist reconciliation page", () => {
   const NEW_REASONS: Record<string, string> = {
     range: "a range or alternative between two amounts",
     unparsed_token: "a dose form this checker does not read",
+    per_unit_amount: "an amount per day, per weight or per other unit, not per dose",
   };
   for (const [reason, label] of Object.entries(NEW_REASONS)) {
     it(`field status labels[${reason}]`, async () => {
