@@ -29,13 +29,18 @@ _UNIT_ALT = "|".join(sorted((re.escape(u) for u in _UNITS), key=len, reverse=Tru
 # Latin units must end at a word boundary; Thai units are matched as written. The lookbehinds are ASCII-only on
 # purpose: Thai is written without spaces, so a number straight after a Thai word ("ครั้งละ2เม็ด") must still be read.
 DOSE_RE = re.compile(rf"(?<![A-Za-z0-9_/]){_NUM}\s*({_UNIT_ALT})(?![A-Za-z])", re.IGNORECASE)
-# Units per administration: "2 tabs", "1/2 tab", "1 1/2 tab", "½ เม็ด", "1.5 tablets", "ครึ่งเม็ด". A fraction is
-# parsed exactly.
-# A mixed number ("1 1/2", "1½") is tried first so its whole part is never dropped.
-_QTY_NUM = r"(\d+\s+\d+\s*/\s*\d+|\d+\s*½|\d+\s*/\s*\d+|\d+(?:\.\d+)?|½|ครึ่ง)"
+# Units per administration: "2 tabs", "1/2 tab", "1 1/2 tab", "1-1/2 tab", "1 and 1/2 tab", "½ เม็ด", "1.5 tablets",
+# "ครึ่งเม็ด", "1 เม็ดครึ่ง" (N and a half). A fraction is parsed exactly. A mixed number is tried first so its whole
+# part is never dropped; its separator (space, "-", "and", "และ") is required before "n/d" so "12/5" is never 1 2/5.
+_MIX_SEP = r"(?:\s*(?:-|and|และ)\s*|\s+)"
+_QTY_NUM = rf"(\d+{_MIX_SEP}\d+\s*/\s*\d+|\d+(?:\s*(?:-|and|และ)\s*|\s*)½|\d+\s*/\s*\d+|\d+(?:\.\d+)?|½|ครึ่ง)"
 QTY_RE = re.compile(
-    rf"(?<![A-Za-z0-9_./]){_QTY_NUM}\s*(?:tabs?|tablets?|caps?|capsules?|เม็ด|แคปซูล)(?![A-Za-z])", re.IGNORECASE
+    rf"(?<![A-Za-z0-9_./]){_QTY_NUM}\s*(?:tabs?|tablets?|caps?|capsules?|เม็ด|แคปซูล)(ครึ่ง)?(?![A-Za-z])", re.IGNORECASE
 )
+_MIXED_RE = re.compile(rf"(\d+){_MIX_SEP}(\d+/\d+)|(\d+)(?:\s*(?:-|and|และ)\s*|\s*)½", re.IGNORECASE)
+# Any quantity word left over once every quantity form is read ("one tab", "สองเม็ด", "tab and a half") is a form
+# the fixed pattern set does not know: the quantity is unverifiable, never "not stated".
+_QTY_WORD_RE = re.compile(r"(?<![A-Za-z])(?:tabs?|tablets?|caps?|capsules?|half)(?![A-Za-z])|เม็ด|แคปซูล|ครึ่ง", re.IGNORECASE)
 # Variable regimen: an exception, alternation, or a weekday-specific dose.
 _WEEKDAYS = r"mon|tue|tues|wed|wednes|thu|thur|thurs|fri|sat|satur|sun"
 VARIABLE_RE = re.compile(
@@ -105,18 +110,28 @@ def _first_start(text: str, patterns: list[re.Pattern[str]]) -> int:
     return min(starts) if starts else len(text)
 
 
-def _qty_value(token: str) -> float:
-    token = " ".join(token.replace("/", " / ").replace("½", " ½").split())
+def _qty_value(m: re.Match[str]) -> float | None:
+    """Exact units per administration for one ``QTY_RE`` match; ``None`` when the figure is not a valid quantity."""
+    token = re.sub(r"\s*/\s*", "/", m.group(1).strip())
     if token in ("½", "ครึ่ง"):
-        return 0.5
-    parts = token.split(" ")
-    if len(parts) == 4 or (len(parts) == 2 and parts[1] == "½"):  # mixed number: "1 1/2" or "1½"
-        return float(Fraction(parts[0]) + (Fraction(0.5) if parts[1] == "½" else Fraction(f"{parts[1]}/{parts[3]}")))
-    return float(Fraction("".join(parts)))  # exact for "1/2", "3/4", "1.5"
+        value = Fraction(1, 2)
+    elif mixed := _MIXED_RE.fullmatch(token):
+        value = Fraction(mixed.group(1) or mixed.group(3)) + (Fraction(mixed.group(2)) if mixed.group(2) else Fraction(1, 2))
+    else:
+        try:
+            value = Fraction(token)  # exact for "1/2", "3/4", "1.5"
+        except ZeroDivisionError:
+            return None
+    if m.group(2):  # "N เม็ดครึ่ง" = N and a half; only after a whole number
+        if not token.isdigit():
+            return None
+        value += Fraction(1, 2)
+    return float(value) if value > 0 else None
 
 
-# A bare number straight before a quantity ("1 0.5 tab") is a split or garbled figure: never drop it silently.
-_STRAY_NUM_BEFORE_RE = re.compile(r"\d\s*$")
+# A number, or a number plus a connector, straight before a quantity ("1 0.5 tab", "1-2 tabs", "1 to 2 tabs",
+# "1/2-1 tab", "ครั้งละ 1-2 เม็ด") is a range or a split/garbled figure: never drop it silently or pick one end.
+_STRAY_NUM_BEFORE_RE = re.compile(r"(?:\d|½|ครึ่ง)\s*(?:[^\w\s]|to|or|and|ถึง|หรือ|และ)?\s*$", re.IGNORECASE)
 
 
 def _frequency(raw: str) -> str | None:
@@ -137,9 +152,13 @@ def parse_entry(text: str) -> dict[str, Any]:
     raw = " ".join(text.split())
     doses = [(float(m.group(1)), _UNITS[m.group(2).lower()]) for m in DOSE_RE.finditer(raw)]
     qty_matches = list(QTY_RE.finditer(raw))
-    quantities = [_qty_value(m.group(1)) for m in qty_matches]
-    stray_number = any(_STRAY_NUM_BEFORE_RE.search(raw[: m.start()]) for m in qty_matches)
-    quantities += [float(m.group(1)) for m in TIMES_RE.finditer(raw)]
+    times_matches = list(TIMES_RE.finditer(raw))
+    quantities = [_qty_value(m) for m in qty_matches] + [float(m.group(1)) for m in times_matches]
+    unreadable_quantity = (
+        None in quantities
+        or any(_STRAY_NUM_BEFORE_RE.search(raw[: m.start()]) for m in qty_matches + times_matches)
+        or _QTY_WORD_RE.search(QTY_RE.sub(" ", raw)) is not None
+    )
 
     # Order matters: the first reason that applies is reported. When unsure, never guess a value.
     reason = None
@@ -149,7 +168,7 @@ def parse_entry(text: str) -> dict[str, Any]:
         reason = "liquid_volume"
     elif len(set(doses)) > 1:
         reason = "multiple_strengths"
-    elif len(set(quantities)) > 1 or stray_number:
+    elif len(set(quantities)) > 1 or unreadable_quantity:
         reason = "ambiguous_quantity"
 
     if reason is not None:

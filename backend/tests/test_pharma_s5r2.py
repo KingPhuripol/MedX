@@ -146,10 +146,62 @@ def test_extract_stray_number_before_quantity_is_unverifiable():
     assert (e["dose_status"], e["dose_unverifiable_reason"], e["quantity"]) == ("unverifiable", "ambiguous_quantity", None)
 
 
+# Checker findings F3-F5 on v1.2 (fix 2): a mixed number joined by "-"/"and" lost its whole part (F3), Thai
+# "N เม็ดครึ่ง" dropped the half (F4), and a range "1-2 tabs" was read as its upper end (F5).
+QUANTITY_FORMS_REGRESSION_2 = {
+    "Warfarin 3 mg 1-1/2 tab od": 1.5,
+    "Warfarin 3 mg 1 and 1/2 tab od": 1.5,
+    "Warfarin 3 mg 1 - 1/2 tab od": 1.5,
+    "วาร์ฟาริน 3 มก. 1และ1/2 เม็ด วันละ 1 ครั้ง": 1.5,
+    "วาร์ฟาริน 3 มก. 1 เม็ดครึ่ง วันละ 1 ครั้ง": 1.5,
+    "วาร์ฟาริน 3 มก. 2เม็ดครึ่ง วันละ 1 ครั้ง": 2.5,
+}
+
+
+@pytest.mark.parametrize("text", list(QUANTITY_FORMS_REGRESSION_2))
+def test_extract_quantity_joined_mixed_number_and_thai_half(text):
+    e = parse_entry(text)
+    assert e["quantity"] == QUANTITY_FORMS_REGRESSION_2[text] and e["dose_status"] == "resolved"
+
+
+AMBIGUOUS_QUANTITY_FORMS = [
+    "พาราเซตามอล 500 มก. ครั้งละ 1-2 เม็ด ทุก 6 ชั่วโมง เวลาปวด",  # range
+    "Paracetamol 500 mg 1-2 tabs q6h prn",
+    "Paracetamol 500 mg 1 to 2 tabs q6h prn",
+    "Paracetamol 500 mg 1 or 2 tabs q6h prn",
+    "Warfarin 3 mg 1/2-1 tab od",
+    "Warfarin 3 mg ½-1 tab od",
+    "Metformin 500 mg 1-2x2",
+    "Warfarin 3 mg one tab od",  # quantity word the pattern set cannot read
+    "วาร์ฟาริน 3 มก. สองเม็ด วันละ 1 ครั้ง",
+    "Warfarin 3 mg 1/0 tab od",
+    "Warfarin 3 mg 1.5 เม็ดครึ่ง od",
+]
+
+
+@pytest.mark.parametrize("text", AMBIGUOUS_QUANTITY_FORMS)
+def test_extract_range_or_unknown_quantity_is_unverifiable(text):
+    e = parse_entry(text)
+    assert (e["dose_status"], e["dose_unverifiable_reason"], e["quantity"], e["dose_value"]) == (
+        "unverifiable", "ambiguous_quantity", None, None)
+
+
+def test_range_quantity_raises_missing_dose_not_silent_pass():
+    # F5: never guess the upper end of a range; the comparison is unchecked and visible.
+    result = run(snapshot(home=["พาราเซตามอล 500 มก. ครั้งละ 1-2 เม็ด ทุก 6 ชั่วโมง เวลาปวด"],
+                          orders=["Paracetamol 1000 mg q6h prn"]))
+    [mf] = [i for i in of_type(result, "missing_field") if i["field"] == "dose"]
+    assert (mf["detail"]["field_status"], mf["detail"]["unverifiable_reason"]) == ("unverifiable", "ambiguous_quantity")
+    assert of_type(result, "dose_mismatch") == [] and result["unchecked_comparisons"] >= 1
+
+
 REGRESSION_MISMATCH = {
     "mixed_number": ("Warfarin 3 mg 1 1/2 tab od", "Warfarin 1.5 mg od", {4.5, 1.5}),
     "thai_attached": ("เมทฟอร์มิน 500 มก. ครั้งละ2เม็ด วันละ2ครั้ง", "Metformin 500 mg 1 tab bid", {1000.0, 500.0}),
     "thai_attached_half": ("วาร์ฟาริน 3 มก. วันละครึ่งเม็ด", "Warfarin 3 mg 1 tab od", {1.5, 3.0}),
+    "hyphen_mixed_number": ("Warfarin 3 mg 1-1/2 tab od", "Warfarin 1.5 mg od", {4.5, 1.5}),
+    "and_mixed_number": ("Warfarin 3 mg 1 and 1/2 tab od", "Warfarin 1.5 mg od", {4.5, 1.5}),
+    "thai_n_and_a_half": ("วาร์ฟาริน 3 มก. 1 เม็ดครึ่ง วันละ 1 ครั้ง", "Warfarin 3 mg 1 tab od", {4.5, 3.0}),
 }
 
 
