@@ -1,8 +1,10 @@
 {
- "decision": "docs/DECISIONS.md 2026-09-27 — S5 Pharma evaluation definitions",
- "frozen_on": "2026-09-26",
- "generator_version": "s5-fixtures-2.0.0",
- "note": "Frozen test split. Do not tune rules or the mock against these patients.",
+ "decision": "docs/DECISIONS.md 2026-09-27 — S5 Pharma evaluation definitions; slices/s5r2/SPEC.md §11",
+ "fixtures_file_sha256": "22979820a842432e5faf63e63490a6e8ea24cb973704c3c29a88d0dda80d0521",
+ "frozen_on": "2026-09-27",
+ "generator_version": "s5-fixtures-3.0.0",
+ "manifest_version": 3,
+ "note": "Frozen test split (same patients as v2). Do not tune rules or the mock against these patients.",
  "patient_refs": [
   "s5-p03",
   "s5-p06",
@@ -37,6 +39,15 @@
   "s5-p93",
   "s5-p96"
  ],
- "sha256": "313e44b314097bf8980d353b3d28f739223fb848c5fe8f9cabdf9b307771dad9",
- "split": "test"
+ "sha256": "700d598ba3d756af83992d72447d90db8e92763d87ad269870c641dbb07375e1",
+ "split": "test",
+ "supersedes": {
+  "generator_version": "s5-fixtures-2.0.0",
+  "manifest_version": 2,
+  "sha256": "313e44b314097bf8980d353b3d28f739223fb848c5fe8f9cabdf9b307771dad9"
+ },
+ "surface_suite": {
+  "generator_version": "s5-surface-forms-1.0.0",
+  "seed": 11
+ }
 }

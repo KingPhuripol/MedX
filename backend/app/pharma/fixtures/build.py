@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 import random
+import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -18,9 +19,16 @@ HERE = Path(__file__).resolve().parent
 PATIENTS_FILE = HERE / "patients.json"
 MANIFEST_FILE = HERE / "test_manifest.json"
 DEMO_FILE = HERE / "demo.json"
-GENERATOR_VERSION = "s5-fixtures-2.0.0"
+GENERATOR_VERSION = "s5-fixtures-3.0.0"
 SEED = 20260926
-FROZEN_ON = "2026-09-26"  # manifest v2 frozen before any v1.1 test-split evaluation
+FROZEN_ON = "2026-09-27"  # manifest v3 frozen before any v1.2 test-split evaluation
+MANIFEST_VERSION = 3
+# The v2 test split this manifest keeps unchanged (same 32 refs, no patient changes split).
+SUPERSEDES = {"manifest_version": 2, "generator_version": "s5-fixtures-2.0.0",
+              "sha256": "313e44b314097bf8980d353b3d28f739223fb848c5fe8f9cabdf9b307771dad9"}
+# Seeded surface-form suite (eval/inject.py), frozen together with the split.
+SURFACE_SEED = 11
+SURFACE_GENERATOR_VERSION = "s5-surface-forms-1.0.0"
 N_PATIENTS = 96  # >= 60 dev and >= 30 test (s5r); refs s5-p01..s5-p96
 PROVENANCE = "synthetic: s5 fixture generator (no real patient data)"
 
@@ -115,6 +123,14 @@ def gold_route(surface: str | None) -> str | None:
     return None if surface is None else "oral"
 
 
+NXM_SURFACE = re.compile(r"^(\d+)x\d")  # "1x2 pc": N units per administration
+
+
+def gold_quantity(freq_surface: str | None) -> float | None:
+    m = NXM_SURFACE.match(freq_surface or "")
+    return float(m.group(1)) if m else None
+
+
 def make_entry(
     form: Formulary, rng: random.Random, product: str, name: str, dose, unit, freq_code, style: str,
     *, keep_dose: bool = True, keep_freq: bool = True,
@@ -131,13 +147,39 @@ def make_entry(
             "drug_name_raw": name,
             "dose_value": float(d) if d is not None else None,
             "dose_unit": u,
+            "quantity": gold_quantity(freq_s) if d is not None else None,
+            "dose_status": "resolved" if d is not None else "not_stated",
             "route": gold_route(route_s),
             "frequency_code": freq_code if freq_s else None,
+            "frequency_status": "recognised" if freq_s else "not_stated",
             "ingredients": ingredients,
             "ingredient_rxcuis": list(form.rxcuis(ingredients)),
             "product": product,
         },
     }
+
+
+TIMES_PER_DAY = {"q24h": 1, "q12h": 2, "q8h": 3, "q6h": 4}
+TH_UNITS = {"mg": "มก.", "g": "กรัม", "mcg": "mcg"}
+
+
+def quantity_form_entry(entry: dict, rng: random.Random, style: str) -> tuple[dict, str]:
+    """Rewrite a clean entry in a quantity form with the *same dose per administration*, e.g.
+    ``Metformin 500 mg bid`` -> ``Metformin 250 mg 2 tabs bid`` (v3: >= 30 patients carry one)."""
+    g = entry["gold"]
+    dose, unit, code = g["dose_value"], g["dose_unit"], g["frequency_code"]
+    u = TH_UNITS.get(unit, unit) if style == "th" else unit
+    # Count forms never share a line with an "NxM" surface (two quantity statements = ambiguous).
+    freq_s = rng.choice([f for f in FREQ_SURFACES[code][style] if not NXM_SURFACE.match(f)])
+    options = [("half_strength_x2", f"{fmt_num(dose / 2)} {u} 2 {'เม็ด' if style == 'th' else 'tabs'} {freq_s}", dose / 2, 2.0),
+               ("double_strength_half", f"{fmt_num(dose * 2)} {u} {'ครึ่งเม็ด' if style == 'th' else '1/2 tab'} {freq_s}", dose * 2, 0.5)]
+    if code in TIMES_PER_DAY:
+        suffix = "หลังอาหาร" if style == "th" else "pc"
+        options.append(("nxm", f"{fmt_num(dose / 2)} {u} 2x{TIMES_PER_DAY[code]} {suffix}", dose / 2, 2.0))
+    kind, tail, strength, qty = rng.choice(options)
+    text = f"{g['drug_name_raw']} {tail}"
+    gold = g | {"dose_value": float(strength), "quantity": qty, "route": None}
+    return {**{k: v for k, v in entry.items() if k != "text"}, "text": text, "gold": gold}, kind
 
 
 def allergy_reach(form: Formulary, text: str, ingredients: set[str]) -> set[str]:
@@ -191,6 +233,23 @@ def build_patient(form: Formulary, index: int) -> dict:
     for key, names, dose, unit, freq in acute:
         orders.append(make_entry(form, rng, key, _surface(names, order_style, rng), dose, unit, freq, order_style))
 
+    # v3: every other patient carries one active chronic entry written in a quantity form whose dose per
+    # administration equals the other sources' dose. A separate RNG keeps every other v2 choice unchanged.
+    quantity_form = None
+    if index % 2 == 0:
+        qrng = random.Random(f"{SEED}:quantity-form:{index}")
+        by_source = {"home_list": (home, home_style), "patient_reported": (reported, pr_style), "new_order": (orders, order_style)}
+        chronic_keys_active = {c[0] for c in chronic} - {ended_key}
+        cands_by_source = {
+            st: [n for n, e in enumerate(entries) if e["gold"]["product"] in chronic_keys_active]
+            for st, (entries, _) in by_source.items()
+        }
+        source_type = qrng.choice(sorted(st for st, c in cands_by_source.items() if c))
+        entries, style = by_source[source_type]
+        n = qrng.choice(cands_by_source[source_type])
+        entries[n], kind = quantity_form_entry(entries[n], qrng, style)
+        quantity_form = {"source_type": source_type, "entry_index": n, "form": kind}
+
     all_ings = {i for e in home + reported + orders for i in e["gold"]["ingredients"]}
     allergies = []
     if rng.random() < 0.6:
@@ -243,6 +302,7 @@ def build_patient(form: Formulary, index: int) -> dict:
         "meta": {
             "uses_thai_mentions": uses_thai,
             "documented_discontinuation": discontinue,
+            "quantity_form": quantity_form,
             "generator_version": GENERATOR_VERSION,
         },
     }
@@ -263,22 +323,30 @@ def frozen_split_sha256(patients: list[dict]) -> str:
     return hashlib.sha256(canon.encode("utf-8")).hexdigest()
 
 
-def manifest(patients: list[dict]) -> dict:
+def fixtures_file_sha256() -> str:
+    return hashlib.sha256(PATIENTS_FILE.read_bytes()).hexdigest()
+
+
+def manifest(patients: list[dict], fixtures_sha256: str | None = None) -> dict:
     return {
+        "manifest_version": MANIFEST_VERSION,
         "split": "test",
         "frozen_on": FROZEN_ON,
-        "decision": "docs/DECISIONS.md 2026-09-27 — S5 Pharma evaluation definitions",
+        "decision": "docs/DECISIONS.md 2026-09-27 — S5 Pharma evaluation definitions; slices/s5r2/SPEC.md §11",
         "generator_version": GENERATOR_VERSION,
         "patient_refs": [p["patient_ref"] for p in patients if p["split"] == "test"],
         "sha256": frozen_split_sha256(patients),
-        "note": "Frozen test split. Do not tune rules or the mock against these patients.",
+        "fixtures_file_sha256": fixtures_sha256 if fixtures_sha256 is not None else fixtures_file_sha256(),
+        "surface_suite": {"seed": SURFACE_SEED, "generator_version": SURFACE_GENERATOR_VERSION},
+        "supersedes": SUPERSEDES,
+        "note": "Frozen test split (same patients as v2). Do not tune rules or the mock against these patients.",
     }
 
 
 def main() -> None:
     patients = build_all()
     PATIENTS_FILE.write_text(dumps({"generator_version": GENERATOR_VERSION, "seed": SEED, "patients": patients}), encoding="utf-8")
-    MANIFEST_FILE.write_text(dumps(manifest(patients)), encoding="utf-8")
+    MANIFEST_FILE.write_text(dumps(manifest(patients, fixtures_file_sha256())), encoding="utf-8")
     print(f"wrote {len(patients)} patients")
 
 

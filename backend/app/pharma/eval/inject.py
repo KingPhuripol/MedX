@@ -5,6 +5,10 @@ record or a new order) to make a type applicable. It uses formulary ground truth
 
 Log line: case_id, patient_ref, split, type, source, before, after, expected{type, ingredients, sources}
 (+ ``field`` at top level and in ``expected`` for ``missing_field``).
+
+A separate seeded **surface-form suite** (``build_surface_cases``, v1.2) rewrites one entry per case in
+one written form (quantity, fraction, equivalent, variable, liquid, multi-strength, unmapped frequency);
+its log lines add ``form`` and ``lang``. It leaves the 9-type suite unchanged.
 """
 
 from __future__ import annotations
@@ -15,10 +19,16 @@ import random
 from functools import lru_cache
 
 from ..fixtures.build import (
+    CHRONIC,
     EXTRA_REGIMENS,
     FREQ_SURFACES,
+    NXM_SURFACE,
     PATIENTS_FILE,
+    SURFACE_SEED,
+    TH_UNITS,
+    TIMES_PER_DAY,
     allergy_reach,
+    fmt_num,
     render,
 )
 from ..formulary import DATA_DIR, Formulary, load_formulary
@@ -101,13 +111,19 @@ def _route_surface(g: dict, style: str) -> str | None:
     return "รับประทาน" if style == "th" else "PO"
 
 
+def per_admin(g: dict) -> float | None:
+    """Gold dose per administration: strength x quantity (the stated amount when no quantity)."""
+    return None if g["dose_value"] is None else g["dose_value"] * (g.get("quantity") or 1.0)
+
+
 def _rerender(g: dict, *, name: str | None = None, dose=None, unit=None, freq_code=None, style="en",
               rng: random.Random) -> str:
+    """Re-render an entry with its dose per administration as a stated amount (no quantity)."""
     fc = freq_code if freq_code is not None else g["frequency_code"]
     freq_s = rng.choice(FREQ_SURFACES[fc][style] + HELDOUT_FREQ_SURFACES[fc][style]) if fc else None
     return render(
         name or g["drug_name_raw"],
-        dose if dose is not None else g["dose_value"],
+        dose if dose is not None else per_admin(g),
         unit if unit is not None else g["dose_unit"],
         _route_surface(g, style),
         freq_s,
@@ -195,7 +211,7 @@ def inject(form: Formulary, p: dict, kind: str, rng: random.Random) -> tuple[dic
             freq_s = rng.choice(FREQ_SURFACES[fc][style] + HELDOUT_FREQ_SURFACES[fc][style])
             after = render(g["drug_name_raw"], None, None, _route_surface(g, style), freq_s, style)
         else:
-            after = render(g["drug_name_raw"], g["dose_value"], g["dose_unit"], _route_surface(g, style), None, style)
+            after = render(g["drug_name_raw"], per_admin(g), g["dose_unit"], _route_surface(g, style), None, style)
         target[i] = {**target[i], "text": after}
         return snap, {"source": source_type, "before": before, "after": after, "field": field,
                       "expected": {"type": kind, "ingredients": g["ingredients"], "sources": [source_type],
@@ -223,7 +239,7 @@ def inject(form: Formulary, p: dict, kind: str, rng: random.Random) -> tuple[dic
         before = target_entries[idx]["text"]
         style = _style(before)
         if kind == "dose_mismatch":
-            value, unit = g["dose_value"] * 2, g["dose_unit"]
+            value, unit = per_admin(g) * 2, g["dose_unit"]
             if unit == "mg" and value >= 1000 and rng.random() < 0.5:
                 value, unit = value / 1000, "g"
             after = _rerender(g, dose=value, unit=unit, style=style, rng=rng)
@@ -308,3 +324,137 @@ def log_lines(cases: list[dict]) -> str:
         + "\n"
         for c in cases
     )
+
+
+# --------------------------------------------------------------------------- surface-form suite (v1.2)
+
+SURFACE_FORMS = ("SF-NXM", "SF-TABS", "SF-MED", "SF-FRAC", "SF-EQUIV", "SF-VAR", "SF-LIQ", "SF-MULTI", "SF-FREQ")
+DETECTION_FORMS = tuple(f for f in SURFACE_FORMS if f != "SF-EQUIV")
+_EN_ONLY, _TH_ONLY = {"SF-TABS"}, {"SF-MED"}
+_NAMES = {key: names for key, names, *_ in CHRONIC}
+UNMAPPED_FREQ = {"en": ("q4h", "every other day", "3 times a week", "twice weekly"), "th": ("วันเว้นวัน", "สัปดาห์ละ 1 ครั้ง")}
+_UNVERIFIABLE = {"SF-VAR": "variable_regimen", "SF-LIQ": "liquid_volume", "SF-MULTI": "multiple_strengths"}
+
+
+def surface_lang(patient_ref: str, form: str) -> str:
+    if form in _EN_ONLY:
+        return "en"
+    if form in _TH_ONLY:
+        return "th"
+    index = int(patient_ref.rsplit("p", 1)[1]) - 1
+    return "en" if (index // 3) % 2 == 0 else "th"  # alternates within every split
+
+
+def _surface_expected(form: str, ings: list[str], source: str) -> dict:
+    base = {"ingredients": ings, "sources": [source]}
+    if form == "SF-EQUIV":
+        return base | {"type": None}
+    if form in _UNVERIFIABLE:
+        return base | {"type": "missing_field", "field": "dose", "field_status": "unverifiable",
+                       "unverifiable_reason": _UNVERIFIABLE[form]}
+    if form == "SF-FREQ":
+        return base | {"type": "missing_field", "field": "frequency", "field_status": "not_recognised"}
+    return base | {"type": "dose_mismatch"}
+
+
+def _surface_text(form: str, name: str, dose: float, unit: str, code: str, lang: str, rng: random.Random) -> str:
+    th = lang == "th"
+    u = TH_UNITS.get(unit, unit) if th else unit
+    d, half, dbl = fmt_num(dose), fmt_num(dose / 2), fmt_num(dose * 2)
+    freq_s = rng.choice([f for f in FREQ_SURFACES[code][lang] if not NXM_SURFACE.match(f)])
+    times = TIMES_PER_DAY.get(code)
+    meal = "หลังอาหาร" if th else "pc"
+    tab = "เม็ด" if th else "tabs"
+    if form == "SF-NXM":
+        return f"{name} {d} {u} {rng.choice((2, 3))}x{times} {meal}"
+    if form == "SF-TABS":
+        n = rng.choice((2, 3))
+        return f"{name} {d} {u} {n} {rng.choice(('tabs', 'tablets', 'caps', 'capsules'))} {freq_s}"
+    if form == "SF-MED":
+        return f"{name} {d} {u} {rng.choice((2, 3))} {rng.choice(('เม็ด', 'แคปซูล'))} {freq_s}"
+    if form == "SF-FRAC":
+        qty = rng.choice(("ครึ่งเม็ด", "½ เม็ด", "1.5 เม็ด") if th else ("1/2 tab", "½ tab", "1.5 tabs"))
+        return f"{name} {d} {u} {qty} {freq_s}"
+    if form == "SF-EQUIV":
+        options = [f"{name} {half} {u} 2 {tab} {freq_s}", f"{name} {dbl} {u} {'ครึ่งเม็ด' if th else '1/2 tab'} {freq_s}"]
+        if times:
+            options.append(f"{name} {half} {u} 2x{times} {meal}")
+        return rng.choice(options)
+    if form == "SF-VAR":
+        options = (
+            [f"{name} {d} {u} {freq_s} ยกเว้นวันอาทิตย์ {half} {u}", f"{name} {d} {u} สลับกับ {half} {u} {freq_s}"]
+            if th else
+            [f"{name} {d} {u} {freq_s} except {half} {u} on Sunday", f"{name} {d} {u} alternating with {half} {u} {freq_s}"]
+        )
+        return rng.choice(options)
+    if form == "SF-LIQ":
+        if th:
+            return f"{name} {rng.choice(('', 'น้ำเชื่อม '))}{d} {u}/5 มล. 5 มล. {freq_s}".replace("  ", " ")
+        return f"{name} {rng.choice(('', 'syrup '))}{d} {u}/5 ml 5 ml {freq_s}".replace("  ", " ")
+    if form == "SF-MULTI":
+        joiner = "+" if th else rng.choice(("+", "and"))
+        return f"{name} {d} {u} {joiner} {half} {u} {freq_s}"
+    if form == "SF-FREQ":
+        return f"{name} {d} {u} {rng.choice(UNMAPPED_FREQ[lang])}"
+    raise ValueError(form)  # pragma: no cover
+
+
+def inject_surface(p: dict, form: str, rng: random.Random) -> tuple[dict, dict]:
+    """Rewrite one active chronic entry (present in home_list and the new order) in ``form``."""
+    snap = copy.deepcopy(p["snapshot"])
+    orders = _active_orders(p)
+    by_ings = {tuple(g["ingredients"]): g for _, g in orders}
+    cands = [
+        (st, i, g)
+        for st in ("home_list", "new_order")
+        for i, g in enumerate(_gold(p, st))
+        if g["product"] in _NAMES and tuple(g["ingredients"]) in by_ings
+        and any(tuple(h["ingredients"]) == tuple(g["ingredients"]) for h in _gold(p, "home_list"))
+        and not (st == "new_order" and _entries(snap, st)[i].get("discontinue_intent"))
+        and (form != "SF-NXM" or g["frequency_code"] in TIMES_PER_DAY)
+    ]
+    if not cands:
+        raise InjectionError(f"{p['patient_ref']}: no target for {form}")
+    source, i, g = rng.choice(cands)
+    lang = surface_lang(p["patient_ref"], form)
+    name = _NAMES[g["product"]][lang]
+    target = _entries(snap, source)
+    before = target[i]["text"]
+    for _ in range(20):  # exactly one change: never re-emit the clean text
+        after = _surface_text(form, name, per_admin(g), g["dose_unit"], g["frequency_code"], lang, rng)
+        if after != before:
+            break
+    else:  # pragma: no cover
+        raise InjectionError(f"{p['patient_ref']}: {form} produced no change")
+    target[i] = {**target[i], "text": after}
+    return snap, {"source": source, "before": before, "after": after, "form": form, "lang": lang,
+                  "expected": _surface_expected(form, g["ingredients"], source)}
+
+
+def build_surface_cases(patients: list[dict] | None = None, seed: int = SURFACE_SEED) -> list[dict]:
+    """One case = one patient x one form; at most one case per (patient, form)."""
+    patients = patients if patients is not None else load_patients()
+    cases = []
+    for p in patients:
+        for form in SURFACE_FORMS:
+            rng = random.Random(f"{seed}:{p['patient_ref']}:{form}")
+            try:
+                snap, log = inject_surface(p, form, rng)
+            except InjectionError:
+                continue  # not applicable to this patient; counts are checked per form
+            cases.append({
+                "case_id": f"{p['patient_ref']}-{form}",
+                "patient_ref": p["patient_ref"],
+                "split": p["split"],
+                "type": log["expected"]["type"],
+                **log,
+                "snapshot": snap,
+            })
+    return cases
+
+
+SURFACE_LOG_KEYS = LOG_KEYS + ("form", "lang")
+
+
+def surface_log_lines(cases: list[dict]) -> str:
+    return "".join(json.dumps({k: c[k] for k in SURFACE_LOG_KEYS}, ensure_ascii=False, sort_keys=True) + "\n" for c in cases)
