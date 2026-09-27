@@ -514,6 +514,17 @@ def reference_parse(text: str) -> tuple[str, float | None, str | None, float | N
     return "resolved", float(value), unit, quantity, None
 
 
+def reference_closure(text: str) -> dict[str, bool]:
+    """§F.5 inputs: an INVISIBLE character; a SLASH-LIKE character other than an ASCII "/" consumed by FRAC, S2 or
+    L1; a D1 marker. A line with any of these is never resolved."""
+    pairs, walk = _walk(text)
+    return {
+        "invisible": any(kind == "I" for kind, _ in pairs),
+        "slash_like": any(kind == "L" and not (ch == "/" and walk.used[j]) for j, (kind, ch) in enumerate(pairs)),
+        "daily_total": daily_marker(text),
+    }
+
+
 def reference_reason_hint(text: str) -> str:
     """Diagnostic only (printed on failure): which unverifiable condition the reference saw."""
     pairs, walk = _walk(text)

@@ -16,7 +16,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from fractions import Fraction
 
-from .pharma_dose_reference import reference_parse
+from .pharma_dose_reference import reference_closure, reference_parse
 
 SEED = 5303
 N_PHRASES = 4000
@@ -199,8 +199,7 @@ _TW = ["ชั่วโมง", "ชม.", "นาที", "ชม", " hr", " mi
 # SLASH-LIKE code points (a fixed list of more than 12, including the ASCII "/").
 SLASH_POINTS = ["/", "\\", "\u2044", "\u2215", "\u2216", "\uff0f", "\uff3c", "\u29f8", "\ufe68", "\u29f9", "\u2afd",
                 "\u2e4a", "\ua718", "\u0338", "\U0001f67c", "\u2298"]
-_SLASH_CONTEXTS = [("strength", "1000 mg{}day"), ("strength", "5 มก.{}กก."), ("strength", "1000 mg {} day"),
-                   ("quantity", "2 tabs{}day"), ("quantity", "1 เม็ด{}วัน"),  # anchor tail
+_SLASH_CONTEXTS = [("strength", "1000 mg{}day"), ("strength", "5 มก. {} กก."), ("quantity", "2 tabs{}day"),  # anchor tail
                    ("quantity", "1{}2 tab"), ("quantity", "1 1{}2 เม็ด"),  # fraction
                    ("tail", "ก่อนอาหาร{}หลังอาหาร"), ("pre", "HCTZ{}plus")]  # between two words
 _DOTTED = ["mg.", "mcg.", "g.", "ml."]
@@ -234,14 +233,17 @@ def _rev3_classes() -> dict[str, tuple[str, list]]:
     inv = [("insert", c) for c in INVISIBLE_POINTS]
     inv += [("quantity", f"{q}{c}{tw}") for c in INVISIBLE_POINTS for q, tw in (("1 เม็ดครึ่ง", _TW[0]), ("2เม็ดครึ่ง", _TW[2]))]
     slash = [(slot, text.format(c)) for c in SLASH_POINTS for slot, text in _SLASH_CONTEXTS]
-    dotted = [("strength", f"1000 {u}{t}") for u in _DOTTED for t in _DOTTED_TAILS]
-    dotted += [("quantity", f"2 {w}{t}") for w in _DOTTED_QW for t in _DOTTED_TAILS] + _DOTTED_CONTROLS * 6
+    dotted = [("strength", f"1000 {_DOTTED[k % len(_DOTTED)]}{t}") for k, t in enumerate(_DOTTED_TAILS)]
+    dotted += [("quantity", f"2 {_DOTTED_QW[k % len(_DOTTED_QW)]}{t}") for k, t in enumerate(_DOTTED_TAILS)]
+    dotted += _DOTTED_CONTROLS * 2
     daily = ([("tail", (m, ("D1",))) for m in _D1_AFTER] + [("pre", (m, ("D1",))) for m in _D1_BEFORE]
              + [("dose", (m, ("D1", "S1"))) for m in _D1_STRENGTH] + _D1_CONTROLS)
-    q4b = [("last", (q + sep + f, ("Q4",))) for q in _Q4B for f in _QF_OK for sep in ("", " ")]
-    q4b += [("last", q + sep + f) for q in _Q4B for f in _QF_BAD for sep in ("", " ")]
-    return {"invisible": ("*", inv), "slash_like": ("*", slash), "dotted_tail": ("*", dotted),
-            "daily_total": ("*", daily), "q4b_follower": ("*", q4b)}
+    q4b = [("last", (_Q4B[k % len(_Q4B)] + sep + f, ("Q4",))) for k, f in enumerate(_QF_OK) for sep in ("", " ")]
+    q4b += [("last", _Q4B[k % len(_Q4B)] + sep + f) for k, f in enumerate(_QF_BAD) for sep in ("", " ")]
+    classes = {"invisible": inv, "slash_like": slash, "dotted_tail": dotted, "daily_total": daily, "q4b_follower": q4b}
+    for choices in classes.values():  # fixed order, mixed so every prefix of the cycle holds good and bad forms
+        random.Random(SEED).shuffle(choices)
+    return {cls: ("*", choices) for cls, choices in classes.items()}
 
 
 REV3_CLASSES = _rev3_classes()
@@ -262,8 +264,8 @@ def _join(rng: random.Random, left: str, right: str) -> str:
 
 def generate(seed: int = SEED, n: int = N_PHRASES) -> list[Phrase]:
     rng = random.Random(seed)
-    # Round-robin over the classes; each rev-3 class has 3 turns per round (they carry many sub-forms).
-    classes = list(ADVERSARIAL) + [c for c in REV3_CLASSES for _ in range(2)]
+    # Round-robin over the classes; each rev-3 class has 4 turns per round, so its whole choice list is cycled.
+    classes = list(ADVERSARIAL) + [c for c in REV3_CLASSES for _ in range(3)]
     turns: collections.Counter = collections.Counter()
     out: list[Phrase] = []
     for k in range(n):
@@ -327,6 +329,8 @@ class Report:
     status: list[str] = field(default_factory=list)  # dose_status or reason differs from the reference
     reference: list[str] = field(default_factory=list)  # reference differs from the generator's built value
     over_ten: list[str] = field(default_factory=list)  # resolved with a quantity > 10 (QV bound)
+    closure: list[str] = field(default_factory=list)  # §F.5: resolved despite INVISIBLE / SLASH-LIKE / D1
+    closure_counts: collections.Counter = field(default_factory=collections.Counter)  # phrases per closure trigger
     safety_classes: collections.Counter = field(default_factory=collections.Counter)  # class/production -> misreads
 
 
@@ -343,6 +347,10 @@ def harness(parse: Callable[[str], Parsed], phrases: list[Phrase]) -> Report:
             report.status.append(line)
         if got[0] == "resolved" and got[3] is not None and got[3] > 10:
             report.over_ten.append(line)
+        triggers = [k for k, hit in reference_closure(ph.text).items() if hit]
+        report.closure_counts.update(triggers)
+        if got[0] == "resolved" and triggers:
+            report.closure.append(line + f" closure={triggers}")
         if ph.single_quantity is not None and (ref[0] == "unverifiable" or ref[3] != float(ph.single_quantity)):
             report.reference.append(line + f" expected quantity {float(ph.single_quantity)}")
     return report

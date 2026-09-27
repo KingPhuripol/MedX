@@ -12,13 +12,14 @@ import pytest
 from app.pharma.fixtures import get_fixture
 from app.pharma.eval.inject import load_patients
 from app.pharma.formulary import load_formulary
-from app.pharma.mock_rules import DOSE_GRAMMAR, DOSE_GRAMMAR_VERSION, MOCK_RULES_VERSION, normalise, parse_entry, read_dose
+from app.pharma.mock_rules import (DOSE_GRAMMAR, DOSE_GRAMMAR_VERSION, MOCK_RULES_VERSION, is_invisible, is_slash_like,
+                                   normalise, parse_entry, read_dose)
 from app.pharma.models import UnverifiableReason
 from app.pharma.phrasing import TEMPLATE_VERSION, UNVERIFIABLE_WORDS, phrase_input, template_text, validate_text
 from app.pharma.pipeline import PIPELINE_VERSION
 
 from .conftest import REPO_ROOT
-from .pharma_dose_fuzz import ADVERSARIAL, entry_tuple, generate, harness
+from .pharma_dose_fuzz import ADVERSARIAL, INVISIBLE_POINTS, entry_tuple, generate, harness
 from .pharma_dose_reference import reference_parse
 from .pharma_helpers import of_type, run, snapshot
 
@@ -404,12 +405,19 @@ def test_dose_fuzz_vs_reference():
     langs = collections.Counter(p.quantity_lang for p in phrases)
     assert langs["en"] >= 0.3 * len(phrases) and langs["th"] >= 0.3 * len(phrases), langs
     assert sum(p.single_quantity is not None for p in phrases) >= 200
+    # rev 3: >= 20 phrases put an INVISIBLE character between "ครึ่ง" and a time word.
+    half_hidden = [p for p in phrases if "invisible" in p.adversarial and any(
+        f"ครึ่ง{c}{tw}" in p.text for c in INVISIBLE_POINTS for tw in ("ชั่วโมง", "นาที"))]
+    assert len(half_hidden) >= 20, len(half_hidden)
 
     report = harness(entry_tuple(parse_entry), phrases)
     assert report.safety == [], "\n".join(report.safety[:20])  # 1. safety: 0 misreads
     assert report.status == [], "\n".join(report.status[:20])  # 2. 100% dose_status and reason agreement
     assert report.reference == [], "\n".join(report.reference[:20])  # 3. reference == generator's built value
     assert report.over_ten == [], "\n".join(report.over_ten[:20])  # A17: no resolved quantity above 10
+    # 5. closure (rev 3): 0 resolved lines holding an INVISIBLE, an unconsumed SLASH-LIKE or a D1 marker
+    assert report.closure == [], "\n".join(report.closure[:20])
+    assert min(report.closure_counts[k] for k in ("invisible", "slash_like", "daily_total")) >= 20, report.closure_counts
 
 
 def _piecewise_stub(text: str):
@@ -433,7 +441,8 @@ def test_fuzz_catches_piecewise_stub():
     caught = report.safety_classes
     assert caught["Q3"] >= 1, caught  # mixed number: whole part dropped
     assert sum(n for c, n in caught.items() if c.startswith("range_")) >= 1, caught  # upper end of a range
-    for cls in ("th_half_time", "per_unit", "qv_over"):
+    for cls in ("th_half_time", "per_unit", "qv_over", "invisible", "slash_like", "dotted_tail", "daily_total",
+                "q4b_follower"):  # rev 3: 10 classes in all (§F.4)
         assert caught[cls] >= 1, (cls, caught)
 
 
@@ -558,7 +567,12 @@ def test_clean_fixtures_grammar_only():
                 trace = read_dose(normalise(entry["text"]))
                 assert trace.dose_status == "resolved" and trace.unconsumed_numeric == [], entry["text"]
                 assert trace.quantity == gold["quantity"], entry["text"]
-                assert not {m.pid for m in trace.matches} & {"R1", "T1"}, entry["text"]  # rev 2: no clean line hits them
+                assert not {m.pid for m in trace.matches} & {"R1", "T1", "D1"}, entry["text"]  # rev 2/3: none hit
+                text = normalise(entry["text"])  # rev 3: no INVISIBLE, no QF failure, no unconsumed SLASH-LIKE
+                assert not any(is_invisible(c) for c in text), entry["text"]
+                assert all(t.text == "/" and k in trace.consumed for k, t in enumerate(trace.tokens)
+                           if is_slash_like(t.text[:1])), entry["text"]
+                assert "ครึ่ง" not in text or reference_parse(text)[4] != "ambiguous_quantity", entry["text"]
                 entries += 1
     assert entries > 0
 
