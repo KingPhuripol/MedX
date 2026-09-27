@@ -1,0 +1,374 @@
+{
+ "$comment": "Slice e1 frozen manifest (System Evaluation on synthetic data - not clinical performance). Hash bindings follow as canonical JSON after the prefix 'e1-hashes '. e1-hashes {\"adapters_sha256\":\"9c07252fbb62dea212a36fe0bbc7432ad3b0eb72128ced80c26f223720fffe27\",\"always_answer_fallback\":\"E-MED\",\"dataset_tree_sha256\":\"e76e38cc67d6317d82196f105cb9781bedf3451b9ba74a1585b19662d4d1162b\",\"generator_version\":\"1.1.1\",\"mapping_sha256\":\"7748c53b041870a56b815d0f815456bd571422adb4b70d32b59610cc19d68787\",\"s_star\":\"\\u0e17\\u0e35\\u0e04\",\"split_sha256\":\"fb9454a2bc7433b663c6d921ebd68d3a1897bdbffb02dc3849e9d37976c828e9\"}",
+ "manifest_version": "1.0",
+ "evaluation_id": "e1-voice-test-v1",
+ "slice": "e1",
+ "dataset": {
+  "name": "s1r-synthetic",
+  "version": "s1r-1.1.1+tree:e76e38cc67d6317d82196f105cb9781bedf3451b9ba74a1585b19662d4d1162b",
+  "data_class": "synthetic"
+ },
+ "split": "test",
+ "split_version": "fb9454a2bc7433b663c6d921ebd68d3a1897bdbffb02dc3849e9d37976c828e9",
+ "split_patient_list": [
+  "SYNP-0008",
+  "SYNP-0013",
+  "SYNP-0015",
+  "SYNP-0021",
+  "SYNP-0026",
+  "SYNP-0028",
+  "SYNP-0030",
+  "SYNP-0033",
+  "SYNP-0034",
+  "SYNP-0035",
+  "SYNP-0038",
+  "SYNP-0040",
+  "SYNP-0046",
+  "SYNP-0047",
+  "SYNP-0049",
+  "SYNP-0053",
+  "SYNP-0054",
+  "SYNP-0057",
+  "SYNP-0071",
+  "SYNP-0082",
+  "SYNP-0089",
+  "SYNP-0103",
+  "SYNP-0108",
+  "SYNP-0111",
+  "SYNP-0117",
+  "SYNP-0120",
+  "SYNP-0124",
+  "SYNP-0127",
+  "SYNP-0135",
+  "SYNP-0140",
+  "SYNP-0158",
+  "SYNP-0160",
+  "SYNP-0161",
+  "SYNP-0169",
+  "SYNP-0170",
+  "SYNP-0172"
+ ],
+ "task_patient_lists": {
+  "voice_allergy_false_none": [
+   "SYNP-0008",
+   "SYNP-0021",
+   "SYNP-0030",
+   "SYNP-0033",
+   "SYNP-0047",
+   "SYNP-0049",
+   "SYNP-0053",
+   "SYNP-0071",
+   "SYNP-0082",
+   "SYNP-0111",
+   "SYNP-0117",
+   "SYNP-0120",
+   "SYNP-0127",
+   "SYNP-0135",
+   "SYNP-0158",
+   "SYNP-0160",
+   "SYNP-0161",
+   "SYNP-0170"
+  ],
+  "voice_cc": [
+   "SYNP-0013",
+   "SYNP-0021",
+   "SYNP-0030",
+   "SYNP-0033",
+   "SYNP-0035",
+   "SYNP-0038",
+   "SYNP-0040",
+   "SYNP-0046",
+   "SYNP-0047",
+   "SYNP-0049",
+   "SYNP-0057",
+   "SYNP-0071",
+   "SYNP-0082",
+   "SYNP-0089",
+   "SYNP-0103",
+   "SYNP-0111",
+   "SYNP-0120",
+   "SYNP-0124",
+   "SYNP-0127",
+   "SYNP-0135",
+   "SYNP-0140",
+   "SYNP-0169",
+   "SYNP-0172"
+  ],
+  "voice_intake": [
+   "SYNP-0008",
+   "SYNP-0013",
+   "SYNP-0015",
+   "SYNP-0021",
+   "SYNP-0026",
+   "SYNP-0028",
+   "SYNP-0030",
+   "SYNP-0033",
+   "SYNP-0034",
+   "SYNP-0035",
+   "SYNP-0038",
+   "SYNP-0040",
+   "SYNP-0046",
+   "SYNP-0047",
+   "SYNP-0049",
+   "SYNP-0053",
+   "SYNP-0054",
+   "SYNP-0057",
+   "SYNP-0071",
+   "SYNP-0082",
+   "SYNP-0089",
+   "SYNP-0103",
+   "SYNP-0108",
+   "SYNP-0111",
+   "SYNP-0117",
+   "SYNP-0120",
+   "SYNP-0124",
+   "SYNP-0127",
+   "SYNP-0135",
+   "SYNP-0140",
+   "SYNP-0158",
+   "SYNP-0160",
+   "SYNP-0161",
+   "SYNP-0169",
+   "SYNP-0170",
+   "SYNP-0172"
+  ]
+ },
+ "metrics": [
+  {
+   "id": "voice_cc_precision",
+   "item": "Voice Agent",
+   "task": "voice_cc",
+   "name": "field_prf",
+   "params": {
+    "field": "chief_complaint",
+    "fields": [
+     "chief_complaint",
+     "onset_duration",
+     "allergy_status"
+    ],
+    "component": "precision"
+   },
+   "primary": false
+  },
+  {
+   "id": "voice_cc_recall",
+   "item": "Voice Agent",
+   "task": "voice_cc",
+   "name": "field_prf",
+   "params": {
+    "field": "chief_complaint",
+    "fields": [
+     "chief_complaint",
+     "onset_duration",
+     "allergy_status"
+    ],
+    "component": "recall"
+   },
+   "primary": false
+  },
+  {
+   "id": "voice_cc_f1",
+   "item": "Voice Agent",
+   "task": "voice_cc",
+   "name": "field_prf",
+   "params": {
+    "field": "chief_complaint",
+    "fields": [
+     "chief_complaint",
+     "onset_duration",
+     "allergy_status"
+    ],
+    "component": "f1"
+   },
+   "primary": true
+  },
+  {
+   "id": "voice_dur_precision",
+   "item": "Voice Agent",
+   "task": "voice_intake",
+   "name": "field_prf",
+   "params": {
+    "field": "onset_duration",
+    "fields": [
+     "chief_complaint",
+     "onset_duration",
+     "allergy_status"
+    ],
+    "component": "precision"
+   },
+   "primary": false
+  },
+  {
+   "id": "voice_dur_recall",
+   "item": "Voice Agent",
+   "task": "voice_intake",
+   "name": "field_prf",
+   "params": {
+    "field": "onset_duration",
+    "fields": [
+     "chief_complaint",
+     "onset_duration",
+     "allergy_status"
+    ],
+    "component": "recall"
+   },
+   "primary": false
+  },
+  {
+   "id": "voice_dur_f1",
+   "item": "Voice Agent",
+   "task": "voice_intake",
+   "name": "field_prf",
+   "params": {
+    "field": "onset_duration",
+    "fields": [
+     "chief_complaint",
+     "onset_duration",
+     "allergy_status"
+    ],
+    "component": "f1"
+   },
+   "primary": true
+  },
+  {
+   "id": "voice_allergy_precision",
+   "item": "Voice Agent",
+   "task": "voice_intake",
+   "name": "field_prf",
+   "params": {
+    "field": "allergy_status",
+    "fields": [
+     "chief_complaint",
+     "onset_duration",
+     "allergy_status"
+    ],
+    "component": "precision"
+   },
+   "primary": false
+  },
+  {
+   "id": "voice_allergy_recall",
+   "item": "Voice Agent",
+   "task": "voice_intake",
+   "name": "field_prf",
+   "params": {
+    "field": "allergy_status",
+    "fields": [
+     "chief_complaint",
+     "onset_duration",
+     "allergy_status"
+    ],
+    "component": "recall"
+   },
+   "primary": false
+  },
+  {
+   "id": "voice_allergy_f1",
+   "item": "Voice Agent",
+   "task": "voice_intake",
+   "name": "field_prf",
+   "params": {
+    "field": "allergy_status",
+    "fields": [
+     "chief_complaint",
+     "onset_duration",
+     "allergy_status"
+    ],
+    "component": "f1"
+   },
+   "primary": true
+  },
+  {
+   "id": "voice_micro_precision",
+   "item": "Voice Agent",
+   "task": "voice_intake",
+   "name": "field_prf",
+   "params": {
+    "fields": [
+     "chief_complaint",
+     "onset_duration",
+     "allergy_status"
+    ],
+    "component": "precision"
+   },
+   "primary": false
+  },
+  {
+   "id": "voice_micro_recall",
+   "item": "Voice Agent",
+   "task": "voice_intake",
+   "name": "field_prf",
+   "params": {
+    "fields": [
+     "chief_complaint",
+     "onset_duration",
+     "allergy_status"
+    ],
+    "component": "recall"
+   },
+   "primary": false
+  },
+  {
+   "id": "voice_micro_f1",
+   "item": "Voice Agent",
+   "task": "voice_intake",
+   "name": "field_prf",
+   "params": {
+    "fields": [
+     "chief_complaint",
+     "onset_duration",
+     "allergy_status"
+    ],
+    "component": "f1"
+   },
+   "primary": false
+  },
+  {
+   "id": "voice_allergy_false_none_rate",
+   "item": "Voice Agent",
+   "task": "voice_allergy_false_none",
+   "name": "accuracy",
+   "params": {
+    "estimand": "false-none rate: share of cases with gold allergy known or MISSING where S3 records KNOWN none"
+   },
+   "primary": true
+  }
+ ],
+ "comparators": [],
+ "thresholds": [
+  {
+   "metric": "voice_cc_f1",
+   "op": ">=",
+   "value": 0.8,
+   "rule": "point"
+  },
+  {
+   "metric": "voice_dur_f1",
+   "op": ">=",
+   "value": 0.8,
+   "rule": "point"
+  },
+  {
+   "metric": "voice_allergy_f1",
+   "op": ">=",
+   "value": 0.8,
+   "rule": "point"
+  },
+  {
+   "metric": "voice_allergy_false_none_rate",
+   "op": "<=",
+   "value": 0,
+   "rule": "point"
+  }
+ ],
+ "bootstrap": {
+  "n_boot": 2000,
+  "seed": 20260926,
+  "ci_level": 0.95,
+  "method": "percentile"
+ },
+ "expert_review": {
+  "done": false,
+  "n_reviewers": 0
+ }
+}

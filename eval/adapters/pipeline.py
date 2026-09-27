@@ -3,7 +3,8 @@
 Run order (spec scope 6): dev iteration (unfrozen, scratch ledger, results under ``<out>/unfrozen``) ->
 ``python -m eval freeze`` of all 4 manifests -> one frozen dev run and one test run into ``<out>/<split>``.
 A run refuses (exit 2, 0 files written) when a bound hash differs (dataset tree, splits, mapping, adapters),
-when the ledger fails verification, when the test manifests are not frozen, or when outputs already exist.
+when the ledger fails verification, when the test manifests are not frozen, or when frozen outputs already exist.
+Unfrozen (exploratory) dev outputs are replaced as a whole on the next unfrozen run and are not committed.
 """
 
 from __future__ import annotations
@@ -143,8 +144,8 @@ def run_split(split: str, dataset: Path = DEFAULT_DATASET, manifest_dir: Path = 
     if split == "test" and not frozen:
         raise RunRefused("test split requires all e1 test manifests frozen in the ledger (python -m eval freeze)")
     out = Path(out_root) / (split if frozen else f"unfrozen/{split}")
-    if out.exists() and any(out.iterdir()):
-        raise RunRefused(f"{out} already has files; results are never overwritten")
+    if frozen and out.exists() and any(out.iterdir()):
+        raise RunRefused(f"{out} already has files; frozen results are never overwritten")
     with tempfile.TemporaryDirectory() as tmp:
         stage = Path(tmp) / "stage"
         run_ledger = ledger
@@ -177,8 +178,8 @@ def run_split(split: str, dataset: Path = DEFAULT_DATASET, manifest_dir: Path = 
             json.dumps(split_sum, sort_keys=True, indent=1, ensure_ascii=False, allow_nan=False) + "\n",
             encoding="utf-8")
         out.parent.mkdir(parents=True, exist_ok=True)
-        if out.exists():
-            out.rmdir()
+        if out.exists():  # frozen: empty (checked above); unfrozen: exploratory scratch, replaced as a whole
+            shutil.rmtree(out)
         shutil.copytree(stage, out)
     write_summary(out.parent)
     return out
