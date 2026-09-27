@@ -51,7 +51,7 @@ test("abstained case shows the exact missing list, no suggestions, and supports 
   await expect(page.getByTestId("pathway-options")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Confirm suggestion" })).toHaveCount(0);
   await page.getByLabel(/I have seen that red-flag screening incomplete/).check();
-  await page.getByLabel(/Repeat vital signs/).check();
+  await page.getByLabel(/Repeat full set of vital signs/).check();
   await page.getByLabel("Reason for the edit").fill("Collect the missing history first");
   await page.getByRole("button", { name: "Save edited suggestion" }).click();
   await expect(page.getByTestId("review-result")).toContainText("Edited: next information NI-OBS-REPEAT-VITALS");
