@@ -85,8 +85,10 @@ def test_discriminated_adapter():
         evidence_adapter.validate_python({**BASE, "data_type": "Unknown"})
 
 
-def test_still_no_compiler_or_executor_symbols():
+def test_evidence_schema_does_not_depend_on_compiler_or_executor():
+    # s1 asserted the whole package had no compiler/executor; superseded by slice s2, which adds them.
+    # What must still hold: the s1 dataset schema stays independent of graph execution.
     import casegraph.evidence as e
 
-    names = {n.lower() for n in dir(casegraph)} | {n.lower() for n in dir(e)}
+    names = {n.lower() for n in dir(e)}
     assert not any("compile" in n or "execute" in n for n in names)
