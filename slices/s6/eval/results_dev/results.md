@@ -18,11 +18,11 @@
 | Evaluated item | Metric | Point estimate | 95% CI | Comparator | Difference (95% CI) | n patients / decision points | Threshold (predeclared rule) |
 |---|---|---|---|---|---|---|---|
 | Abstention | coverage | 0.7875 | [0.6538, 0.9048] | none declared | - | 36 / 80 | not declared |
-| Abstention | selective_hit_at_k(exact_ci=patient_all_success, k=3) *primary* | 1.0000 | [1.0000, 1.0000]; exact (Clopper-Pearson, patient-level 15/15) [0.7820, 1.0000] | always_answer: 1.0000 | 0.0000 [0.0000, 0.0000] | 21 / 42 | >= 0.8 on point: met |
-|  |  |  |  | always_answer_on_answered: 1.0000 | 0.0000 [0.0000, 0.0000] |  |  |
-|  |  |  |  | train_prior: 0.5806 | 0.4194 [0.1852, 0.6923] |  |  |
-| Case Graph | selective_hit_at_k(exact_ci=patient_all_success, k=3) | 0.0323 | [0.0000, 0.1111] | none declared | - | 36 / 40 | not declared |
-| Case Graph | selective_accuracy(exact_ci=patient_all_success) | 0.9394 | [0.7931, 1.0000] | none declared | - | 22 / 45 | not declared |
+| Abstention | selective_hit_at_k(exact_ci=patient_all_success, k=3) *primary* | 1.0000 | [1.0000, 1.0000]; exact (Clopper-Pearson, patient-level 15/15) [0.7820, 1.0000] | always_answer: 1.0000 [1.0000, 1.0000]; exact (Clopper-Pearson, patient-level 21/21) [0.8389, 1.0000]; n 21 / 42 | 0.0000 [0.0000, 0.0000] | 21 / 42 (scored 15 / 31) | >= 0.8 on point: met |
+|  |  |  |  | always_answer_on_answered: 1.0000 [1.0000, 1.0000]; exact (Clopper-Pearson, patient-level 15/15) [0.7820, 1.0000]; n 21 / 42 (scored 15 / 31) | 0.0000 [0.0000, 0.0000] |  |  |
+|  |  |  |  | train_prior: 0.5806 [0.3077, 0.8148]; n 21 / 42 (scored 15 / 31) | 0.4194 [0.1852, 0.6923] |  |  |
+| Case Graph | selective_hit_at_k(exact_ci=patient_all_success, k=3) | 0.0323 | [0.0000, 0.1111] | none declared | - | 36 / 40 (scored 27 / 31) | not declared |
+| Case Graph | selective_accuracy(exact_ci=patient_all_success) | 0.9394 | [0.7931, 1.0000] | none declared | - | 22 / 45 (scored 16 / 33) | not declared |
 
 Undefined values are shown as null with a reason; they are never reported as 0 or 1. Differences are system minus comparator with a paired patient-level bootstrap CI.
 

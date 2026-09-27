@@ -15,11 +15,11 @@
 <table>
 <tr><th>Evaluated item</th><th>Metric</th><th>Point estimate</th><th>95% CI</th><th>Comparator</th><th>Difference (95% CI)</th><th>n patients / decision points</th><th>Threshold (predeclared rule)</th></tr>
 <tr><td>Abstention</td><td>coverage</td><td>0.7875</td><td>[0.6538, 0.9048]</td><td>none declared</td><td>-</td><td>36 / 80</td><td>not declared</td></tr>
-<tr><td>Abstention</td><td>selective_hit_at_k(exact_ci=patient_all_success, k=3) *primary*</td><td>1.0000</td><td>[1.0000, 1.0000]; exact (Clopper-Pearson, patient-level 15/15) [0.7820, 1.0000]</td><td>always_answer: 1.0000</td><td>0.0000 [0.0000, 0.0000]</td><td>21 / 42</td><td>&gt;= 0.8 on point: met</td></tr>
-<tr><td></td><td></td><td></td><td></td><td>always_answer_on_answered: 1.0000</td><td>0.0000 [0.0000, 0.0000]</td><td></td><td></td></tr>
-<tr><td></td><td></td><td></td><td></td><td>train_prior: 0.5806</td><td>0.4194 [0.1852, 0.6923]</td><td></td><td></td></tr>
-<tr><td>Case Graph</td><td>selective_hit_at_k(exact_ci=patient_all_success, k=3)</td><td>0.0323</td><td>[0.0000, 0.1111]</td><td>none declared</td><td>-</td><td>36 / 40</td><td>not declared</td></tr>
-<tr><td>Case Graph</td><td>selective_accuracy(exact_ci=patient_all_success)</td><td>0.9394</td><td>[0.7931, 1.0000]</td><td>none declared</td><td>-</td><td>22 / 45</td><td>not declared</td></tr>
+<tr><td>Abstention</td><td>selective_hit_at_k(exact_ci=patient_all_success, k=3) *primary*</td><td>1.0000</td><td>[1.0000, 1.0000]; exact (Clopper-Pearson, patient-level 15/15) [0.7820, 1.0000]</td><td>always_answer: 1.0000 [1.0000, 1.0000]; exact (Clopper-Pearson, patient-level 21/21) [0.8389, 1.0000]; n 21 / 42</td><td>0.0000 [0.0000, 0.0000]</td><td>21 / 42 (scored 15 / 31)</td><td>&gt;= 0.8 on point: met</td></tr>
+<tr><td></td><td></td><td></td><td></td><td>always_answer_on_answered: 1.0000 [1.0000, 1.0000]; exact (Clopper-Pearson, patient-level 15/15) [0.7820, 1.0000]; n 21 / 42 (scored 15 / 31)</td><td>0.0000 [0.0000, 0.0000]</td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td>train_prior: 0.5806 [0.3077, 0.8148]; n 21 / 42 (scored 15 / 31)</td><td>0.4194 [0.1852, 0.6923]</td><td></td><td></td></tr>
+<tr><td>Case Graph</td><td>selective_hit_at_k(exact_ci=patient_all_success, k=3)</td><td>0.0323</td><td>[0.0000, 0.1111]</td><td>none declared</td><td>-</td><td>36 / 40 (scored 27 / 31)</td><td>not declared</td></tr>
+<tr><td>Case Graph</td><td>selective_accuracy(exact_ci=patient_all_success)</td><td>0.9394</td><td>[0.7931, 1.0000]</td><td>none declared</td><td>-</td><td>22 / 45 (scored 16 / 33)</td><td>not declared</td></tr>
 </table>
 <p>Undefined values are shown as null with a reason; they are never reported as 0 or 1. Differences are system minus comparator with a paired patient-level bootstrap CI.</p>
 <h2>Split coverage</h2>
