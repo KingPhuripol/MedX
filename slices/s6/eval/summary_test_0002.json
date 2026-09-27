@@ -1,0 +1,18 @@
+{
+  "evaluation_id": "s6-care-test-0002",
+  "label": "System Evaluation on synthetic data — not clinical performance",
+  "split": "test",
+  "rules_version": "care-rules-1.1.0",
+  "dataset_tree_sha256": "552b1acd2533428c03d6c88a2ff7e3f68f7dd8daef89f5981fc5daebb8b73729",
+  "train_prior_codes": [
+    "NI-ECG-12LEAD",
+    "NI-IMG-HEAD-CT",
+    "NI-ASK-DIARRHEA-FEATURES"
+  ],
+  "n_decision_points": 160,
+  "n_status_error": 0,
+  "n_answered_evaluable": 56,
+  "min_answered_evaluable": 30,
+  "underpowered": false,
+  "note": "hit@3 is lenient (any one of the top 3 in the gold set counts); labels are synthetic reference labels, not expert-reviewed (D1)"
+}
