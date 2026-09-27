@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "s8 frozen evaluation manifest (Table 3.2). Research prototype - not for clinical use.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["manifest_version", "evaluation_id", "slice", "dataset", "split", "split_version",
+               "metrics", "comparators", "thresholds", "bootstrap", "expert_review"],
+  "properties": {
+    "$comment": {"type": "string"},
+    "manifest_version": {"type": "string", "enum": ["1.0"]},
+    "evaluation_id": {"type": "string", "minLength": 1},
+    "slice": {"type": "string", "minLength": 1},
+    "dataset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "data_class"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1},
+        "data_class": {"type": "string", "enum": ["synthetic", "mimic", "hospital"]}
+      }
+    },
+    "split": {"type": "string", "enum": ["train", "dev", "test"]},
+    "split_version": {"type": "string", "minLength": 1},
+    "split_patient_list": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "task_patient_lists": {
+      "$comment": "s8r: optional frozen listed set per '<task>' or '<task>:<population>'; each a subset of split_patient_list",
+      "type": "object",
+      "additionalProperties": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+    },
+    "metrics": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "item", "task", "name", "params", "primary"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "item": {"type": "string", "enum": ["Model, by modality", "Case Graph", "Provider swap", "Voice Agent",
+                                               "Department suggestion", "Pharma Agent", "Abstention",
+                                               "Replay / Regenerate"]},
+          "task": {"type": "string", "minLength": 1},
+          "name": {"type": "string", "minLength": 1},
+          "params": {"type": "object"},
+          "primary": {"type": "boolean"}
+        }
+      }
+    },
+    "comparators": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "tasks"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "description": {"type": "string"},
+          "tasks": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+        }
+      }
+    },
+    "thresholds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["metric", "op", "value", "rule"],
+        "properties": {
+          "metric": {"type": "string", "minLength": 1},
+          "op": {"type": "string", "enum": [">=", ">", "<=", "<"]},
+          "value": {"type": "number"},
+          "rule": {"type": "string", "enum": ["point", "ci_lower", "ci_upper"]}
+        }
+      }
+    },
+    "bootstrap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["n_boot", "seed", "ci_level", "method"],
+      "properties": {
+        "n_boot": {"type": "integer", "minimum": 1},
+        "seed": {"type": "integer", "minimum": 0},
+        "ci_level": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
+        "method": {"type": "string", "enum": ["percentile"]}
+      }
+    },
+    "expert_review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["done", "n_reviewers"],
+      "properties": {
+        "done": {"type": "boolean"},
+        "n_reviewers": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

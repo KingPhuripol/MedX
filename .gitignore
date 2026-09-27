@@ -52,3 +52,5 @@ web/next-env.d.ts
 # s9 research run outputs and checkpoints (never committed)
 research/**/outputs/
 research/**/checkpoints/
+# s8r: evaluation ledgers are committed (tamper-evident, hash-chained)
+!eval/ledger/*.jsonl

@@ -1,0 +1,2 @@
+# s8r: exact bytes; concurrent ledger appends conflict instead of auto-merging
+eval/ledger/*.jsonl -text -merge

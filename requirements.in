@@ -17,3 +17,7 @@ transformers==5.17.0
 peft==0.21.0
 pyyaml>=6,<7
 jsonschema>=4.23,<5
+# Evaluation harness (s8) — runtime
+numpy>=2.0,<3
+# Evaluation harness (s8) — test-only reference implementation
+scikit-learn>=1.5,<2
