@@ -23,7 +23,7 @@ from .phrasing import TEMPLATE_VERSION, parse_phrase_output, phrase_input, templ
 from .rules import NOTICE_RANK, RULE_VERSIONS, RULES_VERSION, AllergyItem, MedItem, count_comparisons, run_rules
 
 Invoke = Callable[[GatewayRequest], GatewayResponse]
-PIPELINE_VERSION = "s5-pipeline-2.3.0"
+PIPELINE_VERSION = "s5-pipeline-2.4.0"
 
 
 def canonical_json(data: Any) -> str:

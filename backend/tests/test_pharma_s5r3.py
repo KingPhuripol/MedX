@@ -627,7 +627,7 @@ def test_templates_pass_validation(reason):
 
 def test_versions_bumped():
     assert (MOCK_RULES_VERSION, DOSE_GRAMMAR_VERSION, TEMPLATE_VERSION, PIPELINE_VERSION) == (
-        "s5-mock-rules-2.1.0", "s5-dose-grammar-1.1.0", "template-1.3.0", "s5-pipeline-2.3.0")
+        "s5-mock-rules-2.2.0", "s5-dose-grammar-1.2.0", "template-1.3.0", "s5-pipeline-2.4.0")
     r = run(get_fixture("demo-quantity"))
     assert (r["extract_mock_version"], r["dose_grammar_version"], r["template_version"], r["pipeline_version"]) == (
         MOCK_RULES_VERSION, DOSE_GRAMMAR_VERSION, TEMPLATE_VERSION, PIPELINE_VERSION)
