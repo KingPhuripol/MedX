@@ -150,6 +150,25 @@ def test_syne0196_trace(doc):
         assert dp["cc_symptom"] == "joint_pain" and dp["top3"] == ["ORTHO", "MED"] and dp["alerts"] == []
         assert dp["gold_red_flags"] == ["RF-FAST"] and dp["gold_target_department"] == "12"
         assert dp["gold_expected_action"] == "escalate"
+    rep = t["instrumented_replay"]
+    assert [a["utterance_id"] for a in rep["agent_turns"]] == [
+        "ask.chief_complaint", "reask.chief_complaint", "handoff.nurse_attention_phrase"]
+    assert [(f["turn_index"], f["value"], f["value_text"], f["superseded"]) for f in rep["chief_complaint_facts"]] \
+        == [(1, "fatigue", "อ่อนแรง", True), (9, "joint_pain", "ปวดข้อ", False)]
+    assert rep["final_facts_equal_stored"] is True and rep["turn_1_contains_gold_cc_text"] is True
+    stmt = t["replay_statement"]
+    for needle in ("3 agent turns", "ask.chief_complaint, reask.chief_complaint, handoff.nurse_attention_phrase",
+                   "Turn 1 yielded a KNOWN chief complaint fatigue (from อ่อนแรง)",
+                   "superseded by joint_pain from turn 9", "allergy", "equal the stored output: True"):
+        assert needle in stmt, needle
+    notes = " ".join(_section(doc, "C-E1-1")["notes"])
+    assert stmt in notes
+    rat = t["classification_rationale"]
+    assert "agent-led live use (S3_DEFECT)" in rat and "nurse-led replay (REPLAY_ARTIFACT)" in rat
+    assert {"mock_rules.py:195", "service.py:401"} <= set(re.findall(r"\w+\.py:\d+", rat))
+    js, md = F.render(doc)
+    for text in (js, md):
+        assert not re.search(r"yielded no|no CC|0 agent turns|no agent turns", text, re.IGNORECASE)
 
 
 # ---------------------------------------------------------------- 4. silent escalations
@@ -202,6 +221,15 @@ def test_not_evaluable_rf_overlap(doc):
     got = {(e["split"], e["case_id"], e["dp"]) for e in data["not_evaluable_and_red_flag_positive"]}
     assert got == {("dev", "SYNE-0107", "T1"), ("dev", "SYNE-0107", "T2"), ("test", "SYNE-0053", "T2")}
     assert all(e["counted_correct_abstention"] for e in data["not_evaluable_and_red_flag_positive"])
+    ov = {(e["split"], e["case_id"], e["dp"]): e for e in data["not_evaluable_and_red_flag_positive"]}
+    assert {k for k, e in ov.items() if e["missed_in_rf_case_recall"]} == {
+        ("dev", "SYNE-0107", "T1"), ("dev", "SYNE-0107", "T2")}
+    det = ov[("test", "SYNE-0053", "T2")]
+    assert det["rf_case_recall_y_pred"] is True and not det["missed_in_rf_case_recall"]
+    assert det["alerts"] == ["RF-CONSC", "RF-QSOFA"] and det["gold_rules"] == ["RF-QSOFA"]
+    notes = " ".join(_section(doc, "C5")["notes"])
+    assert "2 of them are missed in rf_case_recall (dev SYNE-0107 T1, dev SYNE-0107 T2)" in notes
+    assert "test SYNE-0053 T2 (y_pred=true; S4 fired RF-CONSC, RF-QSOFA; gold RF-QSOFA)" in notes
     assert data["counts"]["dev"] == {"dept_12_dps": 22, "dept_12_gold_escalate": 22}
     assert data["counts"]["test"] == {"dept_12_dps": 21, "dept_12_gold_escalate": 21}
     assert data["precedence_for_safety_reading"] == "escalation"
@@ -250,6 +278,10 @@ def test_defects_and_headline(doc):
     assert any(b.startswith("- Claim boundary") for b in bullets)
     for text in (js, md):
         assert not FORBIDDEN.search(text), FORBIDDEN.search(text)
+    assert doc["spec_deviations"] == []
+    for text in (js, md, (RESULTS / F.OUT_JSON).read_text("utf-8"), (RESULTS / F.OUT_MD).read_text("utf-8")):
+        assert "Correction to the e1r spec premise" not in text
+    assert json.loads((RESULTS / F.OUT_JSON).read_text("utf-8"))["spec_deviations"] == []
 
 
 def test_header_labels_and_sections(doc):

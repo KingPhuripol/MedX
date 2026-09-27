@@ -15,11 +15,9 @@ The frozen voice_cc_precision excludes cases whose gold chief complaint is UNMAP
 
 All-assertion CC precision = correct KNOWN CC assertions / all KNOWN CC assertions over every case of the split. Clopper-Pearson 95% (eval.exact) assumes independent cases; cases of one patient are not independent. It is shown beside the frozen value and never replaces it.
 
-SYNE-0196 classification: BOTH. S3_DEFECT: after the nurse-attention handoff the agent emits no further field-bearing turn (the handoff turn has field None and is not repeated), so last_asked stays chief_complaint for the rest of the session; the CC gate then admits every later patient turn as a chief-complaint answer, and the latest CC fact replaces the earlier one. The allergy answer at turn 9 names a joint-pain drug class (ยาแก้ปวดข้อ), matches the joint_pain pattern, and replaces the turn-1 CC. This path does not depend on the replay: any session that continues after a handoff reaches it. REPLAY_ARTIFACT: the recorded interview is nurse-led; S3 does not track the nurse's questions, so its field context differs from agent-led live use (a documented replay deviation in e1_mapping_v1). Both parts contributed; the case stays an open HIGH defect (DEF-E1R-001), not fixed and not artifact-only.
+SYNE-0196 classification: BOTH. Part that also occurs in agent-led live use (S3_DEFECT): (a) the handoff turn carries no field (policy.py) and service.py:401 takes last_asked from the latest agent turn with a non-null field, so after a nurse-attention handoff last_asked stays chief_complaint and the CC gate (mock_rules.py:195) admits every later patient turn as a chief-complaint answer; (b) a later KNOWN CC silently supersedes an earlier KNOWN CC (latest fact per field wins) with no conflict flag; (c) one-sided arm weakness is coerced to the fatigue code because S3 has no focal-deficit code. None of these needs the nurse-led replay: any live session that keeps capturing patient speech after a handoff reaches (a) and (b). Part caused by the nurse-led replay (REPLAY_ARTIFACT): the drug-reaction question at turn 8 was asked by the recorded nurse, which S3 does not track; in agent-led use before a handoff the agent would ask allergy_status itself, last_asked would be allergy_status, and the turn-9 answer would not reach the CC gate (a documented replay deviation in e1_mapping_v1). Both parts contributed; the case stays an open HIGH defect (DEF-E1R-001), not fixed and not artifact-only.
 
-Why the stored CC is not from turn 1: turn 1 did yield a KNOWN chief complaint - fatigue, from the word อ่อนแรง (one-sided arm weakness read as a fatigue word; S3 has no focal-deficit code) - but it was superseded at turn 9 by joint_pain (instrumented replay). The stored output keeps only the final fact per field, so only the turn-9 span is visible. Even the turn-1 value would have been wrong for scoring: the gold CC is UNMAPPABLE to S3.
-
-Correction to the e1r spec premise: the spec says turn 1 yielded no CC and the e1 replay has 0 agent turns. The instrumented replay shows 3 agent turns emitted by S3's own policy (ask and reask of chief_complaint, then the handoff) and a turn-1 CC that was later superseded. The two cited code lines are still the mechanism: last_asked is derived only from agent turns and stays chief_complaint, which is exactly what the CC gate admits.
+Dev-only instrumented replay through the unchanged S3 service, in memory (tests/e1r/test_syne0196_replay.py); turn numbers are source-transcript turn indexes (the stored span turn index), not replay seq numbers. S3's own policy emitted 3 agent turns: ask.chief_complaint, reask.chief_complaint, handoff.nurse_attention_phrase. Turn 1 yielded a KNOWN chief complaint fatigue (from อ่อนแรง); it was superseded by joint_pain from turn 9. Turn 9 yielded a KNOWN chief complaint joint_pain (from ปวดข้อ); it is final. Turn 9 is the answer to the drug-reaction (allergy) question. The final replay facts equal the stored output: True. The stored output keeps only the final fact per field, so only the turn-9 span is visible there. The turn-1 value would also have been wrong for scoring: the gold CC is UNMAPPABLE to S3.
 
 ### KNOWN CC assertions excluded from frozen scoring (gold CC UNMAPPABLE)
 
@@ -52,6 +50,7 @@ Correction to the e1r spec premise: the spec says turn 1 yielded no CC and the e
 | S3 handoff_reason (stored) | nurse_attention_phrase |
 | Instrumented replay: CC facts | turn 1 fatigue (อ่อนแรง) superseded; turn 9 joint_pain (ปวดข้อ) final |
 | Instrumented replay: agent turns | ask.chief_complaint (field chief_complaint); reask.chief_complaint (field chief_complaint); handoff.nurse_attention_phrase (field None) |
+| Instrumented replay: final facts equal stored output | True |
 | S4 at T1 (stored) | cc_symptom joint_pain; department suggested top3 [ORTHO, MED]; alerts 0; RF-STROKE not_evaluable True |
 | Gold at T1 | red flags RF-FAST; target 12; expected escalate |
 | S4 at T2 (stored) | cc_symptom joint_pain; department suggested top3 [ORTHO, MED]; alerts 0; RF-STROKE not_evaluable True |
@@ -229,9 +228,7 @@ Mapping rules (e1_mapping_v1, frozen): gold department 12 (emergency) -> red-fla
 
 Dept-12 decision points: dev 22, test 21; gold-escalate among them: dev 22, test 21.
 
-The 3 decision points below are both NOT_EVALUABLE and gold red-flag-positive. 3 of 3 count as correct abstentions in abst_rate_not_evaluable; 2 of them are missed in rf_case_recall (dev SYNE-0107 T1, dev SYNE-0107 T2), while test SYNE-0053 T2 raised an alert and is detected. For safety reading, escalation takes precedence: an abstention with no alert on a red-flag-positive decision point is a miss, not a success.
-
-Correction to the e1r spec premise: the spec says every listed decision point is missed in rf_case_recall; test SYNE-0053 T2 raised an alert (stored) and counts as detected.
+The 3 decision points below are both NOT_EVALUABLE and gold red-flag-positive. 3 of 3 count as correct abstentions in abst_rate_not_evaluable; 2 of them are missed in rf_case_recall (dev SYNE-0107 T1, dev SYNE-0107 T2); 1 of them is detected: test SYNE-0053 T2 (y_pred=true; S4 fired RF-CONSC, RF-QSOFA; gold RF-QSOFA). For safety reading, escalation takes precedence: an abstention with no alert on a red-flag-positive decision point is a miss, not a success.
 
 ### Gold department 12 decision points
 
@@ -246,11 +243,11 @@ Correction to the e1r spec premise: the spec says every listed decision point is
 
 > **System Evaluation on synthetic data - not clinical performance**
 
-| Split | Case | DP | Gold rules | Gold action | System department | Correct abstention | Alerts | Missed in rf_case_recall |
+| Split | Case | DP | Gold rules | Gold action | System department | Correct abstention | S4 alerts fired | Missed in rf_case_recall |
 |---|---|---|---|---|---|---|---|---|
-| dev | SYNE-0107 | T1 | RF-NEWS-AGG5 | escalate | abstained | yes | 0 | yes |
-| dev | SYNE-0107 | T2 | RF-NEWS-AGG5 | escalate | abstained | yes | 0 | yes |
-| test | SYNE-0053 | T2 | RF-QSOFA | escalate | abstained | yes | 2 | no |
+| dev | SYNE-0107 | T1 | RF-NEWS-AGG5 | escalate | abstained | yes | none | yes |
+| dev | SYNE-0107 | T2 | RF-NEWS-AGG5 | escalate | abstained | yes | none | yes |
+| test | SYNE-0053 | T2 | RF-QSOFA | escalate | abstained | yes | RF-CONSC, RF-QSOFA | no |
 
 ## Defects filed for I2
 
@@ -262,7 +259,7 @@ Filed for I2; not repaired in e1r. Each defect keeps its evidence and a stored-f
 
 | ID | Severity | Target | Component | Repro | Observed | Expected |
 |---|---|---|---|---|---|---|
-| DEF-E1R-001 | HIGH | i2 | S3 voice: chief-complaint attribution (backend/app/voice/service.py last_asked; backend/app/voice/mock_rules.py _chief_complaint gate) | dev SYNE-0196 (eval/results/e1/dev/system_outputs.jsonl) | CC KNOWN joint_pain from turn 9 (the allergy answer) after a nurse_attention_phrase handoff; S4 cc_symptom joint_pain, top3 [ORTHO, MED], 0 alerts at T1 and T2. | No chief complaint taken from an answer to another question; a CC that cannot be expressed (focal deficit) is not coerced to a code; after a nurse-attention handoff the case is escalated, never routed to a routine department. |
+| DEF-E1R-001 | HIGH | i2 | S3 voice: chief-complaint attribution (backend/app/voice/service.py last_asked; backend/app/voice/mock_rules.py _chief_complaint gate) | dev SYNE-0196 (eval/results/e1/dev/system_outputs.jsonl) | CC KNOWN joint_pain from turn 9 (the allergy answer) after a nurse_attention_phrase handoff, superseding the turn-1 KNOWN CC fatigue (dev replay); S4 cc_symptom joint_pain, top3 [ORTHO, MED], 0 alerts at T1 and T2. | No chief complaint taken from an answer to another question; a CC that cannot be expressed (focal deficit) is not coerced to a code; after a nurse-attention handoff the case is escalated, never routed to a routine department. |
 | DEF-E1R-002 | HIGH | i2 | S3 voice extractor (no onset/acuity/exposure capture, no symptom extractor) and the S3->S4 fact path | dev SYNE-0196 (eval/results/e1/dev/system_outputs.jsonl) | 0 T1 decision points (dev+test) carry a fact kind required by RF-CHEST, RF-STROKE, RF-THUNDER or RF-ANAPH; rf_text_t1_recall dev 0/8, test 0/6. | Text red flags stated in the interview reach S4 as the acuity-qualified facts its rules need, so the rules are evaluable (S4-A01 recall target 1.00). |
 | DEF-E1R-003 | HIGH | i2 | S4 red-flag rules (backend/app/triage/rules/redflag_rules_v1.json): no aggregate-NEWS rule | dev SYNE-0030 (eval/results/e1/dev/triage/predictions.jsonl) | RF-NEWS-AGG5 gold decision points: dev 5 (2 with any alert), test 8 (5 with any alert); no S4 rule can express an aggregate NEWS score of 5 or more. | An aggregate NEWS rule in S4 so gold RF-NEWS-AGG5 decision points can be detected. |
 

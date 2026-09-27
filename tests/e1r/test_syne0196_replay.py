@@ -1,9 +1,10 @@
-"""Slice e1r (optional scope 4): instrumented replay of dev SYNE-0196 through the unchanged S3 service.
+"""Slice e1r (required, scope 4): instrumented replay of dev SYNE-0196 through the unchanged S3 service.
 
 Dev split only; test-split cases are analysed from stored outputs only. The replay runs in-process on an
 in-memory SQLite engine and writes nothing under eval/results or eval/ledger (checked). It lives outside eval/
 because it imports product code (app.*), which eval/ modules outside eval/adapters may not. It fails unless it
-observes exactly what eval.posthoc.e1_findings.INSTRUMENTED_REPLAY_SYNE0196 states. Research prototype.
+observes exactly what eval.posthoc.e1_findings.INSTRUMENTED_REPLAY_SYNE0196 and the committed
+POSTHOC_FINDINGS.json trace state. Research prototype.
 """
 
 from __future__ import annotations
@@ -87,6 +88,14 @@ def test_syne0196_instrumented_replay(ds):
         "turn_1_contains_gold_cc_text": gold_cc in turn1,
         "final_facts_equal_stored": res == stored,
     }
+    assert [a["utterance_id"] for a in agent_turns] == [
+        "ask.chief_complaint", "reask.chief_complaint", "handoff.nurse_attention_phrase"]
+    assert [(f["turn_index"], f["value"], f["superseded"]) for f in cc] == [
+        (1, "fatigue", True), (9, "joint_pain", False)]
+    assert observed["final_facts_equal_stored"] is True
     expected = {k: v for k, v in F.INSTRUMENTED_REPLAY_SYNE0196.items() if k != "verified_by"}
     assert observed == expected
+    committed = json.loads((REPO / "eval/results/e1" / F.OUT_JSON).read_text("utf-8"))
+    trace = next(s for s in committed["sections"] if s["id"] == "C-E1-1")["data"]["syne0196_trace"]
+    assert {k: v for k, v in trace["instrumented_replay"].items() if k != "verified_by"} == observed
     assert _tree(*guarded) == before

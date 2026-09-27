@@ -356,8 +356,7 @@ def section_cc(d: dict[str, Any], repo: Path) -> dict[str, Any]:
         "the split. Clopper-Pearson 95% (eval.exact) assumes independent cases; cases of one patient are not "
         "independent. It is shown beside the frozen value and never replaces it.",
         f"SYNE-0196 classification: {t['classification']}. {t['classification_rationale']}",
-        t["turn_1_explanation"],
-        t["spec_premise_note"],
+        t["replay_statement"],
     ]
     return {
         "id": "C-E1-1",
@@ -434,6 +433,7 @@ def trace_syne0196(d: dict[str, Any], repo: Path) -> dict[str, Any]:
                    + (" superseded" if f["superseded"] else " final") for f in rep["chief_complaint_facts"])],
         ["Instrumented replay: agent turns",
          "; ".join(f"{a['utterance_id']} (field {a['field']})" for a in rep["agent_turns"])],
+        ["Instrumented replay: final facts equal stored output", str(rep["final_facts_equal_stored"])],
     ]
     for x in dps:
         evidence_rows.append([f"S4 at {x['dp']} (stored)",
@@ -455,27 +455,32 @@ def trace_syne0196(d: dict[str, Any], repo: Path) -> dict[str, Any]:
         "code_citations": cites,
         "classification": "BOTH",
         "classification_rationale": (
-            "S3_DEFECT: after the nurse-attention handoff the agent emits no further field-bearing turn (the "
-            "handoff turn has field None and is not repeated), so last_asked stays chief_complaint for the rest of "
-            "the session; the CC gate then admits every later patient turn as a chief-complaint answer, and the "
-            "latest CC fact replaces the earlier one. The allergy answer at turn 9 names a joint-pain drug class "
-            "(ยาแก้ปวดข้อ), matches the joint_pain pattern, and replaces the turn-1 CC. This path does not "
-            "depend on the replay: any session that continues after a handoff reaches it. REPLAY_ARTIFACT: the "
-            "recorded interview is nurse-led; S3 does not track the nurse's questions, so its field context "
-            "differs from agent-led live use (a documented replay deviation in e1_mapping_v1). Both parts "
-            "contributed; the case stays an open HIGH defect (DEF-E1R-001), not fixed and not artifact-only."),
-        "turn_1_explanation": (
-            "Why the stored CC is not from turn 1: turn 1 did yield a KNOWN chief complaint - fatigue, from "
-            "the word อ่อนแรง (one-sided arm weakness read as a fatigue word; S3 has no focal-deficit code) - "
-            "but it was superseded at turn 9 by joint_pain (instrumented replay). The stored output keeps only "
-            "the final fact per field, so only the turn-9 span is visible. Even the turn-1 value would have been "
-            "wrong for scoring: the gold CC is UNMAPPABLE to S3."),
-        "spec_premise_note": (
-            "Correction to the e1r spec premise: the spec says turn 1 yielded no CC and the e1 replay has 0 agent "
-            "turns. The instrumented replay shows 3 agent turns emitted by S3's own policy (ask and reask of "
-            "chief_complaint, then the handoff) and a turn-1 CC that was later superseded. The two cited code "
-            "lines are still the mechanism: last_asked is derived only from agent turns and stays "
-            "chief_complaint, which is exactly what the CC gate admits."),
+            "Part that also occurs in agent-led live use (S3_DEFECT): (a) the handoff turn carries no field "
+            "(policy.py) and service.py:401 takes last_asked from the latest agent turn with a non-null field, so "
+            "after a nurse-attention handoff last_asked stays chief_complaint and the CC gate "
+            "(mock_rules.py:195) admits every later patient turn as a chief-complaint answer; (b) a later KNOWN "
+            "CC silently supersedes an earlier KNOWN CC (latest fact per field wins) with no conflict flag; (c) "
+            "one-sided arm weakness is coerced to the fatigue code because S3 has no focal-deficit code. None of "
+            "these needs the nurse-led replay: any live session that keeps capturing patient speech after a "
+            "handoff reaches (a) and (b). Part caused by the nurse-led replay (REPLAY_ARTIFACT): the drug-reaction "
+            "question at turn 8 was asked by the recorded nurse, which S3 does not track; in agent-led use before "
+            "a handoff the agent would ask allergy_status itself, last_asked would be allergy_status, and the "
+            "turn-9 answer would not reach the CC gate (a documented replay deviation in e1_mapping_v1). Both "
+            "parts contributed; the case stays an open HIGH defect (DEF-E1R-001), not fixed and not "
+            "artifact-only."),
+        "replay_statement": (
+            f"Dev-only instrumented replay through the unchanged S3 service, in memory ({rep['verified_by']}); "
+            "turn numbers are source-transcript turn indexes (the stored span turn index), not replay seq "
+            f"numbers. S3's own policy emitted {len(rep['agent_turns'])} agent turns: "
+            + ", ".join(a["utterance_id"] for a in rep["agent_turns"]) + ". "
+            + " ".join(f"Turn {f['turn_index']} yielded a {f['state']} chief complaint {f['value']} (from "
+                       f"{f['value_text']})" + (f"; it was superseded by {n['value']} from turn {n['turn_index']}."
+                                                if f["superseded"] else "; it is final.")
+                       for f, n in zip(rep["chief_complaint_facts"], rep["chief_complaint_facts"][1:] + [None]))
+            + f" Turn 9 is the answer to the drug-reaction (allergy) question. The final replay facts equal the "
+            f"stored output: {rep['final_facts_equal_stored']}. The stored output keeps only the final fact per "
+            "field, so only the turn-9 span is visible there. The turn-1 value would also have been wrong for "
+            "scoring: the gold CC is UNMAPPABLE to S3."),
         "evidence_rows": evidence_rows,
     }
 
@@ -764,15 +769,17 @@ def section_dept12(d: dict[str, Any]) -> dict[str, Any]:
                                     "gold_expected_action": gd["expected_action"],
                                     "system_department_status": ab["dept_status"],
                                     "counted_correct_abstention": ab["y_pred"] == ab["y_true"],
-                                    "alerts": rc["fired_s4"], "missed_in_rf_case_recall": not rc["y_pred"]})
+                                    "rf_case_recall_y_pred": bool(rc["y_pred"]), "alerts": rc["fired_s4"],
+                                    "missed_in_rf_case_recall": not rc["y_pred"]})
         counts[split] = {"dept_12_dps": n12, "dept_12_gold_escalate": esc12}
     rows_c = [[s, str(counts[s]["dept_12_dps"]), str(counts[s]["dept_12_gold_escalate"])] for s in SPLITS]
     n_correct = sum(1 for e in overlap if e["counted_correct_abstention"])
     missed = [f"{e['split']} {e['case_id']} {e['dp']}" for e in overlap if e["missed_in_rf_case_recall"]]
-    detected = [f"{e['split']} {e['case_id']} {e['dp']}" for e in overlap if not e["missed_in_rf_case_recall"]]
+    detected = [f"{e['split']} {e['case_id']} {e['dp']} (y_pred=true; S4 fired {', '.join(e['alerts'])}; gold "
+                f"{', '.join(e['gold_rules'])})" for e in overlap if not e["missed_in_rf_case_recall"]]
     rows_o = [[e["split"], e["case_id"], e["dp"], ", ".join(e["gold_rules"]), e["gold_expected_action"],
                e["system_department_status"], "yes" if e["counted_correct_abstention"] else "no",
-               str(len(e["alerts"])), "yes" if e["missed_in_rf_case_recall"] else "no"] for e in overlap]
+               ", ".join(e["alerts"]) or "none", "yes" if e["missed_in_rf_case_recall"] else "no"] for e in overlap]
     return {
         "id": "C5",
         "heading": "C5: dept 12 vs NOT_EVALUABLE",
@@ -789,17 +796,15 @@ def section_dept12(d: dict[str, Any]) -> dict[str, Any]:
             f"The {len(overlap)} decision points below are both NOT_EVALUABLE and gold red-flag-positive. "
             f"{n_correct} of {len(overlap)} count as correct abstentions in abst_rate_not_evaluable; "
             f"{len(missed)} of them are missed in rf_case_recall ({', '.join(missed) or 'none'})"
-            + (f", while {', '.join(detected)} raised an alert and is detected" if detected else "") + ". "
+            + (f"; {len(detected)} of them is detected: {'; '.join(detected)}" if detected else "") + ". "
             "For safety reading, escalation takes precedence: an abstention with no alert on a red-flag-positive "
             "decision point is a miss, not a success.",
-        ] + ([f"Correction to the e1r spec premise: the spec says every listed decision point is missed in "
-              f"rf_case_recall; {', '.join(detected)} raised an alert (stored) and counts as detected."]
-             if detected else []),
+        ],
         "tables": [
             _table("Gold department 12 decision points", ["Split", "Dept-12 DPs", "Gold escalate"], rows_c),
             _table("NOT_EVALUABLE and gold red-flag-positive decision points",
                    ["Split", "Case", "DP", "Gold rules", "Gold action", "System department", "Correct abstention",
-                    "Alerts", "Missed in rf_case_recall"], rows_o),
+                    "S4 alerts fired", "Missed in rf_case_recall"], rows_o),
         ],
     }
 
@@ -824,7 +829,8 @@ def defects(d: dict[str, Any], sec: dict[str, dict[str, Any]], repo: Path) -> li
                             "(tests/e1r/test_syne0196_replay.py); read the final chief_complaint fact."},
          "observed": f"CC KNOWN {tr['voice']['chief_complaint']['value']} from turn "
                      f"{tr['voice']['chief_complaint']['span_turn_indexes'][0]} (the allergy answer) after a "
-                     f"{tr['voice']['handoff_reason']} handoff; S4 cc_symptom {tr['decision_points'][0]['cc_symptom']}, "
+                     f"{tr['voice']['handoff_reason']} handoff, superseding the turn-1 KNOWN CC "
+                     f"{tr['instrumented_replay']['chief_complaint_facts'][0]['value']} (dev replay); S4 cc_symptom {tr['decision_points'][0]['cc_symptom']}, "
                      f"top3 [{', '.join(tr['decision_points'][0]['top3'])}], 0 alerts at T1 and T2.",
          "expected": "No chief complaint taken from an answer to another question; a CC that cannot be expressed "
                      "(focal deficit) is not coerced to a code; after a nurse-attention handoff the case is "
@@ -925,8 +931,7 @@ def build(p: Paths = Paths()) -> dict[str, Any]:
         "sections": secs,
         "defects": defs,
         "headline": heads,
-        "spec_deviations": [by_id["C-E1-1"]["data"]["syne0196_trace"]["spec_premise_note"]]
-        + [n for n in by_id["C5"]["notes"] if n.startswith("Correction to the e1r spec premise")],
+        "spec_deviations": [],
     }
 
 
