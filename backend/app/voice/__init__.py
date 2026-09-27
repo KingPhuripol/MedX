@@ -7,6 +7,7 @@ deterministic policy, and calls the LLM only through the Model Gateway.
 from __future__ import annotations
 
 from ..gateway import mock_tasks
+from . import symptoms  # noqa: F401  (registers voice.symptom_extract.v1)
 from .db import create_voice_schema
 from .mock_rules import EXTRACTOR_VERSION, extract
 from .models import EXTRACT_TASK
