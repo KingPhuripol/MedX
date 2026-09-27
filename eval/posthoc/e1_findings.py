@@ -56,13 +56,17 @@ MOCK_RULES = "backend/app/voice/mock_rules.py"
 SERVICE = "backend/app/voice/service.py"
 POLICY = "backend/app/voice/policy.py"
 RULES_JSON = "backend/app/triage/rules/redflag_rules_v1.json"
+VOICE_UI = "web/components/voice/VoiceIntake.tsx"
 TRACE_CASE = ("dev", "SYNE-0196")
 
 # Observed by an instrumented replay of dev SYNE-0196 through the unchanged S3 service (in-memory SQLite,
 # nothing written under eval/results or eval/ledger). tests/e1r/test_syne0196_replay.py re-runs the replay and
 # fails unless it observes exactly this. Test-split cases are analysed from stored outputs only.
+REPLAY_TEST = "tests/e1r/test_syne0196_replay.py::test_replay_constant_recomputed"
 INSTRUMENTED_REPLAY_SYNE0196 = {
     "verified_by": "tests/e1r/test_syne0196_replay.py",
+    "provenance": ("INSTRUMENTED_REPLAY_SYNE0196 is a hand-transcribed constant in eval/posthoc/e1_findings.py; "
+                   f"it is recomputed from the dev-only replay and asserted equal by {REPLAY_TEST}."),
     "agent_turns": [
         {"after_turn_index": None, "utterance_id": "ask.chief_complaint", "field": "chief_complaint"},
         {"after_turn_index": 0, "utterance_id": "reask.chief_complaint", "field": "chief_complaint"},
@@ -131,6 +135,10 @@ def _cite(repo: Path, path: str, needle: str, commit: str = CODE_COMMIT) -> dict
 def _cp(x: int, n: int) -> list[float]:
     lo, hi = clopper_pearson(x, n)
     return [round(lo, 4), round(hi, 4)]
+
+
+def _yn(v: bool) -> str:
+    return "yes" if v else "no"
 
 
 def _frac(x: int, n: int) -> str:
@@ -405,7 +413,19 @@ def trace_syne0196(d: dict[str, Any], repo: Path) -> dict[str, Any]:
         dict(_cite(repo, MOCK_RULES, '("fatigue", ('), role="fatigue pattern includes the turn-1 word"),
         dict(_cite(repo, MOCK_RULES, '("joint_pain", ('), role="joint_pain pattern matches the allergy answer"),
         dict(_cite(repo, POLICY, '"ปากเบี้ยว"'), role="nurse-attention phrase"),
+        dict(_cite(repo, POLICY, "def nurse_attention_hit("), role="deterministic nurse-attention check"),
+        dict(_cite(repo, SERVICE, "    if attention:"), role="_decide: attention leads to handoff"),
+        dict(_cite(repo, SERVICE, 'if session["status"] != "active":'),
+             role="add_turn refuses only sessions that are not active"),
+        dict(_cite(repo, SERVICE, '.values(status="finished")'), role="only finish() sets finished"),
+        dict(_cite(repo, VOICE_UI, "{!finished && ("), role="web turn form rendered until finish"),
     ]
+    at = {c["role"]: f"{Path(c['file']).name}:{c['line']}" for c in cites}
+    dec = sorted(c["line"] for c in cites if c["role"] in ("_decide: attention leads to handoff",
+                                                            "handoff on attention"))
+    if dec[1] != dec[0] + 1:
+        raise PosthocError("the _decide attention branch is not two consecutive lines at the run commit")
+    at_decide = f"{Path(SERVICE).name}:{dec[0]}-{dec[1]}"
     stored = [
         f"chief_complaint KNOWN {cc['value']} (value_text {cc['value_text']}), span_turn_indexes "
         f"{cc['span_turn_indexes']}, span_text {cc['span_text']}",
@@ -432,14 +452,18 @@ def trace_syne0196(d: dict[str, Any], repo: Path) -> dict[str, Any]:
          "; ".join(f"turn {f['turn_index']} {f['value']} ({f['value_text']})"
                    + (" superseded" if f["superseded"] else " final") for f in rep["chief_complaint_facts"])],
         ["Instrumented replay: agent turns",
-         "; ".join(f"{a['utterance_id']} (field {a['field']})" for a in rep["agent_turns"])],
-        ["Instrumented replay: final facts equal stored output", str(rep["final_facts_equal_stored"])],
+         "; ".join(f"{a['utterance_id']} (field {a['field'] or 'none'})" for a in rep["agent_turns"])],
+        ["Instrumented replay: final facts equal stored output", _yn(rep["final_facts_equal_stored"])],
+        ["Instrumented replay: turn 1 contains the gold CC text", _yn(rep["turn_1_contains_gold_cc_text"])],
+        ["Instrumented replay: last_asked at patient turns",
+         "; ".join(f"turn {k} {v}" for k, v in rep["last_asked_field_at_patient_turns"].items())],
+        ["Instrumented replay: provenance", rep["provenance"]],
     ]
     for x in dps:
         evidence_rows.append([f"S4 at {x['dp']} (stored)",
                               f"cc_symptom {x['cc_symptom']}; department {x['department_status']} top3 "
                               f"[{', '.join(x['top3'])}]; alerts {len(x['alerts'])}; RF-STROKE not_evaluable "
-                              f"{x['rf_stroke_not_evaluable']}"])
+                              f"{_yn(x['rf_stroke_not_evaluable'])}"])
         evidence_rows.append([f"Gold at {x['dp']}", f"red flags {', '.join(x['gold_red_flags'])}; target "
                                                     f"{x['gold_target_department']}; expected "
                                                     f"{x['gold_expected_action']}"])
@@ -453,21 +477,28 @@ def trace_syne0196(d: dict[str, Any], repo: Path) -> dict[str, Any]:
         "stored_evidence": stored,
         "instrumented_replay": rep,
         "code_citations": cites,
-        "classification": "BOTH",
+        "classification": "S3_DEFECT",
         "classification_rationale": (
-            "Part that also occurs in agent-led live use (S3_DEFECT): (a) the handoff turn carries no field "
-            "(policy.py) and service.py:401 takes last_asked from the latest agent turn with a non-null field, so "
-            "after a nurse-attention handoff last_asked stays chief_complaint and the CC gate "
-            "(mock_rules.py:195) admits every later patient turn as a chief-complaint answer; (b) a later KNOWN "
-            "CC silently supersedes an earlier KNOWN CC (latest fact per field wins) with no conflict flag; (c) "
-            "one-sided arm weakness is coerced to the fatigue code because S3 has no focal-deficit code. None of "
-            "these needs the nurse-led replay: any live session that keeps capturing patient speech after a "
-            "handoff reaches (a) and (b). Part caused by the nurse-led replay (REPLAY_ARTIFACT): the drug-reaction "
-            "question at turn 8 was asked by the recorded nurse, which S3 does not track; in agent-led use before "
-            "a handoff the agent would ask allergy_status itself, last_asked would be allergy_status, and the "
-            "turn-9 answer would not reach the CC gate (a documented replay deviation in e1_mapping_v1). Both "
-            "parts contributed; the case stays an open HIGH defect (DEF-E1R-001), not fixed and not "
-            "artifact-only."),
+            "The chain occurs in live use of this exact case, not only in the replay. "
+            "(1) S3's own policy hands off right after source turn 1: turn 1 contains ปากเบี้ยว, a listed "
+            f"nurse-attention phrase ({at['nurse-attention phrase']}); the check is deterministic "
+            f"({at['deterministic nurse-attention check']}); and _decide hands off whenever attention is set "
+            f"({at_decide}). So in live use S3 never asks a field other than chief_complaint in this case. "
+            f"(2) The handoff turn carries no field ({at['handoff turn has no field']}), and "
+            f"{at['last_asked from agent turns only']} takes last_asked from the latest agent turn with a non-null "
+            "field, so last_asked stays chief_complaint at every patient turn 1..11 (replay "
+            "last_asked_field_at_patient_turns) and the CC gate "
+            f"({at['CC gate']}) admits every later patient turn as a chief-complaint answer. "
+            "(3) The session stays active after the handoff: add_turn refuses only sessions that are not active "
+            f"({at['add_turn refuses only sessions that are not active']}), only finish() sets finished "
+            f"({at['only finish() sets finished']}), and the web turn form (speaker patient / relative / nurse) is "
+            f"rendered until finish ({at['web turn form rendered until finish']}). "
+            "The defect has three parts: (a) the no-field handoff turn leaves last_asked at chief_complaint (above); "
+            "(b) a later KNOWN CC silently supersedes an earlier KNOWN CC (latest fact per field wins) with no "
+            "conflict flag; (c) one-sided arm weakness is coerced to the fatigue code because S3 has no "
+            "focal-deficit code. The only replay-specific differences are that the nurse turns are pre-recorded "
+            "text and that there is no ASR or audio; neither changes the S3 code path. The case stays an open HIGH "
+            "defect (DEF-E1R-001), not fixed."),
         "replay_statement": (
             f"Dev-only instrumented replay through the unchanged S3 service, in memory ({rep['verified_by']}); "
             "turn numbers are source-transcript turn indexes (the stored span turn index), not replay seq "
@@ -477,10 +508,11 @@ def trace_syne0196(d: dict[str, Any], repo: Path) -> dict[str, Any]:
                        f"{f['value_text']})" + (f"; it was superseded by {n['value']} from turn {n['turn_index']}."
                                                 if f["superseded"] else "; it is final.")
                        for f, n in zip(rep["chief_complaint_facts"], rep["chief_complaint_facts"][1:] + [None]))
-            + f" Turn 9 is the answer to the drug-reaction (allergy) question. The final replay facts equal the "
-            f"stored output: {rep['final_facts_equal_stored']}. The stored output keeps only the final fact per "
+            + " Turn 9 is the patient's answer to the drug-reaction (allergy) question asked in a nurse turn "
+            "after the handoff. The final replay facts equal the "
+            f"stored output: {_yn(rep['final_facts_equal_stored'])}. The stored output keeps only the final fact per "
             "field, so only the turn-9 span is visible there. The turn-1 value would also have been wrong for "
-            "scoring: the gold CC is UNMAPPABLE to S3."),
+            "scoring: the gold CC is UNMAPPABLE to S3. Provenance: " + rep["provenance"]),
         "evidence_rows": evidence_rows,
     }
 
@@ -537,6 +569,27 @@ def section_text_rf(d: dict[str, Any], repo: Path) -> dict[str, Any]:
     rows_s = [[e["split"], e["case_id"], e["dp"], ", ".join(e["gold_rules"]) or "-", e["gold_target_department"],
                "[" + ", ".join(e["system_top3"]) + "]", str(e["n_alerts"])] for e in silent]
     n_sil = {s: sum(1 for e in silent if e["split"] == s) for s in SPLITS}
+    misses = rf_case_recall_misses(d)
+    frozen_misses = {}
+    for s in SPLITS:
+        x, n = _binary_xn(d, "triage", s, "rf_case_recall", _row(d, "triage", s, "rf_case_recall")["point"])
+        frozen_misses[s] = n - x
+    check_miss_consistency(misses, frozen_misses, silent, not_evaluable_rf_overlap(d))
+    mc = rf_case_recall_miss_counts(misses)
+    rows_m = [[e["split"], e["case_id"], e["dp"], e["gold_target_department"], e["gold_expected_action"],
+               ", ".join(e["gold_rules"]), e["system_outcome"], e["department_reason"],
+               "[" + ", ".join(e["system_top3"]) + "]", str(e["n_alerts"]), _yn(e["escalation_required"]),
+               ", ".join(e["also_listed_in"])] for e in misses]
+    miss_note = (
+        "All rf_case_recall misses (gold red-flag-positive decision points with 0 alerts), one row per frozen "
+        "rf_case_recall row with y_true true and y_pred false: "
+        + "; ".join(f"{s} {mc[s]['total']} (= frozen n - x {frozen_misses[s]}): {mc[s]['suggested']} with a "
+                    f"department suggestion, {mc[s]['abstained']} abstained ({mc[s]['abstained_gold_not_evaluable']}"
+                    f" of them gold NOT_EVALUABLE), {mc[s]['with_any_alert']} with any alert, "
+                    f"{mc[s]['escalation_required_true']} with escalation_required yes" for s in SPLITS)
+        + ". The suggested rows are exactly the silent escalations; the gold-NOT_EVALUABLE rows are exactly the "
+        "missed C5 overlap (checked; the generator refuses otherwise). A nurse sees 'abstained', not 'urgent': "
+        "each abstention here is a red-flag miss, not a safe abstention.")
     bc = ("The zero is by construction: each of the 4 text rules needs at least one of its symptom fact kinds "
           "(three-valued logic: a missing symptom leaves the rule not_evaluable, never fired), and 0 T1 decision "
           "points (dev+test) carry any of them, because S3 records no onset, acuity or exposure and the e1 "
@@ -554,13 +607,16 @@ def section_text_rf(d: dict[str, Any], repo: Path) -> dict[str, Any]:
         "Silent escalations: rule = gold expected_action escalate AND system department status suggested AND 0 "
         f"alerts. Dev {n_sil['dev']}, test {n_sil['test']} decision points. A nurse could read these as "
         "routine: a department suggestion with no alert.",
+        miss_note,
+        fast_abstention_sentence(misses),
     ]
     return {
         "id": "C-E1-2",
-        "heading": "C-E1-2: text red flags; silent escalations",
+        "heading": "C-E1-2: text red flags; silent escalations; all red-flag misses",
         "data": {"rf_text_t1_recall_frozen": quoted, "text_rules": per_rule, "all_by_construction": all_bc,
                  "t1_symptom_fact_kinds": t1_symptom_kinds, "silent_escalations": silent,
-                 "silent_escalation_counts": n_sil,
+                 "silent_escalation_counts": n_sil, "rf_case_recall_misses": misses,
+                 "rf_case_recall_miss_counts": mc, "rf_case_recall_frozen_n_minus_x": frozen_misses,
                  "follow_up": {"defects": ["DEF-E1R-002", "DEF-E1R-003"]}},
         "notes": notes,
         "tables": [
@@ -571,8 +627,84 @@ def section_text_rf(d: dict[str, Any], repo: Path) -> dict[str, Any]:
                     "Total", "By construction"], rows_r),
             _table("Silent escalations (gold escalate, department suggested, 0 alerts)",
                    ["Split", "Case", "DP", "Gold rules", "Gold target", "System top3", "Alerts"], rows_s),
+            _table("All rf_case_recall misses (gold red-flag-positive, 0 alerts)",
+                   ["Split", "Case", "DP", "Gold department", "Gold expected action", "Gold rules", "System outcome",
+                    "Dept reason", "System top3", "Alerts", "escalation_required", "Also listed in"], rows_m),
         ],
     }
+
+
+def _key(e: dict[str, Any]) -> tuple[str, str, str]:
+    return e["split"], e["case_id"], e["dp"]
+
+
+def rf_case_recall_misses(d: dict[str, Any]) -> list[dict[str, Any]]:
+    """Every frozen rf_case_recall row with y_true and not y_pred, joined with the stored S4 output and gold."""
+    silent = {_key(e) for e in silent_escalations(d)}
+    c5 = {_key(e) for e in not_evaluable_rf_overlap(d)}
+    out = []
+    for split in SPLITS:
+        rows = [r for r in d["preds"][("triage", split)] if r["task"] == "rf_case_recall" and r["y_true"]
+                and not r["y_pred"]]
+        for r in sorted(rows, key=lambda r: (r["case_id"], r["dp"])):
+            dp = _dp(d["system"][split][r["case_id"]], r["dp"])
+            gd = _gdp(d["gold"][split][r["case_id"]], r["dp"])
+            rules = sorted({f["rule_id"] for f in gd["red_flags"]})
+            if rules != sorted(r["gold_rules"]) or not rules:
+                raise PosthocError(f"{split} {r['decision_point_id']}: gold rules disagree with predictions")
+            status = dp["department"]["status"]
+            if status not in ("suggested", "abstained"):
+                raise PosthocError(f"{split} {r['decision_point_id']}: unexpected department status {status}")
+            e = {"split": split, "case_id": r["case_id"], "dp": r["dp"],
+                 "gold_target_department": gd["target_department"], "gold_expected_action": gd["expected_action"],
+                 "gold_rules": rules, "system_outcome": status, "department_reason": dp["department"]["reason"],
+                 "system_top3": dp["department"]["top3"], "n_alerts": len(dp["alerts"]),
+                 "escalation_required": bool(dp["escalation_required"])}
+            e["also_listed_in"] = [n for n, keys in (("silent escalations", silent), ("C5 overlap", c5))
+                                   if _key(e) in keys] or ["none"]
+            out.append(e)
+    return out
+
+
+def rf_case_recall_miss_counts(misses: list[dict[str, Any]]) -> dict[str, dict[str, int]]:
+    out = {}
+    for split in SPLITS:
+        m = [e for e in misses if e["split"] == split]
+        ab = [e for e in m if e["system_outcome"] == "abstained"]
+        out[split] = {"total": len(m), "suggested": sum(e["system_outcome"] == "suggested" for e in m),
+                      "abstained": len(ab),
+                      "abstained_gold_not_evaluable": sum(e["gold_target_department"] == "NOT_EVALUABLE" for e in ab),
+                      "with_any_alert": sum(e["n_alerts"] > 0 for e in m),
+                      "escalation_required_true": sum(e["escalation_required"] for e in m)}
+    return out
+
+
+def check_miss_consistency(misses: list[dict[str, Any]], frozen_misses: dict[str, int],
+                           silent: list[dict[str, Any]], overlap: list[dict[str, Any]]) -> None:
+    """Refuse unless the miss rows equal n - x of the frozen rf_case_recall row, the suggested rows equal the
+    silent-escalation set and the gold-NOT_EVALUABLE rows equal the missed subset of the C5 overlap."""
+    counts = rf_case_recall_miss_counts(misses)
+    for split in SPLITS:
+        if counts[split]["total"] != frozen_misses[split]:
+            raise PosthocError(f"{split}: {counts[split]['total']} rf_case_recall misses listed, frozen n - x is "
+                               f"{frozen_misses[split]}")
+    if {_key(e) for e in misses if e["system_outcome"] == "suggested"} != {_key(e) for e in silent}:
+        raise PosthocError("suggested red-flag misses differ from the silent-escalation set")
+    if {_key(e) for e in misses if e["gold_target_department"] == "NOT_EVALUABLE"} != {
+            _key(e) for e in overlap if e["missed_in_rf_case_recall"]}:
+        raise PosthocError("gold-NOT_EVALUABLE red-flag misses differ from the missed subset of the C5 overlap")
+
+
+def fast_abstention_sentence(misses: list[dict[str, Any]]) -> str:
+    fast = [e for e in misses if e["system_outcome"] == "abstained" and "RF-FAST" in e["gold_rules"]]
+    if not fast or any(e["gold_target_department"] != "12" for e in fast):
+        raise PosthocError("FAST-positive abstentions missing or not gold department 12")
+    groups: dict[tuple[str, str], list[str]] = {}
+    for e in fast:
+        groups.setdefault((e["split"], e["case_id"]), []).append(e["dp"])
+    names = ", ".join(f"{s} {c} {'/'.join(dps)}" for (s, c), dps in groups.items())
+    return (f"The FAST-positive abstentions ({names}) are misses by the C5 rule: their gold department is 12, so "
+            "they are scored in the red-flag metrics, and an abstention with no alert is not a detection.")
 
 
 def silent_escalations(d: dict[str, Any]) -> list[dict[str, Any]]:
@@ -749,16 +881,13 @@ def section_bindings(d: dict[str, Any], p: Paths) -> dict[str, Any]:
     }
 
 
-def section_dept12(d: dict[str, Any]) -> dict[str, Any]:
-    counts, overlap = {}, []
+def not_evaluable_rf_overlap(d: dict[str, Any]) -> list[dict[str, Any]]:
+    """C5: decision points that are gold NOT_EVALUABLE and gold red-flag-positive."""
+    overlap = []
     for split in SPLITS:
-        n12 = esc12 = 0
         pred = {(r["task"], r["decision_point_id"]): r for r in d["preds"][("triage", split)]}
         for cid, g in sorted(d["gold"][split].items()):
             for gd in g["decision_times"]:
-                if gd["target_department"] == "12":
-                    n12 += 1
-                    esc12 += gd["expected_action"] == "escalate"
                 if gd["target_department"] == "NOT_EVALUABLE" and gd["red_flags"]:
                     dpid = f"{cid}/{gd['decision_point']}"
                     ab, rc = pred.get(("abst_on_not_evaluable", dpid)), pred.get(("rf_case_recall", dpid))
@@ -771,7 +900,16 @@ def section_dept12(d: dict[str, Any]) -> dict[str, Any]:
                                     "counted_correct_abstention": ab["y_pred"] == ab["y_true"],
                                     "rf_case_recall_y_pred": bool(rc["y_pred"]), "alerts": rc["fired_s4"],
                                     "missed_in_rf_case_recall": not rc["y_pred"]})
-        counts[split] = {"dept_12_dps": n12, "dept_12_gold_escalate": esc12}
+    return overlap
+
+
+def section_dept12(d: dict[str, Any]) -> dict[str, Any]:
+    counts, overlap = {}, not_evaluable_rf_overlap(d)
+    for split in SPLITS:
+        dts = [gd for g in d["gold"][split].values() for gd in g["decision_times"]]
+        counts[split] = {"dept_12_dps": sum(gd["target_department"] == "12" for gd in dts),
+                         "dept_12_gold_escalate": sum(gd["target_department"] == "12"
+                                                      and gd["expected_action"] == "escalate" for gd in dts)}
     rows_c = [[s, str(counts[s]["dept_12_dps"]), str(counts[s]["dept_12_gold_escalate"])] for s in SPLITS]
     n_correct = sum(1 for e in overlap if e["counted_correct_abstention"])
     missed = [f"{e['split']} {e['case_id']} {e['dp']}" for e in overlap if e["missed_in_rf_case_recall"]]
@@ -835,10 +973,17 @@ def defects(d: dict[str, Any], sec: dict[str, dict[str, Any]], repo: Path) -> li
          "expected": "No chief complaint taken from an answer to another question; a CC that cannot be expressed "
                      "(focal deficit) is not coerced to a code; after a nurse-attention handoff the case is "
                      "escalated, never routed to a routine department.",
-         "evidence": [f"{c['file']}:{c['line']} @ {c['commit']}" for c in tr["code_citations"][:3]]
+         "evidence": [f"{c['file']}:{c['line']} @ {c['commit']} ({c['role']})" for c in tr["code_citations"]]
                      + [f"gold {', '.join(tr['decision_points'][0]['gold_red_flags'])}, target "
                         f"{tr['decision_points'][0]['gold_target_department']}, expected "
-                        f"{tr['decision_points'][0]['gold_expected_action']}", "classification BOTH (C-E1-1)"]},
+                        f"{tr['decision_points'][0]['gold_expected_action']}",
+                        f"classification {tr['classification']} (C-E1-1)"],
+         "live_use_reachable": True,
+         "live_use_reachability": (
+             f"In live use of this exact case ({tr['split']} {tr['case_id']}), S3 hands off right after turn 1 "
+             "(nurse-attention phrase ปากเบี้ยว) and the session stays active, so a patient answer entered after "
+             "the handoff (e.g. the allergy answer) reaches the CC gate with last_asked chief_complaint and can "
+             "replace the turn-1 CC, as in the replay.")},
         {"id": "DEF-E1R-002", "severity": "HIGH", "target_slice": "i2",
          "component": "S3 voice extractor (no onset/acuity/exposure capture, no symptom extractor) and the S3->S4 "
                       "fact path",
@@ -875,20 +1020,23 @@ def headline(d: dict[str, Any], sec: dict[str, dict[str, Any]]) -> list[str]:
     xn = {s: _binary_xn(d, "triage", s, "rf_case_recall", rc[s]["point"]) for s in SPLITS}
     d3 = {s: _row(d, "triage", s, "dept_top3") for s in SPLITS}
     cc = sec["C-E1-1"]["data"]["cc_precision"]
-    sil = sec["C-E1-2"]["data"]["silent_escalation_counts"]
+    mc = sec["C-E1-2"]["data"]["rf_case_recall_miss_counts"]
     q = sec["C-E1-2"]["data"]["rf_text_t1_recall_frozen"]
     return [
         f"Red-flag recall FAILS the predeclared threshold (point >= 1.00) on both splits: case-level dev "
         f"{xn['dev'][0]}/{xn['dev'][1]} ({rc['dev']['point']:.4f}, {_verdict(rc['dev'])}), test "
         f"{xn['test'][0]}/{xn['test'][1]} ({rc['test']['point']:.4f}, {_verdict(rc['test'])}); rule-level dev "
         f"{rr['dev']['point']:.4f} ({_verdict(rr['dev'])}), test {rr['test']['point']:.4f} ({_verdict(rr['test'])}).",
-        f"Text red flags at T1 are missed by construction (dev {q['dev']['x']}/{q['dev']['n']}, test "
-        f"{q['test']['x']}/{q['test']['n']}), and {sil['dev'] + sil['test']} gold-escalate decision points (dev "
-        f"{sil['dev']}, test {sil['test']}) received a department suggestion with no alert.",
+        f"Red-flag misses: dev {mc['dev']['total']} and test {mc['test']['total']} gold red-flag-positive decision "
+        f"points got 0 alerts; of those, dev {mc['dev']['suggested']} / test {mc['test']['suggested']} got a "
+        f"department suggestion and dev {mc['dev']['abstained']} / test {mc['test']['abstained']} abstained (a "
+        "miss, not a safe abstention); text red flags at T1 score zero by construction (dev "
+        f"{q['dev']['x']}/{q['dev']['n']}, test {q['test']['x']}/{q['test']['n']}).",
         f"The frozen CC precision of 1.0 excludes wrong assertions: over all KNOWN CC assertions it is dev "
         f"{cc['dev']['all_known_cc_precision']['x']}/{cc['dev']['all_known_cc_precision']['n']} and test "
         f"{cc['test']['all_known_cc_precision']['x']}/{cc['test']['all_known_cc_precision']['n']}; dev SYNE-0196 "
-        "(stroke-sign presentation) was routed to ORTHO/MED with no alert - open HIGH defect DEF-E1R-001.",
+        "(stroke-sign presentation) was routed to ORTHO/MED with no alert - an S3 defect reachable in live use, "
+        "open HIGH defect DEF-E1R-001.",
         f"Department top-3 FAILS its threshold (>= 0.80): dev {d3['dev']['point']:.4f}, test "
         f"{d3['test']['point']:.4f}; three HIGH defects are filed for I2 (DEF-E1R-001..003).",
         "Claim boundary: System Evaluation of a research prototype on synthetic data with text-transcript replay "
@@ -909,7 +1057,9 @@ def build(p: Paths = Paths()) -> dict[str, Any]:
     heads = headline(d, by_id)
     secs.append({
         "id": "DEFECTS", "heading": "Defects filed for I2", "data": {"n_defects": len(defs)},
-        "notes": ["Filed for I2; not repaired in e1r. Each defect keeps its evidence and a stored-file repro."],
+        "notes": ["Filed for I2; not repaired in e1r. Each defect keeps its evidence and a stored-file repro.",
+                  f"DEF-E1R-001 live-use reachable: {_yn(defs[0]['live_use_reachable'])}. "
+                  + defs[0]["live_use_reachability"]],
         "tables": [_table("Defects filed for I2",
                           ["ID", "Severity", "Target", "Component", "Repro", "Observed", "Expected"],
                           [[x["id"], x["severity"], x["target_slice"], x["component"],
@@ -922,7 +1072,7 @@ def build(p: Paths = Paths()) -> dict[str, Any]:
         "header": HEADER,
         "label": LABEL,
         "status": PROTOTYPE,
-        "title": "E1 post-hoc findings (slice e1r)",
+        "title": "E1 post-hoc findings (slice e1r, revised in e1r2)",
         "slice": "e1r",
         "scope": ("Disclosure only: computed after the frozen e1 run from stored, hash-pinned outputs. No metric, "
                   "verdict, manifest, adapter or ledger line is changed; nothing is re-run; the test split is "
@@ -936,7 +1086,7 @@ def build(p: Paths = Paths()) -> dict[str, Any]:
 
 
 def _cell(v: Any) -> str:
-    s = "-" if v is None else str(v)
+    s = "-" if v is None else _yn(v) if isinstance(v, bool) else str(v)
     return s.replace("|", "\\|").replace("\n", " ")
 
 

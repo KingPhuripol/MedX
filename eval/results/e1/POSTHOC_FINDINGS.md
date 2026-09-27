@@ -1,6 +1,6 @@
 Post-hoc findings - computed after the frozen run from stored predictions; not part of the predeclared evaluation
 
-# E1 post-hoc findings (slice e1r)
+# E1 post-hoc findings (slice e1r, revised in e1r2)
 
 > **System Evaluation on synthetic data - not clinical performance**
 > **Research prototype - not for clinical use**
@@ -15,9 +15,9 @@ The frozen voice_cc_precision excludes cases whose gold chief complaint is UNMAP
 
 All-assertion CC precision = correct KNOWN CC assertions / all KNOWN CC assertions over every case of the split. Clopper-Pearson 95% (eval.exact) assumes independent cases; cases of one patient are not independent. It is shown beside the frozen value and never replaces it.
 
-SYNE-0196 classification: BOTH. Part that also occurs in agent-led live use (S3_DEFECT): (a) the handoff turn carries no field (policy.py) and service.py:401 takes last_asked from the latest agent turn with a non-null field, so after a nurse-attention handoff last_asked stays chief_complaint and the CC gate (mock_rules.py:195) admits every later patient turn as a chief-complaint answer; (b) a later KNOWN CC silently supersedes an earlier KNOWN CC (latest fact per field wins) with no conflict flag; (c) one-sided arm weakness is coerced to the fatigue code because S3 has no focal-deficit code. None of these needs the nurse-led replay: any live session that keeps capturing patient speech after a handoff reaches (a) and (b). Part caused by the nurse-led replay (REPLAY_ARTIFACT): the drug-reaction question at turn 8 was asked by the recorded nurse, which S3 does not track; in agent-led use before a handoff the agent would ask allergy_status itself, last_asked would be allergy_status, and the turn-9 answer would not reach the CC gate (a documented replay deviation in e1_mapping_v1). Both parts contributed; the case stays an open HIGH defect (DEF-E1R-001), not fixed and not artifact-only.
+SYNE-0196 classification: S3_DEFECT. The chain occurs in live use of this exact case, not only in the replay. (1) S3's own policy hands off right after source turn 1: turn 1 contains ปากเบี้ยว, a listed nurse-attention phrase (policy.py:17); the check is deterministic (policy.py:30); and _decide hands off whenever attention is set (service.py:157-158). So in live use S3 never asks a field other than chief_complaint in this case. (2) The handoff turn carries no field (policy.py:47), and service.py:401 takes last_asked from the latest agent turn with a non-null field, so last_asked stays chief_complaint at every patient turn 1..11 (replay last_asked_field_at_patient_turns) and the CC gate (mock_rules.py:195) admits every later patient turn as a chief-complaint answer. (3) The session stays active after the handoff: add_turn refuses only sessions that are not active (service.py:378), only finish() sets finished (service.py:548), and the web turn form (speaker patient / relative / nurse) is rendered until finish (VoiceIntake.tsx:199). The defect has three parts: (a) the no-field handoff turn leaves last_asked at chief_complaint (above); (b) a later KNOWN CC silently supersedes an earlier KNOWN CC (latest fact per field wins) with no conflict flag; (c) one-sided arm weakness is coerced to the fatigue code because S3 has no focal-deficit code. The only replay-specific differences are that the nurse turns are pre-recorded text and that there is no ASR or audio; neither changes the S3 code path. The case stays an open HIGH defect (DEF-E1R-001), not fixed.
 
-Dev-only instrumented replay through the unchanged S3 service, in memory (tests/e1r/test_syne0196_replay.py); turn numbers are source-transcript turn indexes (the stored span turn index), not replay seq numbers. S3's own policy emitted 3 agent turns: ask.chief_complaint, reask.chief_complaint, handoff.nurse_attention_phrase. Turn 1 yielded a KNOWN chief complaint fatigue (from อ่อนแรง); it was superseded by joint_pain from turn 9. Turn 9 yielded a KNOWN chief complaint joint_pain (from ปวดข้อ); it is final. Turn 9 is the answer to the drug-reaction (allergy) question. The final replay facts equal the stored output: True. The stored output keeps only the final fact per field, so only the turn-9 span is visible there. The turn-1 value would also have been wrong for scoring: the gold CC is UNMAPPABLE to S3.
+Dev-only instrumented replay through the unchanged S3 service, in memory (tests/e1r/test_syne0196_replay.py); turn numbers are source-transcript turn indexes (the stored span turn index), not replay seq numbers. S3's own policy emitted 3 agent turns: ask.chief_complaint, reask.chief_complaint, handoff.nurse_attention_phrase. Turn 1 yielded a KNOWN chief complaint fatigue (from อ่อนแรง); it was superseded by joint_pain from turn 9. Turn 9 yielded a KNOWN chief complaint joint_pain (from ปวดข้อ); it is final. Turn 9 is the patient's answer to the drug-reaction (allergy) question asked in a nurse turn after the handoff. The final replay facts equal the stored output: yes. The stored output keeps only the final fact per field, so only the turn-9 span is visible there. The turn-1 value would also have been wrong for scoring: the gold CC is UNMAPPABLE to S3. Provenance: INSTRUMENTED_REPLAY_SYNE0196 is a hand-transcribed constant in eval/posthoc/e1_findings.py; it is recomputed from the dev-only replay and asserted equal by tests/e1r/test_syne0196_replay.py::test_replay_constant_recomputed.
 
 ### KNOWN CC assertions excluded from frozen scoring (gold CC UNMAPPABLE)
 
@@ -49,11 +49,14 @@ Dev-only instrumented replay through the unchanged S3 service, in memory (tests/
 | S3 allergy_status (stored) | KNOWN present from turn 9 |
 | S3 handoff_reason (stored) | nurse_attention_phrase |
 | Instrumented replay: CC facts | turn 1 fatigue (อ่อนแรง) superseded; turn 9 joint_pain (ปวดข้อ) final |
-| Instrumented replay: agent turns | ask.chief_complaint (field chief_complaint); reask.chief_complaint (field chief_complaint); handoff.nurse_attention_phrase (field None) |
-| Instrumented replay: final facts equal stored output | True |
-| S4 at T1 (stored) | cc_symptom joint_pain; department suggested top3 [ORTHO, MED]; alerts 0; RF-STROKE not_evaluable True |
+| Instrumented replay: agent turns | ask.chief_complaint (field chief_complaint); reask.chief_complaint (field chief_complaint); handoff.nurse_attention_phrase (field none) |
+| Instrumented replay: final facts equal stored output | yes |
+| Instrumented replay: turn 1 contains the gold CC text | yes |
+| Instrumented replay: last_asked at patient turns | turn 1 chief_complaint; turn 3 chief_complaint; turn 5 chief_complaint; turn 7 chief_complaint; turn 9 chief_complaint; turn 11 chief_complaint |
+| Instrumented replay: provenance | INSTRUMENTED_REPLAY_SYNE0196 is a hand-transcribed constant in eval/posthoc/e1_findings.py; it is recomputed from the dev-only replay and asserted equal by tests/e1r/test_syne0196_replay.py::test_replay_constant_recomputed. |
+| S4 at T1 (stored) | cc_symptom joint_pain; department suggested top3 [ORTHO, MED]; alerts 0; RF-STROKE not_evaluable yes |
 | Gold at T1 | red flags RF-FAST; target 12; expected escalate |
-| S4 at T2 (stored) | cc_symptom joint_pain; department suggested top3 [ORTHO, MED]; alerts 0; RF-STROKE not_evaluable True |
+| S4 at T2 (stored) | cc_symptom joint_pain; department suggested top3 [ORTHO, MED]; alerts 0; RF-STROKE not_evaluable yes |
 | Gold at T2 | red flags RF-FAST; target 12; expected escalate |
 
 ### SYNE-0196 code citations (file:line at the run commit)
@@ -72,8 +75,13 @@ Dev-only instrumented replay through the unchanged S3 service, in memory (tests/
 | backend/app/voice/mock_rules.py:63 @ 8943cd1 (fatigue pattern includes the turn-1 word) | ("fatigue", ("อ่อนเพลีย", "อ่อนแรง", "เพลีย")), |
 | backend/app/voice/mock_rules.py:61 @ 8943cd1 (joint_pain pattern matches the allergy answer) | ("joint_pain", ("ปวดเข่า", "ปวดข้อ", "ข้อบวม")), |
 | backend/app/voice/policy.py:17 @ 8943cd1 (nurse-attention phrase) | "ถ่ายเป็นเลือด", "อยากตาย", "ฆ่าตัวตาย", "ทำร้ายตัวเอง", "ปากเบี้ยว", "แขนขาอ่อนแรง", |
+| backend/app/voice/policy.py:30 @ 8943cd1 (deterministic nurse-attention check) | def nurse_attention_hit(current_text: str, prior_texts: Iterable[str] = ()) -> bool: |
+| backend/app/voice/service.py:157 @ 8943cd1 (_decide: attention leads to handoff) | if attention: |
+| backend/app/voice/service.py:378 @ 8943cd1 (add_turn refuses only sessions that are not active) | if session["status"] != "active": |
+| backend/app/voice/service.py:548 @ 8943cd1 (only finish() sets finished) | voice_sessions.update().where(voice_sessions.c.session_id == session_id).values(status="finished") |
+| web/components/voice/VoiceIntake.tsx:199 @ 8943cd1 (web turn form rendered until finish) | {!finished && ( |
 
-## C-E1-2: text red flags; silent escalations
+## C-E1-2: text red flags; silent escalations; all red-flag misses
 
 Frozen rf_text_t1_recall (quoted, no threshold): dev 0/8, test 0/6.
 
@@ -84,6 +92,10 @@ Symptom fact kinds present at T1 in stored S4 inputs (dev+test): symptom.abdomin
 Follow-up recommendation (I2): add onset/acuity/exposure capture and a symptom extractor to S3 (DEF-E1R-002) and an aggregate-NEWS rule to S4 (DEF-E1R-003), then re-evaluate under new, separately frozen manifests (v2) with disclosure that the v1 test split was already consumed.
 
 Silent escalations: rule = gold expected_action escalate AND system department status suggested AND 0 alerts. Dev 8, test 5 decision points. A nurse could read these as routine: a department suggestion with no alert.
+
+All rf_case_recall misses (gold red-flag-positive decision points with 0 alerts), one row per frozen rf_case_recall row with y_true true and y_pred false: dev 19 (= frozen n - x 19): 8 with a department suggestion, 11 abstained (2 of them gold NOT_EVALUABLE), 0 with any alert, 0 with escalation_required yes; test 13 (= frozen n - x 13): 5 with a department suggestion, 8 abstained (0 of them gold NOT_EVALUABLE), 0 with any alert, 0 with escalation_required yes. The suggested rows are exactly the silent escalations; the gold-NOT_EVALUABLE rows are exactly the missed C5 overlap (checked; the generator refuses otherwise). A nurse sees 'abstained', not 'urgent': each abstention here is a red-flag miss, not a safe abstention.
+
+The FAST-positive abstentions (dev SYNE-0166 T1/T2, test SYNE-0033 T1/T2, test SYNE-0131 T1/T2) are misses by the C5 rule: their gold department is 12, so they are scored in the red-flag metrics, and an abstention with no alert is not a detection.
 
 ### Frozen rf_text_t1_recall (quoted from results.json)
 
@@ -124,6 +136,45 @@ Silent escalations: rule = gold expected_action escalate AND system department s
 | test | SYNE-0101 | T2 | RF-NEWS-AGG5 | 12 | [MED] | 0 |
 | test | SYNE-0187 | T1 | RF-ACUTE-CHEST-PAIN | 12 | [CARD] | 0 |
 | test | SYNE-0187 | T2 | RF-ACUTE-CHEST-PAIN | 12 | [CARD] | 0 |
+
+### All rf_case_recall misses (gold red-flag-positive, 0 alerts)
+
+> **System Evaluation on synthetic data - not clinical performance**
+
+| Split | Case | DP | Gold department | Gold expected action | Gold rules | System outcome | Dept reason | System top3 | Alerts | escalation_required | Also listed in |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| dev | SYNE-0071 | T1 | 12 | escalate | RF-ANAPHYLAXIS | abstained | required_information_missing | [] | 0 | no | none |
+| dev | SYNE-0071 | T2 | 12 | escalate | RF-ANAPHYLAXIS | abstained | required_information_missing | [] | 0 | no | none |
+| dev | SYNE-0081 | T1 | 12 | escalate | RF-ACUTE-CHEST-PAIN | suggested | - | [CARD] | 0 | no | silent escalations |
+| dev | SYNE-0081 | T2 | 12 | escalate | RF-ACUTE-CHEST-PAIN | suggested | - | [CARD] | 0 | no | silent escalations |
+| dev | SYNE-0089 | T1 | 12 | escalate | RF-ACUTE-CHEST-PAIN | abstained | required_information_missing | [] | 0 | no | none |
+| dev | SYNE-0089 | T2 | 12 | escalate | RF-ACUTE-CHEST-PAIN | abstained | required_information_missing | [] | 0 | no | none |
+| dev | SYNE-0107 | T1 | NOT_EVALUABLE | escalate | RF-NEWS-AGG5 | abstained | required_information_missing | [] | 0 | no | C5 overlap |
+| dev | SYNE-0107 | T2 | NOT_EVALUABLE | escalate | RF-NEWS-AGG5 | abstained | required_information_missing | [] | 0 | no | C5 overlap |
+| dev | SYNE-0108 | T1 | 12 | escalate | RF-THUNDERCLAP | suggested | - | [NEURO] | 0 | no | silent escalations |
+| dev | SYNE-0108 | T2 | 12 | escalate | RF-THUNDERCLAP | suggested | - | [NEURO] | 0 | no | silent escalations |
+| dev | SYNE-0119 | T1 | 12 | escalate | RF-ANAPHYLAXIS | abstained | no_evidence_matched | [] | 0 | no | none |
+| dev | SYNE-0119 | T2 | 12 | escalate | RF-ANAPHYLAXIS | abstained | no_evidence_matched | [] | 0 | no | none |
+| dev | SYNE-0127 | T1 | 12 | escalate | RF-THUNDERCLAP | suggested | - | [NEURO] | 0 | no | silent escalations |
+| dev | SYNE-0127 | T2 | 12 | escalate | RF-THUNDERCLAP | suggested | - | [NEURO] | 0 | no | silent escalations |
+| dev | SYNE-0165 | T2 | 12 | escalate | RF-NEWS-AGG5 | abstained | required_information_missing | [] | 0 | no | none |
+| dev | SYNE-0166 | T1 | 12 | escalate | RF-FAST | abstained | required_information_missing | [] | 0 | no | none |
+| dev | SYNE-0166 | T2 | 12 | escalate | RF-FAST | abstained | required_information_missing | [] | 0 | no | none |
+| dev | SYNE-0196 | T1 | 12 | escalate | RF-FAST | suggested | - | [ORTHO, MED] | 0 | no | silent escalations |
+| dev | SYNE-0196 | T2 | 12 | escalate | RF-FAST | suggested | - | [ORTHO, MED] | 0 | no | silent escalations |
+| test | SYNE-0033 | T1 | 12 | escalate | RF-FAST | abstained | required_information_missing | [] | 0 | no | none |
+| test | SYNE-0033 | T2 | 12 | escalate | RF-FAST | abstained | required_information_missing | [] | 0 | no | none |
+| test | SYNE-0039 | T2 | 12 | escalate | RF-NEWS-AGG5 | suggested | - | [MED] | 0 | no | silent escalations |
+| test | SYNE-0101 | T1 | 12 | escalate | RF-NEWS-AGG5 | suggested | - | [MED] | 0 | no | silent escalations |
+| test | SYNE-0101 | T2 | 12 | escalate | RF-NEWS-AGG5 | suggested | - | [MED] | 0 | no | silent escalations |
+| test | SYNE-0125 | T1 | 12 | escalate | RF-ACUTE-CHEST-PAIN | abstained | required_information_missing | [] | 0 | no | none |
+| test | SYNE-0125 | T2 | 12 | escalate | RF-ACUTE-CHEST-PAIN | abstained | required_information_missing | [] | 0 | no | none |
+| test | SYNE-0131 | T1 | 12 | escalate | RF-FAST | abstained | required_information_missing | [] | 0 | no | none |
+| test | SYNE-0131 | T2 | 12 | escalate | RF-FAST | abstained | required_information_missing | [] | 0 | no | none |
+| test | SYNE-0141 | T1 | 12 | escalate | RF-THUNDERCLAP | abstained | required_information_missing | [] | 0 | no | none |
+| test | SYNE-0141 | T2 | 12 | escalate | RF-THUNDERCLAP | abstained | required_information_missing | [] | 0 | no | none |
+| test | SYNE-0187 | T1 | 12 | escalate | RF-ACUTE-CHEST-PAIN | suggested | - | [CARD] | 0 | no | silent escalations |
+| test | SYNE-0187 | T2 | 12 | escalate | RF-ACUTE-CHEST-PAIN | suggested | - | [CARD] | 0 | no | silent escalations |
 
 ## C-E1-3: degenerate F1; CC coverage
 
@@ -253,6 +304,8 @@ The 3 decision points below are both NOT_EVALUABLE and gold red-flag-positive. 3
 
 Filed for I2; not repaired in e1r. Each defect keeps its evidence and a stored-file repro.
 
+DEF-E1R-001 live-use reachable: yes. In live use of this exact case (dev SYNE-0196), S3 hands off right after turn 1 (nurse-attention phrase ปากเบี้ยว) and the session stays active, so a patient answer entered after the handoff (e.g. the allergy answer) reaches the CC gate with last_asked chief_complaint and can replace the turn-1 CC, as in the replay.
+
 ### Defects filed for I2
 
 > **System Evaluation on synthetic data - not clinical performance**
@@ -266,7 +319,7 @@ Filed for I2; not repaired in e1r. Each defect keeps its evidence and a stored-f
 ## Headline for the progress report
 
 - Red-flag recall FAILS the predeclared threshold (point >= 1.00) on both splits: case-level dev 5/24 (0.2083, FAIL), test 9/22 (0.4091, FAIL); rule-level dev 0.1923 (FAIL), test 0.3103 (FAIL).
-- Text red flags at T1 are missed by construction (dev 0/8, test 0/6), and 13 gold-escalate decision points (dev 8, test 5) received a department suggestion with no alert.
-- The frozen CC precision of 1.0 excludes wrong assertions: over all KNOWN CC assertions it is dev 24/26 and test 19/20; dev SYNE-0196 (stroke-sign presentation) was routed to ORTHO/MED with no alert - open HIGH defect DEF-E1R-001.
+- Red-flag misses: dev 19 and test 13 gold red-flag-positive decision points got 0 alerts; of those, dev 8 / test 5 got a department suggestion and dev 11 / test 8 abstained (a miss, not a safe abstention); text red flags at T1 score zero by construction (dev 0/8, test 0/6).
+- The frozen CC precision of 1.0 excludes wrong assertions: over all KNOWN CC assertions it is dev 24/26 and test 19/20; dev SYNE-0196 (stroke-sign presentation) was routed to ORTHO/MED with no alert - an S3 defect reachable in live use, open HIGH defect DEF-E1R-001.
 - Department top-3 FAILS its threshold (>= 0.80): dev 0.5000, test 0.4082; three HIGH defects are filed for I2 (DEF-E1R-001..003).
 - Claim boundary: System Evaluation of a research prototype on synthetic data with text-transcript replay through mock rules; no ASR, no audio, no clinician review, not clinical performance; these post-hoc numbers never replace a frozen value or verdict.

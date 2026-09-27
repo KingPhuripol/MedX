@@ -1,4 +1,4 @@
-"""Slice e1r (required, scope 4): instrumented replay of dev SYNE-0196 through the unchanged S3 service.
+"""Slices e1r (scope 4) and e1r2 (E1R2-A06): instrumented replay of dev SYNE-0196 through the unchanged S3 service.
 
 Dev split only; test-split cases are analysed from stored outputs only. The replay runs in-process on an
 in-memory SQLite engine and writes nothing under eval/results or eval/ledger (checked). It lives outside eval/
@@ -41,7 +41,11 @@ def ds(tmp_path_factory) -> Path:
     return out
 
 
-def test_syne0196_instrumented_replay(ds):
+NOT_RECOMPUTED = ("verified_by", "provenance")  # labels about the constant, not replay observations
+
+
+def test_replay_constant_recomputed(ds):
+    """E1R2-A06: recompute every key of the hand-transcribed INSTRUMENTED_REPLAY_SYNE0196 from the replay."""
     split, cid = F.TRACE_CASE
     guarded = (REPO / "eval" / "results", REPO / "eval" / "ledger")
     before = _tree(*guarded)
@@ -93,9 +97,14 @@ def test_syne0196_instrumented_replay(ds):
     assert [(f["turn_index"], f["value"], f["superseded"]) for f in cc] == [
         (1, "fatigue", True), (9, "joint_pain", False)]
     assert observed["final_facts_equal_stored"] is True
-    expected = {k: v for k, v in F.INSTRUMENTED_REPLAY_SYNE0196.items() if k != "verified_by"}
-    assert observed == expected
+    assert set(F.INSTRUMENTED_REPLAY_SYNE0196) >= set(NOT_RECOMPUTED)
+    expected = {k: v for k, v in F.INSTRUMENTED_REPLAY_SYNE0196.items() if k not in NOT_RECOMPUTED}
+    assert set(observed) == set(expected)
+    for k in expected:
+        assert observed[k] == expected[k], k
+    assert "hand-transcribed" in F.INSTRUMENTED_REPLAY_SYNE0196["provenance"]
+    assert "test_replay_constant_recomputed" in F.INSTRUMENTED_REPLAY_SYNE0196["provenance"]
     committed = json.loads((REPO / "eval/results/e1" / F.OUT_JSON).read_text("utf-8"))
     trace = next(s for s in committed["sections"] if s["id"] == "C-E1-1")["data"]["syne0196_trace"]
-    assert {k: v for k, v in trace["instrumented_replay"].items() if k != "verified_by"} == observed
+    assert trace["instrumented_replay"] == F.INSTRUMENTED_REPLAY_SYNE0196
     assert _tree(*guarded) == before

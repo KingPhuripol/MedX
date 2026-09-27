@@ -135,7 +135,6 @@ def test_cc_known_precision(doc):
 
 def test_syne0196_trace(doc):
     t = _section(doc, "C-E1-1")["data"]["syne0196_trace"]
-    assert t["classification"] in ("S3_DEFECT", "REPLAY_ARTIFACT", "BOTH")
     assert len(t["stored_evidence"]) >= 2
     cited = {(c["file"], c["code"]) for c in t["code_citations"]}
     assert any(f == F.MOCK_RULES and 'asked not in (None, "chief_complaint")' in c for f, c in cited)
@@ -159,16 +158,78 @@ def test_syne0196_trace(doc):
     stmt = t["replay_statement"]
     for needle in ("3 agent turns", "ask.chief_complaint, reask.chief_complaint, handoff.nurse_attention_phrase",
                    "Turn 1 yielded a KNOWN chief complaint fatigue (from อ่อนแรง)",
-                   "superseded by joint_pain from turn 9", "allergy", "equal the stored output: True"):
+                   "superseded by joint_pain from turn 9", "allergy", "equal the stored output: yes"):
         assert needle in stmt, needle
     notes = " ".join(_section(doc, "C-E1-1")["notes"])
     assert stmt in notes
-    rat = t["classification_rationale"]
-    assert "agent-led live use (S3_DEFECT)" in rat and "nurse-led replay (REPLAY_ARTIFACT)" in rat
-    assert {"mock_rules.py:195", "service.py:401"} <= set(re.findall(r"\w+\.py:\d+", rat))
     js, md = F.render(doc)
     for text in (js, md):
         assert not re.search(r"yielded no|no CC|0 agent turns|no agent turns", text, re.IGNORECASE)
+
+
+# ---------------------------------------------------------------- 3b. SYNE-0196 classification (e1r2)
+
+FORBIDDEN_0196 = re.compile(r"would ask allergy_status|would not reach the CC gate|asks? allergy_status|"
+                            r"REPLAY_ARTIFACT|replay artifact", re.IGNORECASE)
+NEW_CITES = {  # file:line at 8943cd1 -> the code the line must hold (verified with git show)
+    ("backend/app/voice/policy.py", 17): '"ปากเบี้ยว"',
+    ("backend/app/voice/policy.py", 30): "def nurse_attention_hit(",
+    ("backend/app/voice/policy.py", 47): 'action="handoff", field=None',
+    ("backend/app/voice/service.py", 157): "if attention:",
+    ("backend/app/voice/service.py", 158): 'return handoff("nurse_attention_phrase"',
+    ("backend/app/voice/service.py", 378): 'if session["status"] != "active":',
+    ("backend/app/voice/service.py", 401): "last_asked = next(",
+    ("backend/app/voice/service.py", 548): '.values(status="finished")',
+    ("web/components/voice/VoiceIntake.tsx", 199): "{!finished && (",
+}
+
+
+def test_syne0196_classification(doc):
+    t = _section(doc, "C-E1-1")["data"]["syne0196_trace"]
+    assert t["classification"] == "S3_DEFECT"
+    rat = t["classification_rationale"]
+    # fact 1: handoff right after source turn 1 on ปากเบี้ยว (deterministic)
+    assert "hands off right after source turn 1" in rat and "ปากเบี้ยว" in rat
+    assert {"policy.py:17", "policy.py:30", "service.py:157-158"} <= set(re.findall(r"\w+\.py:[\d-]+", rat))
+    assert "never asks a field other than chief_complaint" in rat
+    # fact 2: last_asked stays chief_complaint at every patient turn 1..11
+    assert "last_asked stays chief_complaint at every patient turn 1..11" in rat
+    assert {"policy.py:47", "service.py:401", "mock_rules.py:195"} <= set(re.findall(r"\w+\.py:\d+", rat))
+    assert set(t["instrumented_replay"]["last_asked_field_at_patient_turns"]) == {"1", "3", "5", "7", "9", "11"}
+    assert set(t["instrumented_replay"]["last_asked_field_at_patient_turns"].values()) == {"chief_complaint"}
+    # fact 3: the session stays active after the handoff
+    assert "The session stays active after the handoff" in rat
+    assert {"service.py:378", "service.py:548", "VoiceIntake.tsx:199"} <= set(re.findall(r"\w+\.\w+:\d+", rat))
+    # parts (a)-(c) and the only replay-specific differences
+    for needle in ("(a) the no-field handoff turn", "(b) a later KNOWN CC silently supersedes",
+                   "(c) one-sided arm weakness is coerced to the fatigue code",
+                   "nurse turns are pre-recorded text", "no ASR or audio", "neither changes the S3 code path"):
+        assert needle in rat, needle
+    js, md = F.render(doc)
+    for text in (js, md, (RESULTS / F.OUT_JSON).read_text("utf-8"), (RESULTS / F.OUT_MD).read_text("utf-8")):
+        assert not FORBIDDEN_0196.search(text), FORBIDDEN_0196.search(text)
+    cited = {(c["file"], c["line"]): c for c in t["code_citations"]}
+    for (f, line), code in NEW_CITES.items():
+        assert (f, line) in cited, (f, line)
+        assert code in cited[(f, line)]["code"] and cited[(f, line)]["commit"] == "8943cd1"
+        at = subprocess.run(["git", "-C", str(REPO), "show", f"8943cd1:{f}"], capture_output=True, check=True)
+        assert code in at.stdout.decode("utf-8").split("\n")[line - 1], (f, line)
+
+
+def test_def001_live_use(doc):
+    d1 = doc["defects"][0]
+    assert d1["id"] == "DEF-E1R-001" and d1["severity"] == "HIGH" and d1["target_slice"] == "i2"
+    assert d1["live_use_reachable"] is True
+    stmt = d1["live_use_reachability"]
+    assert "SYNE-0196" in stmt and "reaches the CC gate" in stmt and "live use" in stmt
+    assert "after the handoff" in stmt and "replace the turn-1 CC" in stmt
+    ev = " ".join(d1["evidence"])
+    assert "backend/app/voice/service.py:378 @ 8943cd1" in ev and "backend/app/voice/service.py:548 @ 8943cd1" in ev
+    assert "classification S3_DEFECT (C-E1-1)" in ev
+    for k in ("id", "severity", "target_slice", "component", "repro", "observed", "expected", "evidence"):
+        assert d1[k]
+    committed = json.loads((RESULTS / F.OUT_JSON).read_text("utf-8"))["defects"][0]
+    assert committed["live_use_reachable"] is True and committed["live_use_reachability"] == stmt
 
 
 # ---------------------------------------------------------------- 4. silent escalations
@@ -182,6 +243,99 @@ def test_silent_escalations(doc):
     assert got == dev | test
     for e in _section(doc, "C-E1-2")["data"]["silent_escalations"]:
         assert e["n_alerts"] == 0 and e["system_top3"] and e["gold_target_department"]
+
+
+# ---------------------------------------------------------------- 4b. all red-flag misses (e1r2)
+
+
+def _dps(split: str, cases: dict[str, str]) -> set[tuple[str, str, str]]:
+    return {(split, f"SYNE-{c}", dp) for c, dps in cases.items() for dp in dps.split("/")}
+
+
+def test_rf_case_recall_misses(doc):
+    data = _section(doc, "C-E1-2")["data"]
+    rows = data["rf_case_recall_misses"]
+    got = {(e["split"], e["case_id"], e["dp"]): e for e in rows}
+    assert len(got) == len(rows)
+    dev_sug = _dps("dev", {"0081": "T1/T2", "0108": "T1/T2", "0127": "T1/T2", "0196": "T1/T2"})
+    dev_ne = _dps("dev", {"0107": "T1/T2"})
+    dev_ab = _dps("dev", {"0071": "T1/T2", "0089": "T1/T2", "0119": "T1/T2", "0165": "T2", "0166": "T1/T2"})
+    test_sug = _dps("test", {"0039": "T2", "0101": "T1/T2", "0187": "T1/T2"})
+    test_ab = _dps("test", {"0033": "T1/T2", "0125": "T1/T2", "0131": "T1/T2", "0141": "T1/T2"})
+    assert set(got) == dev_sug | dev_ne | dev_ab | test_sug | test_ab
+    assert {k for k, e in got.items() if e["system_outcome"] == "suggested"} == dev_sug | test_sug
+    assert {k for k, e in got.items() if e["system_outcome"] == "abstained"} == dev_ne | dev_ab | test_ab
+    assert {k for k, e in got.items() if e["gold_target_department"] == "NOT_EVALUABLE"} == dev_ne
+    for e in rows:
+        assert e["n_alerts"] == 0 and e["escalation_required"] is False and e["gold_rules"]
+        assert e["gold_expected_action"] == "escalate"
+    silent = {(e["split"], e["case_id"], e["dp"]) for e in data["silent_escalations"]}
+    assert {k for k, e in got.items() if "silent escalations" in e["also_listed_in"]} == silent == dev_sug | test_sug
+    c5 = {(e["split"], e["case_id"], e["dp"]) for e in _section(doc, "C5")["data"][
+        "not_evaluable_and_red_flag_positive"] if e["missed_in_rf_case_recall"]}
+    assert {k for k, e in got.items() if "C5 overlap" in e["also_listed_in"]} == c5 == dev_ne
+    zero = {"with_any_alert": 0, "escalation_required_true": 0}
+    assert data["rf_case_recall_miss_counts"] == {
+        "dev": {"total": 19, "suggested": 8, "abstained": 11, "abstained_gold_not_evaluable": 2, **zero},
+        "test": {"total": 13, "suggested": 5, "abstained": 8, "abstained_gold_not_evaluable": 0, **zero}}
+    assert data["rf_case_recall_frozen_n_minus_x"] == {"dev": 24 - 5, "test": 22 - 9}
+    table = next(t for t in _section(doc, "C-E1-2")["tables"] if t["title"].startswith("All rf_case_recall misses"))
+    assert len(table["rows"]) == 32 and table["columns"][6] == "System outcome"
+    assert {(r[0], r[1], r[2]) for r in table["rows"]} == set(got)
+
+
+def _miss(split, case, dp, outcome="abstained", dept="12"):
+    return {"split": split, "case_id": case, "dp": dp, "system_outcome": outcome, "gold_target_department": dept,
+            "n_alerts": 0, "escalation_required": False}
+
+
+def test_miss_count_mismatch_refused():
+    misses = [_miss("dev", "A", "T1", "suggested"), _miss("dev", "B", "T1", dept="NOT_EVALUABLE"),
+              _miss("test", "C", "T2")]
+    silent = [{"split": "dev", "case_id": "A", "dp": "T1"}]
+    overlap = [{"split": "dev", "case_id": "B", "dp": "T1", "missed_in_rf_case_recall": True},
+               {"split": "test", "case_id": "D", "dp": "T1", "missed_in_rf_case_recall": False}]
+    F.check_miss_consistency(misses, {"dev": 2, "test": 1}, silent, overlap)  # consistent: no raise
+    with pytest.raises(F.PosthocError, match="n - x"):  # a miss dropped
+        F.check_miss_consistency(misses[1:], {"dev": 2, "test": 1}, silent, overlap)
+    with pytest.raises(F.PosthocError, match="n - x"):
+        F.check_miss_consistency(misses, {"dev": 3, "test": 1}, silent, overlap)
+    with pytest.raises(F.PosthocError, match="silent-escalation"):
+        F.check_miss_consistency(misses, {"dev": 2, "test": 1}, silent + [{"split": "test", "case_id": "C",
+                                                                          "dp": "T2"}], overlap)
+    with pytest.raises(F.PosthocError, match="C5 overlap"):
+        F.check_miss_consistency(misses, {"dev": 2, "test": 1}, silent,
+                                 [{**overlap[0], "missed_in_rf_case_recall": False}])
+
+
+def test_fast_abstention_sentence(doc, ds):
+    sentence = ("The FAST-positive abstentions (dev SYNE-0166 T1/T2, test SYNE-0033 T1/T2, test SYNE-0131 T1/T2) "
+                "are misses by the C5 rule: their gold department is 12, so they are scored in the red-flag "
+                "metrics, and an abstention with no alert is not a detection.")
+    _, md = F.render(doc)
+    assert sentence in md and sentence in (RESULTS / F.OUT_MD).read_text("utf-8")
+    for split, cid in (("dev", "SYNE-0166"), ("test", "SYNE-0033"), ("test", "SYNE-0131")):
+        g = json.loads((ds / "gold" / split / f"{cid}.json").read_text("utf-8"))
+        for gd in g["decision_times"]:
+            assert gd["target_department"] == "12"
+            assert "RF-FAST" in {f["rule_id"] for f in gd["red_flags"]}
+    with pytest.raises(F.PosthocError):
+        F.fast_abstention_sentence([{**_miss("dev", "X", "T1", dept="NOT_EVALUABLE"), "gold_rules": ["RF-FAST"]}])
+
+
+def test_md_no_python_booleans(doc):
+    _, md = F.render(doc)
+    for text in (md, (RESULTS / F.OUT_MD).read_text("utf-8")):
+        assert not re.search(r"\b(True|False)\b", text)
+    trace = md.split("### SYNE-0196 (dev) trace", 1)[1].split("###", 1)[0]
+    assert "| Instrumented replay: final facts equal stored output | yes |" in trace
+    assert "RF-STROKE not_evaluable yes" in trace
+    assert F._cell(True) == "yes" and F._cell(False) == "no"
+    t = _section(doc, "C-E1-1")["data"]["syne0196_trace"]["instrumented_replay"]
+    assert t["final_facts_equal_stored"] is True  # JSON keeps booleans
+    prov = t["provenance"]
+    assert "hand-transcribed" in prov and "tests/e1r/test_syne0196_replay.py::test_replay_constant_recomputed" in prov
+    assert prov in md
 
 
 # ---------------------------------------------------------------- 5. text-rule fact counts
@@ -274,6 +428,13 @@ def test_defects_and_headline(doc):
     head = md.split("## Headline for the progress report", 1)[1]
     bullets = [x for x in head.split("\n") if x.startswith("- ")]
     assert len(bullets) == 5 == len(doc["headline"])
+    b2 = doc["headline"][1]
+    for needle in ("dev 19 and test 13 gold red-flag-positive decision points got 0 alerts",
+                   "dev 8 / test 5 got a department suggestion", "dev 11 / test 8 abstained",
+                   "by construction (dev 0/8, test 0/6)"):
+        assert needle in b2, needle
+    assert "SYNE-0196" in doc["headline"][2]
+    assert not any(re.search(r"artifact", b, re.IGNORECASE) for b in doc["headline"])
     assert any("FAIL" in b and "dev" in b and "test" in b and "recall" in b for b in bullets)
     assert any(b.startswith("- Claim boundary") for b in bullets)
     for text in (js, md):
