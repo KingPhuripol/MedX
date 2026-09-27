@@ -27,9 +27,16 @@ class EvidenceItem(TypedData):
 
 
 class NodeType(str, Enum):
-    """Placeholder; concrete node types are defined in slice S2."""
+    """Node types of PROPOSAL Table 3.1 (slice s2)."""
 
-    PLACEHOLDER = "placeholder"
+    READER_TEXT = "reader_text"
+    READER_VITALS_LABS = "reader_vitals_labs"
+    READER_CXR = "reader_cxr"
+    READER_CT_MRI = "reader_ct_mri"
+    RED_FLAG = "red_flag"
+    PHARMA_AGENT = "pharma_agent"
+    REASONING = "reasoning"
+    HUMAN_CHECKPOINT = "human_checkpoint"
 
 
 class Node(BaseModel, ABC):

@@ -1,4 +1,11 @@
-"""Case Graph typed base classes (slice s0) and typed evidence items (slice s1). Compiler/Executor arrive in slice S2."""
+"""Case Graph: typed data, Node Library, Compiler, Executor, Output Store (slices s0 + s2).
+
+``casegraph.evidence`` holds the s1 synthetic-dataset evidence schema; it is unified with
+``casegraph.data`` (s2) in the Case Graph wiring slice.
+
+Research prototype — not for clinical use. Submodules are imported explicitly
+(``casegraph.compiler``, ``casegraph.executor`` ...) so ``python -m casegraph inspect`` stays light.
+"""
 
 from .evidence import (
     AllergyList,

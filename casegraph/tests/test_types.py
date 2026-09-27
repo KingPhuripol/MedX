@@ -20,7 +20,12 @@ VALID = dict(
 
 def test_package_imports_and_exports_base_types():
     assert issubclass(EvidenceItem, TypedData)
-    assert NodeType.PLACEHOLDER.value == "placeholder"
+    # s0 asserted NodeType.PLACEHOLDER; superseded by slice s2 (Table 3.1 node types).
+    assert {t.value for t in NodeType} == {
+        "reader_text", "reader_vitals_labs", "reader_cxr", "reader_ct_mri",
+        "red_flag", "pharma_agent", "reasoning", "human_checkpoint",
+    }
+    assert not hasattr(NodeType, "PLACEHOLDER")
 
 
 def test_valid_evidence_item():
@@ -42,7 +47,7 @@ def test_evidence_item_requires_timezone_aware_times():
 
 def test_node_is_abstract():
     with pytest.raises(TypeError):
-        Node(node_type=NodeType.PLACEHOLDER, input_types=(), output_types=(), provider="mock")
+        Node(node_type=NodeType.READER_TEXT, input_types=(), output_types=(), provider="mock")
 
 
 def test_node_subclass_can_be_instantiated():
@@ -50,13 +55,22 @@ def test_node_subclass_can_be_instantiated():
         def describe(self) -> str:
             return "echo"
 
-    node = Echo(node_type=NodeType.PLACEHOLDER, input_types=("a",), output_types=("a",), provider="mock")
+    node = Echo(node_type=NodeType.READER_TEXT, input_types=("a",), output_types=("a",), provider="mock")
     assert node.describe() == "echo"
 
 
-def test_no_compiler_or_executor_symbols():
-    names = {n.lower() for n in dir(casegraph)}
+def test_compiler_and_executor_exist_as_of_s2():
+    """Supersedes s0 ``test_no_compiler_or_executor_symbols`` ("Those are slice S2").
+
+    s0 asserted the absence of compile/execute symbols; slice s2 delivers them as explicit
+    modules. ``casegraph.types`` itself still holds typed base classes only.
+    """
     import casegraph.types as t
 
-    names |= {n.lower() for n in dir(t)}
-    assert not any("compile" in n or "execute" in n for n in names)
+    assert not any("compile" in n.lower() or "execute" in n.lower() for n in dir(t))
+    assert not any("compile" in n.lower() or "execute" in n.lower() for n in casegraph.__all__)
+
+    from casegraph.compiler import compile_graph, validate
+    from casegraph.executor import Executor
+
+    assert callable(compile_graph) and callable(validate) and callable(Executor)
