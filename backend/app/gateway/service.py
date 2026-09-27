@@ -72,3 +72,7 @@ def invoke_audited(
         details=audit_details(request, response),
     )
     return response
+
+
+# slice s4 callers use service.invoke; same audited path.
+invoke = invoke_audited

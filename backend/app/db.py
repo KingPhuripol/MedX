@@ -53,11 +53,46 @@ audit_events = Table(
     Column("request_id", String(64), nullable=False),
 )
 
+# Slice s4: immutable triage assessments and single human reviews (append-only, like audit_events).
+triage_assessments = Table(
+    "triage_assessments",
+    metadata,
+    Column("assessment_id", String(32), primary_key=True),
+    Column("case_ref", String(64), nullable=False, index=True),
+    Column("as_of", String(40), nullable=False),
+    Column("created_at", String(40), nullable=False),
+    Column("created_by", Integer, nullable=False),
+    Column("ruleset_version", String(32), nullable=False),
+    Column("payload_json", Text, nullable=False),
+)
+
+triage_reviews = Table(
+    "triage_reviews",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("assessment_id", String(32), ForeignKey("triage_assessments.assessment_id"), nullable=False, unique=True),
+    Column("action", String(16), nullable=False),
+    Column("final_department", String(16), nullable=True),
+    Column("reviewer_id", Integer, nullable=False),
+    Column("reviewer_role", String(16), nullable=False),
+    Column("ts_utc", String(40), nullable=False),
+    Column("acknowledged_alert_ids_json", Text, nullable=False),
+    Column("reason", Text, nullable=True),
+    Column("reason_sha256", String(64), nullable=True),
+)
+
+APPEND_ONLY_TRIAGE_TABLES = ("triage_assessments", "triage_reviews")
+
 _SQLITE_TRIGGERS = (
     """CREATE TRIGGER IF NOT EXISTS audit_events_no_update BEFORE UPDATE ON audit_events
        BEGIN SELECT RAISE(ABORT, 'audit_events is append-only'); END""",
     """CREATE TRIGGER IF NOT EXISTS audit_events_no_delete BEFORE DELETE ON audit_events
        BEGIN SELECT RAISE(ABORT, 'audit_events is append-only'); END""",
+) + tuple(
+    f"""CREATE TRIGGER IF NOT EXISTS {t}_no_{op.lower()} BEFORE {op} ON {t}
+       BEGIN SELECT RAISE(ABORT, '{t} is append-only'); END"""
+    for t in APPEND_ONLY_TRIAGE_TABLES
+    for op in ("UPDATE", "DELETE")
 )
 
 _PG_TRIGGERS = (
@@ -69,6 +104,19 @@ _PG_TRIGGERS = (
     "DROP TRIGGER IF EXISTS audit_events_no_truncate ON audit_events",
     """CREATE TRIGGER audit_events_no_truncate BEFORE TRUNCATE ON audit_events
        FOR EACH STATEMENT EXECUTE FUNCTION audit_events_append_only()""",
+    """CREATE OR REPLACE FUNCTION triage_append_only() RETURNS trigger AS $$
+       BEGIN RAISE EXCEPTION USING MESSAGE = TG_TABLE_NAME || ' is append-only'; END; $$ LANGUAGE plpgsql""",
+) + tuple(
+    stmt
+    for t in APPEND_ONLY_TRIAGE_TABLES
+    for stmt in (
+        f"DROP TRIGGER IF EXISTS {t}_no_update_delete ON {t}",
+        f"""CREATE TRIGGER {t}_no_update_delete BEFORE UPDATE OR DELETE ON {t}
+       FOR EACH ROW EXECUTE FUNCTION triage_append_only()""",
+        f"DROP TRIGGER IF EXISTS {t}_no_truncate ON {t}",
+        f"""CREATE TRIGGER {t}_no_truncate BEFORE TRUNCATE ON {t}
+       FOR EACH STATEMENT EXECUTE FUNCTION triage_append_only()""",
+    )
 )
 
 

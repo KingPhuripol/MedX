@@ -1,0 +1,1290 @@
+{
+ "label": "System Evaluation on synthetic fixtures — not clinical performance",
+ "slice": "s4",
+ "versions": {
+  "ruleset_version": "rf-1.1.0",
+  "ruleset_sha256": "086e0a29bde7fe7395cfd650342434920314fda8f5df7f96f8e091ab26f11a3a",
+  "fixtures_sha256": "a757aa00872831d20be1b80e8d0235b60ed2f72b27ffad2020ccdf28c155fe8c",
+  "baseline_version": "kw-1.0.0",
+  "department_list_version": "dept-1.0.0-provisional",
+  "department_task": "triage.department.v1",
+  "provider": "mock (default, offline)"
+ },
+ "bootstrap": {
+  "resamples": 1000,
+  "seed": 20260926,
+  "unit": "patient (one synthetic case per patient)",
+  "interval": "percentile 2.5-97.5"
+ },
+ "definitions": {
+  "answered": "complete cases (no gold missing field) where the department status is 'suggested'",
+  "always_answer": "top-1 of the same baseline without abstention; 'MED' if nothing matched",
+  "redflag_fpr": "gold-negative cases with at least one alert / gold-negative cases"
+ },
+ "metrics": {
+  "dev": {
+   "redflag_case_recall": {
+    "value": 1.0,
+    "num": 12,
+    "den": 12,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "valid_resamples": 1000
+   },
+   "redflag_rule_recall": {
+    "value": 1.0,
+    "num": 15,
+    "den": 15,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "valid_resamples": 1000
+   },
+   "redflag_fpr": {
+    "value": 0.0,
+    "num": 0,
+    "den": 8,
+    "ci95": [
+     0.0,
+     0.0
+    ],
+    "valid_resamples": 1000
+   },
+   "redflag_temporal_early_exact": {
+    "value": 1.0,
+    "num": 3,
+    "den": 3,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "valid_resamples": 954
+   },
+   "dept_top1_accuracy_answered": {
+    "value": 1.0,
+    "num": 17,
+    "den": 17,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "valid_resamples": 1000
+   },
+   "dept_top3_accuracy_answered": {
+    "value": 1.0,
+    "num": 17,
+    "den": 17,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "valid_resamples": 1000
+   },
+   "dept_coverage_complete": {
+    "value": 1.0,
+    "num": 17,
+    "den": 17,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "valid_resamples": 1000
+   },
+   "dept_always_answer_top1_accuracy": {
+    "value": 1.0,
+    "num": 17,
+    "den": 17,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "valid_resamples": 1000
+   },
+   "abstention_on_missing_exact": {
+    "value": 1.0,
+    "num": 3,
+    "den": 3,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "valid_resamples": 956
+   },
+   "false_abstention_complete": {
+    "value": 0.0,
+    "num": 0,
+    "den": 17,
+    "ci95": [
+     0.0,
+     0.0
+    ],
+    "valid_resamples": 1000
+   }
+  },
+  "holdout": {
+   "redflag_case_recall": {
+    "value": 1.0,
+    "num": 12,
+    "den": 12,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "valid_resamples": 1000
+   },
+   "redflag_rule_recall": {
+    "value": 1.0,
+    "num": 19,
+    "den": 19,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "valid_resamples": 1000
+   },
+   "redflag_fpr": {
+    "value": 0.0,
+    "num": 0,
+    "den": 8,
+    "ci95": [
+     0.0,
+     0.0
+    ],
+    "valid_resamples": 1000
+   },
+   "redflag_temporal_early_exact": {
+    "value": null,
+    "num": 0,
+    "den": 0,
+    "ci95": null,
+    "valid_resamples": 0
+   },
+   "dept_top1_accuracy_answered": {
+    "value": 0.8824,
+    "num": 15,
+    "den": 17,
+    "ci95": [
+     0.7059,
+     1.0
+    ],
+    "valid_resamples": 1000
+   },
+   "dept_top3_accuracy_answered": {
+    "value": 1.0,
+    "num": 17,
+    "den": 17,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "valid_resamples": 1000
+   },
+   "dept_coverage_complete": {
+    "value": 1.0,
+    "num": 17,
+    "den": 17,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "valid_resamples": 1000
+   },
+   "dept_always_answer_top1_accuracy": {
+    "value": 0.8824,
+    "num": 15,
+    "den": 17,
+    "ci95": [
+     0.7059,
+     1.0
+    ],
+    "valid_resamples": 1000
+   },
+   "abstention_on_missing_exact": {
+    "value": 1.0,
+    "num": 3,
+    "den": 3,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "valid_resamples": 958
+   },
+   "false_abstention_complete": {
+    "value": 0.0,
+    "num": 0,
+    "den": 17,
+    "ci95": [
+     0.0,
+     0.0
+    ],
+    "valid_resamples": 1000
+   }
+  },
+  "overall": {
+   "redflag_case_recall": {
+    "value": 1.0,
+    "num": 24,
+    "den": 24,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "valid_resamples": 1000
+   },
+   "redflag_rule_recall": {
+    "value": 1.0,
+    "num": 34,
+    "den": 34,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "valid_resamples": 1000
+   },
+   "redflag_fpr": {
+    "value": 0.0,
+    "num": 0,
+    "den": 16,
+    "ci95": [
+     0.0,
+     0.0
+    ],
+    "valid_resamples": 1000
+   },
+   "redflag_temporal_early_exact": {
+    "value": 1.0,
+    "num": 3,
+    "den": 3,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "valid_resamples": 952
+   },
+   "dept_top1_accuracy_answered": {
+    "value": 0.9412,
+    "num": 32,
+    "den": 34,
+    "ci95": [
+     0.8571,
+     1.0
+    ],
+    "valid_resamples": 1000
+   },
+   "dept_top3_accuracy_answered": {
+    "value": 1.0,
+    "num": 34,
+    "den": 34,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "valid_resamples": 1000
+   },
+   "dept_coverage_complete": {
+    "value": 1.0,
+    "num": 34,
+    "den": 34,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "valid_resamples": 1000
+   },
+   "dept_always_answer_top1_accuracy": {
+    "value": 0.9412,
+    "num": 32,
+    "den": 34,
+    "ci95": [
+     0.8529,
+     1.0
+    ],
+    "valid_resamples": 1000
+   },
+   "abstention_on_missing_exact": {
+    "value": 1.0,
+    "num": 6,
+    "den": 6,
+    "ci95": [
+     1.0,
+     1.0
+    ],
+    "valid_resamples": 999
+   },
+   "false_abstention_complete": {
+    "value": 0.0,
+    "num": 0,
+    "den": 34,
+    "ci95": [
+     0.0,
+     0.0
+    ],
+    "valid_resamples": 1000
+   }
+  }
+ },
+ "false_positives": [],
+ "extra_alerts_per_rule": {},
+ "flags": {
+  "holdout_top3_below_0_70_overfitting_risk": false,
+  "redflag_recall_gate_pass": true
+ },
+ "cases": [
+  {
+   "case_ref": "SYN-S4-001",
+   "split": "dev",
+   "gold_rules": [
+    "RF-CHEST"
+   ],
+   "fired_rules": [
+    "RF-CHEST"
+   ],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "CARD",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "CARD"
+   ],
+   "missing_information": [],
+   "always_answer": "CARD"
+  },
+  {
+   "case_ref": "SYN-S4-002",
+   "split": "holdout",
+   "gold_rules": [
+    "RF-CHEST",
+    "RF-HR",
+    "RF-SBP"
+   ],
+   "fired_rules": [
+    "RF-CHEST",
+    "RF-HR",
+    "RF-SBP"
+   ],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "CARD",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "CARD",
+    "MED"
+   ],
+   "missing_information": [],
+   "always_answer": "CARD"
+  },
+  {
+   "case_ref": "SYN-S4-003",
+   "split": "dev",
+   "gold_rules": [
+    "RF-STROKE"
+   ],
+   "fired_rules": [
+    "RF-STROKE"
+   ],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "NEURO",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "NEURO"
+   ],
+   "missing_information": [],
+   "always_answer": "NEURO"
+  },
+  {
+   "case_ref": "SYN-S4-004",
+   "split": "holdout",
+   "gold_rules": [
+    "RF-STROKE"
+   ],
+   "fired_rules": [
+    "RF-STROKE"
+   ],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "EYE",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "EYE",
+    "NEURO"
+   ],
+   "missing_information": [],
+   "always_answer": "EYE"
+  },
+  {
+   "case_ref": "SYN-S4-005",
+   "split": "dev",
+   "gold_rules": [
+    "RF-THUNDER"
+   ],
+   "fired_rules": [
+    "RF-THUNDER"
+   ],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "NEURO",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "NEURO"
+   ],
+   "missing_information": [],
+   "always_answer": "NEURO"
+  },
+  {
+   "case_ref": "SYN-S4-006",
+   "split": "holdout",
+   "gold_rules": [
+    "RF-THUNDER"
+   ],
+   "fired_rules": [
+    "RF-THUNDER"
+   ],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "NEURO",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "NEURO",
+    "MED"
+   ],
+   "missing_information": [],
+   "always_answer": "NEURO"
+  },
+  {
+   "case_ref": "SYN-S4-007",
+   "split": "dev",
+   "gold_rules": [
+    "RF-ANAPH"
+   ],
+   "fired_rules": [
+    "RF-ANAPH"
+   ],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "MED",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "MED",
+    "ENT"
+   ],
+   "missing_information": [],
+   "always_answer": "MED"
+  },
+  {
+   "case_ref": "SYN-S4-008",
+   "split": "holdout",
+   "gold_rules": [
+    "RF-ANAPH",
+    "RF-SBP"
+   ],
+   "fired_rules": [
+    "RF-ANAPH",
+    "RF-SBP"
+   ],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "MED",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "MED"
+   ],
+   "missing_information": [],
+   "always_answer": "MED"
+  },
+  {
+   "case_ref": "SYN-S4-009",
+   "split": "dev",
+   "gold_rules": [
+    "RF-SUICIDE"
+   ],
+   "fired_rules": [
+    "RF-SUICIDE"
+   ],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": [],
+   "fired_early": [],
+   "gold_department": "PSY",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "PSY"
+   ],
+   "missing_information": [],
+   "always_answer": "PSY"
+  },
+  {
+   "case_ref": "SYN-S4-010",
+   "split": "holdout",
+   "gold_rules": [
+    "RF-SUICIDE"
+   ],
+   "fired_rules": [
+    "RF-SUICIDE"
+   ],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "PSY",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "PSY",
+    "ORTHO"
+   ],
+   "missing_information": [],
+   "always_answer": "PSY"
+  },
+  {
+   "case_ref": "SYN-S4-011",
+   "split": "dev",
+   "gold_rules": [
+    "RF-GIBLEED"
+   ],
+   "fired_rules": [
+    "RF-GIBLEED"
+   ],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "SURG",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "SURG",
+    "MED"
+   ],
+   "missing_information": [],
+   "always_answer": "SURG"
+  },
+  {
+   "case_ref": "SYN-S4-012",
+   "split": "holdout",
+   "gold_rules": [
+    "RF-GIBLEED"
+   ],
+   "fired_rules": [
+    "RF-GIBLEED"
+   ],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "SURG",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "MED",
+    "SURG"
+   ],
+   "missing_information": [],
+   "always_answer": "MED"
+  },
+  {
+   "case_ref": "SYN-S4-013",
+   "split": "dev",
+   "gold_rules": [
+    "RF-ECTOPIC"
+   ],
+   "fired_rules": [
+    "RF-ECTOPIC"
+   ],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "OBGYN",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "OBGYN",
+    "SURG"
+   ],
+   "missing_information": [],
+   "always_answer": "OBGYN"
+  },
+  {
+   "case_ref": "SYN-S4-014",
+   "split": "holdout",
+   "gold_rules": [
+    "RF-ECTOPIC"
+   ],
+   "fired_rules": [
+    "RF-ECTOPIC"
+   ],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "OBGYN",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "SURG",
+    "OBGYN"
+   ],
+   "missing_information": [],
+   "always_answer": "SURG"
+  },
+  {
+   "case_ref": "SYN-S4-015",
+   "split": "dev",
+   "gold_rules": [
+    "RF-MENING"
+   ],
+   "fired_rules": [
+    "RF-MENING"
+   ],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "MED",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "MED",
+    "NEURO",
+    "ENT"
+   ],
+   "missing_information": [],
+   "always_answer": "MED"
+  },
+  {
+   "case_ref": "SYN-S4-016",
+   "split": "holdout",
+   "gold_rules": [
+    "RF-MENING",
+    "RF-QSOFA"
+   ],
+   "fired_rules": [
+    "RF-MENING",
+    "RF-QSOFA"
+   ],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "MED",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "MED"
+   ],
+   "missing_information": [],
+   "always_answer": "MED"
+  },
+  {
+   "case_ref": "SYN-S4-017",
+   "split": "dev",
+   "gold_rules": [
+    "RF-CONSC",
+    "RF-HYPOGLY"
+   ],
+   "fired_rules": [
+    "RF-CONSC",
+    "RF-HYPOGLY"
+   ],
+   "not_evaluable": [],
+   "gold_early": [
+    "RF-CONSC"
+   ],
+   "fired_early": [
+    "RF-CONSC"
+   ],
+   "gold_department": "MED",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "MED",
+    "CARD"
+   ],
+   "missing_information": [],
+   "always_answer": "MED"
+  },
+  {
+   "case_ref": "SYN-S4-018",
+   "split": "holdout",
+   "gold_rules": [
+    "RF-CONSC",
+    "RF-TEMP"
+   ],
+   "fired_rules": [
+    "RF-CONSC",
+    "RF-TEMP"
+   ],
+   "not_evaluable": [],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "MED",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "MED"
+   ],
+   "missing_information": [],
+   "always_answer": "MED"
+  },
+  {
+   "case_ref": "SYN-S4-019",
+   "split": "dev",
+   "gold_rules": [
+    "RF-QSOFA",
+    "RF-RR",
+    "RF-SPO2"
+   ],
+   "fired_rules": [
+    "RF-QSOFA",
+    "RF-RR",
+    "RF-SPO2"
+   ],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": [],
+   "fired_early": [],
+   "gold_department": "MED",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "MED"
+   ],
+   "missing_information": [],
+   "always_answer": "MED"
+  },
+  {
+   "case_ref": "SYN-S4-020",
+   "split": "holdout",
+   "gold_rules": [
+    "RF-CONSC",
+    "RF-RR",
+    "RF-SUICIDE"
+   ],
+   "fired_rules": [
+    "RF-CONSC",
+    "RF-RR",
+    "RF-SUICIDE"
+   ],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "PSY",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "PSY"
+   ],
+   "missing_information": [],
+   "always_answer": "PSY"
+  },
+  {
+   "case_ref": "SYN-S4-021",
+   "split": "dev",
+   "gold_rules": [
+    "RF-HR"
+   ],
+   "fired_rules": [
+    "RF-HR"
+   ],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "CARD",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "CARD",
+    "MED"
+   ],
+   "missing_information": [],
+   "always_answer": "CARD"
+  },
+  {
+   "case_ref": "SYN-S4-022",
+   "split": "holdout",
+   "gold_rules": [
+    "RF-QSOFA"
+   ],
+   "fired_rules": [
+    "RF-QSOFA"
+   ],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "URO",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "URO",
+    "MED"
+   ],
+   "missing_information": [],
+   "always_answer": "URO"
+  },
+  {
+   "case_ref": "SYN-S4-023",
+   "split": "dev",
+   "gold_rules": [],
+   "fired_rules": [],
+   "not_evaluable": [
+    "RF-HYPOGLY",
+    "RF-SPO2"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "ORTHO",
+   "gold_missing": [
+    "vitals.spo2"
+   ],
+   "complete": false,
+   "dept_status": "abstained",
+   "top3": [],
+   "missing_information": [
+    "vitals.spo2"
+   ],
+   "always_answer": "MED"
+  },
+  {
+   "case_ref": "SYN-S4-024",
+   "split": "holdout",
+   "gold_rules": [],
+   "fired_rules": [],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "ORTHO",
+   "gold_missing": [
+    "age"
+   ],
+   "complete": false,
+   "dept_status": "abstained",
+   "top3": [],
+   "missing_information": [
+    "age"
+   ],
+   "always_answer": "MED"
+  },
+  {
+   "case_ref": "SYN-S4-025",
+   "split": "dev",
+   "gold_rules": [
+    "RF-GIBLEED"
+   ],
+   "fired_rules": [
+    "RF-GIBLEED"
+   ],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "SURG",
+   "gold_missing": [
+    "age"
+   ],
+   "complete": false,
+   "dept_status": "abstained",
+   "top3": [],
+   "missing_information": [
+    "age"
+   ],
+   "always_answer": "MED"
+  },
+  {
+   "case_ref": "SYN-S4-026",
+   "split": "holdout",
+   "gold_rules": [
+    "RF-SBP"
+   ],
+   "fired_rules": [
+    "RF-SBP"
+   ],
+   "not_evaluable": [
+    "RF-CONSC",
+    "RF-HYPOGLY",
+    "RF-QSOFA",
+    "RF-TEMP"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "MED",
+   "gold_missing": [
+    "vitals.temp_c",
+    "vitals.avpu"
+   ],
+   "complete": false,
+   "dept_status": "abstained",
+   "top3": [],
+   "missing_information": [
+    "vitals.temp_c",
+    "vitals.avpu"
+   ],
+   "always_answer": "MED"
+  },
+  {
+   "case_ref": "SYN-S4-027",
+   "split": "dev",
+   "gold_rules": [],
+   "fired_rules": [],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "ENT",
+   "gold_missing": [
+    "onset_duration"
+   ],
+   "complete": false,
+   "dept_status": "abstained",
+   "top3": [],
+   "missing_information": [
+    "onset_duration"
+   ],
+   "always_answer": "MED"
+  },
+  {
+   "case_ref": "SYN-S4-028",
+   "split": "holdout",
+   "gold_rules": [],
+   "fired_rules": [],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "URO",
+   "gold_missing": [
+    "sex"
+   ],
+   "complete": false,
+   "dept_status": "abstained",
+   "top3": [],
+   "missing_information": [
+    "sex"
+   ],
+   "always_answer": "MED"
+  },
+  {
+   "case_ref": "SYN-S4-029",
+   "split": "dev",
+   "gold_rules": [],
+   "fired_rules": [],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "ORTHO",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "ORTHO"
+   ],
+   "missing_information": [],
+   "always_answer": "ORTHO"
+  },
+  {
+   "case_ref": "SYN-S4-030",
+   "split": "holdout",
+   "gold_rules": [],
+   "fired_rules": [],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "ORTHO",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "ORTHO"
+   ],
+   "missing_information": [],
+   "always_answer": "ORTHO"
+  },
+  {
+   "case_ref": "SYN-S4-031",
+   "split": "dev",
+   "gold_rules": [],
+   "fired_rules": [],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "ORTHO",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "ORTHO"
+   ],
+   "missing_information": [],
+   "always_answer": "ORTHO"
+  },
+  {
+   "case_ref": "SYN-S4-032",
+   "split": "dev",
+   "gold_rules": [],
+   "fired_rules": [],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "URO",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "URO"
+   ],
+   "missing_information": [],
+   "always_answer": "URO"
+  },
+  {
+   "case_ref": "SYN-S4-033",
+   "split": "holdout",
+   "gold_rules": [],
+   "fired_rules": [],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "URO",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "URO"
+   ],
+   "missing_information": [],
+   "always_answer": "URO"
+  },
+  {
+   "case_ref": "SYN-S4-034",
+   "split": "dev",
+   "gold_rules": [],
+   "fired_rules": [],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "EYE",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "EYE"
+   ],
+   "missing_information": [],
+   "always_answer": "EYE"
+  },
+  {
+   "case_ref": "SYN-S4-035",
+   "split": "holdout",
+   "gold_rules": [],
+   "fired_rules": [],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "EYE",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "EYE"
+   ],
+   "missing_information": [],
+   "always_answer": "EYE"
+  },
+  {
+   "case_ref": "SYN-S4-036",
+   "split": "dev",
+   "gold_rules": [],
+   "fired_rules": [],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "ENT",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "ENT",
+    "MED"
+   ],
+   "missing_information": [],
+   "always_answer": "ENT"
+  },
+  {
+   "case_ref": "SYN-S4-037",
+   "split": "holdout",
+   "gold_rules": [],
+   "fired_rules": [],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "ENT",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "ENT"
+   ],
+   "missing_information": [],
+   "always_answer": "ENT"
+  },
+  {
+   "case_ref": "SYN-S4-038",
+   "split": "holdout",
+   "gold_rules": [],
+   "fired_rules": [],
+   "not_evaluable": [],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "ENT",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "ENT"
+   ],
+   "missing_information": [],
+   "always_answer": "ENT"
+  },
+  {
+   "case_ref": "SYN-S4-039",
+   "split": "dev",
+   "gold_rules": [],
+   "fired_rules": [],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "SURG",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "SURG",
+    "MED"
+   ],
+   "missing_information": [],
+   "always_answer": "SURG"
+  },
+  {
+   "case_ref": "SYN-S4-040",
+   "split": "holdout",
+   "gold_rules": [],
+   "fired_rules": [],
+   "not_evaluable": [
+    "RF-HYPOGLY"
+   ],
+   "gold_early": null,
+   "fired_early": null,
+   "gold_department": "OBGYN",
+   "gold_missing": [],
+   "complete": true,
+   "dept_status": "suggested",
+   "top3": [
+    "OBGYN"
+   ],
+   "missing_information": [],
+   "always_answer": "OBGYN"
+  }
+ ],
+ "caveats": [
+  "Rules and fixtures were written by the same author: 100% recall on 40 cases is a regression gate, not evidence of clinical sensitivity.",
+  "The department baseline is a MOCK keyword table; scores are not calibrated probabilities.",
+  "Department list, MIMIC services mapping, and red-flag thresholds are provisional until clinical expert review."
+ ]
+}

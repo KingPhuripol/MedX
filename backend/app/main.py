@@ -11,6 +11,7 @@ from .config import Settings
 from .db import create_schema, make_engine
 from .gateway import build_provider
 from .gateway import router as gateway_router
+from .triage import router as triage_router
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -38,4 +39,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(auth.router)
     app.include_router(gateway_router.router)
     app.include_router(voice.router)
+    app.include_router(triage_router.router)
     return app

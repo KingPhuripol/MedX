@@ -7,8 +7,12 @@ API_PORT ?= 8000
 WEB_PORT ?= 3000
 PG_URL = postgresql+psycopg://frontdoor:$${POSTGRES_PASSWORD:-frontdoor_dev_only}@127.0.0.1:55432/frontdoor
 export PYTHONPATH := $(CURDIR)/backend:$(CURDIR)
+# Ports are overridable (slice s4 uses API_PORT=8104 WEB_PORT=3104); defaults unchanged.
+API_PORT ?= 8000
+WEB_PORT ?= 3000
+export API_PORT WEB_PORT
 
-.PHONY: install test dev e2e test-pg clean data audit eval-voice research-dry-run
+.PHONY: install test dev e2e test-pg clean data audit eval-voice research-dry-run triage-eval
 
 SEED ?= 20260926
 OUT ?= data/synthetic/v1
@@ -72,6 +76,10 @@ audit: $(VENV)/.installed
 ## Voice intake system evaluation (mock rules, synthetic fixtures) -> slices/s3/eval/voice_intake_eval.json
 eval-voice: install
 	$(PY) -m app.voice.eval
+
+## s4 System Evaluation on synthetic fixtures -> slices/s4/eval/metrics_v1.json (offline, mock provider).
+triage-eval: install
+	$(PY) -m app.triage.evaluate
 
 clean:
 	rm -rf $(VENV) web/node_modules web/.next backend/dev.db

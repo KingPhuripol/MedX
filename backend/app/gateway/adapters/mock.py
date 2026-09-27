@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
+from .. import mock_tasks
 from ..contract import GatewayRequest
 from ..provider import ProviderResult
 
@@ -33,6 +34,14 @@ class MockProvider:
             output = dict(handler(request.inputs))
             output["label"] = MOCK_LABEL  # always labelled, whatever the handler returns
             return ProviderResult(status="ok", model_version=self.model_version, output=output)
+        registered = mock_tasks.lookup(request.task)
+        if registered is not None:
+            fn, version = registered
+            return ProviderResult(
+                status="ok",
+                model_version=f"{self.model_version}+{version}",
+                output=fn(dict(request.inputs)),
+            )
         # Output is a pure function of the canonical request hash.
         return ProviderResult(
             status="ok",
