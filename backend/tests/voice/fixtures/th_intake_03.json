@@ -1,0 +1,181 @@
+{
+  "dialogue_id": "th_intake_03",
+  "synthetic": true,
+  "author": "s3-builder (hand-written synthetic script; no real patient)",
+  "scenario_tags": [
+    "relative_speaker",
+    "allergy_unknown",
+    "meds_multi_codeswitch",
+    "dev"
+  ],
+  "patient_ref": "SYN-S3-03",
+  "turns": [
+    {
+      "turn_id": "t01",
+      "speaker": "agent",
+      "text": "วันนี้มีอาการอะไรมาคะ",
+      "started_at": "2026-01-07T02:00:00Z",
+      "ended_at": "2026-01-07T02:00:03Z"
+    },
+    {
+      "turn_id": "t02",
+      "speaker": "relative",
+      "text": "แม่เวียนหัวค่ะ ลุกแล้วจะล้ม",
+      "started_at": "2026-01-07T02:00:05Z",
+      "ended_at": "2026-01-07T02:00:10Z"
+    },
+    {
+      "turn_id": "t03",
+      "speaker": "agent",
+      "text": "มีอาการนี้มานานเท่าไรแล้วคะ",
+      "started_at": "2026-01-07T02:00:12Z",
+      "ended_at": "2026-01-07T02:00:15Z"
+    },
+    {
+      "turn_id": "t04",
+      "speaker": "relative",
+      "text": "เป็นตั้งแต่เมื่อวานค่ะ",
+      "started_at": "2026-01-07T02:00:17Z",
+      "ended_at": "2026-01-07T02:00:22Z"
+    },
+    {
+      "turn_id": "t05",
+      "speaker": "agent",
+      "text": "ถ้าให้คะแนนความรุนแรง 0 ถึง 10 ตอนนี้ประมาณเท่าไรคะ",
+      "started_at": "2026-01-07T02:00:24Z",
+      "ended_at": "2026-01-07T02:00:27Z"
+    },
+    {
+      "turn_id": "t06",
+      "speaker": "relative",
+      "text": "แม่บอกว่าเป็นนิดหน่อยค่ะ",
+      "started_at": "2026-01-07T02:00:29Z",
+      "ended_at": "2026-01-07T02:00:34Z"
+    },
+    {
+      "turn_id": "t07",
+      "speaker": "agent",
+      "text": "เคยแพ้ยาอะไรไหมคะ",
+      "started_at": "2026-01-07T02:00:36Z",
+      "ended_at": "2026-01-07T02:00:39Z"
+    },
+    {
+      "turn_id": "t08",
+      "speaker": "relative",
+      "text": "อันนี้จำไม่ได้ค่ะ ไม่แน่ใจว่าแม่เคยแพ้ยาอะไรหรือเปล่า",
+      "started_at": "2026-01-07T02:00:41Z",
+      "ended_at": "2026-01-07T02:00:48Z"
+    },
+    {
+      "turn_id": "t09",
+      "speaker": "agent",
+      "text": "ตอนนี้ใช้ยาอะไรอยู่บ้างไหมคะ",
+      "started_at": "2026-01-07T02:00:50Z",
+      "ended_at": "2026-01-07T02:00:53Z"
+    },
+    {
+      "turn_id": "t10",
+      "speaker": "relative",
+      "text": "แม่กิน amlodipine กับ simvastatin ค่ะ",
+      "started_at": "2026-01-07T02:00:55Z",
+      "ended_at": "2026-01-07T02:01:01Z"
+    },
+    {
+      "turn_id": "t11",
+      "speaker": "agent",
+      "text": "มีโรคประจำตัวหรือเคยเจ็บป่วยอะไรมาก่อนไหมคะ",
+      "started_at": "2026-01-07T02:01:03Z",
+      "ended_at": "2026-01-07T02:01:06Z"
+    },
+    {
+      "turn_id": "t12",
+      "speaker": "relative",
+      "text": "เป็นความดันสูงกับไขมันในเลือดสูงค่ะ",
+      "started_at": "2026-01-07T02:01:08Z",
+      "ended_at": "2026-01-07T02:01:14Z"
+    }
+  ],
+  "gold_facts": [
+    {
+      "field": "chief_complaint",
+      "state": "KNOWN",
+      "value": "dizziness",
+      "items": null,
+      "span_turn_ids": [
+        "t02"
+      ]
+    },
+    {
+      "field": "onset_duration",
+      "state": "KNOWN",
+      "value": "P1D",
+      "items": null,
+      "span_turn_ids": [
+        "t04"
+      ]
+    },
+    {
+      "field": "severity",
+      "state": "KNOWN",
+      "value": "mild",
+      "items": null,
+      "span_turn_ids": [
+        "t06"
+      ]
+    },
+    {
+      "field": "allergy_status",
+      "state": "UNKNOWN",
+      "value": null,
+      "items": null,
+      "span_turn_ids": [
+        "t08"
+      ]
+    },
+    {
+      "field": "current_medications",
+      "state": "KNOWN",
+      "value": null,
+      "items": [
+        "amlodipine",
+        "simvastatin"
+      ],
+      "span_turn_ids": [
+        "t10"
+      ]
+    },
+    {
+      "field": "relevant_history",
+      "state": "KNOWN",
+      "value": null,
+      "items": [
+        "ความดันสูง",
+        "ไขมันในเลือดสูง"
+      ],
+      "span_turn_ids": [
+        "t12"
+      ]
+    }
+  ],
+  "answers_by_field": {
+    "chief_complaint": [
+      "t02"
+    ],
+    "onset_duration": [
+      "t04"
+    ],
+    "severity": [
+      "t06"
+    ],
+    "allergy_status": [
+      "t08"
+    ],
+    "current_medications": [
+      "t10"
+    ],
+    "relevant_history": [
+      "t12"
+    ]
+  },
+  "gold_nurse_attention": false
+}

@@ -8,10 +8,17 @@ from __future__ import annotations
 import httpx
 
 from ..config import Settings
-from .adapters.mock import MockProvider
+from .adapters.mock import MOCK_LABEL, MockHandler, MockProvider
+from .adapters.mock import register_task as _register_task
 from .adapters.openai_compatible import OpenAICompatibleAdapter
 from .contract import CONTRACT_VERSION, DataClass, GatewayRequest, GatewayResponse
 from .provider import Provider, ProviderResult
+from .service import invoke_audited
+
+
+def register_mock_task(task: str, handler: MockHandler) -> None:
+    """Register a pure, deterministic mock handler for ``task`` (offline default provider)."""
+    _register_task(task, handler)
 
 
 def build_provider(name: str, settings: Settings, transport: httpx.BaseTransport | None = None) -> Provider:
@@ -31,10 +38,13 @@ def build_provider(name: str, settings: Settings, transport: httpx.BaseTransport
 
 __all__ = [
     "CONTRACT_VERSION",
+    "MOCK_LABEL",
     "DataClass",
     "GatewayRequest",
     "GatewayResponse",
     "Provider",
     "ProviderResult",
     "build_provider",
+    "invoke_audited",
+    "register_mock_task",
 ]
