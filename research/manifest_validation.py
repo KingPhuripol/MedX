@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -33,6 +34,33 @@ LOCAL_ONLY_CLASSES = {"mimic", "hospital"}
 
 def sha256_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _reject_constant(name: str) -> object:
+    raise ValueError(f"non-finite number {name} is not allowed (JSON has no NaN/Infinity)")
+
+
+def loads_strict(text: str) -> object:
+    """json.loads that rejects NaN/Infinity/-Infinity literals and overflowing numbers such as 1e999.
+
+    Python's json accepts these by default and no JSON Schema keyword rejects them, while every numeric
+    comparison with NaN is False, so a NaN budget would pass a `manifest > record` check (s9r F1).
+    """
+    value = json.loads(text, parse_constant=_reject_constant)
+    if bad := nonfinite_paths(value):
+        raise ValueError(f"non-finite number at {bad[0]} is not allowed")
+    return value
+
+
+def nonfinite_paths(value: object, path: str = "") -> list[str]:
+    """JSON-pointer-like paths of every NaN/Infinity float inside a parsed JSON value."""
+    if isinstance(value, float) and not math.isfinite(value):
+        return [path or "<root>"]
+    if isinstance(value, dict):
+        return [p for k, v in value.items() for p in nonfinite_paths(v, f"{path}/{k}")]
+    if isinstance(value, list):
+        return [p for i, v in enumerate(value) for p in nonfinite_paths(v, f"{path}/{i}")]
+    return []
 
 
 # ---------------------------------------------------------------------------------------------------
@@ -77,8 +105,8 @@ def parse_decision_log(text: str) -> DecisionLog:
                 if fence_info == "approval" and section is not None:
                     body = "\n".join(fence_lines)
                     try:
-                        blocks.append(ApprovalBlock(section, fence_line, json.loads(body)))
-                    except json.JSONDecodeError as exc:
+                        blocks.append(ApprovalBlock(section, fence_line, loads_strict(body)))
+                    except ValueError as exc:  # includes json.JSONDecodeError and non-finite numbers
                         blocks.append(ApprovalBlock(section, fence_line, None, f"invalid JSON: {exc}"))
                 elif section is not None:
                     other[section] += fence_lines
@@ -117,7 +145,7 @@ def load_decision_log(decisions_path: Path) -> DecisionLog:
 def approval_sha256(manifest: dict) -> str:
     """sha256 of the canonical manifest JSON without approval/status/result (status changes keep the approval)."""
     content = {k: v for k, v in manifest.items() if k not in HASH_EXCLUDED_KEYS}
-    canonical = json.dumps(content, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    canonical = json.dumps(content, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
@@ -168,6 +196,9 @@ def approval_errors(manifest: dict, log: DecisionLog, *, agents_dir: Path = AGEN
         return errors
 
     record = block.record
+    if bad := nonfinite_paths(record):
+        errors.append(f"approval record (line {block.line}) has a non-finite number at {', '.join(bad)}; NaN/Infinity never approve")
+        return errors
     schema = json.loads(APPROVAL_SCHEMA_PATH.read_text(encoding="utf-8"))
     rec_errors = sorted(jsonschema.Draft202012Validator(schema).iter_errors(record), key=lambda e: list(e.absolute_path))
     if rec_errors:
@@ -180,11 +211,12 @@ def approval_errors(manifest: dict, log: DecisionLog, *, agents_dir: Path = AGEN
         errors.append(f"approval record tier {record['tier']} != manifest run_tier {tier}")
     if record["gpu_count"] != res["gpu_count"]:
         errors.append(f"manifest resources.gpu_count {res['gpu_count']} != approved gpu_count {record['gpu_count']}")
-    if res["max_minutes"] > record["max_minutes"]:
+    # `not (a <= b)` so an incomparable value (NaN) is rejected, never accepted (s9r F1).
+    if not res["max_minutes"] <= record["max_minutes"]:
         errors.append(f"manifest max_minutes {res['max_minutes']} exceeds approved max_minutes {record['max_minutes']}")
-    if budget["gpu_hours"] > record["gpu_hours"]:
+    if not budget["gpu_hours"] <= record["gpu_hours"]:
         errors.append(f"manifest budget.gpu_hours {budget['gpu_hours']} exceeds approved gpu_hours {record['gpu_hours']}")
-    if budget["cost_usd_max"] > record["cost_usd_max"]:
+    if not budget["cost_usd_max"] <= record["cost_usd_max"]:
         errors.append(f"manifest budget.cost_usd_max {budget['cost_usd_max']} exceeds approved cost_usd_max {record['cost_usd_max']}")
     if record["approved_by"] != approval["approved_by"]:
         errors.append(f"approval.approved_by {approval['approved_by']!r} != record approved_by {record['approved_by']!r}")
@@ -263,6 +295,8 @@ def semantic_errors(manifest: dict, *, root: Path = ROOT, decisions_path: Path =
 
 def validate_manifest(manifest: object, *, root: Path = ROOT, decisions_path: Path = DECISIONS_PATH) -> list[str]:
     """All errors for a parsed manifest; empty list means valid."""
+    if bad := nonfinite_paths(manifest):
+        return [f"manifest has a non-finite number (NaN/Infinity) at {p}" for p in bad]
     errors = schema_errors(manifest)
     if errors:
         return errors
@@ -271,7 +305,7 @@ def validate_manifest(manifest: object, *, root: Path = ROOT, decisions_path: Pa
 
 def validate_path(path: Path, *, root: Path = ROOT, decisions_path: Path = DECISIONS_PATH) -> list[str]:
     try:
-        manifest = json.loads(Path(path).read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+        manifest = loads_strict(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
         return [f"cannot read manifest: {exc}"]
     return validate_manifest(manifest, root=root, decisions_path=decisions_path)

@@ -14,7 +14,7 @@ import sys
 import pytest
 
 from research.manifest_validation import (APPROVAL_SCHEMA_PATH, DECISIONS_PATH, approval_sha256, load_decision_log,
-                                          parse_decision_log, validate_manifest)
+                                          parse_decision_log, validate_manifest, validate_path)
 from research.train import launcher, models
 
 from .conftest import CONFIGS, REPO_ROOT, load_json
@@ -306,3 +306,79 @@ def test_launcher_rejects_forged_approval(tmp_path, monkeypatch, capsys):
     assert built == []
     assert not out_root.exists()
     assert "contains no fenced ```approval record" in capsys.readouterr().err
+
+
+# ------------------------------------------------------------------------------------------------ s9r F1
+# Non-finite numbers must never approve: `NaN > 80` is False, so a NaN budget used to pass `manifest > record`.
+
+NONFINITE = [float("nan"), float("inf")]
+
+
+def _nonfinite_record_text(rec: dict, field: str, literal: str) -> str:
+    """A record block whose `field` is the raw JSON literal (NaN, Infinity, -Infinity or 1e999)."""
+    text = json.dumps({**rec, field: "__X__"}, ensure_ascii=False, indent=2)
+    return "```approval\n" + text.replace('"__X__"', literal) + "\n```\n"
+
+
+@pytest.mark.parametrize("field", ["gpu_hours", "cost_usd_max", "max_minutes"])
+@pytest.mark.parametrize("value", NONFINITE, ids=["nan", "inf"])
+def test_validator_rejects_nonfinite_manifest_budget(field, value, tmp_path):
+    """Manifest side: a NaN/Inf budget against an approved record (80 GPU-h / USD 640) is rejected."""
+    m = _manifest()
+    log = _log(tmp_path, [(HEADING, _block(_record(m)))])
+    assert validate_manifest(m, decisions_path=log) == []  # control: the finite manifest is accepted
+    bad = copy.deepcopy(m)
+    target = bad["resources"] if field == "max_minutes" else bad["resources"]["budget"]
+    target[field] = value
+    errors = validate_manifest(bad, decisions_path=log)
+    assert errors and all("non-finite" in e for e in errors), errors
+
+
+@pytest.mark.parametrize("literal", ["NaN", "Infinity", "-Infinity", "1e999"])
+def test_validate_path_rejects_nonfinite_manifest_file(literal, tmp_path):
+    """The same through the file path used by the CLI and the launcher (Python json accepts these literals)."""
+    m = _manifest()
+    log = _log(tmp_path, [(HEADING, _block(_record(m)))])
+    text = json.dumps(m, ensure_ascii=False).replace('"gpu_hours": 80.0', f'"gpu_hours": {literal}')
+    assert literal in text
+    path = tmp_path / "nan.json"
+    path.write_text(text, encoding="utf-8")
+    errors = validate_path(path, decisions_path=log)
+    assert errors and all("non-finite" in e for e in errors), errors
+    out = subprocess.run([sys.executable, "scripts/validate_manifest.py", "--approval-sha", str(path)], cwd=REPO_ROOT,
+                         capture_output=True, text=True, timeout=120)
+    assert out.returncode == 1 and "non-finite" in out.stderr, out
+
+
+@pytest.mark.parametrize("field", ["gpu_hours", "cost_usd_max", "max_minutes", "gpu_count"])
+@pytest.mark.parametrize("literal", ["NaN", "Infinity", "1e999"])
+def test_validator_rejects_nonfinite_record(field, literal, tmp_path):
+    """Record side: a record whose budget/resources are NaN/Infinity approves nothing."""
+    m = _manifest()
+    log = _log(tmp_path, [(HEADING, _nonfinite_record_text(_record(m), field, literal))])
+    errors = validate_manifest(m, decisions_path=log)
+    assert errors and all("non-finite" in e for e in errors), errors
+
+
+def test_validator_rejects_nonfinite_record_dict():
+    """Record side through the parsed-log API (a record dict built in Python, bypassing the strict loader)."""
+    from research.manifest_validation import ApprovalBlock, DecisionLog, approval_errors
+
+    m = _manifest()
+    for field in ("gpu_hours", "cost_usd_max"):
+        for value in NONFINITE:
+            log = DecisionLog((ApprovalBlock(HEADING, 1, _record(m, **{field: value})),), frozenset({HEADING}), {HEADING: ""})
+            errors = approval_errors(m, log)
+            assert errors and all("non-finite" in e for e in errors), (field, value, errors)
+    log = DecisionLog((ApprovalBlock(HEADING, 1, _record(m)),), frozenset({HEADING}), {HEADING: ""})
+    assert approval_errors(m, log) == []  # control
+
+
+def test_launcher_rejects_nonfinite_manifest(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(models, "build_model", lambda *a, **k: pytest.fail("model built"))
+    path = tmp_path / "nan.json"
+    path.write_text(json.dumps(_manifest(gpu_hours=float("nan"))), encoding="utf-8")
+    out_root = tmp_path / "out"
+    rc = launcher.main(["--config", str(CONFIGS["stage3"]), "--manifest", str(path), "--output-root", str(out_root)])
+    assert rc == launcher.EXIT_INVALID and not out_root.exists()
+    assert "non-finite" in capsys.readouterr().err

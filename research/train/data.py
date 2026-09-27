@@ -42,22 +42,36 @@ DATASET_ALIASES = {
     "synthetic": "synthetic",
     "structured": STRUCTURED,
 }
-_CT_RATE_STUDY = re.compile(r"((?:train|valid)_\d+_[a-z]+)(?:_\d+)?")  # split_patient_scan[_reconstruction]
+# ASCII digits only ([0-9], never `\d`): `\d` also matches Thai, Arabic-Indic, Devanagari ... digits,
+# which NFKC does not fold, so the same study written in two scripts would get two ids (s9r F2).
+# canonical_source_id folds every Unicode decimal digit to ASCII first; anything left fails closed.
+_CT_RATE_STUDY = re.compile(r"(train|valid)_([0-9]+)_([a-z]+)(?:_[0-9]+)?", re.ASCII)  # split_patient_scan[_recon]
+_NUMERIC_STUDY = re.compile(r"s?([0-9]+)", re.ASCII)
+
+
+def _fold_digits(text: str) -> str:
+    """Every Unicode decimal digit (category Nd, e.g. Thai '๕', Arabic-Indic '٥', Devanagari '५') -> ASCII."""
+    return "".join(str(unicodedata.decimal(c)) if not c.isascii() and c.isdecimal() else c for c in text)
+
+
+def _number(digits: str) -> str:
+    """Leading zeros do not make a different study: '050414267' == '50414267'."""
+    return str(int(digits))
 
 
 def _study_id(dataset: str, stem: str) -> str | None:
     """Dataset-specific study identity; None if the stem is not a valid id for that dataset."""
     if dataset == "mimic-cxr":
-        m = re.fullmatch(r"s?(\d+)", stem)
-        return m.group(1) if m else None
+        m = _NUMERIC_STUDY.fullmatch(stem)
+        return _number(m.group(1)) if m else None
     if dataset == "ct-rate":  # every reconstruction of a scan shares the scan's report
         m = _CT_RATE_STUDY.fullmatch(stem)
-        return m.group(1) if m else None
+        return f"{m.group(1)}_{_number(m.group(2))}_{m.group(3)}" if m else None
     if dataset == "synthetic":
-        if not re.fullmatch(r"[a-z0-9][a-z0-9_.-]*", stem):
+        if not re.fullmatch(r"[a-z0-9][a-z0-9_.-]*", stem, re.ASCII):
             return None
-        m = re.fullmatch(r"s?(\d+)", stem)
-        return m.group(1) if m else stem
+        m = _NUMERIC_STUDY.fullmatch(stem)
+        return _number(m.group(1)) if m else stem
     return stem or None  # structured
 
 
@@ -71,13 +85,14 @@ def _dataset_alias(name: str) -> str | None:
 def canonical_source_id(ref: Any) -> tuple[str, str]:
     """(dataset, study_id) of a report / label-source reference. Raises SourceIdError if unparseable.
 
-    Order: NFKC + casefold, trim, drop `file://`, `\\` -> `/`, collapse `//`, dataset from a `name:`
+    Order: NFKC + casefold, Unicode decimal digits -> ASCII, trim, drop `file://`, `\\` -> `/`, collapse `//`, dataset from a `name:`
     prefix or a path directory (alias table), directories and `.txt` stripped, study-id normalized
-    (`s50414267` == `50414267`). Two different datasets named in one reference is unparseable.
+    (`s50414267` == `50414267` == `s050414267`; ids match ASCII [0-9] only, so no `\\d` Unicode gap).
+    Two different datasets named in one reference is unparseable.
     """
     if not isinstance(ref, str):
         raise SourceIdError(f"reference {ref!r} is not a string")
-    text = unicodedata.normalize("NFKC", ref).casefold().strip()
+    text = _fold_digits(unicodedata.normalize("NFKC", ref).casefold()).strip()
     if text.startswith("file://"):
         text = text[len("file://"):]
     text = re.sub(r"/{2,}", "/", text.replace("\\", "/"))

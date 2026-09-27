@@ -108,12 +108,12 @@ def preflight(config_path: Path, manifest_path: Path, dry_run: bool) -> tuple[di
     """Validate everything that does not need a model. Raises LaunchRefused with a specific message."""
     import yaml
 
-    from research.manifest_validation import validate_path
+    from research.manifest_validation import loads_strict, validate_path
 
     errors = validate_path(manifest_path)
     if errors:
         raise LaunchRefused("manifest invalid:\n- " + "\n- ".join(errors))
-    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+    manifest = loads_strict(Path(manifest_path).read_text(encoding="utf-8"))
     if (ROOT / manifest["code"]["config_path"]).resolve() != Path(config_path).resolve():
         raise LaunchRefused(f"--config {config_path} is not the config the manifest pins ({manifest['code']['config_path']})")
     cfg = yaml.safe_load(Path(config_path).read_text(encoding="utf-8"))

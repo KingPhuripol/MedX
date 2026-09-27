@@ -11,14 +11,13 @@ that a human writes into the `manifest_sha256` field of a ```approval record in 
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from research.manifest_validation import approval_sha256, validate_path  # noqa: E402
+from research.manifest_validation import approval_sha256, loads_strict, validate_path  # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -30,7 +29,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.approval_sha:
         for path in args.manifests:
             try:
-                manifest = json.loads(path.read_text(encoding="utf-8"))
+                manifest = loads_strict(path.read_text(encoding="utf-8"))
                 if not isinstance(manifest, dict):
                     raise ValueError("manifest is not a JSON object")
             except (OSError, ValueError) as exc:

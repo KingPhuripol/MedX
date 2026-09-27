@@ -37,6 +37,14 @@ IDENTITY_VARIANTS = {
     "alias_CT_RATE": (CT_REPORT_REF, "CT_RATE:train_1_a"),
     "alias_ctrate": (CT_REPORT_REF, "ctrate/train_1_a.txt"),
     "ct_rate_reconstruction": (CT_REPORT_REF, "CT-RATE:train_1_a_2.nii.gz"),
+    # s9r F2: `\d` matched non-ASCII digits that NFKC does not fold, giving a different study id.
+    "thai_digits": ("mimic-cxr:s50414267", "mimic-cxr:s\u0e55\u0e50\u0e54\u0e51\u0e54\u0e52\u0e56\u0e57"),
+    "arabic_indic_digits": ("mimic-cxr:s50414267", "mimic-cxr:s\u0665\u0660\u0664\u0661\u0664\u0662\u0666\u0667"),
+    "devanagari_digits": ("mimic-cxr:s50414267", "mimic-cxr:s\u096b\u0966\u096a\u0967\u096a\u0968\u096c\u096d"),
+    "mixed_script_digits": (REPORT_REF, "mimic-cxr:files/p10/p10000032/s5\u0e50414\u0662\u096c7.txt"),
+    "thai_digits_ct_rate": (CT_REPORT_REF, "ct-rate:train_\u0e51_a"),
+    "leading_zero": ("mimic-cxr:s50414267", "mimic-cxr:s050414267"),
+    "leading_zero_ct_rate": (CT_REPORT_REF, "ct-rate:train_0001_a_1"),
 }
 
 
@@ -84,6 +92,9 @@ UNPARSEABLE = {
     "report_unknown_dataset": ("chexpert:s50414267", "structured:service"),
     "report_unparseable": ("???", "mimic-cxr:s50414268"),
     "two_datasets": ("mimic-cxr/ct-rate/s50414267", "structured:service"),
+    # Numeric characters that are not decimal digits are never folded: fail closed, never a new id.
+    "label_cjk_numeral": (REPORT_REF, "mimic-cxr:s\u4e94\u3007\u56db\u4e00\u56db\u4e8c\u516d\u4e03"),
+    "label_roman_numeral": (REPORT_REF, "mimic-cxr:s\u2164"),
 }
 
 
@@ -121,3 +132,21 @@ def test_substitution_allowed_for_distinct_source(case):
     assert sum(events.values()) == 0
     out = Collator(POLICY, seq_len=16, volume_modality="cxr")([_sample(report_ref, label)], random.Random(0))
     assert out["decisions"][0]["cxr"] == REPORT
+
+
+def test_unicode_digit_variants_are_really_non_ascii():
+    """Guard: the F2 fixtures really use non-ASCII digits, which `\\d` matches and NFKC leaves unchanged."""
+    import re
+    import unicodedata
+
+    for name in ("thai_digits", "arabic_indic_digits", "devanagari_digits", "mixed_script_digits", "thai_digits_ct_rate"):
+        label = IDENTITY_VARIANTS[name][1]
+        assert not label.isascii(), name
+        assert unicodedata.normalize("NFKC", label) == label, name  # NFKC alone does not fold them
+        assert any(c.isdecimal() and not c.isascii() for c in label), name
+        assert re.fullmatch(r"\d+", "".join(c for c in label if c.isdecimal() and not c.isascii())), name  # `\\d` matches them
+
+
+def test_leading_zero_is_not_a_distinct_study():
+    assert canonical_source_id("mimic-cxr:s050414267") == canonical_source_id("mimic-cxr:50414267") == ("mimic-cxr", "50414267")
+    assert canonical_source_id("synthetic:007") == canonical_source_id("synthetic:s7")
