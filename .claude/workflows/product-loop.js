@@ -67,7 +67,7 @@ let findings = '', build = null, checks = [], reviews = [], rounds = 0, done = f
 while (rounds < 3 && !done) {
   rounds++
   build = await tryAgent(`${role(A.builder).pre}${CTX}
-ROLE: BUILDER. Implement exactly ${WT}/slices/${A.id}/SPEC.md with your own unit tests. Keep it minimal and runnable. Commit on the branch when tests pass.
+ROLE: BUILDER. Implement exactly ${WT}/slices/${A.id}/SPEC.md with your own unit tests. Keep it minimal and runnable. Commit on the branch when tests pass.${A.buildNote ? '\n' + A.buildNote : ''}
 ${findings ? 'Fix these findings from the independent checker/reviewers first:\n' + findings : ''}`,
     { label: `build:${A.builder}#${rounds}`, phase: 'Build', agentType: role(A.builder).agentType, schema: BUILD })
   if (!build || build.status === 'BLOCKED') { log('builder blocked'); break }
