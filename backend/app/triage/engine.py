@@ -24,6 +24,7 @@ def assess(case: Case, as_of: datetime, invoke: department.InvokeFn, *, actor_id
         not_evaluable=not_evaluable,
         escalation_required=bool(alerts),
         department=suggestion,
+        conflicts=snap.conflicts,  # i2 (C4): same-timestamp conflicts, shown at review
         created_at=utc_now_iso(),
         created_by=actor_id,
     )

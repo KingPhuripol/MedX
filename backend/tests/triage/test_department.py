@@ -11,6 +11,8 @@ from app.triage import department, engine, evaluate, redflags
 from app.triage.fixtures import load_entries
 from app.triage.models import Snapshot
 
+from .helpers import api_as_of
+
 ENTRIES = load_entries()
 MISSING = [e for e in ENTRIES if e.gold.missing_required]
 RED = [e for e in ENTRIES if e.gold.red_flag_rules]
@@ -66,7 +68,7 @@ def test_department_top3_threshold():
 
 
 def _assess(client, ref, as_of=None):
-    body = {"as_of": as_of or BY_REF[ref].as_of.isoformat()}
+    body = {"as_of": as_of or api_as_of(BY_REF[ref].case, BY_REF[ref].as_of).isoformat()}  # i2 C3 clamp
     return client.post(f"/api/triage/cases/{ref}/assess", json=body)
 
 

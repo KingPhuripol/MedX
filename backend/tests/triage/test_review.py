@@ -7,6 +7,7 @@ from sqlalchemy.exc import DBAPIError
 from app.triage.fixtures import load_entries
 
 from ..conftest import PASSWORDS
+from .helpers import api_as_of
 
 BY_REF = {e.case.case_ref: e for e in load_entries()}
 RED_REF = "SYN-S4-002"  # RF-CHEST, RF-HR, RF-SBP; department suggested
@@ -17,7 +18,7 @@ REASON_SENTINEL = "SENTINEL-reason-9d41c7"
 
 
 def assess(client, ref):
-    resp = client.post(f"/api/triage/cases/{ref}/assess", json={"as_of": BY_REF[ref].as_of.isoformat()})
+    resp = client.post(f"/api/triage/cases/{ref}/assess", json={"as_of": api_as_of(BY_REF[ref].case, BY_REF[ref].as_of).isoformat()})
     assert resp.status_code == 201, resp.text
     return resp.json()
 
@@ -45,7 +46,7 @@ def review_rows(app):
 
 def test_assess_response_shape(client, login):
     login("nurse1")
-    raw = client.post(f"/api/triage/cases/{RED_REF}/assess", json={"as_of": BY_REF[RED_REF].as_of.isoformat()})
+    raw = client.post(f"/api/triage/cases/{RED_REF}/assess", json={"as_of": api_as_of(BY_REF[RED_REF].case, BY_REF[RED_REF].as_of).isoformat()})
     body = raw.text
     assert body.index('"alerts":') < body.index('"department":')
     a = raw.json()
@@ -209,7 +210,7 @@ def test_triage_role_matrix(client, audit_rows):
     as_user(client, "nurse1")
     a = assess(client, PLAIN_REF)
     aid = a["assessment_id"]
-    as_of = BY_REF[PLAIN_REF].as_of.isoformat()
+    as_of = api_as_of(BY_REF[PLAIN_REF].case, BY_REF[PLAIN_REF].as_of).isoformat()
     writes = [
         (f"/api/triage/cases/{PLAIN_REF}/assess", {"as_of": as_of}),
         (f"/api/triage/assessments/{aid}/confirm", review_body("confirm", a)),
@@ -248,6 +249,7 @@ TEMPORAL_REFS = sorted(ref for ref, e in BY_REF.items() if e.gold.temporal is no
 
 
 def _assess_at(client, ref, as_of):
+    as_of = api_as_of(BY_REF[ref].case, as_of)  # i2 C3 clamp (unchanged snapshot)
     resp = client.post(f"/api/triage/cases/{ref}/assess", json={"as_of": as_of.isoformat()})
     assert resp.status_code == 201, resp.text
     return resp.json()

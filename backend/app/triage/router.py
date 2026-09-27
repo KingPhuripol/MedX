@@ -7,6 +7,7 @@ before any review. Every 403/409 is audited as ``triage.review.denied``.
 from __future__ import annotations
 
 import hashlib
+from datetime import timedelta
 from typing import Any, NoReturn
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -107,12 +108,36 @@ def list_departments(request: Request, user: CurrentUser = Depends(require_user)
     }
 
 
+def _check_as_of(request: Request, user: CurrentUser, case_ref: str, case: Any, as_of: Any) -> None:
+    """C3 (S4 HIGH, D-I2-2): ``as_of`` must lie within [earliest evidence, latest evidence + skew].
+
+    A later ``as_of`` would let an assessment claim a decision time no evidence supports (stale vitals read as
+    current); an earlier one would assess a case with no evidence yet. Every rejection is audited.
+    """
+    times = [f.available_at_time for f in case.facts]
+    earliest, latest = min(times), max(times)
+    skew = timedelta(seconds=float(request.app.state.settings.triage_as_of_skew_s))
+    reason = None
+    if as_of > latest + skew:
+        reason = "as_of_beyond_evidence"
+    elif as_of < earliest:
+        reason = "as_of_before_evidence"
+    if reason is None:
+        return
+    _audit(request, user, "triage.assess.rejected", f"triage/cases/{case_ref}/assess", "denied", {
+        "status": 422, "reason": reason, "as_of": as_of.isoformat(), "earliest_evidence": earliest.isoformat(),
+        "latest_evidence": latest.isoformat(), "skew_s": skew.total_seconds(),
+    })
+    raise HTTPException(status_code=422, detail=reason)
+
+
 @router.post("/cases/{case_ref}/assess", status_code=201)
 def assess(case_ref: str, body: AssessBody, request: Request, user: CurrentUser = Depends(require_user)) -> dict:
     _require(request, user, WRITE_ROLES, f"triage/cases/{case_ref}/assess")
     case = engine_cases().get(case_ref)
     if case is None:
         raise HTTPException(status_code=404, detail="unknown_case")
+    _check_as_of(request, user, case_ref, case, body.as_of)
     engine = get_engine(request)
     provider = request.app.state.provider
 

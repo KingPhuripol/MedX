@@ -40,3 +40,14 @@ def make_case(overrides: dict | None = None, *, base: dict | None = None, case_r
 
 def snap(overrides: dict | None = None, **kw) -> Snapshot:
     return Snapshot(make_case(overrides, **kw), T0 + timedelta(hours=1))
+
+
+AS_OF_SKEW = timedelta(minutes=5)  # i2 C3 default (D-I2-2); Settings.triage_as_of_skew_s
+
+
+def api_as_of(case: Case, as_of: datetime) -> datetime:
+    """i2 (C3): the assess endpoint rejects as_of > latest evidence + skew. The S4 author fixtures declare an
+    ``as_of`` 30 min after their latest fact; API tests clamp it to latest + skew. No fact lies between the two,
+    so the snapshot (and every expected alert/department) is unchanged."""
+    latest = max(f.available_at_time for f in case.facts)
+    return min(as_of, latest + AS_OF_SKEW)

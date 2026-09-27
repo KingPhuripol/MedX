@@ -26,6 +26,8 @@ class Settings:
     gateway_timeout_s: float = 10.0
     session_ttl_minutes: int = 480
     cookie_secure: bool = False
+    # Slice i2 (C3, D-I2-2): /api/triage assess rejects as_of later than the latest evidence + this skew.
+    triage_as_of_skew_s: float = 300.0
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -43,4 +45,5 @@ class Settings:
             gateway_timeout_s=float(env.get("GATEWAY_TIMEOUT_S", "10") or 10),
             session_ttl_minutes=int(env.get("SESSION_TTL_MINUTES", "480") or 480),
             cookie_secure=_bool(env.get("SESSION_COOKIE_SECURE")),
+            triage_as_of_skew_s=float(env.get("TRIAGE_AS_OF_SKEW_S", "300") or 300),
         )
