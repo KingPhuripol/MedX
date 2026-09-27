@@ -1,0 +1,251 @@
+{
+  "version": "1.0.0",
+  "note": "Closed vocabulary of information-gathering items (ask, observe, lab, imaging, ecg). An item is information to collect, never a disposition. Synthetic reference vocabulary pending expert review (D1).",
+  "codes": [
+    {
+      "code": "NI-ECG-12LEAD",
+      "kind": "ecg",
+      "display_en": "12-lead ECG",
+      "display_th": "คลื่นไฟฟ้าหัวใจ 12 ลีด",
+      "source_refs": [],
+      "observed_when": "never"
+    },
+    {
+      "code": "NI-LAB-TROPONIN",
+      "kind": "lab",
+      "display_en": "Cardiac troponin I",
+      "display_th": "ระดับโทรโปนินไอในเลือด",
+      "loinc": "10839-9",
+      "source_refs": [
+        "LOINC",
+        "NLM-CLINICALTABLES-LOINC"
+      ],
+      "observed_when": "lab_resulted"
+    },
+    {
+      "code": "NI-IMG-HEAD-CT",
+      "kind": "imaging",
+      "display_en": "Non-contrast head CT",
+      "display_th": "ภาพเอกซเรย์คอมพิวเตอร์ศีรษะแบบไม่ฉีดสารทึบรังสี",
+      "source_refs": [],
+      "observed_when": "never"
+    },
+    {
+      "code": "NI-LAB-GLU",
+      "kind": "lab",
+      "display_en": "Blood glucose",
+      "display_th": "ระดับน้ำตาลในเลือด",
+      "loinc": "2345-7",
+      "source_refs": [
+        "LOINC",
+        "NLM-CLINICALTABLES-LOINC"
+      ],
+      "observed_when": "lab_resulted"
+    },
+    {
+      "code": "NI-ASK-LAST-KNOWN-WELL",
+      "kind": "ask",
+      "display_en": "Time last known well",
+      "display_th": "เวลาที่ผู้ป่วยยังปกติดีครั้งสุดท้าย",
+      "source_refs": [],
+      "observed_when": "never"
+    },
+    {
+      "code": "NI-ASK-OTTAWA-SAH",
+      "kind": "ask",
+      "display_en": "Ottawa SAH rule items: age 40 or over, neck pain or stiffness, witnessed loss of consciousness, onset during exertion, instantly peaking pain, limited neck flexion",
+      "display_th": "ข้อมูลตาม Ottawa SAH rule: อายุ 40 ปีขึ้นไป ปวดหรือตึงต้นคอ หมดสติโดยมีผู้เห็น เริ่มปวดขณะออกแรง ปวดสุดทันที ก้มคอได้จำกัด",
+      "source_refs": [],
+      "observed_when": "never"
+    },
+    {
+      "code": "NI-LAB-TRYPTASE",
+      "kind": "lab",
+      "display_en": "Serum tryptase",
+      "display_th": "ระดับทริปเทสในเลือด",
+      "loinc": "21582-2",
+      "source_refs": [
+        "LOINC",
+        "NLM-CLINICALTABLES-LOINC"
+      ],
+      "observed_when": "lab_resulted"
+    },
+    {
+      "code": "NI-ASK-ALLERGEN-TRIGGER",
+      "kind": "ask",
+      "display_en": "Possible trigger and time of exposure (food, drug, insect sting)",
+      "display_th": "สิ่งกระตุ้นที่อาจสัมผัสและเวลาที่สัมผัส (อาหาร ยา แมลงต่อย)",
+      "source_refs": [],
+      "observed_when": "never"
+    },
+    {
+      "code": "NI-LAB-LACTATE",
+      "kind": "lab",
+      "display_en": "Blood lactate",
+      "display_th": "ระดับแลคเตทในเลือด",
+      "loinc": "2524-7",
+      "source_refs": [
+        "LOINC",
+        "NLM-CLINICALTABLES-LOINC"
+      ],
+      "observed_when": "lab_resulted"
+    },
+    {
+      "code": "NI-LAB-BLOOD-CULTURE",
+      "kind": "lab",
+      "display_en": "Blood culture",
+      "display_th": "การเพาะเชื้อจากเลือด",
+      "loinc": "600-7",
+      "source_refs": [
+        "LOINC",
+        "NLM-CLINICALTABLES-LOINC"
+      ],
+      "observed_when": "lab_resulted"
+    },
+    {
+      "code": "NI-OBS-REPEAT-VITALS",
+      "kind": "observe",
+      "display_en": "Repeat full set of vital signs (NEWS parameters)",
+      "display_th": "วัดสัญญาณชีพซ้ำครบชุด (ตัวแปร NEWS)",
+      "source_refs": [],
+      "observed_when": "second_vitals_set"
+    },
+    {
+      "code": "NI-IMG-CXR",
+      "kind": "imaging",
+      "display_en": "Chest radiograph",
+      "display_th": "ภาพถ่ายรังสีทรวงอก",
+      "source_refs": [],
+      "observed_when": "never"
+    },
+    {
+      "code": "NI-LAB-WBC",
+      "kind": "lab",
+      "display_en": "White blood cell count",
+      "display_th": "จำนวนเม็ดเลือดขาว",
+      "loinc": "6690-2",
+      "source_refs": [
+        "LOINC",
+        "NLM-CLINICALTABLES-LOINC"
+      ],
+      "observed_when": "lab_resulted"
+    },
+    {
+      "code": "NI-LAB-CRP",
+      "kind": "lab",
+      "display_en": "C-reactive protein",
+      "display_th": "ระดับซีรีแอคทีฟโปรตีน",
+      "loinc": "1988-5",
+      "source_refs": [
+        "LOINC",
+        "NLM-CLINICALTABLES-LOINC"
+      ],
+      "observed_when": "lab_resulted"
+    },
+    {
+      "code": "NI-IMG-ABD-US",
+      "kind": "imaging",
+      "display_en": "Abdominal ultrasound",
+      "display_th": "อัลตราซาวด์ช่องท้อง",
+      "source_refs": [],
+      "observed_when": "never"
+    },
+    {
+      "code": "NI-LAB-HGB",
+      "kind": "lab",
+      "display_en": "Hemoglobin",
+      "display_th": "ระดับฮีโมโกลบิน",
+      "loinc": "718-7",
+      "source_refs": [
+        "LOINC",
+        "NLM-CLINICALTABLES-LOINC"
+      ],
+      "observed_when": "lab_resulted"
+    },
+    {
+      "code": "NI-LAB-CREAT",
+      "kind": "lab",
+      "display_en": "Serum creatinine",
+      "display_th": "ระดับครีเอตินินในเลือด",
+      "loinc": "2160-0",
+      "source_refs": [
+        "LOINC",
+        "NLM-CLINICALTABLES-LOINC"
+      ],
+      "observed_when": "lab_resulted"
+    },
+    {
+      "code": "NI-LAB-HBA1C",
+      "kind": "lab",
+      "display_en": "Hemoglobin A1c",
+      "display_th": "ระดับฮีโมโกลบินเอวันซี",
+      "loinc": "4548-4",
+      "source_refs": [
+        "LOINC",
+        "NLM-CLINICALTABLES-LOINC"
+      ],
+      "observed_when": "lab_resulted"
+    },
+    {
+      "code": "NI-ASK-DIARRHEA-FEATURES",
+      "kind": "ask",
+      "display_en": "Fever, blood or mucus in stool, recent travel and exposures",
+      "display_th": "ไข้ มูกหรือเลือดในอุจจาระ ประวัติการเดินทางและการสัมผัส",
+      "source_refs": [],
+      "observed_when": "never"
+    },
+    {
+      "code": "NI-OBS-DIX-HALLPIKE",
+      "kind": "observe",
+      "display_en": "Dix-Hallpike positional test",
+      "display_th": "การทดสอบท่า Dix-Hallpike",
+      "source_refs": [],
+      "observed_when": "never"
+    },
+    {
+      "code": "NI-LAB-ABSCESS-CULTURE",
+      "kind": "lab",
+      "display_en": "Culture of pus from the abscess",
+      "display_th": "การเพาะเชื้อจากหนองในฝี",
+      "loinc": "595-9",
+      "source_refs": [
+        "LOINC",
+        "NLM-CLINICALTABLES-LOINC"
+      ],
+      "observed_when": "lab_resulted"
+    },
+    {
+      "code": "NI-LAB-GAS-RADT",
+      "kind": "lab",
+      "display_en": "Rapid antigen test for group A streptococcus (throat)",
+      "display_th": "การตรวจแอนติเจนเชื้อสเตรปโตคอคคัสกลุ่มเอจากลำคออย่างรวดเร็ว",
+      "loinc": "78012-2",
+      "source_refs": [
+        "LOINC",
+        "NLM-CLINICALTABLES-LOINC"
+      ],
+      "observed_when": "lab_resulted"
+    },
+    {
+      "code": "NI-ASK-BLEEDING-RISK",
+      "kind": "ask",
+      "display_en": "Bleeding history and anticoagulant or antiplatelet use",
+      "display_th": "ประวัติเลือดออกง่ายและการใช้ยาต้านการแข็งตัวของเลือดหรือยาต้านเกล็ดเลือด",
+      "source_refs": [],
+      "observed_when": "never"
+    },
+    {
+      "code": "NI-OBS-ANTERIOR-RHINOSCOPY",
+      "kind": "observe",
+      "display_en": "Anterior rhinoscopy to find the bleeding site",
+      "display_th": "การส่องตรวจโพรงจมูกด้านหน้าเพื่อหาตำแหน่งเลือดออก",
+      "source_refs": [],
+      "observed_when": "never"
+    }
+  ],
+  "observed_when": {
+    "lab_resulted": "a LabSeries in snapshot_T has a result whose test maps (labs.json) to this LOINC code",
+    "second_vitals_set": "snapshot_T holds two or more Vitals items",
+    "never": "no item type in the dataset records this information"
+  }
+}

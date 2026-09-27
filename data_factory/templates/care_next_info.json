@@ -1,0 +1,476 @@
+{
+  "version": "1.0.0",
+  "note": "Per complaint template and per red-flag rule: guideline-sourced information to collect and one pathway option, or no_sourced_workup. Gold next_info = template items + fired-rule items - items already resulted/observed in snapshot_T. Pathway = first fired rule in rule_priority, else the template pathway. Synthetic reference labels, not expert-reviewed (D1).",
+  "rule_priority": [
+    "RF-FAST",
+    "RF-ACUTE-CHEST-PAIN",
+    "RF-THUNDERCLAP",
+    "RF-ANAPHYLAXIS",
+    "RF-QSOFA",
+    "RF-NEWS-SINGLE3",
+    "RF-NEWS-AGG5"
+  ],
+  "complaints": {
+    "CC-FEVER-COUGH": {
+      "next_info": [
+        "NI-IMG-CXR"
+      ],
+      "pathway": "CP-CAP-EVAL",
+      "source_refs": [
+        "PMID-31573350"
+      ]
+    },
+    "CC-DIARRHEA": {
+      "next_info": [
+        "NI-ASK-DIARRHEA-FEATURES"
+      ],
+      "pathway": "CP-ACUTE-DIARRHEA-EVAL",
+      "source_refs": [
+        "PMID-29053792"
+      ]
+    },
+    "CC-DYSURIA": {
+      "no_sourced_workup": true,
+      "reason": "The verified IDSA/ESCMID cystitis guideline (PMID-21292654) addresses antimicrobial choice, not the information to collect; no sourced work-up in v1.2.0."
+    },
+    "CC-PALPITATION": {
+      "next_info": [
+        "NI-ECG-12LEAD"
+      ],
+      "pathway": "CP-PALPITATION-EVAL",
+      "source_refs": [
+        "PMID-21697315"
+      ]
+    },
+    "CC-HEADACHE": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-FATIGUE": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-RLQ-PAIN": {
+      "next_info": [
+        "NI-LAB-WBC",
+        "NI-LAB-CRP",
+        "NI-IMG-ABD-US"
+      ],
+      "pathway": "CP-RLQ-PAIN-EVAL",
+      "source_refs": [
+        "PMID-32295644"
+      ]
+    },
+    "CC-ABSCESS": {
+      "next_info": [
+        "NI-LAB-ABSCESS-CULTURE"
+      ],
+      "pathway": "CP-SKIN-ABSCESS-EVAL",
+      "source_refs": [
+        "PMID-24973422"
+      ]
+    },
+    "CC-GROIN-LUMP": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-PREG-NAUSEA": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-PREG-ITCH": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-DYSMENORRHEA": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-DISCHARGE": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-SORE-THROAT": {
+      "next_info": [
+        "NI-LAB-GAS-RADT"
+      ],
+      "pathway": "CP-PHARYNGITIS-EVAL",
+      "source_refs": [
+        "PMID-22965026"
+      ]
+    },
+    "CC-EAR-PAIN": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-VERTIGO": {
+      "next_info": [
+        "NI-OBS-DIX-HALLPIKE"
+      ],
+      "pathway": "CP-POSITIONAL-VERTIGO-EVAL",
+      "source_refs": [
+        "PMID-28248609"
+      ]
+    },
+    "CC-RED-EYE": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-BLURRED": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-LOW-BACK": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-KNEE": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-ANKLE": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-INSOMNIA": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-ANXIETY": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-TOOTHACHE": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-GUM": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-GASTRO": {
+      "next_info": [
+        "NI-ASK-DIARRHEA-FEATURES"
+      ],
+      "pathway": "CP-ACUTE-DIARRHEA-EVAL",
+      "source_refs": [
+        "PMID-29053792"
+      ]
+    },
+    "CC-HEARTBURN": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-NASAL": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-COLD": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-EPISTAXIS": {
+      "next_info": [
+        "NI-ASK-BLEEDING-RISK",
+        "NI-OBS-ANTERIOR-RHINOSCOPY"
+      ],
+      "pathway": "CP-EPISTAXIS-EVAL",
+      "source_refs": [
+        "PMID-31910111"
+      ]
+    },
+    "CC-CARIES": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-LOW-MOOD": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-RF-CHEST": {
+      "next_info": [
+        "NI-ECG-12LEAD",
+        "NI-LAB-TROPONIN"
+      ],
+      "pathway": "CP-CHEST-PAIN-EVAL",
+      "source_refs": [
+        "PMID-34709879"
+      ]
+    },
+    "CC-RF-CHEST-2": {
+      "next_info": [
+        "NI-ECG-12LEAD",
+        "NI-LAB-TROPONIN"
+      ],
+      "pathway": "CP-CHEST-PAIN-EVAL",
+      "source_refs": [
+        "PMID-34709879"
+      ]
+    },
+    "CC-RF-CHEST-3": {
+      "next_info": [
+        "NI-ECG-12LEAD",
+        "NI-LAB-TROPONIN"
+      ],
+      "pathway": "CP-CHEST-PAIN-EVAL",
+      "source_refs": [
+        "PMID-34709879"
+      ]
+    },
+    "CC-RF-CHEST-4": {
+      "next_info": [
+        "NI-ECG-12LEAD",
+        "NI-LAB-TROPONIN"
+      ],
+      "pathway": "CP-CHEST-PAIN-EVAL",
+      "source_refs": [
+        "PMID-34709879"
+      ]
+    },
+    "CC-RF-FAST": {
+      "next_info": [
+        "NI-IMG-HEAD-CT",
+        "NI-LAB-GLU",
+        "NI-ASK-LAST-KNOWN-WELL"
+      ],
+      "pathway": "CP-STROKE-EVAL",
+      "source_refs": [
+        "PMID-31662037"
+      ]
+    },
+    "CC-RF-FAST-2": {
+      "next_info": [
+        "NI-IMG-HEAD-CT",
+        "NI-LAB-GLU",
+        "NI-ASK-LAST-KNOWN-WELL"
+      ],
+      "pathway": "CP-STROKE-EVAL",
+      "source_refs": [
+        "PMID-31662037"
+      ]
+    },
+    "CC-RF-FAST-3": {
+      "next_info": [
+        "NI-IMG-HEAD-CT",
+        "NI-LAB-GLU",
+        "NI-ASK-LAST-KNOWN-WELL"
+      ],
+      "pathway": "CP-STROKE-EVAL",
+      "source_refs": [
+        "PMID-31662037"
+      ]
+    },
+    "CC-RF-FAST-4": {
+      "next_info": [
+        "NI-IMG-HEAD-CT",
+        "NI-LAB-GLU",
+        "NI-ASK-LAST-KNOWN-WELL"
+      ],
+      "pathway": "CP-STROKE-EVAL",
+      "source_refs": [
+        "PMID-31662037"
+      ]
+    },
+    "CC-RF-THUNDERCLAP": {
+      "next_info": [
+        "NI-ASK-OTTAWA-SAH",
+        "NI-IMG-HEAD-CT"
+      ],
+      "pathway": "CP-ACUTE-HEADACHE-EVAL",
+      "source_refs": [
+        "PMID-24065011"
+      ]
+    },
+    "CC-RF-THUNDERCLAP-2": {
+      "next_info": [
+        "NI-ASK-OTTAWA-SAH",
+        "NI-IMG-HEAD-CT"
+      ],
+      "pathway": "CP-ACUTE-HEADACHE-EVAL",
+      "source_refs": [
+        "PMID-24065011"
+      ]
+    },
+    "CC-RF-THUNDERCLAP-3": {
+      "next_info": [
+        "NI-ASK-OTTAWA-SAH",
+        "NI-IMG-HEAD-CT"
+      ],
+      "pathway": "CP-ACUTE-HEADACHE-EVAL",
+      "source_refs": [
+        "PMID-24065011"
+      ]
+    },
+    "CC-RF-THUNDERCLAP-4": {
+      "next_info": [
+        "NI-ASK-OTTAWA-SAH",
+        "NI-IMG-HEAD-CT"
+      ],
+      "pathway": "CP-ACUTE-HEADACHE-EVAL",
+      "source_refs": [
+        "PMID-24065011"
+      ]
+    },
+    "CC-RF-ANAPHYLAXIS": {
+      "next_info": [
+        "NI-ASK-ALLERGEN-TRIGGER",
+        "NI-LAB-TRYPTASE"
+      ],
+      "pathway": "CP-ANAPHYLAXIS-EVAL",
+      "source_refs": [
+        "PMID-33204386"
+      ]
+    },
+    "CC-RF-ANAPHYLAXIS-2": {
+      "next_info": [
+        "NI-ASK-ALLERGEN-TRIGGER",
+        "NI-LAB-TRYPTASE"
+      ],
+      "pathway": "CP-ANAPHYLAXIS-EVAL",
+      "source_refs": [
+        "PMID-33204386"
+      ]
+    },
+    "CC-RF-ANAPHYLAXIS-3": {
+      "next_info": [
+        "NI-ASK-ALLERGEN-TRIGGER",
+        "NI-LAB-TRYPTASE"
+      ],
+      "pathway": "CP-ANAPHYLAXIS-EVAL",
+      "source_refs": [
+        "PMID-33204386"
+      ]
+    },
+    "CC-RF-ANAPHYLAXIS-4": {
+      "next_info": [
+        "NI-ASK-ALLERGEN-TRIGGER",
+        "NI-LAB-TRYPTASE"
+      ],
+      "pathway": "CP-ANAPHYLAXIS-EVAL",
+      "source_refs": [
+        "PMID-33204386"
+      ]
+    },
+    "CC-TNM-CHEST-1": {
+      "next_info": [
+        "NI-ECG-12LEAD"
+      ],
+      "pathway": "CP-CHEST-PAIN-EVAL",
+      "source_refs": [
+        "PMID-34709879"
+      ]
+    },
+    "CC-TNM-CHEST-2": {
+      "next_info": [
+        "NI-ECG-12LEAD"
+      ],
+      "pathway": "CP-CHEST-PAIN-EVAL",
+      "source_refs": [
+        "PMID-34709879"
+      ]
+    },
+    "CC-TNM-HEADACHE-1": {
+      "no_sourced_workup": true,
+      "reason": "Gradually worsening headache is outside the Ottawa SAH rule population (peak within 1 hour); no sourced work-up in v1.2.0."
+    },
+    "CC-TNM-HEADACHE-2": {
+      "no_sourced_workup": true,
+      "reason": "Gradually worsening headache is outside the Ottawa SAH rule population (peak within 1 hour); no sourced work-up in v1.2.0."
+    },
+    "CC-TNM-NUMB-1": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-TNM-NUMB-2": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-TNM-URTICARIA-1": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-TNM-URTICARIA-2": {
+      "no_sourced_workup": true,
+      "reason": "No verified guideline source for an information-gathering item in v1.2.0; pending expert review (D1)."
+    },
+    "CC-TNM-DEFICIT-1": {
+      "no_sourced_workup": true,
+      "reason": "Unchanged deficit at a scheduled follow-up is outside the acute stroke guideline population; no sourced work-up in v1.2.0."
+    },
+    "CC-TNM-DEFICIT-2": {
+      "no_sourced_workup": true,
+      "reason": "Unchanged deficit at a scheduled follow-up is outside the acute stroke guideline population; no sourced work-up in v1.2.0."
+    }
+  },
+  "red_flag_rules": {
+    "RF-FAST": {
+      "next_info": [
+        "NI-IMG-HEAD-CT",
+        "NI-LAB-GLU",
+        "NI-ASK-LAST-KNOWN-WELL"
+      ],
+      "pathway": "CP-STROKE-EVAL",
+      "source_refs": [
+        "PMID-31662037"
+      ]
+    },
+    "RF-ACUTE-CHEST-PAIN": {
+      "next_info": [
+        "NI-ECG-12LEAD",
+        "NI-LAB-TROPONIN"
+      ],
+      "pathway": "CP-CHEST-PAIN-EVAL",
+      "source_refs": [
+        "PMID-34709879"
+      ]
+    },
+    "RF-THUNDERCLAP": {
+      "next_info": [
+        "NI-ASK-OTTAWA-SAH",
+        "NI-IMG-HEAD-CT"
+      ],
+      "pathway": "CP-ACUTE-HEADACHE-EVAL",
+      "source_refs": [
+        "PMID-24065011"
+      ]
+    },
+    "RF-ANAPHYLAXIS": {
+      "next_info": [
+        "NI-ASK-ALLERGEN-TRIGGER",
+        "NI-LAB-TRYPTASE"
+      ],
+      "pathway": "CP-ANAPHYLAXIS-EVAL",
+      "source_refs": [
+        "PMID-33204386"
+      ]
+    },
+    "RF-QSOFA": {
+      "next_info": [
+        "NI-LAB-LACTATE",
+        "NI-LAB-BLOOD-CULTURE"
+      ],
+      "pathway": "CP-SEPSIS-SCREEN",
+      "source_refs": [
+        "PMID-34599691"
+      ]
+    },
+    "RF-NEWS-SINGLE3": {
+      "next_info": [
+        "NI-OBS-REPEAT-VITALS"
+      ],
+      "pathway": "CP-NEWS-URGENT-REVIEW",
+      "source_refs": [
+        "RCP-NEWS-2012"
+      ]
+    },
+    "RF-NEWS-AGG5": {
+      "next_info": [
+        "NI-OBS-REPEAT-VITALS"
+      ],
+      "pathway": "CP-NEWS-URGENT-REVIEW",
+      "source_refs": [
+        "RCP-NEWS-2012"
+      ]
+    }
+  }
+}

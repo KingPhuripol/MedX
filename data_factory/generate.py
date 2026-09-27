@@ -17,7 +17,10 @@ from pathlib import Path
 
 from casegraph import evidence_adapter
 
-GENERATOR_VERSION = "1.1.1"
+GENERATOR_VERSION = "1.2.0"
+# v1.2.0 adds gold labels only (`care`); every inputs/** file stays byte-identical to v1.1.1, so input items
+# keep the item version they were generated with.
+ITEM_VERSION = "1.1.1"
 PKG_DIR = Path(__file__).resolve().parent
 TEMPLATES = PKG_DIR / "templates"
 TZ = timezone(timedelta(hours=7))
@@ -72,7 +75,8 @@ def _nfc(obj):
 
 def load_templates() -> dict:
     names = ("complaints", "departments", "red_flags", "references", "formulary", "allergy_classes",
-             "vitals_bands", "issue_types", "labs", "pregnancy_exclusions")
+             "vitals_bands", "issue_types", "labs", "pregnancy_exclusions", "next_info_codes", "care_pathways",
+             "care_next_info", "care_required_inputs")
     return {n: _nfc(json.loads((TEMPLATES / f"{n}.json").read_text(encoding="utf-8"))) for n in names}
 
 
@@ -344,7 +348,7 @@ class _Case:
         it = {"item_id": f"{self.cid}-{suffix}", "data_type": data_type, "patient_ref": self.plan["patient_ref"],
               "encounter_ref": self.cid, "event_time": iso(event), "observed_at": iso(observed),
               "available_at_time": iso(available), "source": source, "provenance": "synthetic",
-              "version": GENERATOR_VERSION, **body}
+              "version": ITEM_VERSION, **body}
         self.items.append(it)
         return it
 
@@ -576,6 +580,57 @@ class _Case:
 
 
 # ---------------------------------------------------------------- gold labels
+def _field_known(snap: list[dict], data_type: str, key: str) -> bool:
+    return any(it["data_type"] == data_type and it.get(key) is not None for it in snap)
+
+
+def required_inputs_missing(case: "_Case", snap: list[dict], required: list[str]) -> list[str]:
+    """Canonical-order required inputs that are missing or unknown at T (unknown is never read as negative)."""
+    state = {
+        "demographics.age": _field_known(snap, "Demographics", "age_years"),
+        "demographics.sex": _field_known(snap, "Demographics", "sex"),
+        **{f: case.fields[f] != "MISSING" for f in ("chief_complaint", "duration", "allergy_status")},
+        **{f"vitals.{p}": _field_known(snap, "Vitals", p) for p in VITAL_PARAMS},
+    }
+    return [f for f in required if not state[f]]
+
+
+def care_gold(case: "_Case", journey: dict, T: str, snap: list[dict], flags: list[dict], tpl: dict) -> dict:
+    """Care-suggestion reference label at T (v1.2.0). Synthetic, from predeclared sourced templates (D1)."""
+    cni, vocab = tpl["care_next_info"], {c["code"]: c for c in tpl["next_info_codes"]["codes"]}
+    lab_loinc = {x["test"]: x["loinc"] for x in tpl["labs"]}
+    code_of_loinc = {c["loinc"]: c["code"] for c in vocab.values() if c.get("loinc")}
+    missing = required_inputs_missing(case, snap, [r["input"] for r in tpl["care_required_inputs"]["required_inputs"]])
+    entry = cni["complaints"][case.cc["id"]]
+    fired = [f["rule_id"] for f in flags]
+    entries = ([] if entry.get("no_sourced_workup") else [entry]) + [
+        cni["red_flag_rules"][r] for r in cni["rule_priority"] if r in fired]
+    resulted = {code_of_loinc[lab_loinc[r["test"]]] for it in snap if it["data_type"] == "LabSeries"
+                for r in it["results"]}
+    n_vitals = sum(1 for it in snap if it["data_type"] == "Vitals")
+
+    def observed(code: str) -> bool:
+        when = vocab[code]["observed_when"]
+        return (when == "lab_resulted" and code in resulted) or (when == "second_vitals_set" and n_vitals >= 2)
+
+    sources: dict[str, set] = {}
+    for e in entries:
+        for code in e["next_info"]:
+            sources.setdefault(code, set()).update(e["source_refs"], vocab[code]["source_refs"])
+    removed = sorted(c for c in sources if observed(c))
+    next_info = sorted(c for c in sources if c not in removed)
+    rule_paths = [cni["red_flag_rules"][r]["pathway"] for r in cni["rule_priority"] if r in fired]
+    pathway = rule_paths[0] if rule_paths else (None if entry.get("no_sourced_workup") else entry["pathway"])
+    reason = ("sourced" if next_info else "no_sourced_workup" if not entries else "all_sourced_items_already_available")
+    cut = parse(T)
+    ordered = sorted({code_of_loinc[lab_loinc[r["test"]]] for it in journey["items"]
+                      if it["data_type"] == "LabSeries" and parse(it["event_time"]) > cut for r in it["results"]})
+    return {"required_inputs_missing": missing, "expected_action": "abstain" if missing else "suggest",
+            "next_info": next_info, "next_info_sources": {c: sorted(sources[c]) for c in next_info},
+            "already_available_at_T": removed, "pathway": pathway, "evaluable": bool(next_info), "reason": reason,
+            "ordered_after_T": ordered}
+
+
 def gold_for(case: _Case, journey: dict, injections: list[dict], rules: list[dict]) -> dict:
     rows = []
     cc_dept = case.cc["department"]
@@ -594,7 +649,7 @@ def gold_for(case: _Case, journey: dict, injections: list[dict], rules: list[dic
                      "department_evaluable": not cc_missing,
                      "department_reason": "chief_complaint_missing" if cc_missing else None,
                      "red_flags": flags, "required_fields": case.fields, "medication_issues": issues,
-                     "expected_action": action})
+                     "expected_action": action, "care": care_gold(case, journey, T, snap, flags, case.tpl)})
     return {"case_id": case.cid, "patient_ref": case.plan["patient_ref"], "split": case.plan["split"],
             "label_version": GENERATOR_VERSION,
             "label_status": "synthetic reference labels from predeclared rules; not clinical ground truth; not expert-reviewed",
@@ -688,6 +743,10 @@ def summarize(plans, golds, injections, splits) -> dict:
         "clean_medication_cases": sum(1 for p in plans if p["has_meds"] and not p["injections"]),
         "injections_per_type": tally(r["issue_type"] for r in injections),
         "cases_with_late_items": sum(1 for p in plans if p["late"]),
+        "care_expected_action": tally(r["care"]["expected_action"] for r in rows),
+        "care_evaluable_rows": sum(1 for r in rows if r["care"]["evaluable"]),
+        "care_reason": tally(r["care"]["reason"] for r in rows),
+        "care_pathway": tally(str(r["care"]["pathway"]) for r in rows),
     }
 
 
@@ -697,12 +756,23 @@ SNAPSHOT_ONLY = ("Only `inputs/<split>/<case_id>/snapshot_T*.json` files are val
 DEPT_EVALUABLE = ("Department accuracy is computed only over rows with `department_evaluable == true`. Rows with "
                   "`target_department == \"NOT_EVALUABLE\"` (chief complaint missing) are excluded from department "
                   "accuracy and enter the abstention/coverage metric instead (PROPOSAL 3.6).")
+CARE_LABELS = ("`care` (v1.2.0, slice s6) holds care-suggestion reference labels per decision point: "
+               "`required_inputs_missing` (canonical order, `care_required_inputs.json`; unknown counts as missing), "
+               "`expected_action` (`abstain` iff that list is non-empty), `next_info` (sourced template items plus "
+               "fired red-flag rule items, minus items already resulted or observed in snapshot_T), "
+               "`next_info_sources`, `pathway`, `evaluable` (false when no sourced work-up applies or `next_info` is "
+               "empty), `reason` and `ordered_after_T` (lab items whose LabSeries `event_time` is after T; proxy for "
+               "tests ordered after the decision time, PROPOSAL 3.6(3)). These are synthetic reference labels from "
+               "guideline-sourced templates written by the builder, not expert-reviewed (D1), not clinical ground "
+               "truth; results against them are a System Evaluation, not clinical performance.")
 GOLD_README = f"""# gold/ — synthetic reference labels (audit and evaluation only; never model input)
 
 Labels are synthetic reference labels from predeclared rules, not clinical ground truth, not expert-reviewed (D1).
 A "no red flag" row means only that no rule in the registry fires; it does not mean the patient is clinically safe.
 
 {DEPT_EVALUABLE}
+
+{CARE_LABELS}
 
 {SNAPSHOT_ONLY}
 """
@@ -735,6 +805,9 @@ def datacard(seed: int, counts: dict) -> str:
   `suggest`.
 - `medication_issues`: deliberately injected discrepancies (AHRQ MATCH; ASHP 2021), each logged in
   `gold/injection_log.jsonl`; present only at decision times where the new order is available.
+- {CARE_LABELS}
+- v1.2.0 changes gold only: every `inputs/**` file is byte-identical to v1.1.1 at the same seed (input items keep
+  `version` {ITEM_VERSION}); existing gold keys are unchanged except `label_version`.
 
 ## Leakage controls
 Patients are split before cases are generated (`splits.json`). Snapshot at T contains only items with
