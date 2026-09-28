@@ -316,6 +316,12 @@ def main(argv: list[str] | None = None) -> int:
     if a.dataset:
         os.environ["CARE_DATASET"] = a.dataset
     root = dataset.root()
+    try:
+        dataset.require_synthetic(root)  # int2: before anything is read, called or written
+    except dataset.DatasetNotSynthetic:
+        print(f"REFUSED: {root}/manifest.json does not declare data_class 'synthetic'; nothing written",
+              file=sys.stderr)
+        return 2
     if a.split == "test" and not _dataset_meta(root).get("heldout"):
         print(f"REFUSED: the test split of {root} is retired ({DECISION}: {DECISION_TITLE}); "
               f"{RETIRED_ID} is '{RETIRED_LABEL}'. Use --dataset data/synthetic/s6r-heldout", file=sys.stderr)

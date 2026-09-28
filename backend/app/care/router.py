@@ -66,7 +66,9 @@ def physician(request: Request) -> CurrentUser:
     return user
 
 
-def _unavailable() -> JSONResponse:
+def _unavailable(exc: Exception | None = None) -> JSONResponse:
+    if isinstance(exc, dataset.DatasetNotSynthetic):  # int2: synthetic datasets only, before any gateway call
+        return JSONResponse(status_code=503, content={"detail": "dataset_not_synthetic"})
     return JSONResponse(status_code=503, content={"detail": "dataset_missing: run make data"})
 
 
@@ -97,8 +99,8 @@ def _load(request: Request, assessment_id: str) -> CareAssessment:
 def list_cases(user: CurrentUser = Depends(physician)) -> Any:
     try:
         ids = dataset.case_ids(SPLIT)
-    except dataset.DatasetMissing:
-        return _unavailable()
+    except (dataset.DatasetMissing, dataset.DatasetNotSynthetic) as exc:
+        return _unavailable(exc)
     cases = []
     for cid in ids:
         dps = []
@@ -126,8 +128,8 @@ def vocabulary(user: CurrentUser = Depends(physician)) -> dict:
 def assess(case_id: str, body: AssessBody, request: Request, user: CurrentUser = Depends(physician)) -> Any:
     try:
         snap = dataset.load_snapshot(SPLIT, case_id, body.decision_point)
-    except dataset.DatasetMissing:
-        return _unavailable()
+    except (dataset.DatasetMissing, dataset.DatasetNotSynthetic) as exc:
+        return _unavailable(exc)
     if snap is None:
         raise HTTPException(status_code=404, detail="unknown_case")
     db = get_engine(request)

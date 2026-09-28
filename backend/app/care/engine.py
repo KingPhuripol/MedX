@@ -43,10 +43,8 @@ class _Invalid(Exception):
 
 
 def _screening_view(s: redflag_adapter.Screening) -> ScreeningView:
-    x = s.screening
-    return ScreeningView(status=x.status, performed=x.performed, banner=x.banner,
-                         rules_evaluated=list(x.rules_evaluated), rules_not_evaluated=list(x.rules_not_evaluated),
-                         missing_inputs=list(x.missing_inputs))
+    x = s.screening  # a validated casegraph.data.RedFlagScreening (I2 block)
+    return ScreeningView(**x.model_dump(mode="json"), summary=x.summary())
 
 
 def _optional_missing(view: SnapshotView) -> list[str]:

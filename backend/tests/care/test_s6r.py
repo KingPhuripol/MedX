@@ -193,10 +193,10 @@ TEST_0002 = evaluate.paths("test", "s6-care-test-0002")
 
 @pytest.fixture(scope="session")
 def heldout_root(tmp_path_factory):
-    from data_factory.generate import generate
+    from .conftest import factory_generate
 
     out = tmp_path_factory.mktemp("care_heldout") / "s6r-heldout"
-    generate(HELDOUT_SEED, out, heldout=True)
+    factory_generate(HELDOUT_SEED, out, heldout=True)
     return out
 
 

@@ -26,7 +26,8 @@ class _Strict(BaseModel):
 
 
 class ScreeningView(_Strict):
-    """``casegraph.data.RedFlagScreening`` fields, serialised as lists."""
+    """Every ``casegraph.data.RedFlagScreening`` field (slice int2: the I2 block), serialised as lists, plus
+    ``summary`` (``RedFlagScreening.summary()``). Built only from a validated ``RedFlagScreening``."""
 
     status: Literal["evaluated", "partially_evaluated", "not_evaluated", "unavailable"]
     performed: bool
@@ -34,6 +35,16 @@ class ScreeningView(_Strict):
     rules_evaluated: list[str]
     rules_not_evaluated: list[str]
     missing_inputs: list[str]
+    rule_set_version: str
+    label: str
+    scope: str
+    n_declared: int
+    n_evaluated: int
+    n_not_evaluated: int
+    n_fired: int
+    readings: list[dict[str, Any]]
+    conflicts: list[dict[str, Any]]
+    summary: str
 
 
 class EvidenceRef(_Strict):

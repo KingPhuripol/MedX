@@ -9,6 +9,7 @@ import pytest
 import casegraph.single_prompt  # noqa: F401  (registers casegraph.single_prompt.v1)
 import app.triage.department  # noqa: F401  (registers triage.department.v1)
 import app.voice  # noqa: F401  (registers voice.intake_extract, voice.symptom_extract.v1)
+import app.care.mock_rules  # noqa: F401  (registers care.suggest.v1, slice int2)
 from app.config import Settings
 from app.gateway import MOCK_LABEL, GatewayRequest, build_provider, mock_tasks
 from app.gateway.contract import canonical_sha256
@@ -21,6 +22,8 @@ SAMPLE_INPUTS = {
     "voice.symptom_extract.v1": {"turns": [{"turn_index": 1, "speaker": "patient", "text": "เจ็บหน้าอกขึ้นมาทันที",
                                             "spoken_at": "2030-01-01T08:00:00+07:00"}]},
     "triage.department.v1": {"chief_complaint": {"fact_id": "X-1", "text": "ear pain"}, "symptoms_present": []},
+    "care.suggest.v1": {"as_of": "2030-01-01T09:00:00+07:00", "items": [], "alerts": [], "max_next_information": 5,
+                        "max_pathway_options": 3},
 }
 
 
@@ -50,7 +53,7 @@ def test_single_mock_registry():
     assert tables == ["backend/app/gateway/mock_tasks.py:_REGISTRY"]
     registered = mock_tasks.registered()
     for task in ("voice.intake_extract", "voice.symptom_extract.v1", "triage.department.v1",
-                 "casegraph.single_prompt.v1"):
+                 "casegraph.single_prompt.v1", "care.suggest.v1"):
         assert task in registered, task
 
 

@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import copy
 import json
+import subprocess
+import sys
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -16,7 +18,8 @@ from app.config import Settings
 from app.gateway import build_provider
 from app.gateway import service as gateway_service
 from app.gateway.contract import GatewayRequest, GatewayResponse
-from data_factory.generate import generate
+
+REPO = Path(__file__).resolve().parents[3]
 
 SEED = 20260926
 SPLITS = ("train", "dev", "test")
@@ -40,10 +43,16 @@ class Dataset:
         return self.snapshot(row["split"], row["case_id"], row["dp"])
 
 
+def factory_generate(seed: int, out: Path, *, heldout: bool = False) -> None:
+    """The factory CLI in a subprocess (no ``data_factory`` import under backend/, I2-A06)."""
+    cmd = [sys.executable, "-m", "data_factory", "generate", "--seed", str(seed), "--out", str(out)]
+    subprocess.run(cmd + (["--heldout"] if heldout else []), cwd=REPO, check=True, capture_output=True)
+
+
 @pytest.fixture(scope="session")
 def dataset(tmp_path_factory) -> Dataset:
     out = tmp_path_factory.mktemp("care_synthetic") / "v1"
-    generate(SEED, out)
+    factory_generate(SEED, out)
     return Dataset(out)
 
 
