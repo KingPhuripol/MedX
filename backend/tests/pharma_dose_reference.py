@@ -504,14 +504,20 @@ class _Walk:
         return self.numberlike(i) or self.t(i) in UNIT_OF or self.t(i) in QW
 
 
-# rev 4 C1: the only words the unread part of the dose region may hold.
+# rev 4 C1 (rev 5: no bare day/days/week/month/วัน): the only words the unread part of the dose region may hold.
 FREE_LATIN = frozenset(
-    "od bd bid tid qid qd qod hs prn po ac pc daily nightly weekly monthly once twice thrice every other day days "
-    "week month morning evening night bedtime noon before after with without meal meals food breakfast lunch dinner "
+    "od bd bid tid qid qd qod hs prn po ac pc daily nightly weekly monthly once twice thrice every other "
+    "morning evening night bedtime noon before after with without meal meals food breakfast lunch dinner "
     "supper as needed when required for pain fever oral orally by mouth at in the take sc sl im iv".split(" "))
 FREE_THAI = frozenset(
-    "รับประทาน กิน ทาน อาหาร นอน มี อาการ ปวด ไข้ วัน เว้น ให้ ก่อน หลัง พร้อม เช้า กลางวัน เที่ยง เย็น ค่ำ ตอน เวลา "
-    "เมื่อ ทุก ทันที ต่อ แบ่ง รวม ทั้งหมด ทั้งวัน".split(" "))
+    "รับประทาน กิน ทาน อาหาร นอน มี อาการ ปวด ไข้ เว้น ให้ ก่อน หลัง พร้อม เช้า กลางวัน เที่ยง เย็น ค่ำ ตอน เวลา "
+    "เมื่อ ทุก ทันที ต่อ แบ่ง รวม ทั้งหมด ทั้งวัน ทุกวัน วันเว้นวัน".split(" "))
+# rev 5: word sequences a bare period word may stand in; consecutive words are separated only by PHRASE_GLUE.
+FREE_PHRASES = (("every", "day"), ("every", "other", "day"), ("every", "week"), ("every", "other", "week"),
+                ("every", "month"))
+PHRASE_GLUE = " -._"
+BARE_PERIODS = ("day", "days", "week", "weeks", "month", "months")
+THAI_DAY_COMPOUNDS = ("วันเว้นวัน", "ทั้งวัน", "กลางวัน", "ทุกวัน")
 
 
 def _wordchar(ch: str) -> bool:
@@ -564,9 +570,50 @@ def _covers(run: str) -> bool:
     return True
 
 
+def latin_words(text: str) -> list[tuple[int, int, str]]:
+    """(start, end, word) of every maximal run of non-Thai letters (category L*)."""
+    out, k = [], 0
+    while k < len(text):
+        if unicodedata.category(text[k]).startswith("L") and not _thai(text[k]):
+            end = k
+            while end < len(text) and unicodedata.category(text[end]).startswith("L") and not _thai(text[end]):
+                end += 1
+            out.append((k, end, text[k:end]))
+            k = end
+        else:
+            k += 1
+    return out
+
+
+def phrase_spans(text: str) -> list[tuple[int, int, tuple[str, ...]]]:
+    """rev 5: FREE_PHRASES found left to right over the words of ``text`` (longest phrase first at each word)."""
+    words, out, k = latin_words(text), [], 0
+    while k < len(words):
+        hit = None
+        for phrase in sorted(FREE_PHRASES, key=len, reverse=True):
+            seg = words[k:k + len(phrase)]
+            if len(seg) == len(phrase) and tuple(w for _, _, w in seg) == phrase and all(
+                    all(ch in PHRASE_GLUE for ch in text[a[1]:b[0]]) for a, b in zip(seg, seg[1:])):
+                hit = phrase
+                break
+        if hit:
+            out.append((words[k][0], words[k + len(hit) - 1][1], hit))
+            k += len(hit)
+        else:
+            k += 1
+    return out
+
+
+def blank_phrases(text: str) -> str:
+    for a, b, _ in phrase_spans(text):
+        text = text[:a] + " " * (b - a) + text[b:]
+    return text
+
+
 def free_words_ok(free: str) -> bool:
-    """rev 4 C1 on already-blanked free text: every Thai run segments, every other letter run is a listed word."""
-    text = undot(free.casefold())
+    """rev 4 C1 on already-blanked free text: every Thai run segments, every other letter run is a listed word
+    (rev 5: after the FREE_PHRASES are blanked)."""
+    text = blank_phrases(undot(free.casefold()))
     runs: list[tuple[bool, str]] = []  # (is_thai, run)
     for ch in text:
         thai = _thai_mark_or_letter(ch)

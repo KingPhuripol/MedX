@@ -223,8 +223,29 @@ K_PROBES = {
     "K7": ("ซาร่า 500 มก. 2 แคปซูล เวลาปวด", ("resolved", None, 500.0, "mg", 2.0), None, None),
     "K8": ("Metformin 500 mg once a day", ("resolved", None, 500.0, "mg", None), "q24h", None),
 }
-REV4_PROBES = {**N_PROBES, **M_PROBES, **PU_PROBES, **K_PROBES}
-ALL_PROBES = {**REV3_PROBES, **REV4_PROBES}
+
+# ================================================================ rev 5 (SPEC rev 5, final)
+# UT = unverifiable / unparsed_token; PUA = unverifiable / per_unit_amount. Row: (input, expected, Freq or None, None).
+
+B_PROBES = {
+    "B1": ("Metformin 1000 mg day", UNP, None, None),
+    "B2": ("Metformin 1000 mg day, bid", UNP, "q12h", "day,"),
+    "B3": ("Metformin 500 mg 2 tabs day bid", UNP, "q12h", "day"),
+    "B4": ("เมทฟอร์มิน 1000 มก. วัน", UNP, None, None),
+    "B5": ("เมทฟอร์มิน 1000 มก. วัน วันละ 2 ครั้ง", UNP, "q12h", "วัน"),
+    "B22": ("Metformin 1000 mg po day", UNP, None, None),
+    "B23": ("เมทฟอร์มิน 1000 มก. รับประทาน วัน วันละ 2 ครั้ง", UNP, "q12h", "วัน"),
+}
+K5_PROBES = {
+    "K9": ("Alendronate 70 mg weekly", ("resolved", None, 70.0, "mg", None), None, None),
+    "K10": ("Alendronate 70 mg every week", ("resolved", None, 70.0, "mg", None), None, None),
+    "K11": ("Metformin 500 mg every day", ("resolved", None, 500.0, "mg", None), "q24h", None),
+    "K18": ("เมทฟอร์มิน 500 มก. วันเว้นวัน", ("resolved", None, 500.0, "mg", None), None, None),
+}
+K_PROBES.update(K5_PROBES)  # test_probe_controls runs K1-K8 and the rev-5 rows K9-K19
+REV4_PROBES = {**N_PROBES, **M_PROBES, **PU_PROBES, **{k: v for k, v in K_PROBES.items() if k not in K5_PROBES}}
+REV5_PROBES = {**B_PROBES, **K5_PROBES}
+ALL_PROBES = {**REV3_PROBES, **REV4_PROBES, **REV5_PROBES}
 
 
 def _dose(text: str) -> tuple:
@@ -280,10 +301,10 @@ def test_probe_q4b_follower(probe):
 
 
 def test_t1_r1_frequency_neutral():
-    """A15 (rev 3 extension to SL, DT, D and QF; rev 4 to N, M, PU and K): every probe with a Freq gives it, and so
-    does the same entry with its SLASH-LIKE / R1 / D1 / QF / §N / C1 / §P segment removed."""
+    """A15 (rev 3 extension to SL, DT, D and QF; rev 4 to N, M, PU and K; rev 5 to B and K9-K19): every probe with a
+    Freq gives it, and so does the same entry with its SLASH-LIKE / R1 / D1 / QF / §N / C1 / §P segment removed."""
     rows = [(p, t, f, seg) for p, (t, _, f, seg) in ALL_PROBES.items() if f]
-    assert {p.rstrip("0123456789") for p, *_ in rows} == {"SL", "DT", "D", "QF", "N", "M", "PU", "K"}
+    assert {p.rstrip("0123456789") for p, *_ in rows} == {"SL", "DT", "D", "QF", "N", "M", "PU", "K", "B"}
     for probe, text, freq, seg in rows:
         got = parse_entry(text)
         assert got["frequency_code"] == freq, probe
@@ -437,17 +458,38 @@ def test_normalise_steps_closed():
 SPEC = REPO_ROOT / "slices" / "s5r4" / "SPEC.md"
 
 
+def _spec_constants(heading: str) -> dict[str, str]:
+    """``NAME = value`` blocks from the first code block after ``heading`` in the spec (continuation lines joined,
+    parenthesised note lines dropped)."""
+    block = SPEC.read_text(encoding="utf-8").split(heading, 1)[1].split("```")[1]
+    out: dict[str, str] = {}
+    name = None
+    for line in block.splitlines():
+        head, eq, rest = line.partition("=")
+        if eq and re.fullmatch(r"[A-Z0-9_]+", head.strip()):
+            name, line = head.strip(), rest
+        if name and not line.strip().startswith("("):
+            out[name] = out.get(name, "") + " " + line.strip()
+    return out
+
+
 def _spec_block(title: str) -> set[str]:
-    text = SPEC.read_text(encoding="utf-8")
-    block = text.split(f"`{title}` (one constant; exactly these words):")[1].split("```")[1]
-    return set(block.split())
+    return set(_spec_constants("**Rev 5 changes**")[title].split())
 
 
 def test_vocab_sets_match_spec():
+    """A14 (rev 5): the vocabularies equal the rev-5 spec block and the reference's own lists."""
     en, th = _spec_block("V_EN_FREE"), _spec_block("V_TH_FREE")
-    assert len(en) == 60 and len(th) == 30, (len(en), len(th))  # guards the spec parsing
+    assert len(en) == 56 and len(th) == 31, (len(en), len(th))  # guards the spec parsing
     assert mock_rules.V_EN_FREE == en == ref.FREE_LATIN
     assert mock_rules.V_TH_FREE == th == ref.FREE_THAI
+    for word in ("day", "days", "week", "month"):
+        assert word not in en
+    assert "วัน" not in th and {"ทุกวัน", "วันเว้นวัน"} <= th
+    phrases = {tuple(p.replace("J", " ").split()) for p in _spec_constants("**Rev 5 changes**")["V_EN_PHRASES"].split("|")}
+    assert phrases == {tuple(p.split()) for p in mock_rules.V_EN_PHRASES} == set(ref.FREE_PHRASES)
+    assert len(phrases) == 5
+    assert mock_rules._WORD_JOINERS == frozenset(ref.PHRASE_GLUE) == frozenset(" -._")  # J
     # Deliberately absent: accepted only when a production consumes them.
     for word in ("mg", "tab", "tabs", "x", "a", "per", "to", "or", "and", "one", "half", "h", "hr"):
         assert word not in en
@@ -508,3 +550,55 @@ def test_fuzz_rev4_classes():
     # K1/K2/K8-style controls inside per_unit_word resolve.
     controls = [p for p in phrases if "per_unit_word" in p.adversarial and p.productions == ["S1"]]
     assert len(controls) >= 5 and all(parse_entry(p.text)["dose_status"] == "resolved" for p in controls)
+
+
+@pytest.mark.parametrize("probe", list(B_PROBES))
+def test_probe_rev5_blockers(probe):
+    _check(probe)
+    assert _dose(B_PROBES[probe][0])[0] != "resolved"
+
+
+def test_bare_period_words_only_in_phrases():
+    """§C1 rev 5: a bare period word fires C1; inside V_EN_PHRASES (any J run) or a Thai compound it does not."""
+    for text in ("Metformin 1000 mg days", "Metformin 1000 mg weeks", "Metformin 1000 mg month", "Metformin 1000 mg every other month",
+                 "Metformin 1000 mg every  day day", "เมทฟอร์มิน 1000 มก. กินวัน", "เมทฟอร์มิน 1000 มก. วันวัน",
+                 "Metformin 1000 mg everyday-ish"):
+        assert _dose(text) == UNP, text
+        assert reference_parse(text)[4] == "unparsed_token", text
+    for text in ("Metformin 500 mg every-day", "Metformin 500 mg every. day", "Metformin 500 mg every_other_week",
+                 "Metformin 500 mg every month", "เมทฟอร์มิน 500 มก. ทุกวัน", "เมทฟอร์มิน 500 มก. กลางวัน"):
+        assert not any(m.pid == "C1" for m in mock_rules.read_dose(text).matches), text
+        assert ref.c1_ok(ref._walk(text)[1]), text
+
+
+# ---------------------------------------------------------------- S5R4-A09 (rev 5) neutral on existing data vs d2ff98c
+
+LEGACY_D2FF98C = Path(__file__).parent / "legacy" / "mock_rules_d2ff98c.py"
+LEGACY_D2FF98C_SHA256 = "db97f2597410efd60e0687419d98d225fb778e9966f26d598ce6333251198459"  # git show d2ff98c:...
+
+
+def _load_legacy(path: Path, digest: str):
+    assert hashlib.sha256(path.read_bytes()).hexdigest() == digest
+    spec = importlib.util.spec_from_file_location(path.stem, path)
+    legacy = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = legacy
+    try:
+        spec.loader.exec_module(legacy)
+    finally:
+        del sys.modules[spec.name]
+    return legacy
+
+
+# Inputs whose result changes only because P3 no longer fires on a word that merely starts with "per" (A09 list).
+P3_NARROWED_EXISTING: list[str] = []
+
+FIELDS = ("dose_status", "dose_unverifiable_reason", "dose_value", "dose_unit", "quantity", "frequency_code")
+
+
+def test_rev5_neutral_on_existing():
+    legacy = _load_legacy(LEGACY_D2FF98C, LEGACY_D2FF98C_SHA256)
+    assert legacy.DOSE_GRAMMAR_VERSION == "s5-dose-grammar-1.3.0"
+    texts = sorted(set(_existing_inputs()))
+    assert len(texts) >= 2000, len(texts)
+    changed = [t for t in texts if tuple(parse_entry(t)[f] for f in FIELDS) != tuple(legacy.parse_entry(t)[f] for f in FIELDS)]
+    assert changed == P3_NARROWED_EXISTING, [ascii(t) for t in changed[:10]]

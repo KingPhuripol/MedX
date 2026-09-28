@@ -544,39 +544,21 @@ def _d1(toks: list[Token], i: int) -> Match | None:
     return Match("D1", i, i) if any(_d1_th_at(compact[k:]) for k in range(len(t.text))) else None
 
 
-# C1 (rev 4, amended in rev 5): closed free-text vocabulary for the dose region. Units, quantity words, number words,
-# ครั้ง, ครั้งละ, วันละ, time words, x, a, per, to, or and and are deliberately absent: they pass only when a production
-# consumes them. Rev 5: the bare period words day/days/week/month and วัน are absent too; they pass only inside a
-# V_EN_PHRASES match or a listed Thai compound (ทุกวัน, วันเว้นวัน, ทั้งวัน, กลางวัน).
+# C1 (rev 4): closed free-text vocabulary for the dose region. Units, quantity words, number words, ครั้ง, ครั้งละ,
+# วันละ, time words, x, a, per, to, or and and are deliberately absent: they pass only when a production consumes them.
 V_EN_FREE = frozenset("""
-od bd bid tid qid qd qod hs prn po ac pc daily nightly weekly monthly once twice thrice every other
-morning evening night bedtime noon before after with without meal meals food breakfast lunch dinner
-supper as needed when required for pain fever oral orally by mouth at in the take sc sl im iv
+od bd bid tid qid qd qod hs prn po ac pc daily nightly weekly monthly once twice thrice every other day days week
+month morning evening night bedtime noon before after with without meal meals food breakfast lunch dinner supper
+as needed when required for pain fever oral orally by mouth at in the take sc sl im iv
 """.split())
 V_TH_FREE = frozenset("""
-รับประทาน กิน ทาน อาหาร นอน มี อาการ ปวด ไข้ เว้น ให้ ก่อน หลัง พร้อม เช้า กลางวัน เที่ยง เย็น ค่ำ ตอน เวลา
-เมื่อ ทุก ทันที ต่อ แบ่ง รวม ทั้งหมด ทั้งวัน ทุกวัน วันเว้นวัน
+รับประทาน กิน ทาน อาหาร นอน มี อาการ ปวด ไข้ วัน เว้น ให้ ก่อน หลัง พร้อม เช้า กลางวัน เที่ยง เย็น ค่ำ ตอน เวลา
+เมื่อ ทุก ทันที ต่อ แบ่ง รวม ทั้งหมด ทั้งวัน
 """.split())
-# Rev 5: frequency phrases blanked (whole words; each space stands for a run of _WORD_JOINERS) before the word check.
-V_EN_PHRASES = ("every day", "every other day", "every week", "every other week", "every month")
 _V_TH_LONGEST = tuple(sorted(V_TH_FREE, key=len, reverse=True))
 _DOTTED_ABBR = re.compile(r"(?<![^\W\d_])[^\W\d_](?:\.[^\W\d_])+\.?(?![^\W\d_])")  # p.r.n. -> prn
 _TH_RUN = re.compile("[\u0e01-\u0e3a\u0e40-\u0e4e]+")
 _LETTER_RUN = re.compile(r"[^\W\d_]+")
-_JOINER_RUN = "[" + re.escape("".join(sorted(_WORD_JOINERS))) + "]+"
-_PHRASE_RE = re.compile("|".join(_JOINER_RUN.join(map(re.escape, p.split())) for p in sorted(V_EN_PHRASES, key=len, reverse=True)))
-
-
-def _is_latin_letter(c: str) -> bool:
-    """A letter of a C1 Latin word: category L*, not Thai."""
-    return unicodedata.category(c)[0] == "L" and not _is_thai(c)
-
-
-def _phrases(free: str) -> list[re.Match[str]]:
-    """Whole-word V_EN_PHRASES matches in ``free`` (casefolded), left to right, non-overlapping."""
-    return [m for m in _PHRASE_RE.finditer(free)
-            if not (m.start() and _is_latin_letter(free[m.start() - 1]))
-            and not (m.end() < len(free) and _is_latin_letter(free[m.end()]))]
 
 
 def _compact_dots(text: str) -> str:
@@ -608,27 +590,20 @@ def _th_segmented(run: str) -> bool:
     return True
 
 
-def _free_text(toks: list[Token], i: int, spans: list[tuple[int, int]]) -> str:
-    """The dose region (token ``i`` to the end) with every consumed character blanked, casefolded, dots compacted."""
+def _c1(toks: list[Token], i: int, spans: list[tuple[int, int]] = ()) -> Match | None:
+    """C1 (rev 4): the free text of the dose region (token ``i`` = the first numeric-ish token, to the end; every
+    consumed character blanked) must be closed-vocabulary words only. Consumes nothing."""
+    if i >= len(toks):
+        return None
     chars = list(_surface(toks))
     for a, b in spans:
         chars[a:b] = " " * (b - a)
-    return _compact_dots("".join(chars[toks[i].start:]).casefold())
-
-
-def _c1(toks: list[Token], i: int, spans: list[tuple[int, int]] = ()) -> Match | None:
-    """C1 (rev 4, rev 5): the free text of the dose region (token ``i`` = the first numeric-ish token, to the end;
-    every consumed character blanked) must be closed-vocabulary words or V_EN_PHRASES only. Consumes nothing."""
-    if i >= len(toks):
-        return None
-    free = _free_text(toks, i, spans)
+    free = _compact_dots("".join(chars[toks[i].start:]).casefold())
     if not all(_th_segmented(run) for run in _TH_RUN.findall(free)):
         return Match("C1", i, i)
-    for m in _phrases(free):  # rev 5: a listed frequency phrase is the only place a bare period word may stand
-        free = free[:m.start()] + " " * (m.end() - m.start()) + free[m.end():]
     word = ""
     for c in free + " ":
-        if _is_latin_letter(c):
+        if unicodedata.category(c)[0] == "L" and not _is_thai(c):
             word += c
         elif word:
             if word not in V_EN_FREE:
