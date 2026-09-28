@@ -2,7 +2,9 @@
 
 import { FormEvent, useState } from "react";
 
+import ScreeningBlock from "@/components/ScreeningBlock";
 import {
+  CARE_STALE_TEXT,
   OUTPUT_LABEL,
   refText,
   type Assessment,
@@ -125,34 +127,12 @@ export default function CareReview({ assessment, vocabulary, onReview }: Props) 
             </ul>
           </div>
         ) : (
-          <p>No red-flag rule fired on the data recorded so far.</p>
+          <p data-testid="no-alert">
+            No alert raised by the rules that ran. This is not an all-rules result: see the screening block below
+            for what was and was not checked.
+          </p>
         )}
-        {scr.banner ? (
-          <div data-testid="screening-banner" className="error">
-            <p>
-              <span aria-hidden="true">⚠ </span>
-              {scr.banner}
-            </p>
-            <p>
-              Screening status: {scr.status}. Rules not checked are not a negative result.
-            </p>
-            {scr.rules_not_evaluated.length > 0 && (
-              <>
-                <h3>Rules not evaluated</h3>
-                <ul data-testid="rules-not-evaluated">
-                  {scr.rules_not_evaluated.map((r) => (
-                    <li key={r}>{r}</li>
-                  ))}
-                </ul>
-              </>
-            )}
-            {scr.missing_inputs.length > 0 && (
-              <p data-testid="screening-missing">Inputs not available: {scr.missing_inputs.join(", ")}</p>
-            )}
-          </div>
-        ) : (
-          <p data-testid="screening-evaluated">Red-flag screening evaluated every rule.</p>
-        )}
+        <ScreeningBlock screening={scr} staleText={CARE_STALE_TEXT} />
       </section>
 
       <section aria-labelledby="suggestion-title" data-testid="suggestion-section">

@@ -1,5 +1,7 @@
 /** Types and copy for the physician care pages (slice s6). Mirrors the /api/care responses. */
 
+import type { Screening } from "@/lib/triage";
+
 export const OUTPUT_LABEL = "Suggestion for physician review — research prototype";
 
 export type EvidenceRef = { item_id: string; data_type: string; available_at_time: string };
@@ -15,16 +17,12 @@ export type Alert = {
   message_th: string;
 };
 
-export type ScreeningStatus = "evaluated" | "partially_evaluated" | "not_evaluated" | "unavailable";
+/** The red-flag screening block is the shared I2 type (slice int2): rule set, label, care scope, counts, readings. */
+export type { Screening } from "@/lib/triage";
+export type ScreeningStatus = Screening["status"];
 
-export type Screening = {
-  status: ScreeningStatus;
-  performed: boolean;
-  banner: string | null;
-  rules_evaluated: string[];
-  rules_not_evaluated: string[];
-  missing_inputs: string[];
-};
+/** Care reads freshness conservatively (D-int2-1): a stale abnormal vital still alerts. */
+export const CARE_STALE_TEXT = "STALE — a normal value is not counted as screened; an abnormal value still alerts";
 
 export type SummaryLine = { text: string; evidence_refs: EvidenceRef[] };
 export type NextInfo = {

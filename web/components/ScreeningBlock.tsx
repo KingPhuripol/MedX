@@ -6,7 +6,14 @@ import { BANNER_INCOMPLETE, BANNER_NOT_PERFORMED, type Screening } from "@/lib/t
  * alerts says "0 of N declared rules fired" with the scope; a partial or missing screen shows a text banner
  * (role="alert", warning tokens from the theme), so the state never depends on colour alone.
  */
-export default function ScreeningBlock({ screening }: { screening: Screening | null | undefined }) {
+export default function ScreeningBlock({
+  screening,
+  staleText = "STALE (not used)",
+}: {
+  screening: Screening | null | undefined;
+  /** How a stale reading is described (care: an abnormal stale value still alerts, D-int2-1). */
+  staleText?: string;
+}) {
   const s = screening;
   if (!s || s.status === "unavailable" || s.status === "not_evaluated") {
     return (
@@ -16,7 +23,7 @@ export default function ScreeningBlock({ screening }: { screening: Screening | n
           <strong>{BANNER_NOT_PERFORMED}.</strong> The red-flag rules did not run on this case. Do not regard it as
           screened: check red flags yourself and escalate if in doubt.
         </p>
-        {s && <ScreeningDetails s={s} />}
+        {s && <ScreeningDetails s={s} staleText={staleText} />}
       </section>
     );
   }
@@ -37,12 +44,12 @@ export default function ScreeningBlock({ screening }: { screening: Screening | n
           ({s.n_evaluated} evaluated). Scope: {s.scope}
         </p>
       )}
-      <ScreeningDetails s={s} />
+      <ScreeningDetails s={s} staleText={staleText} />
     </section>
   );
 }
 
-function ScreeningDetails({ s }: { s: Screening }) {
+function ScreeningDetails({ s, staleText }: { s: Screening; staleText: string }) {
   return (
     <>
       <p data-testid="screening-scope">
@@ -61,7 +68,7 @@ function ScreeningDetails({ s }: { s: Screening }) {
             {s.readings.map((r) => (
               <li key={r.vital}>
                 {r.vital} = {String(r.value)}, read at {r.read_at}, age {r.age_min.toFixed(0)} min of a{" "}
-                {r.window_min} min window — {r.fresh ? "fresh" : "STALE (not used)"}
+                {r.window_min} min window — {r.fresh ? "fresh" : staleText}
               </li>
             ))}
           </ul>

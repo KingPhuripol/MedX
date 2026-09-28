@@ -27,13 +27,24 @@ const BANNERS: Record<ScreeningStatus, string | null> = {
 };
 
 function screening(status: ScreeningStatus): Screening {
+  const rules_evaluated = status === "evaluated" ? ["RF-HR", "RF-STROKE"] : ["RF-HR"];
+  const rules_not_evaluated = status === "evaluated" ? [] : ["RF-STROKE"];
   return {
     status,
     performed: status === "evaluated",
     banner: BANNERS[status],
-    rules_evaluated: status === "evaluated" ? ["RF-HR", "RF-STROKE"] : ["RF-HR"],
-    rules_not_evaluated: status === "evaluated" ? [] : ["RF-STROKE"],
+    rules_evaluated,
+    rules_not_evaluated,
     missing_inputs: status === "evaluated" ? [] : ["symptom.sudden_facial_droop"],
+    rule_set_version: "rf-1.1.0",
+    label: "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+    scope: "rf-1.1.0: 16 declared rules; care screening uses the latest structured vitals and demographics only",
+    n_declared: 16,
+    n_evaluated: 16 - rules_not_evaluated.length,
+    n_not_evaluated: rules_not_evaluated.length,
+    n_fired: 0,
+    readings: [],
+    conflicts: [],
   };
 }
 
@@ -135,10 +146,10 @@ describe("CareReview", () => {
     const text = BANNERS[status];
     if (text) {
       expect(screen.getByTestId("screening-banner")).toHaveTextContent(text);
-      expect(screen.getByTestId("rules-not-evaluated")).toHaveTextContent("RF-STROKE");
+      expect(screen.getByTestId("screening-not-evaluated")).toHaveTextContent("RF-STROKE");
     } else {
       expect(screen.queryByTestId("screening-banner")).not.toBeInTheDocument();
-      expect(screen.getByTestId("screening-evaluated")).toBeInTheDocument();
+      expect(screen.getByTestId("screening-count")).toHaveTextContent("0 of 16 declared rules fired");
     }
   });
 
