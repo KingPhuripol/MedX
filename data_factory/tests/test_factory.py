@@ -614,7 +614,7 @@ def test_manifest_model_inputs(dataset, tmp_path):
     m = dataset.manifest
     assert m["model_inputs_glob"] == "inputs/*/*/snapshot_T*.json"
     assert m["audit_only_globs"] == ["inputs/*/*/journey.json", "gold/**"]
-    assert m["generator_version"] == "1.1.1"
+    assert m["generator_version"] == "1.2.2" and m["output_version"] == "1.2.1"
     assert len(list(dataset.root.glob(m["model_inputs_glob"]))) == 400
     rep = audit.run_audit(dataset.root, write_report=False)
     assert rep["status"] == "PASS" and rep["steps"]["snapshot_items_after_T"] == "PASS"

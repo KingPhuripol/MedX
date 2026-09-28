@@ -136,7 +136,7 @@ test.describe("MedX theme", () => {
     page.on("request", (req) => {
       const url = new URL(req.url());
       if (url.protocol === "data:" || url.protocol === "blob:") return;
-      if (!["127.0.0.1:3000", "127.0.0.1:8000"].includes(url.host)) offOrigin.push(req.url());
+      if (![`127.0.0.1:${process.env.WEB_PORT || "3000"}`, `127.0.0.1:${process.env.API_PORT || "8000"}`].includes(url.host)) offOrigin.push(req.url());
       if (req.resourceType() === "font") {
         pending.push(
           req.response().then((resp) => {

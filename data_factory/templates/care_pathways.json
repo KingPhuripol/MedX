@@ -1,0 +1,118 @@
+{
+  "version": "1.0.0",
+  "note": "Closed vocabulary of care-pathway options, each named after its source guideline pathway. An option is not a disposition, a diagnosis or an order. Synthetic reference vocabulary pending expert review (D1).",
+  "pathways": [
+    {
+      "code": "CP-CHEST-PAIN-EVAL",
+      "display_en": "Acute chest pain evaluation pathway (AHA/ACC 2021)",
+      "display_th": "แนวทางประเมินอาการเจ็บหน้าอกเฉียบพลัน (AHA/ACC 2021)",
+      "source_refs": [
+        "PMID-34709879"
+      ]
+    },
+    {
+      "code": "CP-STROKE-EVAL",
+      "display_en": "Acute stroke early evaluation pathway (AHA/ASA 2019)",
+      "display_th": "แนวทางประเมินระยะแรกเมื่อสงสัยโรคหลอดเลือดสมองเฉียบพลัน (AHA/ASA 2019)",
+      "source_refs": [
+        "PMID-31662037"
+      ]
+    },
+    {
+      "code": "CP-ACUTE-HEADACHE-EVAL",
+      "display_en": "Acute headache evaluation pathway (Ottawa SAH rule)",
+      "display_th": "แนวทางประเมินอาการปวดศีรษะเฉียบพลัน (Ottawa SAH rule)",
+      "source_refs": [
+        "PMID-24065011"
+      ]
+    },
+    {
+      "code": "CP-ANAPHYLAXIS-EVAL",
+      "display_en": "Anaphylaxis recognition and assessment pathway (WAO 2020)",
+      "display_th": "แนวทางประเมินและเฝ้าระวังภาวะแอนาฟิแล็กซิส (WAO 2020)",
+      "source_refs": [
+        "PMID-33204386"
+      ]
+    },
+    {
+      "code": "CP-SEPSIS-SCREEN",
+      "display_en": "Sepsis screening and assessment pathway (SSC 2021)",
+      "display_th": "แนวทางคัดกรองและประเมินภาวะติดเชื้อในกระแสเลือด (SSC 2021)",
+      "source_refs": [
+        "PMID-34599691"
+      ]
+    },
+    {
+      "code": "CP-NEWS-URGENT-REVIEW",
+      "display_en": "NEWS urgent clinical review pathway (RCP 2012)",
+      "display_th": "แนวทางทบทวนอาการโดยเร่งด่วนตามคะแนน NEWS (RCP 2012)",
+      "source_refs": [
+        "RCP-NEWS-2012"
+      ]
+    },
+    {
+      "code": "CP-CAP-EVAL",
+      "display_en": "Community-acquired pneumonia evaluation pathway (ATS/IDSA 2019)",
+      "display_th": "แนวทางประเมินเมื่อสงสัยปอดอักเสบจากชุมชน (ATS/IDSA 2019)",
+      "source_refs": [
+        "PMID-31573350"
+      ]
+    },
+    {
+      "code": "CP-RLQ-PAIN-EVAL",
+      "display_en": "Right lower quadrant pain evaluation pathway (WSES 2020)",
+      "display_th": "แนวทางประเมินอาการปวดท้องด้านขวาล่าง (WSES 2020)",
+      "source_refs": [
+        "PMID-32295644"
+      ]
+    },
+    {
+      "code": "CP-ACUTE-DIARRHEA-EVAL",
+      "display_en": "Acute infectious diarrhoea evaluation pathway (IDSA 2017)",
+      "display_th": "แนวทางประเมินอาการท้องเสียเฉียบพลันจากการติดเชื้อ (IDSA 2017)",
+      "source_refs": [
+        "PMID-29053792"
+      ]
+    },
+    {
+      "code": "CP-PALPITATION-EVAL",
+      "display_en": "Palpitations evaluation pathway (EHRA 2011)",
+      "display_th": "แนวทางประเมินอาการใจสั่น (EHRA 2011)",
+      "source_refs": [
+        "PMID-21697315"
+      ]
+    },
+    {
+      "code": "CP-POSITIONAL-VERTIGO-EVAL",
+      "display_en": "Positional vertigo evaluation pathway (AAO-HNS 2017)",
+      "display_th": "แนวทางประเมินอาการเวียนศีรษะจากการเปลี่ยนท่า (AAO-HNS 2017)",
+      "source_refs": [
+        "PMID-28248609"
+      ]
+    },
+    {
+      "code": "CP-SKIN-ABSCESS-EVAL",
+      "display_en": "Skin abscess evaluation pathway (IDSA 2014)",
+      "display_th": "แนวทางประเมินฝีที่ผิวหนัง (IDSA 2014)",
+      "source_refs": [
+        "PMID-24973422"
+      ]
+    },
+    {
+      "code": "CP-EPISTAXIS-EVAL",
+      "display_en": "Nosebleed evaluation pathway (AAO-HNS 2020)",
+      "display_th": "แนวทางประเมินเลือดกำเดาไหล (AAO-HNS 2020)",
+      "source_refs": [
+        "PMID-31910111"
+      ]
+    },
+    {
+      "code": "CP-PHARYNGITIS-EVAL",
+      "display_en": "Sore throat testing pathway for group A streptococcus (IDSA 2012)",
+      "display_th": "แนวทางตรวจหาเชื้อสเตรปโตคอคคัสกลุ่มเอเมื่อเจ็บคอ (IDSA 2012)",
+      "source_refs": [
+        "PMID-22965026"
+      ]
+    }
+  ]
+}

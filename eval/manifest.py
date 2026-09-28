@@ -11,7 +11,7 @@ from .errors import LedgerIntegrityError, RunRefused
 from .jsonio import canonical_bytes, load_json_file, sha256_bytes, utc_now
 from .jsonschema_lite import validate
 from .ledger_chain import DEFAULT_LEDGER_DIR, PKG_DIR, Ledger
-from .registry import REGISTRY, population_for
+from .registry import METRICS, population_for
 
 SCHEMA_PATH = PKG_DIR / "schemas" / "eval_manifest.schema.json"
 
@@ -43,7 +43,7 @@ def manifest_errors(m: dict[str, Any]) -> list[str]:
     if len(set(ids)) != len(ids):
         errors.append("$.metrics: metric ids must be unique")
     for x in m["metrics"]:
-        if x["name"] not in REGISTRY:
+        if x["name"] not in METRICS:
             errors.append(f"$.metrics[{x['id']}]: unknown metric name {x['name']!r}")
     tasks = {x["task"] for x in m["metrics"]}
     names = [c["name"] for c in m["comparators"]]

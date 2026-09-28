@@ -12,7 +12,7 @@ API_PORT ?= 8000
 WEB_PORT ?= 3000
 export API_PORT WEB_PORT
 
-.PHONY: install test dev e2e test-pg clean data audit eval-voice research-dry-run triage-eval eval-e1-dev eval-e1-test
+.PHONY: install test dev e2e test-pg clean data audit eval-voice research-dry-run triage-eval eval-e1-dev eval-e1-test care-eval
 
 SEED ?= 20260926
 OUT ?= data/synthetic/v1
@@ -89,6 +89,23 @@ eval-e1-dev: $(VENV)/.installed
 ## Test split: refuses (exit 2, nothing written) unless all 4 e1 manifests are frozen; run once, then commit.
 eval-e1-test: $(VENV)/.installed
 	$(PY) -m eval.adapters run --split test
+
+## s6 System Evaluation (mock baseline, synthetic, offline): SPLIT=dev|test -> slices/s6/eval/results_$(SPLIT)[_NNNN]/.
+## Needs `make data` at the default seed (dataset tree hash must equal the manifest). The test manifest must be
+## frozen and committed first; the test split runs once. Pages: make dev API_PORT=8106 WEB_PORT=3106 -> /physician/care
+## s6r: DATASET=<dir> EVAL_ID=s6-care-<split>-NNNN; ids other than -0001 use the _NNNN file suffix. The v1 test split
+## is retired (DECISIONS.md 2026-09-27): SPLIT=test needs DATASET=data/synthetic/s6r-heldout.
+SPLIT ?= dev
+DATASET ?= data/synthetic/v1
+EVAL_ID ?= s6-care-$(SPLIT)-0001
+S6_EVAL := slices/s6/eval
+S6_SFX = $(if $(filter %-0001,$(EVAL_ID)),,_$(lastword $(subst -, ,$(EVAL_ID))))
+S6_X = $(SPLIT)$(S6_SFX)
+care-eval: install
+	$(PY) -m app.care.evaluate --split $(SPLIT) --dataset "$(DATASET)" --evaluation-id $(EVAL_ID)
+	$(PY) -m eval --ledger-dir $(S6_EVAL)/ledger run --manifest $(S6_EVAL)/manifest_$(S6_X).json \
+	  --predictions $(S6_EVAL)/predictions_$(S6_X).jsonl --comparator $(S6_EVAL)/comparator_$(S6_X).jsonl \
+	  --out $(S6_EVAL)/results_$(S6_X)
 
 clean:
 	rm -rf $(VENV) web/node_modules web/.next backend/dev.db

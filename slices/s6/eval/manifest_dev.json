@@ -1,0 +1,259 @@
+{
+  "$comment": "Slice s6 care suggestion with abstention. System Evaluation on synthetic data — not clinical performance. Mock baseline (care-rules-1.0.0), synthetic reference labels (not expert-reviewed). Dev threshold is gating (selective hit@3 point >= 0.80 with >= 30 answered evaluable decision points).",
+  "manifest_version": "1.0",
+  "evaluation_id": "s6-care-dev-0001",
+  "slice": "s6",
+  "dataset": {
+    "name": "s1r-synthetic-v1.2.0",
+    "version": "19033a7270f850852378834e4f76ffb5e90314ee88d0a303582999f6398c3e4d",
+    "data_class": "synthetic"
+  },
+  "split": "dev",
+  "split_version": "splits.json sha256 fb9454a2bc7433b663c6d921ebd68d3a1897bdbffb02dc3849e9d37976c828e9 (seed 20260926)",
+  "split_patient_list": [
+    "SYNP-0006",
+    "SYNP-0010",
+    "SYNP-0023",
+    "SYNP-0025",
+    "SYNP-0061",
+    "SYNP-0063",
+    "SYNP-0066",
+    "SYNP-0068",
+    "SYNP-0070",
+    "SYNP-0074",
+    "SYNP-0077",
+    "SYNP-0078",
+    "SYNP-0081",
+    "SYNP-0084",
+    "SYNP-0085",
+    "SYNP-0092",
+    "SYNP-0095",
+    "SYNP-0096",
+    "SYNP-0105",
+    "SYNP-0113",
+    "SYNP-0125",
+    "SYNP-0126",
+    "SYNP-0131",
+    "SYNP-0133",
+    "SYNP-0141",
+    "SYNP-0149",
+    "SYNP-0150",
+    "SYNP-0152",
+    "SYNP-0153",
+    "SYNP-0156",
+    "SYNP-0163",
+    "SYNP-0166",
+    "SYNP-0167",
+    "SYNP-0174",
+    "SYNP-0176",
+    "SYNP-0177"
+  ],
+  "task_patient_lists": {
+    "care_coverage": [
+      "SYNP-0006",
+      "SYNP-0010",
+      "SYNP-0023",
+      "SYNP-0025",
+      "SYNP-0061",
+      "SYNP-0063",
+      "SYNP-0066",
+      "SYNP-0068",
+      "SYNP-0070",
+      "SYNP-0074",
+      "SYNP-0077",
+      "SYNP-0078",
+      "SYNP-0081",
+      "SYNP-0084",
+      "SYNP-0085",
+      "SYNP-0092",
+      "SYNP-0095",
+      "SYNP-0096",
+      "SYNP-0105",
+      "SYNP-0113",
+      "SYNP-0125",
+      "SYNP-0126",
+      "SYNP-0131",
+      "SYNP-0133",
+      "SYNP-0141",
+      "SYNP-0149",
+      "SYNP-0150",
+      "SYNP-0152",
+      "SYNP-0153",
+      "SYNP-0156",
+      "SYNP-0163",
+      "SYNP-0166",
+      "SYNP-0167",
+      "SYNP-0174",
+      "SYNP-0176",
+      "SYNP-0177"
+    ],
+    "care_next_info": [
+      "SYNP-0010",
+      "SYNP-0025",
+      "SYNP-0061",
+      "SYNP-0068",
+      "SYNP-0070",
+      "SYNP-0077",
+      "SYNP-0078",
+      "SYNP-0081",
+      "SYNP-0084",
+      "SYNP-0095",
+      "SYNP-0096",
+      "SYNP-0105",
+      "SYNP-0113",
+      "SYNP-0125",
+      "SYNP-0126",
+      "SYNP-0131",
+      "SYNP-0149",
+      "SYNP-0150",
+      "SYNP-0163",
+      "SYNP-0176",
+      "SYNP-0177"
+    ],
+    "care_ordered_proxy": [
+      "SYNP-0006",
+      "SYNP-0010",
+      "SYNP-0023",
+      "SYNP-0025",
+      "SYNP-0061",
+      "SYNP-0063",
+      "SYNP-0066",
+      "SYNP-0068",
+      "SYNP-0070",
+      "SYNP-0074",
+      "SYNP-0077",
+      "SYNP-0078",
+      "SYNP-0081",
+      "SYNP-0084",
+      "SYNP-0085",
+      "SYNP-0092",
+      "SYNP-0095",
+      "SYNP-0096",
+      "SYNP-0105",
+      "SYNP-0113",
+      "SYNP-0125",
+      "SYNP-0126",
+      "SYNP-0131",
+      "SYNP-0133",
+      "SYNP-0141",
+      "SYNP-0149",
+      "SYNP-0150",
+      "SYNP-0152",
+      "SYNP-0153",
+      "SYNP-0156",
+      "SYNP-0163",
+      "SYNP-0166",
+      "SYNP-0167",
+      "SYNP-0174",
+      "SYNP-0176",
+      "SYNP-0177"
+    ],
+    "care_pathway": [
+      "SYNP-0006",
+      "SYNP-0010",
+      "SYNP-0025",
+      "SYNP-0061",
+      "SYNP-0068",
+      "SYNP-0070",
+      "SYNP-0077",
+      "SYNP-0078",
+      "SYNP-0081",
+      "SYNP-0084",
+      "SYNP-0095",
+      "SYNP-0096",
+      "SYNP-0105",
+      "SYNP-0113",
+      "SYNP-0125",
+      "SYNP-0126",
+      "SYNP-0131",
+      "SYNP-0149",
+      "SYNP-0150",
+      "SYNP-0163",
+      "SYNP-0176",
+      "SYNP-0177"
+    ]
+  },
+  "metrics": [
+    {
+      "id": "care_coverage",
+      "item": "Abstention",
+      "task": "care_coverage",
+      "name": "coverage",
+      "params": {},
+      "primary": false
+    },
+    {
+      "id": "care_selective_hit3",
+      "item": "Abstention",
+      "task": "care_next_info",
+      "name": "selective_hit_at_k",
+      "params": {
+        "k": 3,
+        "exact_ci": "patient_all_success"
+      },
+      "primary": true
+    },
+    {
+      "id": "care_ordered_proxy_hit3",
+      "item": "Case Graph",
+      "task": "care_ordered_proxy",
+      "name": "selective_hit_at_k",
+      "params": {
+        "k": 3,
+        "exact_ci": "patient_all_success"
+      },
+      "primary": false
+    },
+    {
+      "id": "care_pathway_top1",
+      "item": "Case Graph",
+      "task": "care_pathway",
+      "name": "selective_accuracy",
+      "params": {
+        "exact_ci": "patient_all_success"
+      },
+      "primary": false
+    }
+  ],
+  "comparators": [
+    {
+      "name": "always_answer",
+      "description": "Same engine and rules without abstention, every evaluable decision point",
+      "tasks": [
+        "care_next_info"
+      ]
+    },
+    {
+      "name": "always_answer_on_answered",
+      "description": "Always-answer output on the decision points the system answered (paired)",
+      "tasks": [
+        "care_next_info"
+      ]
+    },
+    {
+      "name": "train_prior",
+      "description": "Static top-3 most frequent gold next-information codes on the train split, on the decision points the system answered",
+      "tasks": [
+        "care_next_info"
+      ]
+    }
+  ],
+  "thresholds": [
+    {
+      "metric": "care_selective_hit3",
+      "op": ">=",
+      "value": 0.8,
+      "rule": "point"
+    }
+  ],
+  "bootstrap": {
+    "n_boot": 2000,
+    "seed": 20260926,
+    "ci_level": 0.95,
+    "method": "percentile"
+  },
+  "expert_review": {
+    "done": false,
+    "n_reviewers": 0
+  }
+}

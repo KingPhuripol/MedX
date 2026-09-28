@@ -12,7 +12,10 @@ from .generate import TEMPLATES, dumps, tree_sha256, validate_item
 
 GOLD_KEYS = ("target_department", "red_flags", "rule_id", "required_fields", "medication_issues",
              "expected_action", "injection_id", "issue_type", "department_evaluable", "department_reason",
-             "NOT_EVALUABLE")
+             "NOT_EVALUABLE",
+             # v1.2.0 care labels (slice s6)
+             "care", "required_inputs_missing", "next_info", "next_info_sources", "already_available_at_T",
+             "pathway", "evaluable", "ordered_after_T")
 TIME_FIELDS = ("event_time", "observed_at", "available_at_time")
 IDENTIFIER_PATTERNS = {
     "thai_national_id": r"(?<!\d)\d{13}(?!\d)|(?<!\d)\d-\d{4}-\d{5}-\d{2}-\d(?!\d)",
@@ -80,6 +83,9 @@ def schema_check(ds: Path) -> tuple[list[str], int]:
 
 def gold_separation(ds: Path) -> list[str]:
     names = [c["display_th"] for c in json.loads((TEMPLATES / "departments.json").read_text("utf-8"))["codes"]]
+    # care vocabulary codes (NI-*/CP-*) are gold values and must never appear in a model input
+    names += [c["code"] for c in json.loads((TEMPLATES / "next_info_codes.json").read_text("utf-8"))["codes"]]
+    names += [c["code"] for c in json.loads((TEMPLATES / "care_pathways.json").read_text("utf-8"))["pathways"]]
     errors = []
     for p in sorted((ds / "inputs").rglob("*")):
         if not p.is_file():

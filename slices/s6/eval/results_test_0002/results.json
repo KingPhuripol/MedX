@@ -1,0 +1,360 @@
+{
+  "bootstrap": {
+    "ci_level": 0.95,
+    "method": "percentile",
+    "n_boot": 2000,
+    "rng": "numpy.random.Generator(PCG64(seed))",
+    "seed": 20260926,
+    "unit": "patient"
+  },
+  "comparator_sha256": "08c2540c7dfe2d0b9882fbd4a2047aea1a27d0c6c11058175de5f30565da8e6d",
+  "dataset": {
+    "data_class": "synthetic",
+    "name": "s6r-heldout-synthetic-v1.2.2",
+    "version": "552b1acd2533428c03d6c88a2ff7e3f68f7dd8daef89f5981fc5daebb8b73729"
+  },
+  "environment": {
+    "eval_version": "0.2.0",
+    "numpy_version": "2.5.3"
+  },
+  "evaluation_id": "s6-care-test-0002",
+  "expert_review": {
+    "done": false,
+    "n_reviewers": 0
+  },
+  "frozen": true,
+  "frozen_entry_hash": "35397d9df957edd0594cde96c5617368c9fc982637784343606995a8c4961000",
+  "labels": {
+    "banner": "System Evaluation, not clinical efficacy",
+    "research_prototype": "Research prototype - not for clinical use",
+    "synthetic_data": true
+  },
+  "manifest_sha256": "d75a91cfa35943d5dda8955b08024f785860621dc7340ea0be3e78a195398ccd",
+  "n_decision_points": 160,
+  "n_patients": 72,
+  "n_patients_in_split_list": 72,
+  "predictions_sha256": "7df8e7f7bd8ac79c81c9d13b7e3118a91b6c35906ac4594ba10a8d9a36caf0a3",
+  "rows": [
+    {
+      "ci_high": 0.8795180722891566,
+      "ci_level": 0.95,
+      "ci_low": 0.7051282051282052,
+      "comparisons": [],
+      "details": {
+        "abstain": "y_pred null or absent"
+      },
+      "item": "Abstention",
+      "method": "percentile",
+      "metric": "coverage",
+      "metric_id": "care_coverage",
+      "n_boot": 2000,
+      "n_decision_points": 160,
+      "n_decision_points_scored": 160,
+      "n_degenerate": 0,
+      "n_patients": 72,
+      "n_patients_scored": 72,
+      "params": {},
+      "point": 0.8,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "care_coverage",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 1.0,
+      "ci_level": 0.95,
+      "ci_low": 1.0,
+      "comparisons": [
+        {
+          "comparator": "always_answer",
+          "comparator_ci_high": 1.0,
+          "comparator_ci_low": 0.9210526315789473,
+          "comparator_n_decision_points": 75,
+          "comparator_n_decision_points_scored": 75,
+          "comparator_n_degenerate": 0,
+          "comparator_n_patients": 36,
+          "comparator_n_patients_scored": 36,
+          "comparator_point": 0.9733333333333334,
+          "comparator_reason": null,
+          "comparator_unstable": false,
+          "diff": {
+            "ci_high": 0.07894736842105265,
+            "ci_low": 0.0,
+            "n_degenerate": 0,
+            "point": 0.026666666666666616,
+            "reason": null,
+            "unstable": false
+          },
+          "status": "computed"
+        },
+        {
+          "comparator": "always_answer_on_answered",
+          "comparator_ci_high": 1.0,
+          "comparator_ci_low": 1.0,
+          "comparator_exact_ci": {
+            "ci_high": 1.0,
+            "ci_level": 0.95,
+            "ci_low": 0.8722971323845676,
+            "method": "clopper_pearson",
+            "n": 27,
+            "trigger": "bootstrap CI has zero width",
+            "unit": "patient (success only if all eligible decision points succeed; conservative)",
+            "x": 27
+          },
+          "comparator_n_decision_points": 75,
+          "comparator_n_decision_points_scored": 56,
+          "comparator_n_degenerate": 0,
+          "comparator_n_patients": 36,
+          "comparator_n_patients_scored": 27,
+          "comparator_point": 1.0,
+          "comparator_reason": null,
+          "comparator_unstable": false,
+          "diff": {
+            "ci_high": 0.0,
+            "ci_low": 0.0,
+            "n_degenerate": 0,
+            "point": 0.0,
+            "reason": null,
+            "unstable": false
+          },
+          "status": "computed"
+        },
+        {
+          "comparator": "train_prior",
+          "comparator_ci_high": 0.6792452830188679,
+          "comparator_ci_low": 0.3278539493293592,
+          "comparator_n_decision_points": 75,
+          "comparator_n_decision_points_scored": 56,
+          "comparator_n_degenerate": 0,
+          "comparator_n_patients": 36,
+          "comparator_n_patients_scored": 27,
+          "comparator_point": 0.5,
+          "comparator_reason": null,
+          "comparator_unstable": false,
+          "diff": {
+            "ci_high": 0.6721460506706408,
+            "ci_low": 0.3207547169811321,
+            "n_degenerate": 0,
+            "point": 0.5,
+            "reason": null,
+            "unstable": false
+          },
+          "status": "computed"
+        }
+      ],
+      "details": {
+        "abstain": "suggested null or absent",
+        "k": 3
+      },
+      "exact_ci": {
+        "ci_high": 1.0,
+        "ci_level": 0.95,
+        "ci_low": 0.8722971323845676,
+        "method": "clopper_pearson",
+        "n": 27,
+        "trigger": "bootstrap CI has zero width",
+        "unit": "patient (success only if all eligible decision points succeed; conservative)",
+        "x": 27
+      },
+      "item": "Abstention",
+      "method": "percentile",
+      "metric": "selective_hit_at_k",
+      "metric_id": "care_selective_hit3",
+      "n_boot": 2000,
+      "n_decision_points": 75,
+      "n_decision_points_scored": 56,
+      "n_degenerate": 0,
+      "n_patients": 36,
+      "n_patients_scored": 27,
+      "params": {
+        "exact_ci": "patient_all_success",
+        "k": 3
+      },
+      "point": 1.0,
+      "primary": true,
+      "reason": null,
+      "seed": 20260926,
+      "task": "care_next_info",
+      "thresholds": [
+        {
+          "compared_value": 1.0,
+          "op": ">=",
+          "rule": "point",
+          "status": "met",
+          "value": 0.7
+        }
+      ],
+      "unstable": false
+    },
+    {
+      "ci_high": 0.14925373134328357,
+      "ci_level": 0.95,
+      "ci_low": 0.016129032258064516,
+      "comparisons": [],
+      "details": {
+        "abstain": "suggested null or absent",
+        "k": 3
+      },
+      "item": "Case Graph",
+      "method": "percentile",
+      "metric": "selective_hit_at_k",
+      "metric_id": "care_ordered_proxy_hit3",
+      "n_boot": 2000,
+      "n_decision_points": 80,
+      "n_decision_points_scored": 64,
+      "n_degenerate": 0,
+      "n_patients": 72,
+      "n_patients_scored": 58,
+      "params": {
+        "exact_ci": "patient_all_success",
+        "k": 3
+      },
+      "point": 0.078125,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "care_ordered_proxy",
+      "thresholds": [],
+      "unstable": false
+    },
+    {
+      "ci_high": 1.0,
+      "ci_level": 0.95,
+      "ci_low": 0.9152542372881356,
+      "comparisons": [],
+      "details": {
+        "abstain": "y_pred null or absent"
+      },
+      "item": "Case Graph",
+      "method": "percentile",
+      "metric": "selective_accuracy",
+      "metric_id": "care_pathway_top1",
+      "n_boot": 2000,
+      "n_decision_points": 79,
+      "n_decision_points_scored": 59,
+      "n_degenerate": 0,
+      "n_patients": 38,
+      "n_patients_scored": 29,
+      "params": {
+        "exact_ci": "patient_all_success"
+      },
+      "point": 0.9661016949152542,
+      "primary": false,
+      "reason": null,
+      "seed": 20260926,
+      "task": "care_pathway",
+      "thresholds": [],
+      "unstable": false
+    }
+  ],
+  "schema_version": "1.1",
+  "slice": "s6",
+  "split": "test",
+  "split_coverage": [
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 72,
+          "status": "provided"
+        }
+      ],
+      "imputation_rule": "abstention-only tasks: a listed patient absent from every arm gets one decision point '__missing__' (y_pred=null) in every arm; any (patient, decision point) key present in one arm but absent from another is imputed as abstain (y_pred=null) where absent",
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 72,
+      "n_missing": 0,
+      "n_predicted": 72,
+      "population": null,
+      "task": "care_coverage"
+    },
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 36,
+          "status": "provided"
+        },
+        {
+          "arm": "comparator:always_answer",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 36,
+          "status": "provided"
+        },
+        {
+          "arm": "comparator:always_answer_on_answered",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 36,
+          "status": "provided"
+        },
+        {
+          "arm": "comparator:train_prior",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 36,
+          "status": "provided"
+        }
+      ],
+      "imputation_rule": "abstention-only tasks: a listed patient absent from every arm gets one decision point '__missing__' (y_pred=null) in every arm; any (patient, decision point) key present in one arm but absent from another is imputed as abstain (y_pred=null) where absent",
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 36,
+      "n_missing": 0,
+      "n_predicted": 36,
+      "population": null,
+      "task": "care_next_info"
+    },
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 72,
+          "status": "provided"
+        }
+      ],
+      "imputation_rule": "abstention-only tasks: a listed patient absent from every arm gets one decision point '__missing__' (y_pred=null) in every arm; any (patient, decision point) key present in one arm but absent from another is imputed as abstain (y_pred=null) where absent",
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 72,
+      "n_missing": 0,
+      "n_predicted": 72,
+      "population": null,
+      "task": "care_ordered_proxy"
+    },
+    {
+      "arms": [
+        {
+          "arm": "system",
+          "n_imputed_abstain_decision_points": 0,
+          "n_missing": 0,
+          "n_predicted": 38,
+          "status": "provided"
+        }
+      ],
+      "imputation_rule": "abstention-only tasks: a listed patient absent from every arm gets one decision point '__missing__' (y_pred=null) in every arm; any (patient, decision point) key present in one arm but absent from another is imputed as abstain (y_pred=null) where absent",
+      "imputation_unit": "1 decision point per missing patient",
+      "missing_policy": "complete",
+      "n_imputed_abstain_decision_points": 0,
+      "n_listed": 38,
+      "n_missing": 0,
+      "n_predicted": 38,
+      "population": null,
+      "task": "care_pathway"
+    }
+  ],
+  "split_version": "splits.json sha256 44363099d8d8c7e93a4e0ed729fd52412306c0af874dacb21a56e43efe176c91 (seed 20260927)",
+  "stamp": null
+}

@@ -16,3 +16,18 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
 - **What:** Exception to `eval/ledger/README.md` rule 1 ("appends on `main` only"). A slice may freeze its evaluation manifests and run its single test-split evaluation on its own `factory/<slice>` branch, provided that: (1) the branch reaches `main` through `factory/int` by ordinary merges (no rebase, squash or force-push), so ledger history is preserved; (2) `python -m eval ledger verify --git-history` passes on `factory/int` and again on `main` after each merge; (3) only one slice appends to a given ledger file at a time — a ledger merge conflict is resolved per README rule 4 (redo the later freeze/run on top of the merged ledger), never by editing entries.
 - **Applies to:** E1 and S6 now; later evaluation slices on the same terms.
 - **Approved by:** project owner (chat, 2026-09-27).
+
+## 2026-09-27 — Case Graph wiring (I2) prototype defaults
+- **What:** For the research prototype on synthetic data, all labelled "pending clinical sign-off" (D1): (D-I2-1) vitals freshness window 60 min per vital, citing RCP NEWS2 (2017) Chart 4; a reading older than the window is `not_evaluated` with its time shown. (D-I2-2) `as_of` ceiling = latest `available_at_time` + 5 min on the assess API, plus a floor. (D-I2-3) same-timestamp conflicting readings resolve to the worse value or are flagged; latest-wins vs worst-in-window across timestamps is reported only, not decided. (D-I2-4) a symptom the patient never mentions is `unknown`, never `absent`; only an explicit denial is `absent`. (D-I2-5) graph export schema bumps to `casegraph-export/0.3`; ledger appends are sequenced after E1 (one writer at a time).
+- **Scope:** synthetic data only; before any real data a licensed clinician must approve D-I2-1 to D-I2-4.
+- **Approved by:** project owner (chat, 2026-09-27).
+
+## 2026-09-27 — S6 test split redone on a fresh held-out set
+- **What:** The S6 ledger recorded the frozen test evaluation `s6-care-test-0001` twice (runs seq 2 and 4, identical predictions sha256 `281c8d9f…`, the second a report re-render). The owner chose to redo it rather than accept it. `s6-care-test-0001` is retired and relabelled "seen — not a held-out result"; it must never be reported as the S6 test result. S6 may be improved on train/dev only; then a fresh held-out test set is generated from a new seed (patients disjoint from all existing splits), its manifest frozen before any run, and evaluated exactly once. The runner must allow a report re-render of an existing run without appending a new run line.
+- **Approved by:** project owner (chat, 2026-09-27).
+
+## 2026-09-27 — D-s6r-2: S6 held-out case mix fixed before any held-out result (orchestrator ruling)
+- **What:** The first S6r held-out set (seed 20260927, data_factory v1.2.1) had 7 pregnancy cases against the predeclared S6R-A07 target 2 ± 2. Before any held-out prediction or result existed, the orchestrator ruled to add a held-out-only pregnancy quota (data_factory v1.2.2), regenerate with the same seed (tree `552b1acd…`, 2 pregnancy cases), rewrite the unfrozen manifest (d55273b), then freeze and run once (fec7677, d423d15). The v1 default-seed output is byte-identical.
+- **Basis:** within the owner's 2026-09-27 decision "S6 test split redone on a fresh held-out set" (same case mix); no threshold, metric or seed changed.
+- **Decided by:** main-session orchestrator, 2026-09-27; reported to the owner in chat the same day.
+- **Open:** D-s6r-1 — the S8 harness owner (สุปรียา) reviews the `eval/runner.py` re-render change (identical frozen test re-run = re-render, no new run line).
