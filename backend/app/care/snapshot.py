@@ -1,6 +1,6 @@
 """Snapshot input for the care engine: ``inputs/<split>/<case_id>/snapshot_T{1,2}.json`` only.
 
-Every item is validated with ``casegraph.evidence_adapter``. As a defence, an item with any time after
+Every item is validated with ``casegraph.EVIDENCE_ADAPTER`` (data_class synthetic). As a defence, an item with any time after
 ``as_of`` rejects the whole snapshot (an error, never silently dropped). Intake fields are tri-state:
 ``known``, ``unknown`` (stated as not known) or ``missing`` (not recorded); ``unknown`` never reads as negative.
 
@@ -19,10 +19,13 @@ from typing import Any, Literal
 
 from pydantic import ValidationError
 
-from casegraph import evidence_adapter
+from casegraph import EVIDENCE_ADAPTER
 
 from .ruleset import rules
 
+# The care engine serves S1r synthetic snapshots only (models.py, engine.py). S1r items carry no data_class;
+# the i2 type system requires one, so it is supplied here and any other declared class is refused.
+DATA_CLASS = "synthetic"
 TIME_FIELDS = ("event_time", "observed_at", "available_at_time")
 VITAL_REQUIRED = ("rr", "spo2", "on_oxygen", "temp_c", "sbp", "hr", "consciousness")
 REQUIRED_INPUTS = ("demographics.age", "demographics.sex", "chief_complaint", "duration", "allergy_status",
@@ -76,8 +79,12 @@ class SnapshotView:
         for it in raw:
             nulls = _demo_nulls(it)
             probe = {**it, **{k: v for k, v in _STAND_IN.items() if k in nulls}} if nulls else it
+            if isinstance(probe, dict):
+                if probe.get("data_class", DATA_CLASS) != DATA_CLASS:
+                    raise SnapshotError("snapshot_item_not_synthetic")
+                probe = {**probe, "data_class": DATA_CLASS}
             try:
-                model = evidence_adapter.validate_python(probe)
+                model = EVIDENCE_ADAPTER.validate_python(probe)
             except ValidationError as exc:
                 raise SnapshotError("snapshot_item_invalid") from exc
             if any(getattr(model, f) > self.as_of for f in TIME_FIELDS):
