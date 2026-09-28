@@ -422,6 +422,9 @@ def test_dose_fuzz_vs_reference():
     # 5. closure (rev 3): 0 resolved lines holding an INVISIBLE, an unconsumed SLASH-LIKE or a D1 marker
     assert report.closure == [], "\n".join(report.closure[:20])
     assert min(report.closure_counts[k] for k in ("invisible", "slash_like", "daily_total")) >= 20, report.closure_counts
+    # s5r4 A12: (c) P markers and (d) C1 firings are never resolved; (e) th_normalise == its standard spelling.
+    assert min(report.closure_counts[k] for k in ("per_word", "c1")) >= 20, report.closure_counts
+    assert report.canonical == [], "\n".join(report.canonical[:20])
 
 
 def _piecewise_stub(text: str):
@@ -575,7 +578,7 @@ def test_clean_fixtures_grammar_only():
                 trace = read_dose(normalise(entry["text"]))
                 assert trace.dose_status == "resolved" and trace.unconsumed_numeric == [], entry["text"]
                 assert trace.quantity == gold["quantity"], entry["text"]
-                assert not {m.pid for m in trace.matches} & {"R1", "T1", "D1"}, entry["text"]  # rev 2/3: none hit
+                assert not {m.pid for m in trace.matches} & {"R1", "T1", "D1", "C1"}, entry["text"]  # rev 2-4: none hit
                 text = normalise(entry["text"])  # rev 3: no INVISIBLE, no QF failure, no unconsumed SLASH-LIKE
                 assert not any(is_invisible(c) for c in text), entry["text"]
                 assert all(t.text == "/" and k in trace.consumed for k, t in enumerate(trace.tokens)

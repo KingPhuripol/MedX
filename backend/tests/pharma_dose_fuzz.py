@@ -291,6 +291,27 @@ _UNKNOWN_DOSE = ["500 mg \u0440er day", "1000 mg \u0430 day", "1000 mg \u0434ivi
                  "1000 mg \uff50\uff45\uff52 day", "3 mg 1 tab and a hlaf od", "3 mg 1 tab od (coumadin)"]
 
 
+# §P: every P1 key form (joined, spaced, -, ., _), P2-P4 triggers, and K1/K2/K8-style controls that must resolve.
+_P1_FORMS = ["1000 mg perday", "1000 mg per-day", "1000 mg per_day", "1000 mg per.day", "1000 mg aday", "1000 mg a-day",
+             "1000 mg a.day", "1000 mg a_day", "1000 mg a day", "500 mg aweek", "500 mg a-month", "5 mg kg", "5 mg.kg",
+             "5 mg-kg", "5 mg_kg", "5mg kg", "1000 mg TDD", "1000 mg daily dose", "1000 mg daily-dose", "1000 mg daily.total",
+             "1000 mg daily_dose", "1000 mg dailydose", "1000 มก. กก.", "5 มก.กิโล", "1000 มก. ต่อวัน"]
+_P1_QW_FORMS = ["2 tabs perday", "1 tab a-day", "2 เม็ด per day", "2 tabs daily dose", "1 cap a.week"]
+_P2_TAILS = ["TDD", "tdd bid", "daily dose", "daily-total", "(daily dose)", "daily_dose"]
+_P3_PRE = ["per day", "perday", "daily", "day", "aday", "dose", "Per dose"]
+_P4_DOSES = ["1000 mg daily, bid", "1000 mg every day bid", "1000 mg everyday twice daily", "1000 mg daily q8h",
+             "1000 มก. ทุกวัน วันละ 2 ครั้ง", "500 mg 2 tabs daily tid", "1000 mg daily 2 times a day", "1000 mg daily b.i.d.",
+             "1000 mg every-day qid"]
+_P_CONTROLS = ["50 mg daily", "500 mg daily pc", "500 mg once a day", "500 mg daily od", "1000 mg every day"]
+
+
+def _per_unit_choices() -> list:
+    out = [("strength", (f, ("S1", "R1"))) for f in _P1_FORMS] + [("quantity", (f, ("R1",))) for f in _P1_QW_FORMS]
+    out += [("tail", (t, ("D1",))) for t in _P2_TAILS] + [("pre", (t, ("D1",))) for t in _P3_PRE]
+    out += [("dose", (d, ("S1", "D1"))) for d in _P4_DOSES] + [("only", (c, ("S1",))) for c in _P_CONTROLS]
+    return out
+
+
 def _n_choices() -> list:
     out = []
     for slot, template, pids in _N_TEMPLATES:
@@ -308,7 +329,8 @@ def _rev4_classes() -> dict[str, tuple[str, list]]:
     misspelt = [(slot, (at.format(m), ("C1",))) for words in MISSPELT.values() for m in words for slot, at in _MISSPELT_AT]
     unknown = [(slot, (at.format(w), ("C1",))) for w in UNKNOWN_WORDS for slot, at in (("tail", "{}"), ("last", "1 tab {}"))]
     unknown += [("dose", (d, ("S1", "C1"))) for d in _UNKNOWN_DOSE]
-    classes = {"th_normalise": _n_choices(), "th_misspelt": misspelt, "unknown_word": unknown}
+    classes = {"th_normalise": _n_choices(), "th_misspelt": misspelt, "unknown_word": unknown,
+               "per_unit_word": _per_unit_choices()}
     for choices in classes.values():
         random.Random(SEED).shuffle(choices)
     return {cls: ("*", choices) for cls, choices in classes.items()}
@@ -360,6 +382,9 @@ def generate(seed: int = SEED, n: int = N_PHRASES) -> list[Phrase]:
                 slots["quantity"], slot = Segment(""), "tail"
             elif slot == "dose":  # the segment carries the strength and the only quantity
                 slots["quantity"], slot = Segment(""), "strength"
+            elif slot == "only":  # the segment is the whole dose and frequency (controls that must resolve)
+                slots["quantity"] = slots["frequency"] = slots["tail"] = Segment("")
+                slot = "strength"
             if slot == "insert":
                 insert = Segment(text, pids, adversarial=cls)
             else:
