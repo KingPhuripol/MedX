@@ -8,7 +8,11 @@ Inputs (read only):
   triage/predictions.jsonl, */results.json}``; each predictions/results file must match its sha256 pin in
   ``eval/ledger/runs.jsonl`` and each system_outputs.jsonl must equal its git blob at the run commit, or the
   generator refuses and writes nothing;
-- gold in ``data/synthetic/v1/gold/`` (the dataset tree must re-hash to the frozen ``dataset_tree_sha256``);
+- gold in ``data/synthetic/v1/gold/``: every manifest-listed file must match its listed sha256, and the E1 data
+  projection (every ``inputs/**`` file, ``splits.json`` and the gold fields E1 reads; see
+  ``E1_PROJECTION_SHA256``) must equal the pinned projection of the frozen ``dataset_tree_sha256``. The C3
+  ``dataset_tree_sha256`` row reports the frozen tree bound through that verified projection; additive gold keys
+  E1 does not read (s6 care labels, ``label_version``) change the full tree but not the projection;
 - ``eval/ledger/{runs,frozen}.jsonl`` and the frozen manifests, for the version/code bindings (C3);
 - product code and rule files at the run commit via ``git show`` (citations only; nothing is imported).
 
@@ -58,6 +62,28 @@ POLICY = "backend/app/voice/policy.py"
 RULES_JSON = "backend/app/triage/rules/redflag_rules_v1.json"
 VOICE_UI = "web/components/voice/VoiceIntake.tsx"
 TRACE_CASE = ("dev", "SYNE-0196")
+
+# E1 data projection: the data E1 uses, so additive dataset changes E1 does not read (s6 / s6r: generator
+# v1.2.x adds decision_times[].care and restamps label_version; inputs/** unchanged) do not break the pin,
+# while any change to an input file or a used gold field does. Definition (canonical JSON, sha256):
+#   {"projection": E1_PROJECTION_ID,
+#    "inputs": {rel: sha256(bytes)} for every file under inputs/** (on disk == manifest-listed),
+#    "splits.json": sha256(bytes),
+#    "gold": {rel: {E1_GOLD_CASE_KEYS..., "decision_times": [{E1_GOLD_DP_KEYS...} in file order]}}
+#            for every gold/<split>/<case>.json (train, dev, test; train gold feeds the e1 comparators)}
+# Not projected (not read by eval/adapters or this module): label_status, label_version, scenario,
+# decision_times[].{department_reason, medication_issues, care}, gold/README.md, gold/injection_log.jsonl,
+# DATACARD.md.
+# Pin source: data_factory at commit 8943cd1 (S1r generator v1.1.1, the e1 test-run commit), exported with
+# `git archive 8943cd1` and run as `python -m data_factory generate --seed 20260926`; that output has
+# tree_sha256 E1_PROJECTION_FROZEN_TREE (= the e1 manifests' dataset_tree_sha256) and this projection.
+# eval/tests/test_e1_posthoc.py::test_projection_pin_recomputed_from_frozen_generator recomputes both.
+E1_PROJECTION_ID = "e1-data-projection-v1"
+E1_GOLD_CASE_KEYS = ("case_id", "split", "patient_ref")
+E1_GOLD_DP_KEYS = ("decision_point", "T", "target_department", "department_evaluable", "expected_action",
+                   "red_flags", "required_fields")
+E1_PROJECTION_FROZEN_TREE = "e76e38cc67d6317d82196f105cb9781bedf3451b9ba74a1585b19662d4d1162b"
+E1_PROJECTION_SHA256 = "6df08a921096a779e5b20bce85a90ec2034d03ae20e31cdf997d82478888073e"
 
 # Observed by an instrumented replay of dev SYNE-0196 through the unchanged S3 service (in-memory SQLite,
 # nothing written under eval/results or eval/ledger). tests/e1r/test_syne0196_replay.py re-runs the replay and
@@ -226,8 +252,42 @@ def _manifest_hashes(m: dict[str, Any]) -> dict[str, Any]:
     return json.loads(c[c.rindex("e1-hashes ") + len("e1-hashes "):])
 
 
+def _project_gold(rel: str, g: dict[str, Any]) -> dict[str, Any]:
+    """The E1 projection of one gold case: exactly the keys E1 reads (eval/adapters + this module)."""
+    try:
+        out = {k: g[k] for k in E1_GOLD_CASE_KEYS}
+        out["decision_times"] = [{k: d[k] for k in E1_GOLD_DP_KEYS} for d in g["decision_times"]]
+    except (KeyError, TypeError) as e:
+        raise PosthocError(f"{rel}: gold field used by E1 is missing: {e}") from None
+    return out
+
+
+def e1_data_projection(data: Path, files: dict[str, str]) -> tuple[str, dict[str, dict[str, Any]]]:
+    """(projection sha256, projected gold by split/case). ``files`` = manifest-listed rel -> verified sha256."""
+    on_disk = sorted(p.relative_to(data).as_posix() for p in (data / "inputs").rglob("*") if p.is_file())
+    listed = sorted(k for k in files if k.startswith("inputs/"))
+    if on_disk != listed:
+        raise PosthocError("inputs/** on disk differs from the files listed in manifest.json")
+    gold_rels = sorted(k for k in files if re.fullmatch(r"gold/[^/]+/[^/]+\.json", k))
+    projected = {rel: _project_gold(rel, json.loads((data / rel).read_text("utf-8"))) for rel in gold_rels}
+    proj = {"projection": E1_PROJECTION_ID, "inputs": {k: files[k] for k in listed},
+            "splits.json": _sha((data / "splits.json").read_bytes()), "gold": projected}
+    gold: dict[str, dict[str, Any]] = {s: {} for s in SPLITS}
+    for rel, g in projected.items():
+        if rel.split("/")[1] in gold:
+            gold[rel.split("/")[1]][g["case_id"]] = g
+    return _canonical_sha(proj), gold
+
+
 def load_gold(data: Path, frozen_tree: str) -> tuple[dict[str, dict[str, Any]], str]:
-    """Gold per split/case; the dataset tree must re-hash to the frozen dataset_tree_sha256."""
+    """Projected gold per split/case; E1 verifies exactly the data it uses (see E1_PROJECTION_SHA256).
+
+    Every manifest-listed file must match its listed sha256 (dataset integrity). The E1 projection of the
+    data must then equal the pinned projection of the frozen tree. Returns the frozen tree the verified
+    projection binds to, and gold restricted to the projected fields (reading any other gold key fails)."""
+    if frozen_tree != E1_PROJECTION_FROZEN_TREE:
+        raise PosthocError(f"frozen dataset tree {frozen_tree} is not the tree the E1 projection pin was "
+                           f"computed from ({E1_PROJECTION_FROZEN_TREE})")
     man = json.loads((data / "manifest.json").read_text("utf-8"))
     files = {}
     for rel, listed in man["files"].items():
@@ -235,19 +295,11 @@ def load_gold(data: Path, frozen_tree: str) -> tuple[dict[str, dict[str, Any]], 
         if h != listed:
             raise PosthocError(f"dataset file hash mismatch: {rel}")
         files[rel] = h
-    text = "".join(f"{k}\t{v}\n" for k, v in files.items())
-    text += (f"model_inputs_glob\t{man.get('model_inputs_glob')}\n"
-             f"audit_only_globs\t{json.dumps(man.get('audit_only_globs'))}\n")
-    tree = _sha(text.encode())
-    if tree != frozen_tree:
-        raise PosthocError(f"dataset tree {tree} != frozen {frozen_tree}")
-    gold: dict[str, dict[str, Any]] = {}
-    for split in SPLITS:
-        gold[split] = {}
-        for rel in sorted(k for k in files if k.startswith(f"gold/{split}/") and k.endswith(".json")):
-            g = json.loads((data / rel).read_text("utf-8"))
-            gold[split][g["case_id"]] = g
-    return gold, tree
+    proj, gold = e1_data_projection(data, files)
+    if proj != E1_PROJECTION_SHA256:
+        raise PosthocError(f"E1 data projection {proj} != frozen {E1_PROJECTION_SHA256} "
+                           f"(an input file or a gold field used by E1 differs from the frozen tree)")
+    return gold, frozen_tree
 
 
 def _cross_check(d: dict[str, Any]) -> None:

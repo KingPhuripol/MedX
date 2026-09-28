@@ -37,7 +37,7 @@ def ds(tmp_path_factory) -> Path:
     subprocess.run([sys.executable, "-m", "data_factory", "generate", "--seed", "20260926", "--out", str(out)],
                    check=True, cwd=REPO, env=env, capture_output=True)
     frozen = F._manifest_hashes(json.loads((REPO / "eval/manifests/e1/e1-voice-dev-v1.json").read_text("utf-8")))
-    F.load_gold(out, frozen["dataset_tree_sha256"])  # raises unless this is the frozen dataset tree
+    F.load_gold(out, frozen["dataset_tree_sha256"])  # raises unless the E1 data projection is the frozen one
     return out
 
 
