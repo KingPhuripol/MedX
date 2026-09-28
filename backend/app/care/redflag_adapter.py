@@ -7,7 +7,8 @@ so symptom rules are not evaluable and the screening is ``partially_evaluated`` 
 
 Slice int2: the result is the I2 ``casegraph.data.RedFlagScreening`` block (rule set, label, care scope, counts,
 vital readings, conflicts). Vital freshness (I2 C1) is applied conservatively: a fired rule stays fired whatever
-the age of its inputs; a rule that did not fire and read a stale vital is ``not_evaluated`` with
+the age of its inputs; a rule that did not fire and cannot be decided once its stale vitals are set aside (the I2
+Red-flag node's drop, applied to non-fired rules only) is ``not_evaluated`` with
 ``vital.<k>:stale(read_at=..., age_min=...)``. Proposed default D-int2-1. Any error is ``unavailable``.
 """
 
@@ -25,7 +26,7 @@ from casegraph.data import (
     banner_for,
     screening_status,
 )
-from casegraph.triage_bridge import load_freshness, rule_kinds, stale_input
+from casegraph.triage_bridge import load_freshness, stale_input
 
 from ..triage import redflags
 from ..triage.models import Alert, Case, IntakeFact, Snapshot
@@ -126,11 +127,13 @@ def screen(view: SnapshotView, extra_facts: Sequence[IntakeFact] = ()) -> Screen
         fired = {a.rule_id for a in alerts}
         missing_by_rule = {n.rule_id: set(n.missing_inputs) for n in not_evaluable}
         reads, stale = readings(view, facts, snap)
-        kinds = rule_kinds()
-        for rid in ids:
-            needed = kinds[rid] & stale.keys()
-            if needed and rid not in fired:  # a fired rule is never moved or downgraded by staleness
-                missing_by_rule.setdefault(rid, set()).update(stale[k] for k in needed)
+        if stale:  # C1, conservative: only a rule that did not fire can become not_evaluated
+            kept = [f for f in [*facts, *extra_facts] if f.kind not in stale]
+            _, without = redflags.evaluate(Snapshot(Case(case_ref=view.case_id, data_class="synthetic",
+                                                         facts=kept), view.as_of))
+            for n in without:  # undecidable once its stale vitals are set aside
+                if n.rule_id not in fired:
+                    missing_by_rule[n.rule_id] = {stale.get(m, m) for m in n.missing_inputs}
         not_eval = set(missing_by_rule)
         missing = sorted({m for ms in missing_by_rule.values() for m in ms})
         status = screening_status([rid not in not_eval for rid in ids], missing)
