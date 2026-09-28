@@ -89,3 +89,22 @@ test("a nurse cannot open the care pages (pharmacist: backend role matrix)", asy
   const resp = await page.request.get("/api/care/cases");
   expect(resp.status()).toBe(403);
 });
+
+// Slice int2 (INT2-A14): the care page renders the I2 screening block (rule set, care scope, vital readings).
+const OVERCLAIM = /no red.?flags?|all clear|ไม่มี.*(สัญญาณอันตราย|red flag)/i;
+
+test("care screening block names rf-1.1.0 and its care scope, lists vital readings, and never overclaims", async ({
+  page,
+}) => {
+  await assessCase(page, "SYNE-0011", "T2");
+  const red = page.getByTestId("redflag-section");
+  const block = red.getByTestId("screening-section");
+  await expect(block).toBeVisible();
+  await expect(page.getByTestId("screening-scope")).toContainText("rf-1.1.0");
+  await expect(page.getByTestId("screening-scope")).toContainText("Symptom rules are not evaluated in care");
+  await expect(page.getByTestId("screening-not-evaluated")).toBeVisible();
+  const readings = page.getByTestId("screening-readings");
+  await expect(readings).toContainText("read at");
+  await expect(readings).toContainText("rr =");
+  expect(await page.locator("body").innerText()).not.toMatch(OVERCLAIM);
+});
