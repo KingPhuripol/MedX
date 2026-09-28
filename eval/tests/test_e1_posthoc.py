@@ -7,6 +7,7 @@ of data_factory under eval/). Nothing here writes under eval/results or eval/led
 from __future__ import annotations
 
 import ast
+import hashlib
 import json
 import os
 import re
@@ -89,6 +90,99 @@ def test_refuses_wrong_dataset_tree(ds, tmp_path):
     g.write_text(g.read_text(encoding="utf-8") + " ", encoding="utf-8")
     with pytest.raises(F.PosthocError, match="dataset file hash mismatch"):
         F.build(F.Paths(data=bad))
+
+
+def _resign(ds: Path, rel: str) -> None:
+    """Re-list one file's sha256 in manifest.json, so only the E1 projection check can catch the change."""
+    man = json.loads((ds / "manifest.json").read_text(encoding="utf-8"))
+    man["files"][rel] = hashlib.sha256((ds / rel).read_bytes()).hexdigest()
+    (ds / "manifest.json").write_text(json.dumps(man, indent=2), encoding="utf-8")
+
+
+def _edit_gold(ds: Path, rel: str, fn) -> None:
+    p = ds / rel
+    g = json.loads(p.read_text(encoding="utf-8"))
+    fn(g)
+    p.write_text(json.dumps(g, ensure_ascii=False, indent=2), encoding="utf-8")
+    _resign(ds, rel)
+
+
+def _set_t1(key, value):
+    return lambda g: next(d for d in g["decision_times"] if d["decision_point"] == "T1").__setitem__(key, value)
+
+
+@pytest.mark.parametrize("rel,fn", [
+    ("gold/dev/SYNE-0196.json", _set_t1("expected_action", "suggest")),
+    ("gold/test/SYNE-0009.json", _set_t1("red_flags", [{"item_ids": [], "rule_id": "RF-TAMPERED"}])),
+    ("gold/train/SYNE-0001.json", _set_t1("department_evaluable", None)),
+    ("gold/dev/SYNE-0196.json", lambda g: g.__setitem__("patient_ref", "SYNP-9999")),
+])
+def test_projection_refuses_changed_used_gold_field(ds, tmp_path, rel, fn):
+    bad = tmp_path / "ds"
+    shutil.copytree(ds, bad)
+    _edit_gold(bad, rel, fn)
+    with pytest.raises(F.PosthocError, match="E1 data projection .* != frozen"):
+        F.build(F.Paths(data=bad))
+
+
+def test_projection_refuses_missing_used_gold_field(ds, tmp_path):
+    bad = tmp_path / "ds"
+    shutil.copytree(ds, bad)
+    _edit_gold(bad, "gold/dev/SYNE-0196.json", lambda g: g["decision_times"][0].pop("required_fields"))
+    with pytest.raises(F.PosthocError, match="gold field used by E1 is missing"):
+        F.build(F.Paths(data=bad))
+
+
+def test_projection_refuses_changed_or_added_input(ds, tmp_path):
+    bad = tmp_path / "ds"
+    shutil.copytree(ds, bad)
+    snap = sorted((bad / "inputs" / "dev").rglob("snapshot_T1.json"))[0]
+    b = bytearray(snap.read_bytes())
+    b[len(b) // 2] ^= 0x01
+    snap.write_bytes(bytes(b))
+    _resign(bad, snap.relative_to(bad).as_posix())
+    with pytest.raises(F.PosthocError, match="E1 data projection .* != frozen"):
+        F.build(F.Paths(data=bad))
+    extra = tmp_path / "ds2"
+    shutil.copytree(ds, extra)
+    (extra / "inputs" / "dev" / "stray.json").write_text("{}", encoding="utf-8")
+    with pytest.raises(F.PosthocError, match="inputs/\\*\\* on disk differs"):
+        F.build(F.Paths(data=extra))
+
+
+def test_projection_ignores_gold_keys_e1_does_not_read(ds, tmp_path, doc):
+    """Additive / unread gold keys (s6 care labels, label_version, medication_issues) leave E1 unchanged."""
+    alt = tmp_path / "ds"
+    shutil.copytree(ds, alt)
+
+    def fn(g):
+        g["label_version"] = "9.9.9"
+        for d in g["decision_times"]:
+            d["care"] = {"tampered": True}
+            d["medication_issues"] = []
+
+    _edit_gold(alt, "gold/dev/SYNE-0196.json", fn)
+    assert F.render(F.build(F.Paths(data=alt))) == F.render(doc)
+
+
+def test_projection_pin_recomputed_from_frozen_generator(tmp_path):
+    """E1_PROJECTION_SHA256 is recomputed from the S1r v1.1.1 generator at 8943cd1 (the e1 frozen tree)."""
+    src = tmp_path / "src"
+    src.mkdir()
+    arch = subprocess.run(["git", "-C", str(REPO), "archive", "8943cd1", "data_factory", "casegraph", "backend",
+                           "schemas"], check=True, capture_output=True).stdout
+    subprocess.run(["tar", "-x", "-C", str(src)], input=arch, check=True)
+    out = tmp_path / "v111"
+    env = {**os.environ, "PYTHONPATH": f"{src}{os.pathsep}{src / 'backend'}"}
+    subprocess.run([sys.executable, "-m", "data_factory", "generate", "--seed", "20260926", "--out", str(out)],
+                   check=True, cwd=src, env=env, capture_output=True)
+    man = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
+    frozen = F._manifest_hashes(json.loads((REPO / "eval/manifests/e1/e1-voice-dev-v1.json").read_text("utf-8")))
+    assert man["generator_version"] == "1.1.1"
+    assert man["tree_sha256"] == frozen["dataset_tree_sha256"] == F.E1_PROJECTION_FROZEN_TREE
+    files = {rel: hashlib.sha256((out / rel).read_bytes()).hexdigest() for rel in man["files"]}
+    assert files == man["files"]
+    assert F.e1_data_projection(out, files)[0] == F.E1_PROJECTION_SHA256
 
 
 # ---------------------------------------------------------------- 2. byte-identical regeneration
