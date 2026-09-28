@@ -92,11 +92,11 @@ D1_LEXICON = {
     "en_p2": frozenset({"tdd"}),
     "daily": "daily",
     "daily_followers": frozenset({"dose", "doses", "total"}),
-    # rev 4 P3: in the drug-name region (before the first numeric-ish token), a Latin word with this prefix or in
-    # "name_words".
-    "name_prefix": "per",
-    "name_words": frozenset({"daily", "day", "aday", "dose"}),
 }
+# P3 (rev 5, narrowed): in the drug-name region (before the first numeric-ish token), a Latin whole word equal to one of
+# these. A word that only starts with "per" (Perindopril, Perphenazine) does not fire.
+P3_WORDS = frozenset({"per", "perday", "perdiem", "perdose", "perweek", "permonth", "perkg", "daily", "day", "days",
+                      "aday", "dose"})
 # P4 (rev 4): an anchor key starting with "daily_keys" (or Thai "th_daily" after the TAIL) is a daily total when the
 # entry also holds a multi-dose frequency: one of "words" (after dot compaction), F1 with an interval in "f1_hours",
 # F2 with a count >= "min_count" per one of "f2_periods", or F3 "วันละ INT ครั้ง" with INT >= "min_count".
@@ -497,8 +497,7 @@ def _daily_total_word(toks: list[Token], i: int) -> bool:
 
 def _name_region_word(toks: list[Token], i: int) -> bool:
     """P3: a per-day word before the first numeric-ish token (only when the entry has one)."""
-    t = toks[i]
-    if not (t.text.startswith(D1_LEXICON["name_prefix"]) or t.text in D1_LEXICON["name_words"]):
+    if toks[i].text not in P3_WORDS:
         return False
     numeric = numeric_ish(toks)
     return True in numeric and i < numeric.index(True)

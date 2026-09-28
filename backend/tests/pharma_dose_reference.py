@@ -42,13 +42,14 @@ DAILY_THAI = ("แบ่ง", "รวม", "ทั้งหมด", "ทั้�
 DAILY_PER_OBJECTS = ("วัน", "สัปดาห์", "อาทิตย์", "เดือน", "กก", "กิโล")
 DAILY_PER_PERIODS = ("วัน", "สัปดาห์", "อาทิตย์", "เดือน")
 DAILY_LATIN = ("divided", "divide", "split", "total", "doses")
-# rev 4 §P. P1: the word(s) right after an anchor's tail; P2: tdd and daily + dose/doses/total; P3: per-day words in
-# the drug-name part; P4: daily + a multi-dose frequency.
+# rev 4 §P. P1: the word(s) right after an anchor's tail; P2: tdd and daily + dose/doses/total; P3 (rev 5): per-day
+# words in the drug-name part; P4: daily + a multi-dose frequency.
 PER_KEYS = ("per", "aday", "aweek", "amonth", "kg", "tdd", "dailydose", "dailytotal")
 PER_THAI = ("ต่อ", "กก", "กิโล")
 KEY_GLUE = " -._"
 DAILY_AFTER = ("dose", "doses", "total")
-NAME_PER_WORDS = ("daily", "day", "aday", "dose")
+NAME_PER_WORDS = ("per", "perday", "perdiem", "perdose", "perweek", "permonth", "perkg", "daily", "day", "days", "aday",
+                  "dose")  # rev 5 P3: whole words only
 EVERY_DAY_KEYS = ("daily", "everyday")
 MULTI_WORDS = ("bd", "bid", "tid", "qid", "twice", "thrice")
 COUNTS = {"once": 1, "twice": 2, "thrice": 3, "one": 1, "two": 2, "three": 3, "four": 4}
@@ -730,7 +731,7 @@ def daily_marker(text: str) -> bool:
                 at += 1
             if at > ends[j] and _latin_run(s, at) in DAILY_AFTER:
                 return True
-        if kind == "W" and first is not None and j < first and (word[:3] == "per" or word in NAME_PER_WORDS):
+        if kind == "W" and first is not None and j < first and word in NAME_PER_WORDS:
             return True
         if word == "วันละ" and walk.strength_at(j + 1):
             return True

@@ -240,6 +240,8 @@ K5_PROBES = {
     "K9": ("Alendronate 70 mg weekly", ("resolved", None, 70.0, "mg", None), None, None),
     "K10": ("Alendronate 70 mg every week", ("resolved", None, 70.0, "mg", None), None, None),
     "K11": ("Metformin 500 mg every day", ("resolved", None, 500.0, "mg", None), "q24h", None),
+    "K16": ("Perindopril 4 mg od", ("resolved", None, 4.0, "mg", None), "q24h", None),
+    "K17": ("Perphenazine 4 mg tid", ("resolved", None, 4.0, "mg", None), "q8h", None),
     "K18": ("เมทฟอร์มิน 500 มก. วันเว้นวัน", ("resolved", None, 500.0, "mg", None), None, None),
 }
 K_PROBES.update(K5_PROBES)  # test_probe_controls runs K1-K8 and the rev-5 rows K9-K19
@@ -473,8 +475,12 @@ def _spec_constants(heading: str) -> dict[str, str]:
     return out
 
 
+def _spec_block_at(heading: str, title: str) -> set[str]:
+    return set(_spec_constants(heading)[title].split())
+
+
 def _spec_block(title: str) -> set[str]:
-    return set(_spec_constants("**Rev 5 changes**")[title].split())
+    return _spec_block_at("**Rev 5 changes**", title)
 
 
 def test_vocab_sets_match_spec():
@@ -502,8 +508,10 @@ def test_vocab_sets_match_spec():
     assert mock_rules.P4_MULTI_DOSE["daily_keys"] == ("daily", "everyday") == ref.EVERY_DAY_KEYS
     assert mock_rules.D1_LEXICON["en_p2"] == {"tdd"}
     assert mock_rules.D1_LEXICON["daily_followers"] == {"dose", "doses", "total"} == set(ref.DAILY_AFTER)
-    assert mock_rules.D1_LEXICON["name_words"] == {"daily", "day", "aday", "dose"} == set(ref.NAME_PER_WORDS)
-    assert mock_rules.D1_LEXICON["name_prefix"] == "per"
+    # rev 5 P3: a closed whole-word list (no "per" prefix rule).
+    p3 = _spec_block_at("**P3 (rev 5, narrowed).**", "P3_WORDS")
+    assert len(p3) == 12 and mock_rules.P3_WORDS == p3 == set(ref.NAME_PER_WORDS)
+    assert "name_prefix" not in mock_rules.D1_LEXICON and "name_words" not in mock_rules.D1_LEXICON
 
 
 def test_reference_rev4_independent():
@@ -569,6 +577,16 @@ def test_bare_period_words_only_in_phrases():
                  "Metformin 500 mg every month", "เมทฟอร์มิน 500 มก. ทุกวัน", "เมทฟอร์มิน 500 มก. กลางวัน"):
         assert not any(m.pid == "C1" for m in mock_rules.read_dose(text).matches), text
         assert ref.c1_ok(ref._walk(text)[1]), text
+
+
+def test_p3_whole_words_only():
+    """§P3 rev 5: every listed word fires in the name region (any case); a longer word that starts with one does not."""
+    for word in sorted(mock_rules.P3_WORDS):
+        for w in (word, word.upper(), word.capitalize()):
+            assert _dose(f"Metformin {w} 1000 mg bid")[:2] == ("unverifiable", "per_unit_amount"), w
+    for name in ("Perindopril", "Perphenazine", "Pergolide", "Dosepin", "Dayquil", "Dailyvit", "Perkgx"):
+        assert _dose(f"{name} 4 mg od") == ("resolved", None, 4.0, "mg", None), name
+        assert reference_parse(f"{name} 4 mg od") == ("resolved", 4.0, "mg", None, None), name
 
 
 # ---------------------------------------------------------------- S5R4-A09 (rev 5) neutral on existing data vs d2ff98c
