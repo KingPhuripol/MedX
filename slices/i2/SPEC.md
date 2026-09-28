@@ -98,7 +98,7 @@
    - The Pharma Agent provider is resolved through a named hook, which by default is the S2 placeholder `placeholder-pharma-0.2`, labelled PLACEHOLDER.
    - S1r `MedicationList` entries map to the placeholder's inputs.
    - A provider registered on the hook runs with no change to the executor. The S5 swap is a follow-up slice.
-9. **Runs and the Table 3.2 comparison** (harness in `eval/adapters/i2/`, under the e1 adapter carve-out).
+9. **Runs and the Table 3.2 comparison** (harness in top-level `eval_i2/`, accepted by the orchestrator on 2026-09-28 in place of `eval/adapters/i2/`; the E1 `eval/adapters` allowlist is unchanged).
    - **Arm A (Case Graph):** compile and execute every S1r case×T through the Executor, then replay.
    - **Arm B (single prompt):**
      - one gateway call per DP, task `casegraph.single_prompt.v1`, with the whole snapshot serialized;

@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 
+import ScreeningBlock from "@/components/ScreeningBlock";
 import {
   OUTPUT_LABEL,
   type Assessment,
@@ -55,6 +56,8 @@ export default function TriageReview({ assessment, departments, onReview }: Prop
         <strong>{OUTPUT_LABEL}.</strong> Evidence as of {a.as_of}. Red-flag rules {a.ruleset_version}.
       </p>
 
+      <ScreeningBlock screening={a.screening} />
+
       <section
         aria-labelledby="alerts-title"
         role={a.alerts.length ? "alert" : undefined}
@@ -92,7 +95,10 @@ export default function TriageReview({ assessment, departments, onReview }: Prop
             </ul>
           </>
         ) : (
-          <p>No red-flag rule fired on the data recorded so far.</p>
+          <p data-testid="alerts-none">
+            Nothing to acknowledge. This is not a negative screen: see the red-flag screening block for which
+            rules were evaluated and their scope.
+          </p>
         )}
         {a.not_evaluable.length > 0 && (
           <>
