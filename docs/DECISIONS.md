@@ -31,3 +31,8 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
 - **Basis:** within the owner's 2026-09-27 decision "S6 test split redone on a fresh held-out set" (same case mix); no threshold, metric or seed changed.
 - **Decided by:** main-session orchestrator, 2026-09-27; reported to the owner in chat the same day.
 - **Open:** D-s6r-1 — the S8 harness owner (สุปรียา) reviews the `eval/runner.py` re-render change (identical frozen test re-run = re-render, no new run line).
+
+## 2026-09-28 — S5 Pharma: final dose-grammar round (rev 5), then close
+- **What:** Implement slices/s5r4/SPEC.md revision 5 (86ccf86) in one final build/check/review round (S5r5). Whatever that round still finds is recorded in slices/s5r4/RESIDUAL_RISK.md for pharmacist acceptance and the slice closes; no further grammar revisions before the 8–9 Oct Proposal presentation.
+- **Approved by:** project owner (chat, 2026-09-28).
+- **Open:** pharmacist sign-off on the rev-5 vocabularies (V_EN_FREE, V_TH_FREE, V_EN_PHRASES, P3_WORDS, P4 DAILY/MULTI, TIME_SLOTS) and on RR-01…RR-07.
