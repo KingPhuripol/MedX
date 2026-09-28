@@ -13,7 +13,7 @@
 - Dataset: s1r-synthetic vs1r-1.1.1+tree:e76e38cc67d6317d82196f105cb9781bedf3451b9ba74a1585b19662d4d1162b (synthetic); split: dev (fb9454a2bc7433b663c6d921ebd68d3a1897bdbffb02dc3849e9d37976c828e9); frozen: no
 - Patients: 36; decision points: 80
 - CI: 95% percentile patient-level cluster bootstrap, n_boot=2000, seed=20260926
-- Manifest sha256: f3dde4829fed55911b3bbe3de7fea50479e9a4487752e2ad2fe013c70bb6fea6
+- Manifest sha256: 806b18668c3cc5a2e55928de60f53b8f7255cd7fca7c287ed75b15d9a73beeb6
 - Frozen ledger entry hash: none (not frozen)
 - Predictions sha256: 329d5e8239de121058fa813c7af92ee00bc5ca4008c72fb2ffef2b9e00271564
 - Comparator sha256: 23ee55efdb24d5e936369cc1f230a19969f2ea2843e599a381903fd5ce1ec4f0

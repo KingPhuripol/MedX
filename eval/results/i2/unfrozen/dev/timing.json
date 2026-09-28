@@ -1,337 +1,337 @@
 {
  "case_graph": {
-  "median_ms": 4.83,
+  "median_ms": 4.662,
   "n": 80,
-  "p95_ms": 5.685
+  "p95_ms": 5.226
  },
  "label": "System Evaluation on synthetic data \u2014 not clinical performance",
  "note": "in-process wall time per DP, arms alternated per DP; orchestration overhead with a mock provider, not model latency",
  "per_dp_ms": {
   "SYNE-0007/T1": {
-   "case_graph": 9.362,
-   "single_prompt": 1.104
+   "case_graph": 9.224,
+   "single_prompt": 1.052
   },
   "SYNE-0007/T2": {
-   "case_graph": 5.062,
-   "single_prompt": 1.139
+   "case_graph": 5.058,
+   "single_prompt": 1.113
   },
   "SYNE-0011/T1": {
-   "case_graph": 5.5,
-   "single_prompt": 1.031
+   "case_graph": 5.507,
+   "single_prompt": 1.027
   },
   "SYNE-0011/T2": {
-   "case_graph": 5.255,
-   "single_prompt": 1.141
+   "case_graph": 4.962,
+   "single_prompt": 1.139
   },
   "SYNE-0012/T1": {
-   "case_graph": 5.682,
-   "single_prompt": 1.176
+   "case_graph": 5.414,
+   "single_prompt": 1.066
   },
   "SYNE-0012/T2": {
-   "case_graph": 5.099,
-   "single_prompt": 1.235
+   "case_graph": 4.714,
+   "single_prompt": 1.153
   },
   "SYNE-0028/T1": {
-   "case_graph": 5.526,
-   "single_prompt": 0.971
+   "case_graph": 4.95,
+   "single_prompt": 0.929
   },
   "SYNE-0028/T2": {
-   "case_graph": 5.018,
-   "single_prompt": 1.06
+   "case_graph": 4.655,
+   "single_prompt": 1.052
   },
   "SYNE-0030/T1": {
-   "case_graph": 5.403,
-   "single_prompt": 1.011
+   "case_graph": 5.048,
+   "single_prompt": 0.963
   },
   "SYNE-0030/T2": {
-   "case_graph": 4.863,
-   "single_prompt": 1.115
+   "case_graph": 4.707,
+   "single_prompt": 1.078
   },
   "SYNE-0071/T1": {
-   "case_graph": 4.289,
-   "single_prompt": 0.881
+   "case_graph": 4.096,
+   "single_prompt": 0.858
   },
   "SYNE-0071/T2": {
-   "case_graph": 3.811,
-   "single_prompt": 0.946
+   "case_graph": 3.694,
+   "single_prompt": 0.927
   },
   "SYNE-0073/T1": {
-   "case_graph": 5.747,
-   "single_prompt": 1.082
+   "case_graph": 5.063,
+   "single_prompt": 0.994
   },
   "SYNE-0073/T2": {
-   "case_graph": 5.114,
-   "single_prompt": 1.123
+   "case_graph": 4.777,
+   "single_prompt": 1.091
   },
   "SYNE-0077/T1": {
-   "case_graph": 5.279,
-   "single_prompt": 0.986
+   "case_graph": 4.888,
+   "single_prompt": 0.996
   },
   "SYNE-0077/T2": {
-   "case_graph": 4.636,
-   "single_prompt": 1.096
+   "case_graph": 4.644,
+   "single_prompt": 1.116
   },
   "SYNE-0079/T1": {
-   "case_graph": 4.974,
+   "case_graph": 4.849,
    "single_prompt": 0.969
   },
   "SYNE-0079/T2": {
-   "case_graph": 4.646,
-   "single_prompt": 1.094
+   "case_graph": 4.633,
+   "single_prompt": 1.1
   },
   "SYNE-0081/T1": {
-   "case_graph": 4.831,
-   "single_prompt": 0.926
+   "case_graph": 4.694,
+   "single_prompt": 0.947
   },
   "SYNE-0081/T2": {
-   "case_graph": 4.378,
-   "single_prompt": 1.022
+   "case_graph": 4.409,
+   "single_prompt": 1.032
   },
   "SYNE-0085/T1": {
-   "case_graph": 4.708,
+   "case_graph": 4.635,
    "single_prompt": 0.879
   },
   "SYNE-0085/T2": {
-   "case_graph": 4.362,
-   "single_prompt": 0.98
+   "case_graph": 4.234,
+   "single_prompt": 0.969
   },
   "SYNE-0088/T1": {
-   "case_graph": 4.63,
-   "single_prompt": 0.886
+   "case_graph": 4.393,
+   "single_prompt": 0.856
   },
   "SYNE-0088/T2": {
-   "case_graph": 4.305,
-   "single_prompt": 1.012
+   "case_graph": 4.037,
+   "single_prompt": 0.982
   },
   "SYNE-0089/T1": {
-   "case_graph": 4.187,
-   "single_prompt": 0.844
+   "case_graph": 3.992,
+   "single_prompt": 0.826
   },
   "SYNE-0089/T2": {
-   "case_graph": 3.704,
-   "single_prompt": 0.921
+   "case_graph": 3.69,
+   "single_prompt": 0.905
   },
   "SYNE-0093/T1": {
-   "case_graph": 5.471,
-   "single_prompt": 1.077
+   "case_graph": 5.337,
+   "single_prompt": 1.079
   },
   "SYNE-0093/T2": {
-   "case_graph": 4.875,
-   "single_prompt": 1.198
+   "case_graph": 4.769,
+   "single_prompt": 1.182
   },
   "SYNE-0096/T1": {
    "case_graph": 4.557,
-   "single_prompt": 0.877
+   "single_prompt": 0.923
   },
   "SYNE-0096/T2": {
-   "case_graph": 4.192,
+   "case_graph": 4.215,
    "single_prompt": 0.991
   },
   "SYNE-0097/T1": {
-   "case_graph": 4.794,
-   "single_prompt": 0.937
+   "case_graph": 4.76,
+   "single_prompt": 0.923
   },
   "SYNE-0097/T2": {
-   "case_graph": 4.554,
-   "single_prompt": 1.066
-  },
-  "SYNE-0104/T1": {
-   "case_graph": 5.198,
-   "single_prompt": 1.005
-  },
-  "SYNE-0104/T2": {
-   "case_graph": 4.756,
-   "single_prompt": 1.109
-  },
-  "SYNE-0107/T1": {
-   "case_graph": 4.937,
-   "single_prompt": 0.965
-  },
-  "SYNE-0107/T2": {
-   "case_graph": 4.484,
-   "single_prompt": 1.068
-  },
-  "SYNE-0108/T1": {
-   "case_graph": 5.212,
-   "single_prompt": 1.032
-  },
-  "SYNE-0108/T2": {
-   "case_graph": 4.935,
-   "single_prompt": 1.148
-  },
-  "SYNE-0109/T1": {
-   "case_graph": 5.013,
+   "case_graph": 4.434,
    "single_prompt": 1.025
   },
-  "SYNE-0109/T2": {
-   "case_graph": 4.828,
-   "single_prompt": 1.085
-  },
-  "SYNE-0118/T1": {
-   "case_graph": 5.102,
-   "single_prompt": 1.01
-  },
-  "SYNE-0118/T2": {
-   "case_graph": 4.735,
-   "single_prompt": 1.139
-  },
-  "SYNE-0119/T1": {
-   "case_graph": 5.534,
-   "single_prompt": 1.053
-  },
-  "SYNE-0119/T2": {
-   "case_graph": 4.954,
-   "single_prompt": 1.147
-  },
-  "SYNE-0127/T1": {
-   "case_graph": 5.272,
-   "single_prompt": 1.027
-  },
-  "SYNE-0127/T2": {
-   "case_graph": 4.941,
-   "single_prompt": 1.149
-  },
-  "SYNE-0139/T1": {
-   "case_graph": 5.309,
-   "single_prompt": 1.013
-  },
-  "SYNE-0139/T2": {
-   "case_graph": 4.793,
-   "single_prompt": 1.127
-  },
-  "SYNE-0140/T1": {
-   "case_graph": 4.647,
-   "single_prompt": 0.92
-  },
-  "SYNE-0140/T2": {
-   "case_graph": 4.23,
-   "single_prompt": 1.033
-  },
-  "SYNE-0147/T1": {
-   "case_graph": 5.141,
+  "SYNE-0104/T1": {
+   "case_graph": 4.972,
    "single_prompt": 0.972
   },
-  "SYNE-0147/T2": {
-   "case_graph": 4.769,
-   "single_prompt": 1.104
+  "SYNE-0104/T2": {
+   "case_graph": 4.589,
+   "single_prompt": 1.082
   },
-  "SYNE-0149/T1": {
-   "case_graph": 4.764,
-   "single_prompt": 0.909
+  "SYNE-0107/T1": {
+   "case_graph": 4.828,
+   "single_prompt": 0.955
   },
-  "SYNE-0149/T2": {
-   "case_graph": 4.569,
-   "single_prompt": 1.029
+  "SYNE-0107/T2": {
+   "case_graph": 4.495,
+   "single_prompt": 1.072
   },
-  "SYNE-0157/T1": {
-   "case_graph": 4.946,
-   "single_prompt": 0.999
+  "SYNE-0108/T1": {
+   "case_graph": 4.99,
+   "single_prompt": 1.001
   },
-  "SYNE-0157/T2": {
-   "case_graph": 4.593,
-   "single_prompt": 1.127
+  "SYNE-0108/T2": {
+   "case_graph": 4.716,
+   "single_prompt": 1.119
   },
-  "SYNE-0165/T1": {
-   "case_graph": 4.114,
-   "single_prompt": 0.82
-  },
-  "SYNE-0165/T2": {
-   "case_graph": 3.56,
-   "single_prompt": 0.896
-  },
-  "SYNE-0166/T1": {
-   "case_graph": 4.188,
+  "SYNE-0109/T1": {
+   "case_graph": 4.665,
    "single_prompt": 0.892
   },
+  "SYNE-0109/T2": {
+   "case_graph": 4.39,
+   "single_prompt": 1.046
+  },
+  "SYNE-0118/T1": {
+   "case_graph": 4.705,
+   "single_prompt": 0.894
+  },
+  "SYNE-0118/T2": {
+   "case_graph": 4.364,
+   "single_prompt": 1.018
+  },
+  "SYNE-0119/T1": {
+   "case_graph": 5.207,
+   "single_prompt": 1.003
+  },
+  "SYNE-0119/T2": {
+   "case_graph": 4.742,
+   "single_prompt": 1.14
+  },
+  "SYNE-0127/T1": {
+   "case_graph": 5.22,
+   "single_prompt": 1.032
+  },
+  "SYNE-0127/T2": {
+   "case_graph": 4.892,
+   "single_prompt": 1.152
+  },
+  "SYNE-0139/T1": {
+   "case_graph": 5.125,
+   "single_prompt": 0.996
+  },
+  "SYNE-0139/T2": {
+   "case_graph": 4.743,
+   "single_prompt": 1.129
+  },
+  "SYNE-0140/T1": {
+   "case_graph": 4.658,
+   "single_prompt": 0.914
+  },
+  "SYNE-0140/T2": {
+   "case_graph": 4.203,
+   "single_prompt": 1.005
+  },
+  "SYNE-0147/T1": {
+   "case_graph": 5.044,
+   "single_prompt": 0.958
+  },
+  "SYNE-0147/T2": {
+   "case_graph": 4.592,
+   "single_prompt": 1.075
+  },
+  "SYNE-0149/T1": {
+   "case_graph": 4.573,
+   "single_prompt": 0.882
+  },
+  "SYNE-0149/T2": {
+   "case_graph": 4.312,
+   "single_prompt": 0.991
+  },
+  "SYNE-0157/T1": {
+   "case_graph": 4.715,
+   "single_prompt": 0.966
+  },
+  "SYNE-0157/T2": {
+   "case_graph": 4.499,
+   "single_prompt": 1.102
+  },
+  "SYNE-0165/T1": {
+   "case_graph": 3.892,
+   "single_prompt": 0.795
+  },
+  "SYNE-0165/T2": {
+   "case_graph": 3.522,
+   "single_prompt": 0.884
+  },
+  "SYNE-0166/T1": {
+   "case_graph": 3.978,
+   "single_prompt": 0.83
+  },
   "SYNE-0166/T2": {
-   "case_graph": 3.685,
-   "single_prompt": 0.979
+   "case_graph": 3.636,
+   "single_prompt": 0.932
   },
   "SYNE-0169/T1": {
-   "case_graph": 4.728,
-   "single_prompt": 0.921
+   "case_graph": 4.67,
+   "single_prompt": 0.917
   },
   "SYNE-0169/T2": {
-   "case_graph": 4.386,
-   "single_prompt": 1.047
+   "case_graph": 4.361,
+   "single_prompt": 1.052
   },
   "SYNE-0170/T1": {
-   "case_graph": 5.267,
-   "single_prompt": 1.083
+   "case_graph": 5.201,
+   "single_prompt": 1.061
   },
   "SYNE-0170/T2": {
-   "case_graph": 4.937,
-   "single_prompt": 1.205
+   "case_graph": 5.025,
+   "single_prompt": 1.237
   },
   "SYNE-0173/T1": {
-   "case_graph": 4.45,
-   "single_prompt": 0.844
+   "case_graph": 4.251,
+   "single_prompt": 0.838
   },
   "SYNE-0173/T2": {
-   "case_graph": 4.099,
-   "single_prompt": 0.96
+   "case_graph": 4.004,
+   "single_prompt": 0.957
   },
   "SYNE-0181/T1": {
-   "case_graph": 5.203,
-   "single_prompt": 1.028
+   "case_graph": 5.219,
+   "single_prompt": 0.998
   },
   "SYNE-0181/T2": {
-   "case_graph": 4.756,
-   "single_prompt": 1.134
+   "case_graph": 4.493,
+   "single_prompt": 1.117
   },
   "SYNE-0184/T1": {
-   "case_graph": 4.811,
-   "single_prompt": 0.941
+   "case_graph": 4.512,
+   "single_prompt": 0.907
   },
   "SYNE-0184/T2": {
-   "case_graph": 4.426,
-   "single_prompt": 1.064
+   "case_graph": 4.292,
+   "single_prompt": 1.027
   },
   "SYNE-0185/T1": {
-   "case_graph": 4.656,
-   "single_prompt": 0.928
+   "case_graph": 4.546,
+   "single_prompt": 0.885
   },
   "SYNE-0185/T2": {
-   "case_graph": 4.414,
-   "single_prompt": 1.045
+   "case_graph": 4.137,
+   "single_prompt": 1.01
   },
   "SYNE-0192/T1": {
-   "case_graph": 4.911,
-   "single_prompt": 1.0
+   "case_graph": 4.711,
+   "single_prompt": 0.939
   },
   "SYNE-0192/T2": {
-   "case_graph": 4.769,
-   "single_prompt": 1.169
+   "case_graph": 4.425,
+   "single_prompt": 1.078
   },
   "SYNE-0194/T1": {
-   "case_graph": 5.419,
-   "single_prompt": 1.017
+   "case_graph": 4.945,
+   "single_prompt": 0.937
   },
   "SYNE-0194/T2": {
-   "case_graph": 5.04,
-   "single_prompt": 1.112
+   "case_graph": 4.633,
+   "single_prompt": 1.055
   },
   "SYNE-0195/T1": {
-   "case_graph": 5.366,
-   "single_prompt": 1.017
+   "case_graph": 4.957,
+   "single_prompt": 0.968
   },
   "SYNE-0195/T2": {
-   "case_graph": 5.278,
-   "single_prompt": 1.106
+   "case_graph": 4.626,
+   "single_prompt": 1.092
   },
   "SYNE-0196/T1": {
-   "case_graph": 8.644,
-   "single_prompt": 1.581
+   "case_graph": 5.187,
+   "single_prompt": 1.03
   },
   "SYNE-0196/T2": {
-   "case_graph": 5.996,
-   "single_prompt": 1.594
+   "case_graph": 4.821,
+   "single_prompt": 1.145
   }
  },
  "single_prompt": {
-  "median_ms": 1.028,
+  "median_ms": 0.999,
   "n": 80,
-  "p95_ms": 1.198
+  "p95_ms": 1.145
  },
  "split": "dev"
 }

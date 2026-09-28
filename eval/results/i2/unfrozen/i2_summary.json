@@ -298,7 +298,7 @@
     "reader_text+reader_vitals_labs+red_flag+reasoning+human_checkpoint": 8
    },
    "label": "System Evaluation on synthetic data — not clinical performance",
-   "manifest_sha256": "f3dde4829fed55911b3bbe3de7fea50479e9a4487752e2ad2fe013c70bb6fea6",
+   "manifest_sha256": "806b18668c3cc5a2e55928de60f53b8f7255cd7fca7c287ed75b15d9a73beeb6",
    "n_dp": 80,
    "n_patients": 36,
    "not_evaluated": {

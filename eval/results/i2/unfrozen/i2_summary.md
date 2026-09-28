@@ -10,7 +10,7 @@ Predeclared expectation: Equal accuracy on DPs where both arms answer; the Case 
 
 ## dev
 
-UNFROZEN - exploratory (dev split); n_dp=80, n_patients=36; manifest `f3dde4829fed`
+UNFROZEN - exploratory (dev split); n_dp=80, n_patients=36; manifest `806b18668c3c`
 
 > **System Evaluation on synthetic data — not clinical performance**
 >
