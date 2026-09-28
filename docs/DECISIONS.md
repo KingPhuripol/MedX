@@ -30,3 +30,8 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
 - **What:** (1) A notice that a source does not state dose or frequency counts as an alert. Clean medication lists are therefore fully specified in every source; an incomplete source is its own labelled discrepancy type `missing_field`, injected and measured by recall like the others. The pipeline still never treats a missing value as agreement. (2) The S5 fixture set grows to at least 90 patients (at least 30 in the frozen test split) so each discrepancy type has at least 30 injected cases, one per patient, with patient-level bootstrap CIs.
 - **Approved by:** project owner (chat, 2026-09-27).
 - **Timing:** decided on dev results before any frozen test-split evaluation; thresholds unchanged (false alerts per clean list <= 0.10, recall per type >= 0.95).
+
+## 2026-09-28 — S5 Pharma: final dose-grammar round (rev 5), then close
+- **What:** Implement slices/s5r4/SPEC.md revision 5 (86ccf86) in one final build/check/review round (S5r5). Whatever that round still finds is recorded in slices/s5r4/RESIDUAL_RISK.md for pharmacist acceptance and the slice closes; no further grammar revisions before the 8–9 Oct Proposal presentation.
+- **Approved by:** project owner (chat, 2026-09-28).
+- **Open:** pharmacist sign-off on the rev-5 vocabularies (V_EN_FREE, V_TH_FREE, V_EN_PHRASES, P3_WORDS, P4 DAILY/MULTI, TIME_SLOTS) and on RR-01…RR-07.
