@@ -9,6 +9,7 @@ priority cascade walks them left to right (longer forms are tried before their p
 
 from __future__ import annotations
 
+import functools
 import unicodedata
 from fractions import Fraction
 
@@ -76,6 +77,7 @@ HIDDEN_RANGES = ((0x034F, 0x034F), (0x115F, 0x1160), (0x17B4, 0x17B5), (0x180B, 
                  (0x2800, 0x2800), (0x3164, 0x3164), (0xFE00, 0xFE0F), (0xFFA0, 0xFFA0), (0xE0100, 0xE01EF))
 
 
+@functools.cache  # pure; keeps the fuzz test within its time budget (S5R4-A02)
 def hidden(ch: str) -> bool:
     if unicodedata.category(ch) in HIDDEN_KINDS:
         return True
@@ -83,6 +85,7 @@ def hidden(ch: str) -> bool:
     return any(lo <= cp <= hi for lo, hi in HIDDEN_RANGES)
 
 
+@functools.cache  # pure; keeps the fuzz test within its time budget (S5R4-A02)
 def slashy(ch: str) -> bool:
     """rev 3 G1: any character named ...SOLIDUS... or ...SLASH..., plus SET MINUS."""
     if ord(ch) == 0x2216:
@@ -745,6 +748,7 @@ def p4(walk: "_Walk") -> bool:
     return daily_statement(walk) and (multi_dose(walk) or slot_count(walk) >= 2)
 
 
+@functools.cache  # pure; see reference_parse
 def daily_marker(text: str) -> bool:
     """rev 3 D1: TH markers in the line with whitespace removed, "วันละ" + strength, or an EN marker word.
     rev 4 P2 (tdd; daily + dose/doses/total) and P3 (per-day words before the first numeric-ish pair)."""
@@ -794,6 +798,7 @@ def _walk(text: str) -> tuple[list[tuple[str, str]], _Walk]:
     return pairs, walk
 
 
+@functools.cache  # pure; keeps the fuzz test within its time budget (S5R4-A02)
 def reference_parse(text: str) -> tuple[str, float | None, str | None, float | None, str | None]:
     pairs, walk = _walk(text)
     leftover = [j for j in range(len(pairs)) if walk.numericish(j) and not walk.used[j]]
@@ -831,14 +836,15 @@ def reference_closure(text: str) -> dict[str, bool]:
     """§F.5 inputs: an INVISIBLE character; a SLASH-LIKE character other than an ASCII "/" consumed by FRAC, S2 or
     L1; a D1 marker. A line with any of these is never resolved."""
     pairs, walk = _walk(text)
+    daily_multi = p4(walk)
     return {
         "invisible": any(kind == "I" for kind, _ in pairs),
         "slash_like": any(kind == "L" and not (ch == "/" and walk.used[j]) for j, (kind, ch) in enumerate(pairs)),
-        "daily_total": daily_marker(text) or p4(walk),
+        "daily_total": daily_marker(text) or daily_multi,
         "per_word": any(_per_follows(walk.s, stop) for stop in walk.tail_stops),
         "c1": not c1_ok(walk),
         "bare_period": bare_period(walk),
-        "daily_multi": p4(walk),
+        "daily_multi": daily_multi,
     }
 
 
