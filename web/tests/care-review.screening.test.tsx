@@ -14,7 +14,7 @@ import { BANNER_INCOMPLETE, BANNER_NOT_PERFORMED } from "@/lib/triage";
 const OVERCLAIM = /no red.?flags?|all clear|ไม่มี.*(สัญญาณอันตราย|red flag)/i;
 const RULES = Array.from({ length: 16 }, (_, i) => `RF-${String(i + 1).padStart(2, "0")}`);
 const LABEL = "provisional research prototype; thresholds copied from the cited source, pending clinical expert review";
-// Mirrors backend/app/care/redflag_adapter.py CARE_SCREENING_SCOPE.
+// Mirrors the backend care CARE_SCREENING_SCOPE constant.
 const SCOPE =
   "rf-1.1.0: 16 declared rules; care screening uses the latest structured vitals and demographics only " +
   "(a stale normal vital is not counted as screened; an abnormal one still alerts). Symptom rules are not " +
