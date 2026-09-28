@@ -28,11 +28,8 @@ SEED = 20260926
 
 
 @pytest.fixture(scope="module")
-def dataset(tmp_path_factory) -> Path:
-    out = tmp_path_factory.mktemp("s1r") / "v1"
-    subprocess.run([sys.executable, "-m", "data_factory", "generate", "--seed", str(SEED), "--out", str(out)],
-                   cwd=ROOT, check=True, capture_output=True)
-    return out
+def dataset(s1r_dataset) -> Path:
+    return s1r_dataset
 
 
 def _execute(snap, gateways=None):

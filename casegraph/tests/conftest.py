@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import subprocess
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -39,8 +41,23 @@ def env(tmp_path) -> Env:
     return Env(tmp_path)
 
 
+S1R_SEED = 20260926
+
+
+@pytest.fixture(scope="session")
+def s1r_dataset(tmp_path_factory) -> Path:
+    """S1r at seed 20260926, generated once per session by the factory CLI in a subprocess
+    (no ``data_factory`` import under casegraph/). Tests never compile the test split."""
+    out = tmp_path_factory.mktemp("s1r") / "v1"
+    root = Path(__file__).resolve().parents[2]
+    subprocess.run([sys.executable, "-m", "data_factory", "generate", "--seed", str(S1R_SEED), "--out", str(out)],
+                   cwd=root, check=True, capture_output=True)
+    return out
+
+
 def s2_config(base: ProviderConfig | None = None) -> ProviderConfig:
-    """The s2/s2r test configuration: placeholder Red-flag rules and a project_model Reader:Text.
+    """The s2/s2r test configuration: placeholder Red-flag rules, a project_model Reader:Text and a physician
+    Human Checkpoint.
 
     Slice i2 moved the *default* config to rf-1.1.0 and the voice_extract reader; the s2/s2r executor,
     screening and replay tests pin the configuration they were written for (placeholder rules stay
@@ -49,6 +66,9 @@ def s2_config(base: ProviderConfig | None = None) -> ProviderConfig:
     cfg = base or ProviderConfig()
     cfg = cfg.with_assignment(NodeType.RED_FLAG, ProviderAssignment(provider="rules",
                                                                   model_version="placeholder-redflag-0.2"))
+    # i2: the default checkpoint is the nurse confirm endpoint (human:nurse); s2 tests resume as a physician
+    cfg = cfg.with_assignment(NodeType.HUMAN_CHECKPOINT, ProviderAssignment(provider="human:physician",
+                                                                         model_version="human"))
     return cfg.with_assignment(NodeType.READER_TEXT, ProviderAssignment(provider="project_model",
                                                                       model_version="proj-mock-0.1"))
 

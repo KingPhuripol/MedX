@@ -138,7 +138,7 @@ def _default_assignments() -> dict[NodeType, ProviderAssignment]:
         NodeType.RED_FLAG: a(provider="rules", model_version=RULES_VERSIONS[NodeType.RED_FLAG]),
         NodeType.PHARMA_AGENT: a(provider="rules", model_version=RULES_VERSIONS[NodeType.PHARMA_AGENT]),
         NodeType.REASONING: a(provider="project_model", model_version="proj-mock-0.1"),
-        NodeType.HUMAN_CHECKPOINT: a(provider="human:physician", model_version="human"),
+        NodeType.HUMAN_CHECKPOINT: a(provider="human:nurse", model_version="human"),  # i2: the nurse endpoints
     }
 
 

@@ -318,3 +318,47 @@ def screen_fields(adapted: Adapted, screen: Screen) -> dict[str, Any]:
         "conflicts": screen.conflicts,
         "unmappable": adapted.unmappable,
     }
+
+
+# ------------------------------------------------------------------------ S4 Case -> evidence (i2 scope 7)
+
+_VITAL_FIELD = {"avpu": "consciousness", "new_confusion": "new_confusion"}
+
+
+def evidence_from_case(case: Case) -> list[Evidence]:
+    """Case Graph evidence for an S4 ``Case`` (the triage API's input), one item per S4 fact.
+
+    Each item keeps the fact's ``available_at_time`` (as ``event_time`` too: S4 facts carry no separate
+    measurement time), source, provenance and version; ``item_id`` is the S4 ``fact_id``. The inverse of
+    :func:`build_case` for S4 fact kinds:
+
+    * ``age``/``sex`` -> :class:`Demographics`; ``vital.<k>`` -> :class:`Vitals` with that one field
+      (``vital.avpu`` -> ``consciousness``);
+    * ``symptom.*``, ``chief_complaint``, ``onset_duration``, ``pregnancy_status`` -> one
+      :class:`VoiceIntakeFacts` (ClinicalText family; Reader:Text passes it through with 0 calls).
+
+    A value that has no lossless Case Graph form (a non-integer or out-of-range age) raises, never repaired.
+    """
+    from .data import VoiceFact, VoiceIntakeFacts  # local: keeps the module's import surface unchanged
+
+    items: list[Evidence] = []
+    for f in case.facts:
+        base = {"item_id": f.fact_id, "patient_ref": case.case_ref, "event_time": f.available_at_time,
+                "available_at_time": f.available_at_time, "source": f.source, "provenance": f.provenance,
+                "version": f.version, "data_class": case.data_class}
+        kind, value = f.kind, f.value
+        if kind == "age":
+            if isinstance(value, float) and not value.is_integer():
+                raise BridgeError(f"{f.fact_id}: age {value!r} has no integer Demographics form")
+            items.append(Demographics(**base, age_years=int(value)))
+        elif kind == "sex":
+            items.append(Demographics(**base, sex=value))
+        elif kind.startswith("vital."):
+            name = kind.removeprefix("vital.")
+            items.append(Vitals(**base, **{_VITAL_FIELD.get(name, name): value}))
+        else:  # symptom.*, chief_complaint, onset_duration, pregnancy_status
+            fact = VoiceFact(field=kind, state="KNOWN", value=value, value_text=str(value)[:500],
+                             event_time=f.available_at_time, available_at_time=f.available_at_time,
+                             fact_id=f.fact_id)
+            items.append(VoiceIntakeFacts(**base, facts=(fact,)))
+    return items
