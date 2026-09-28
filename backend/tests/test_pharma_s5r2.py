@@ -368,14 +368,14 @@ def test_decision_atomic_with_audit(app, audit_rows, monkeypatch):
 
 
 def test_versions_bumped():
-    # s5r3 amendment (S5R2-A16 reads the s5r3 §6 strings); RULES_VERSION and RULE_VERSIONS are unchanged.
-    assert MOCK_RULES_VERSION == "s5-mock-rules-2.2.0"
-    assert DOSE_GRAMMAR_VERSION == "s5-dose-grammar-1.2.0"
+    # s5r3/s5r4 amendment (S5R2-A16 reads the s5r4 version strings); RULES_VERSION and RULE_VERSIONS are unchanged.
+    assert MOCK_RULES_VERSION == "s5-mock-rules-2.3.0"
+    assert DOSE_GRAMMAR_VERSION == "s5-dose-grammar-1.3.0"
     assert TEMPLATE_VERSION == "template-1.3.0"
     assert RULES_VERSION == "s5-rules-2.1.0"
     assert RULE_VERSIONS["dose_mismatch"] == "1.2.0" and RULE_VERSIONS["missing_field"] == "2.1.0"
     assert {RULE_VERSIONS[t] for t in ("allergy_direct", "allergy_class", "allergy_cross_reactivity")} == {"1.1.0"}
-    assert PIPELINE_VERSION == "s5-pipeline-2.4.0"
+    assert PIPELINE_VERSION == "s5-pipeline-2.5.0"
     assert EXTRACT_TASK == "pharma.extract.v2"
     r = run(get_fixture("demo-01"))
     assert (r["extract_mock_version"], r["template_version"], r["rules_version"], r["pipeline_version"]) == (

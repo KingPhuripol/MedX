@@ -326,8 +326,8 @@ def test_eval_thresholds(tmp_path):
         assert extra["mean_per_case"] <= THRESHOLDS["surface_extra_issues_per_case_max"], (scope, extra)
         for field in ("quantity", "dose_status", "frequency_status"):
             assert r["extraction"][scope]["field_accuracy"][field] >= THRESHOLDS["extraction_accuracy_min"]
-    assert r["versions"]["mock_rules"] == "s5-mock-rules-2.2.0" and r["versions"]["template"] == "template-1.3.0"
-    assert r["versions"]["dose_grammar"] == "s5-dose-grammar-1.2.0" and r["versions"]["pipeline"] == "s5-pipeline-2.4.0"
+    assert r["versions"]["mock_rules"] == "s5-mock-rules-2.3.0" and r["versions"]["template"] == "template-1.3.0"
+    assert r["versions"]["dose_grammar"] == "s5-dose-grammar-1.3.0" and r["versions"]["pipeline"] == "s5-pipeline-2.5.0"
     assert r["versions"]["rules"] == "s5-rules-2.1.0" and r["versions"]["extract_task"] == "pharma.extract.v2"
     assert r["versions"]["rule_versions"]["dose_mismatch"] == "1.2.0"
     assert r["versions"]["rule_versions"]["missing_field"] == "2.1.0"
