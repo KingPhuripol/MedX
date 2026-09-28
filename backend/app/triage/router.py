@@ -2,6 +2,10 @@
 
 Nothing is care-facing until a nurse confirms or edits. Red-flag alerts must be acknowledged
 before any review. Every 403/409 is audited as ``triage.review.denied``.
+
+Slice i2: ``assess`` also compiles and executes the Case Graph over the same evidence at ``as_of`` and
+returns its ``graph_id`` and red-flag ``screening`` block; the graph's Human Checkpoint (``human:nurse``) is
+resumed only by the confirm / edit / reject endpoints below (``casegraph_run.resume``).
 """
 
 from __future__ import annotations
@@ -20,8 +24,8 @@ from ..deps import CurrentUser, get_engine, request_id, require_user
 from ..gateway import service as gateway_service
 from ..gateway.contract import GatewayRequest, GatewayResponse
 from ..roles import Role
+from . import casegraph_run, store
 from . import engine as triage_engine
-from . import store
 from .departments import BY_CODE, DEPARTMENT_LIST_VERSION, DEPARTMENTS
 from .fixtures import engine_cases
 from .models import TriageAssessment
@@ -71,6 +75,9 @@ def _require(request: Request, user: CurrentUser, roles: set[Role], target: str)
 def _view(request: Request, a: TriageAssessment) -> dict[str, Any]:
     review = store.get_review(get_engine(request), a.assessment_id)
     data = a.model_dump(mode="json")
+    data["graph_checkpoint_status"] = (
+        casegraph_run.checkpoint_status(request.app.state.casegraph, a.graph_id) if a.graph_id else None
+    )
     if review:
         data["review_status"] = REVIEW_STATUS[review["action"]]
         data["confirmed_department"] = review["final_department"]
@@ -145,6 +152,20 @@ def assess(case_ref: str, body: AssessBody, request: Request, user: CurrentUser 
         return gateway_service.invoke(engine, provider, req, user, request_id=request_id(request))
 
     a = triage_engine.assess(case, body.as_of, invoke, actor_id=user.id)
+    graph_error = None
+    try:  # i2 scope 7: the Case Graph over the same evidence at the same as_of
+        graph = casegraph_run.run_graph(request.app.state.casegraph, case, body.as_of, engine, provider, user,
+                                        request_id(request))
+        screening = casegraph_run.screening_block(graph)
+        graph_alerts = sorted({x["rule_id"] for x in (casegraph_run.graph_alerts(graph) or [])})
+        a = a.model_copy(update={
+            "graph_id": graph.graph_id, "screening": screening,
+            # an alert the graph raised always escalates, even if the engine did not raise it
+            "escalation_required": a.escalation_required or bool(graph_alerts),
+        })
+    except Exception as exc:  # fail safe: screening shows NOT PERFORMED (unavailable) and the case escalates
+        graph_error, graph_alerts = type(exc).__name__, []
+        a = a.model_copy(update={"screening": casegraph_run.unavailable_screening(), "escalation_required": True})
     store.insert_assessment(engine, a)
     dept = a.department
     _audit(request, user, "triage.assess", f"assessment/{a.assessment_id}", "success", {
@@ -161,6 +182,10 @@ def assess(case_ref: str, body: AssessBody, request: Request, user: CurrentUser 
         "provider": dept.provider,
         "model_version": dept.model_version,
         "request_sha256": dept.request_sha256,
+        "graph_id": a.graph_id,
+        "graph_error": graph_error,
+        "graph_alert_rule_ids": graph_alerts,
+        "screening_status": (a.screening or {}).get("status"),
     })
     return a.model_dump(mode="json")
 
@@ -226,6 +251,12 @@ def _review(action: str, assessment_id: str, body: ReviewBody, request: Request,
     if a.escalation_required and set(acked) != set(alert_ids):
         _deny(request, user, target, 409, "alerts_not_acknowledged")
 
+    stores = request.app.state.casegraph
+    if a.graph_id is not None:  # i2: the graph checkpoint must be resumable before any review is written
+        refusal = casegraph_run.resume_refusal(stores, a.graph_id, user.role.value)
+        if refusal is not None:
+            _deny(request, user, target, 409, refusal)
+
     reason = body.reason.strip()
     code = body.department_code.strip()
     final: str | None
@@ -262,6 +293,16 @@ def _review(action: str, assessment_id: str, body: ReviewBody, request: Request,
     except IntegrityError:
         _deny(request, user, target, 409, "already_reviewed")
 
+    confirmation = None
+    if a.graph_id is not None:  # the only production path that resumes the Case Graph checkpoint
+        result = casegraph_run.resume(
+            stores, a.graph_id, action, str(user.id), user.role.value,
+            edited_payload={"final_department": final, "reason_sha256": reason_sha,
+                            "acknowledged_alert_ids": sorted(acked)} if action == "edit" else None,
+        )
+        confirmation = {"graph_id": a.graph_id, "confirmed_at": result.confirmed_at.isoformat(),
+                        "checkpoint_input_hash": result.checkpoint_input_hash}
+
     dept = a.department
     _audit(request, user, f"triage.review.{action}", target, "success", {
         "assessment_id": assessment_id,
@@ -277,6 +318,7 @@ def _review(action: str, assessment_id: str, body: ReviewBody, request: Request,
         "final_department": final,
         "acknowledged_alert_ids": sorted(acked),
         "reason_sha256": reason_sha,
+        "graph_checkpoint": confirmation,
     })
     return _view(request, a)
 

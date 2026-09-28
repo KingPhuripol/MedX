@@ -11,6 +11,7 @@ from .config import Settings
 from .db import create_schema, make_engine
 from .gateway import build_provider
 from .gateway import router as gateway_router
+from .triage import casegraph_run
 from .triage import router as triage_router
 
 
@@ -24,6 +25,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = settings
     app.state.engine = engine
     app.state.provider = build_provider(settings.gateway_provider, settings)
+    app.state.casegraph = casegraph_run.stores_for(settings)  # i2: the Case Graph behind triage assessments
 
     @app.middleware("http")
     async def add_request_id(request: Request, call_next):

@@ -28,6 +28,8 @@ class Settings:
     cookie_secure: bool = False
     # Slice i2 (C3, D-I2-2): /api/triage assess rejects as_of later than the latest evidence + this skew.
     triage_as_of_skew_s: float = 300.0
+    # Slice i2: Case Graph state/outputs behind triage assessments. Empty: beside a file SQLite DB, else in memory.
+    casegraph_dir: str = ""
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -46,4 +48,5 @@ class Settings:
             session_ttl_minutes=int(env.get("SESSION_TTL_MINUTES", "480") or 480),
             cookie_secure=_bool(env.get("SESSION_COOKIE_SECURE")),
             triage_as_of_skew_s=float(env.get("TRIAGE_AS_OF_SKEW_S", "300") or 300),
+            casegraph_dir=env.get("CASEGRAPH_DIR", "").strip(),
         )

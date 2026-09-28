@@ -58,3 +58,4 @@ research/**/checkpoints/
 
 # e1: unfrozen (exploratory) dev iterations are scratch, never committed
 eval/results/e1/unfrozen/
+*.casegraph-outputs/

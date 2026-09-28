@@ -117,6 +117,11 @@ class _ExplicitReasoningKeys:
         return result
 
 
+def with_explicit_reasoning_keys(provider: Provider) -> Provider:
+    """The offline mock with Reasoning's ``department: null, care: []`` stated explicitly (see above)."""
+    return _ExplicitReasoningKeys(provider)
+
+
 def mock_provider(model_version: str) -> Provider:
     """The s0 deterministic ``MockProvider`` (via ``build_provider``) reporting ``model_version``."""
     provider = _ExplicitReasoningKeys(build_provider("mock", Settings()))

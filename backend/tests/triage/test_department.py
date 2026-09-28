@@ -80,6 +80,10 @@ def test_department_via_gateway(client, login, audit_rows):
     dept = resp.json()["department"]
     rows = audit_rows()[before:]
     gw = [r for r in rows if r["action"] == "gateway.invoke"]
+    # i2 (modified): /assess also executes the Case Graph, whose Reasoning node makes its own audited department
+    # call (on graph fact ids) plus one summary call; the S4 engine's department call is the one matched below.
+    assert sorted(r["target"] for r in gw) == ["task/reasoning", "task/triage.department.v1", "task/triage.department.v1"]
+    gw = [r for r in gw if r["details"]["request_sha256"] == dept["request_sha256"]]
     assert len(gw) == 1
     assert gw[0]["target"] == "task/triage.department.v1"
     assert gw[0]["details"]["data_class"] == "synthetic"
@@ -163,11 +167,13 @@ def test_assessment_deterministic(client, login):
     login("nurse1")
 
     def strip(d):
-        return {k: v for k, v in d.items() if k not in ("assessment_id", "created_at")}
+        # i2 (modified): each assessment executes a new Case Graph version, so graph_id differs by design
+        return {k: v for k, v in d.items() if k not in ("assessment_id", "created_at", "graph_id")}
 
     for ref in ("SYN-S4-002", "SYN-S4-026", "SYN-S4-036"):
         a, b = _assess(client, ref).json(), _assess(client, ref).json()
         assert a["assessment_id"] != b["assessment_id"]
+        assert a["graph_id"].split("/v")[0] == b["graph_id"].split("/v")[0] and a["graph_id"] != b["graph_id"]
         assert json.dumps(strip(a), sort_keys=True).encode() == json.dumps(strip(b), sort_keys=True).encode()
 
 
