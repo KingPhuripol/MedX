@@ -1,4 +1,4 @@
-"""Seeded phrase generator and differential harness for the s5r3 dose grammar (spec §F).
+"""Seeded phrase generator and differential harness for the s5r3/s5r4 dose grammar (spec §F, s5r4 §F4).
 
 Standard library only. Phrases are synthetic unit-test inputs and belong to no evaluation split.
 The harness takes any ``text -> (dose_status, dose_value, dose_unit, quantity, reason)`` callable, so the same
@@ -19,7 +19,7 @@ from fractions import Fraction
 from .pharma_dose_reference import reference_closure, reference_parse
 
 SEED = 5303
-N_PHRASES = 4000
+N_PHRASES = 5000
 Parsed = tuple[str, float | None, str | None, float | None, str | None]
 
 
@@ -30,6 +30,7 @@ class Segment:
     adversarial: str | None = None
     quantity: Fraction | None = None  # value the generator built (valid quantity productions only)
     lang: str | None = None
+    canonical: str | None = None  # rev 4 th_normalise: the same segment in its standard spelling
 
 
 @dataclass
@@ -39,6 +40,7 @@ class Phrase:
     adversarial: list[str] = field(default_factory=list)
     quantity_lang: str | None = None
     single_quantity: Fraction | None = None  # set when built from exactly one valid quantity production
+    canonical: str | None = None  # rev 4 th_normalise: the whole phrase in its standard spelling
 
 
 def _fmt(v: Fraction) -> str:
@@ -248,6 +250,73 @@ def _rev3_classes() -> dict[str, tuple[str, list]]:
 
 REV3_CLASSES = _rev3_classes()
 ADVERSARIAL.update(REV3_CLASSES)
+
+# ---- rev 4 classes (s5r4 §F4). Mis-ordered Thai marks, doubled sara e, homoglyphs and full-width letters are
+# written as \uXXXX escapes only.
+# §N variants of each word: N2 (decomposed sara am), N3 (tone mark typed before the upper vowel), N4 (doubled sara e).
+N_VARIANTS = {
+    "ครึ่ง": ["คร\u0e48\u0e36ง"],
+    "ครั้ง": ["คร\u0e49\u0e31ง"],
+    "ทั้ง": ["ท\u0e49\u0e31ง"],
+    "แบ่ง": ["\u0e40\u0e40บ่ง"],
+    "แคปซูล": ["\u0e40\u0e40คปซูล"],
+    "ค่ำ": ["ค\u0e48\u0e4d\u0e32", "ค\u0e4d\u0e48\u0e32"],
+}
+# (slot, template, productions): quantity, QF and D1 positions ({word} is replaced by the word or one variant).
+_N_TEMPLATES = [
+    ("quantity", "1 เม็ด{ครึ่ง}", ("Q4",)), ("quantity", "2เม็ด {ครึ่ง}", ("Q4",)), ("quantity", "{ครึ่ง}เม็ด", ("Q4",)),
+    ("quantity", "{ครั้ง}ละ 1 เม็ด", ("Q6",)), ("quantity", "{ครั้ง}ละ 1 เม็ด{ครึ่ง}", ("Q6",)),
+    ("quantity", "1 {แคปซูล}", ("Q1",)), ("quantity", "2{แคปซูล}", ("Q1",)), ("quantity", "1 {แคปซูล}{ครึ่ง}", ("Q4",)),
+    ("last", "1 เม็ดครึ่ง {ค่ำ}", ("Q4",)), ("last", "1 เม็ดครึ่ง{ค่ำ}", ("Q4",)), ("last", "1 เม็ด{ครึ่ง} ก่อนนอน", ("Q4",)),
+    ("last", "2 เม็ด{ครึ่ง} {ค่ำ}", ("Q4",)), ("last", "1 {แคปซูล}ครึ่ง ตอน{ค่ำ}", ("Q4",)),
+    ("tail", "{แบ่ง}วันละ 2 {ครั้ง}", ("D1", "F3")), ("tail", "{แบ่ง} วันละ 3 ครั้ง", ("D1", "F3")),
+    ("tail", "{ทั้ง}หมด", ("D1",)), ("tail", "{ทั้ง}วัน", ("D1",)), ("tail", "{ทั้ง}หมด วันละ 2 {ครั้ง}", ("D1", "F3")),
+    ("dose", "1000 มก. {แบ่ง}วันละ 2 ครั้ง", ("S1", "D1", "F3")), ("frequency", "วันละ 2 {ครั้ง}", ("F3",)),
+    ("frequency", "วันละ{ครั้ง}", ("F3",)), ("tail", "ตอน{ค่ำ}", ()),
+]
+# Misspelt ครึ่ง / แบ่ง / ทั้งหมด / ทั้งวัน: tone mark dropped, vowel swapped, consonant dropped.
+MISSPELT = {
+    "ครึ่ง": ["ครึง", "ครื่ง", "คึ่ง", "ครึ่"],
+    "แบ่ง": ["แบง", "เบ่ง", "แบ่"],
+    "ทั้งหมด": ["ทังหมด", "ทิ้งหมด", "ทั้งมด"],
+    "ทั้งวัน": ["ทังวัน", "ทั้งวิน", "ทั้วัน"],
+}
+_MISSPELT_AT = [("quantity", "1 เม็ด{}"), ("quantity", "2 เม็ด {}"), ("quantity", "1 แคปซูล{}"),
+                ("dose", "3 มก. {} วันละ 1 ครั้ง"), ("dose", "1000 มก. {}วันละ 2 ครั้ง"), ("dose", "500 mg {}")]
+# Words outside the vocabulary, and vocabulary words with a Cyrillic, Greek or full-width letter.
+UNKNOWN_WORDS = ["hlaf", "foo", "coumadin", "with water", "ยา", "น้ำ", "เคี้ยว", "(brand)", "\u043ed", "b\u0456d",
+                 "\u0440o", "d\u0430ily", "\u03bfd", "\uff42\uff49\uff44", "\uff50\uff52\uff4e", "p\u0441",
+                 "\u03c1o \u03b1c"]
+_UNKNOWN_DOSE = ["500 mg \u0440er day", "1000 mg \u0430 day", "1000 mg \u0434ivided bid", "1000 mg d\u0456vided bid",
+                 "1000 mg \uff50\uff45\uff52 day", "3 mg 1 tab and a hlaf od", "3 mg 1 tab od (coumadin)"]
+
+
+def _n_choices() -> list:
+    out = []
+    for slot, template, pids in _N_TEMPLATES:
+        canonical = template.format(**{w: w for w in N_VARIANTS})
+        for word in N_VARIANTS:
+            if "{" + word + "}" not in template:
+                continue
+            for variant in N_VARIANTS[word]:
+                text = template.format(**{w: (variant if w == word else w) for w in N_VARIANTS})
+                out.append((slot, (text, pids, canonical)))
+    return out
+
+
+def _rev4_classes() -> dict[str, tuple[str, list]]:
+    misspelt = [(slot, (at.format(m), ("C1",))) for words in MISSPELT.values() for m in words for slot, at in _MISSPELT_AT]
+    unknown = [(slot, (at.format(w), ("C1",))) for w in UNKNOWN_WORDS for slot, at in (("tail", "{}"), ("last", "1 tab {}"))]
+    unknown += [("dose", (d, ("S1", "C1"))) for d in _UNKNOWN_DOSE]
+    classes = {"th_normalise": _n_choices(), "th_misspelt": misspelt, "unknown_word": unknown}
+    for choices in classes.values():
+        random.Random(SEED).shuffle(choices)
+    return {cls: ("*", choices) for cls, choices in classes.items()}
+
+
+REV4_CLASSES = _rev4_classes()
+ADVERSARIAL.update(REV4_CLASSES)
+_CYCLED = {**REV3_CLASSES, **REV4_CLASSES}
 _NO_JOIN = set(".,/-–—~")
 
 
@@ -264,8 +333,8 @@ def _join(rng: random.Random, left: str, right: str) -> str:
 
 def generate(seed: int = SEED, n: int = N_PHRASES) -> list[Phrase]:
     rng = random.Random(seed)
-    # Round-robin over the classes; each rev-3 class has 4 turns per round, so its whole choice list is cycled.
-    classes = list(ADVERSARIAL) + [c for c in REV3_CLASSES for _ in range(3)]
+    # Round-robin over the classes; each rev-3/rev-4 class has 4 turns per round, so its whole choice list is cycled.
+    classes = list(ADVERSARIAL) + [c for c in _CYCLED for _ in range(3)]
     turns: collections.Counter = collections.Counter()
     out: list[Phrase] = []
     for k in range(n):
@@ -277,14 +346,14 @@ def generate(seed: int = SEED, n: int = N_PHRASES) -> list[Phrase]:
         if k % 2:  # every other phrase carries one adversarial segment (round-robin over the classes)
             cls = classes[(k // 2) % len(classes)]
             slot, choices = ADVERSARIAL[cls]
-            if cls in REV3_CLASSES:  # cycle, so every rev-3 sub-form is generated
+            if cls in _CYCLED:  # cycle, so every rev-3/rev-4 sub-form is generated
                 choice = choices[turns[cls] % len(choices)]
                 turns[cls] += 1
             else:
                 choice = rng.choice(choices)
             if "|" in slot or slot == "*":  # per-choice slot
                 slot, choice = choice
-            text, pids = choice if isinstance(choice, tuple) else (choice, ())
+            text, pids, *canonical = choice if isinstance(choice, tuple) else (choice, ())
             if cls in ("th_half_time", "per_unit") and not pids:
                 pids = ("T1",) if cls == "th_half_time" else ("R1",)
             if slot == "last":  # the segment ends the entry; it carries the only quantity
@@ -294,7 +363,7 @@ def generate(seed: int = SEED, n: int = N_PHRASES) -> list[Phrase]:
             if slot == "insert":
                 insert = Segment(text, pids, adversarial=cls)
             else:
-                slots[slot] = Segment(text, pids, adversarial=cls, lang=("th" if any("\u0e00" <= c <= "\u0e7f" for c in text)
+                slots[slot] = Segment(text, pids, adversarial=cls, canonical=(canonical or [None])[0], lang=("th" if any("\u0e00" <= c <= "\u0e7f" for c in text)
                                                                            else "en") if slot == "quantity" else None)
         text = name
         for seg in slots.values():
@@ -304,6 +373,10 @@ def generate(seed: int = SEED, n: int = N_PHRASES) -> list[Phrase]:
             text = text[:at] + insert.text + text[at:]
         segs = list(slots.values()) + ([insert] if insert else [])
         phrase = Phrase(text, [p for s in segs for p in s.productions], [s.adversarial for s in segs if s.adversarial])
+        for seg in segs:
+            if seg.canonical is not None:
+                assert text.count(seg.text) == 1, text
+                phrase.canonical = text.replace(seg.text, seg.canonical)
         q = slots["quantity"]
         phrase.quantity_lang = q.lang if q.text else None
         if (not phrase.adversarial and q.quantity is not None and not slots["pre"].text
@@ -331,6 +404,7 @@ class Report:
     over_ten: list[str] = field(default_factory=list)  # resolved with a quantity > 10 (QV bound)
     closure: list[str] = field(default_factory=list)  # §F.5: resolved despite INVISIBLE / SLASH-LIKE / D1
     closure_counts: collections.Counter = field(default_factory=collections.Counter)  # phrases per closure trigger
+    canonical: list[str] = field(default_factory=list)  # rev 4 A12(e): th_normalise output != canonical output
     safety_classes: collections.Counter = field(default_factory=collections.Counter)  # class/production -> misreads
 
 
@@ -351,6 +425,8 @@ def harness(parse: Callable[[str], Parsed], phrases: list[Phrase]) -> Report:
         report.closure_counts.update(triggers)
         if got[0] == "resolved" and triggers:
             report.closure.append(line + f" closure={triggers}")
+        if ph.canonical is not None and (got != tuple(parse(ph.canonical)) or ref != reference_parse(ph.canonical)):
+            report.canonical.append(line + f" canonical={ph.canonical!r}: {parse(ph.canonical)}")
         if ph.single_quantity is not None and (ref[0] == "unverifiable" or ref[3] != float(ph.single_quantity)):
             report.reference.append(line + f" expected quantity {float(ph.single_quantity)}")
     return report

@@ -38,8 +38,9 @@ def _dose(text: str) -> tuple:
 
 
 def test_grammar_table_closed():
-    assert set(DOSE_GRAMMAR) == {"S1", "S2", "S3", "L1", "R1", "D1", "Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "T1",
-                                 "F1", "F2", "F3"}
+    # s5r4 amendment (S5R4-A03): C1 joins the table.
+    assert set(DOSE_GRAMMAR) == {"S1", "S2", "S3", "L1", "R1", "D1", "C1", "Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7",
+                                 "T1", "F1", "F2", "F3"}
 
 
 DELETED = ("DOSE_RE", "QTY_RE", "_QTY_NUM", "_MIXED_RE", "_STRAY_NUM_BEFORE_RE", "_QTY_WORD_RE", "TIMES_RE")
@@ -276,6 +277,9 @@ POSITIVE = {  # id: (text, (status, reason, value, unit, quantity), frequency_co
     "D1-th-before": ("เมทฟอร์มิน วันละ 1000 มก.", ("unverifiable", "per_unit_amount", None, None, None), None, "D1"),
     "D1-en": ("Metformin 1000 mg divided bid", ("unverifiable", "per_unit_amount", None, None, None), "q12h", "D1"),
     "V5-Q3-bound": ("Warfarin 3 mg 9 1/2 tab", (R, None, 3.0, "mg", 9.5), None, "Q3"),
+    # s5r4: C1 (a word outside the closed free-text vocabulary in the dose region)
+    "C1-en": ("Warfarin 3 mg 1 tab od (Coumadin)", ("unverifiable", "unparsed_token", None, None, None), "q24h", "C1"),
+    "C1-th": ("วาร์ฟาริน 3 มก. 1 เม็ดครึง วันละ 1 ครั้ง", ("unverifiable", "unparsed_token", None, None, None), "q24h", "C1"),
 }
 
 
@@ -493,10 +497,14 @@ def test_thai_date_prefix_api_rules_only(client, login):
 
 
 def test_fuzz_catches_substring_unit(monkeypatch):
-    """The fuzz must detect the pre-fix tokeniser, which matched undotted มก/มล inside any Thai word."""
+    """The fuzz must detect the pre-fix tokeniser, which matched undotted มก/มล inside any Thai word.
+
+    s5r4 amendment (C1): C1 now also rejects the Thai left over after a substring unit ("ราคม"), so the pre-fix
+    tokeniser is checked on its own, with C1 switched off."""
     from app.pharma import mock_rules
 
     monkeypatch.setattr(mock_rules, "_WORD_ONLY", frozenset())
+    monkeypatch.setattr(mock_rules, "_c1", lambda *args: None)
     report = harness(entry_tuple(mock_rules.parse_entry), generate())
     assert any("มกราคม" in line or "มลพิษ" in line or "มกรา" in line for line in report.safety), report.safety[:5]
 

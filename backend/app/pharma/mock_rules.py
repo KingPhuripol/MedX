@@ -126,8 +126,26 @@ class Token:
 
 
 def normalise(text: str) -> str:
-    """NFC (not NFKC, so "½" survives) with whitespace collapsed. This is also the ``raw_span``."""
+    """NFC (not NFKC, so "½" survives) with whitespace collapsed (§N N1 + N5). This is also the ``raw_span``."""
     return " ".join(unicodedata.normalize("NFC", text).split())
+
+
+# §N (rev 4, closed): Thai spelling steps applied between N1 (NFC) and N5 (whitespace), in this order. They change
+# only the text the grammar reads (dose, D1, R1, C1, frequency); ``raw_span`` stays N1 + N5. Nothing else is
+# rewritten: no character is removed, and homoglyphs, duplicated tone marks and misspellings are not corrected.
+NORMALISE_STEPS: tuple[tuple[str, re.Pattern[str], str], ...] = (
+    ("N2", re.compile("\u0e4d([\u0e48-\u0e4b]?)\u0e32"), "\\1\u0e33"),  # decomposed sara am -> tone? + U+0E33
+    ("N3", re.compile("([\u0e48-\u0e4b])([\u0e31\u0e34-\u0e37])"), "\\2\\1"),  # tone before upper vowel -> after
+    ("N4", re.compile("\u0e40\u0e40"), "\u0e41"),  # doubled sara e -> sara ae
+)
+
+
+def normalise_grammar(text: str) -> str:
+    """§N N1-N5: the text every grammar check reads."""
+    s = unicodedata.normalize("NFC", text)
+    for _, pattern, repl in NORMALISE_STEPS:
+        s = pattern.sub(repl, s)
+    return " ".join(s.split())
 
 
 def _fold(raw: str) -> str:
@@ -435,6 +453,73 @@ def _d1(toks: list[Token], i: int) -> Match | None:
     return Match("D1", i, i) if any(_d1_th_at(compact[k:]) for k in range(len(t.text))) else None
 
 
+# C1 (rev 4): closed free-text vocabulary for the dose region. Units, quantity words, number words, ครั้ง, ครั้งละ,
+# วันละ, time words, x, a, per, to, or and and are deliberately absent: they pass only when a production consumes them.
+V_EN_FREE = frozenset("""
+od bd bid tid qid qd qod hs prn po ac pc daily nightly weekly monthly once twice thrice every other day days week
+month morning evening night bedtime noon before after with without meal meals food breakfast lunch dinner supper
+as needed when required for pain fever oral orally by mouth at in the take sc sl im iv
+""".split())
+V_TH_FREE = frozenset("""
+รับประทาน กิน ทาน อาหาร นอน มี อาการ ปวด ไข้ วัน เว้น ให้ ก่อน หลัง พร้อม เช้า กลางวัน เที่ยง เย็น ค่ำ ตอน เวลา
+เมื่อ ทุก ทันที ต่อ แบ่ง รวม ทั้งหมด ทั้งวัน
+""".split())
+_V_TH_LONGEST = tuple(sorted(V_TH_FREE, key=len, reverse=True))
+_DOTTED_ABBR = re.compile(r"(?<![^\W\d_])[^\W\d_](?:\.[^\W\d_])+\.?(?![^\W\d_])")  # p.r.n. -> prn
+_TH_RUN = re.compile("[\u0e01-\u0e3a\u0e40-\u0e4e]+")
+
+
+def _compact_dots(text: str) -> str:
+    return _DOTTED_ABBR.sub(lambda m: m.group().replace(".", ""), text)
+
+
+def _consumed_spans(toks: list[Token], matches: list[Match]) -> list[tuple[int, int]]:
+    """Character spans of every token a consuming production took. T1 takes "ครึ่ง" and exactly its time word."""
+    spans = []
+    for m in matches:
+        if m.pid == "T1":
+            tw = toks[m.start + 1]
+            end = tw.end if tw.kind == "WORD" else tw.start + len(
+                next(p for p in _TW_TH_PREFIXES if _surface(toks).startswith(p, tw.start)))
+            spans.append((toks[m.start].start, end))
+        elif m.pid not in _FLAG_PIDS:
+            spans += [(toks[k].start, toks[k].end) for k in range(m.start, m.end)]
+    return spans
+
+
+def _th_segmented(run: str) -> bool:
+    """One greedy, longest-first, left-to-right pass over V_TH_FREE covers the whole run."""
+    k = 0
+    while k < len(run):
+        word = next((w for w in _V_TH_LONGEST if run.startswith(w, k)), None)
+        if word is None:
+            return False
+        k += len(word)
+    return True
+
+
+def _c1(toks: list[Token], i: int, spans: list[tuple[int, int]] = ()) -> Match | None:
+    """C1 (rev 4): the free text of the dose region (token ``i`` = the first numeric-ish token, to the end; every
+    consumed character blanked) must be closed-vocabulary words only. Consumes nothing."""
+    if i >= len(toks):
+        return None
+    chars = list(_surface(toks))
+    for a, b in spans:
+        chars[a:b] = " " * (b - a)
+    free = _compact_dots("".join(chars[toks[i].start:]).casefold())
+    if not all(_th_segmented(run) for run in _TH_RUN.findall(free)):
+        return Match("C1", i, i)
+    word = ""
+    for c in free + " ":
+        if unicodedata.category(c)[0] == "L" and not _is_thai(c):
+            word += c
+        elif word:
+            if word not in V_EN_FREE:
+                return Match("C1", i, i)
+            word = ""
+    return None
+
+
 def _t1(toks: list[Token], i: int) -> Match | None:
     """T1: "ครึ่ง" + TW is a time, never a quantity (right after "INT เม็ด" the QF rule makes it ambiguous)."""
     if _text(toks, i) != "ครึ่ง" or not _is_tw(toks, i + 1):
@@ -475,12 +560,13 @@ def _f3(toks: list[Token], i: int) -> Match | None:
 
 # The complete, closed production table (§G2). Nothing else reads a numeric-ish token.
 DOSE_GRAMMAR: dict[str, Callable[[list[Token], int], Match | None]] = {
-    "S1": _s1, "S2": _s2, "S3": _s3, "L1": _l1, "R1": _r1, "D1": _d1,
+    "S1": _s1, "S2": _s2, "S3": _s3, "L1": _l1, "R1": _r1, "D1": _d1, "C1": _c1,
     "Q1": _q1, "Q2": _q2, "Q3": _q3, "Q4": _q4, "Q5": _q5, "Q6": _q6, "Q7": _q7,
     "T1": _t1, "F1": _f1, "F2": _f2, "F3": _f3,
 }
 _QUANTITY_PIDS = frozenset({"Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7"})
-_FLAG_PIDS = frozenset({"R1", "D1"})  # checked separately (R1 on anchors, D1 at every token); they consume nothing
+# Checked separately (R1 on anchors, D1 at every token, C1 once on the dose region); they consume nothing.
+_FLAG_PIDS = frozenset({"R1", "D1", "C1"})
 
 # Variable regimen: an exception, alternation, or a weekday-specific dose. Checked before all productions.
 _WEEKDAYS = r"mon|tue|tues|wed|wednes|thu|thur|thurs|fri|sat|satur|sun"
@@ -493,8 +579,9 @@ VARIABLE_RE = re.compile(
 
 @dataclass(frozen=True)
 class DoseParse:
-    """Parse trace of one line: tokens, the productions that fired, and the dose read."""
+    """Parse trace of one line: the §N text read, its tokens, the productions that fired, and the dose read."""
 
+    text: str
     tokens: tuple[Token, ...]
     matches: tuple[Match, ...]
     consumed: frozenset[int]
@@ -515,8 +602,9 @@ class DoseParse:
 
 
 def read_dose(raw: str) -> DoseParse:
-    """Tokenise the whole line and apply ``DOSE_GRAMMAR`` left to right, longest match first."""
-    toks = tokenise(raw)
+    """Apply §N, tokenise the whole line and apply ``DOSE_GRAMMAR`` left to right, longest match first."""
+    line = normalise_grammar(raw)
+    toks = tokenise(line)
     matches: list[Match] = []
     i = 0
     while i < len(toks):
@@ -536,11 +624,12 @@ def read_dose(raw: str) -> DoseParse:
     half_unfollowed = any(_half_shape(toks, k) and not _qf(toks, k + 3) for k in range(len(toks)))
     numeric = numeric_ish(toks)
     left = [k for k in range(len(toks)) if numeric[k] and k not in consumed]
+    free = [m for m in [_c1(toks, numeric.index(True), _consumed_spans(toks, matches))] if m] if any(numeric) else []
     strengths = {s for m in matches for s in m.strengths}
     quantities = {m.quantity for m in matches if m.pid in _QUANTITY_PIDS and m.quantity is not None}
 
     # The first reason that applies is reported (§2 order). When unsure, never guess a value.
-    if VARIABLE_RE.search(raw):
+    if VARIABLE_RE.search(line):
         reason = "variable_regimen"
     elif any(m.pid == "L1" for m in matches):
         reason = "liquid_volume"
@@ -553,7 +642,7 @@ def read_dose(raw: str) -> DoseParse:
         reason = "range"
     elif len(quantities) > 1 or half_unfollowed or any(m.daily_total for m in matches):
         reason = "ambiguous_quantity"
-    elif left or tails:  # an unconsumed numeric-ish token, or a broken anchor (R1 c)
+    elif left or tails or free:  # an unconsumed numeric-ish token, a broken anchor (R1 c) or a C1 word
         reason = "unparsed_token"
     else:
         reason = None
@@ -566,7 +655,7 @@ def read_dose(raw: str) -> DoseParse:
             status, value = "resolved", float(v)
         else:
             status = "not_stated"
-    return DoseParse(tuple(toks), tuple(matches + tails + daily), consumed, tuple(numeric), status, reason, value, unit, quantity)
+    return DoseParse(line, tuple(toks), tuple(matches + tails + daily + free), consumed, tuple(numeric), status, reason, value, unit, quantity)
 
 
 # ================================================================ frequency mapping (unchanged since s5r2)
@@ -639,15 +728,16 @@ def _frequency(raw: str, times_code: str | None) -> str | None:
 
 def parse_entry(text: str) -> dict[str, Any]:
     """Parse one free-text medication line (EN/TH) into the ``pharma.extract.v2`` schema."""
-    raw = normalise(text)
+    raw = normalise(text)  # shown on the page and in the audit (N1 + N5)
     dose = read_dose(raw)
+    line = dose.text  # §N: what the grammar, route and frequency mapping read
 
-    route = next((code for pat, code in ROUTE_PATTERNS if pat.search(raw)), None)
+    route = next((code for pat, code in ROUTE_PATTERNS if pat.search(line)), None)
 
-    freq = None if NON_DAILY_RE.search(raw) else _frequency(raw, dose.times_code)
+    freq = None if NON_DAILY_RE.search(line) else _frequency(line, dose.times_code)
     if freq is not None:
         frequency_status = "recognised"
-    elif FREQ_LIKE_RE.search(raw):
+    elif FREQ_LIKE_RE.search(line):
         frequency_status = "not_recognised"
     else:
         frequency_status = "not_stated"
@@ -656,8 +746,8 @@ def parse_entry(text: str) -> dict[str, Any]:
     # grammar did not consume), a route or a frequency starts.
     starts = [dose.tokens[m.anchor].start for m in dose.matches if m.anchor is not None]
     starts += [t.start for t in dose.unconsumed_numeric[:1]]
-    starts.append(_first_start(raw, [EVERY_RE, *(p for p, _ in ROUTE_PATTERNS), *(p for p, _ in FREQ_PATTERNS)]))
-    name = raw[: min(starts)].strip(" ,;:-") or raw
+    starts.append(_first_start(line, [EVERY_RE, *(p for p, _ in ROUTE_PATTERNS), *(p for p, _ in FREQ_PATTERNS)]))
+    name = line[: min(starts)].strip(" ,;:-") or line
     return {
         "drug_name_raw": name,
         "dose_value": dose.dose_value,

@@ -92,13 +92,52 @@ def _time_follows(s: str, pos: int) -> bool:
     return rest[:end] in TIME_EN
 
 
+TONES = range(0x0E48, 0x0E4C)  # rev 4 §N: Thai tone marks
+UPPER_VOWELS = (0x0E31, 0x0E34, 0x0E35, 0x0E36, 0x0E37)
+
+
+def spell(text: str) -> str:
+    """rev 4 §N, written as character loops: NFC; nikhahit (+ one tone mark) + sara aa -> (tone +) sara am; a tone
+    mark typed before an upper vowel moves after it (one left-to-right pass); two sara e -> sara ae; then the
+    whitespace runs are collapsed. Nothing is removed and nothing else is corrected."""
+    s = unicodedata.normalize("NFC", text)
+    out, k = [], 0
+    while k < len(s):  # N2
+        if ord(s[k]) == 0x0E4D:
+            tone = s[k + 1] if k + 1 < len(s) and ord(s[k + 1]) in TONES else ""
+            after = k + 1 + len(tone)
+            if after < len(s) and ord(s[after]) == 0x0E32:
+                out.append(tone + chr(0x0E33))
+                k = after + 1
+                continue
+        out.append(s[k])
+        k += 1
+    s, out, k = "".join(out), [], 0
+    while k < len(s):  # N3
+        if ord(s[k]) in TONES and k + 1 < len(s) and ord(s[k + 1]) in UPPER_VOWELS:
+            out += [s[k + 1], s[k]]
+            k += 2
+        else:
+            out.append(s[k])
+            k += 1
+    s, out, k = "".join(out), [], 0
+    while k < len(s):  # N4
+        if ord(s[k]) == 0x0E40 and k + 1 < len(s) and ord(s[k + 1]) == 0x0E40:
+            out.append(chr(0x0E41))
+            k += 2
+        else:
+            out.append(s[k])
+            k += 1
+    return " ".join("".join(out).split())  # N5
+
+
 def scan(text: str) -> list[tuple[str, str]]:
     return _scan(text)[1]
 
 
 def _scan(text: str) -> tuple[str, list[tuple[str, str]], list[int]]:
     """Returns the normalised line, its (kind, text) pairs and the end offset of each pair."""
-    s = " ".join(unicodedata.normalize("NFC", text).split()).lower().replace("×", "x")
+    s = spell(text).lower().replace("×", "x")
     lexemes = sorted(THAI_LEXEMES, key=len, reverse=True)
     out: list[tuple[str, str]] = []
     pos = 0
@@ -437,7 +476,111 @@ class _Walk:
         return self.numberlike(i) or self.t(i) in UNIT_OF or self.t(i) in QW
 
 
-def _variable(text: str, pairs: list[tuple[str, str]]) -> bool:
+# rev 4 C1: the only words the unread part of the dose region may hold.
+FREE_LATIN = frozenset(
+    "od bd bid tid qid qd qod hs prn po ac pc daily nightly weekly monthly once twice thrice every other day days "
+    "week month morning evening night bedtime noon before after with without meal meals food breakfast lunch dinner "
+    "supper as needed when required for pain fever oral orally by mouth at in the take sc sl im iv".split(" "))
+FREE_THAI = frozenset(
+    "รับประทาน กิน ทาน อาหาร นอน มี อาการ ปวด ไข้ วัน เว้น ให้ ก่อน หลัง พร้อม เช้า กลางวัน เที่ยง เย็น ค่ำ ตอน เวลา "
+    "เมื่อ ทุก ทันที ต่อ แบ่ง รวม ทั้งหมด ทั้งวัน".split(" "))
+
+
+def _wordchar(ch: str) -> bool:
+    """A letter for the dotted-abbreviation rule: alphanumeric but not a decimal digit (underscore excluded)."""
+    return ch.isalnum() and not ch.isdecimal()
+
+
+def undot(s: str) -> str:
+    """Whole-word single letters joined by dots lose the dots ("p.r.n." -> "prn"). Longest form first; the last dot
+    is optional, and the form must not touch a letter on either side."""
+    out, k = [], 0
+    while k < len(s):
+        if _wordchar(s[k]) and (k == 0 or not _wordchar(s[k - 1])):
+            groups = 0
+            while k + 2 * groups + 2 < len(s) and s[k + 2 * groups + 1] == "." and _wordchar(s[k + 2 * groups + 2]):
+                groups += 1
+            hit = None
+            for g in range(groups, 0, -1):
+                end = k + 2 * g + 1
+                for stop in ((end + 1, end) if s[end:end + 1] == "." else (end,)):
+                    if stop >= len(s) or not _wordchar(s[stop]):
+                        hit = stop
+                        break
+                if hit is not None:
+                    break
+            if hit is not None:
+                out.append(s[k:hit].replace(".", ""))
+                k = hit
+                continue
+        out.append(s[k])
+        k += 1
+    return "".join(out)
+
+
+def _thai_mark_or_letter(ch: str) -> bool:
+    return 0x0E01 <= ord(ch) <= 0x0E3A or 0x0E40 <= ord(ch) <= 0x0E4E
+
+
+def _covers(run: str) -> bool:
+    """Greedy longest-first left-to-right segmentation of a Thai run into FREE_THAI words."""
+    words = sorted(FREE_THAI, key=len, reverse=True)
+    at = 0
+    while at < len(run):
+        for w in words:
+            if run[at:at + len(w)] == w:
+                at += len(w)
+                break
+        else:
+            return False
+    return True
+
+
+def free_words_ok(free: str) -> bool:
+    """rev 4 C1 on already-blanked free text: every Thai run segments, every other letter run is a listed word."""
+    text = undot(free.casefold())
+    runs: list[tuple[bool, str]] = []  # (is_thai, run)
+    for ch in text:
+        thai = _thai_mark_or_letter(ch)
+        letter = thai or (unicodedata.category(ch).startswith("L") and not _thai(ch))
+        if letter and runs and runs[-1][0] == thai and runs[-1][1] is not None:
+            runs[-1] = (thai, runs[-1][1] + ch)
+        elif letter:
+            runs.append((thai, ch))
+        else:
+            runs.append((False, None))
+    for thai, run in runs:
+        if run is None:
+            continue
+        if thai and not _covers(run):
+            return False
+        if not thai and run not in FREE_LATIN:
+            return False
+    return True
+
+
+def _free_text(walk: "_Walk") -> str | None:
+    """The dose region (first numeric-ish pair to the end) with every consumed character blanked; None if the line
+    has no numeric-ish pair. T1 consumes the ครึ่ง pair and exactly its time word."""
+    s, p = walk.s, walk.p
+    first = next((j for j in range(len(p)) if walk.numericish(j)), None)
+    if first is None:
+        return None
+    chars = list(s)
+    for j, (kind, txt) in enumerate(p):
+        if not walk.used[j]:
+            continue
+        for q in range(walk.ends[j] - len(txt), walk.ends[j]):
+            chars[q] = " "
+        if kind == "H":  # the time word right after it (one optional space)
+            at = walk.ends[j] + (1 if s[walk.ends[j]:walk.ends[j] + 1] == " " else 0)
+            size = next((len(w) for w in TIME_TH if s[at:at + len(w)] == w), 0) or len(_latin_run(s, at))
+            for q in range(at, at + size):
+                chars[q] = " "
+    return "".join(chars[walk.ends[first] - len(p[first][1]):])
+
+
+def _variable(s: str, pairs: list[tuple[str, str]]) -> bool:
     for kind, word in pairs:
         if kind != "W":
             continue
@@ -446,7 +589,7 @@ def _variable(text: str, pairs: list[tuple[str, str]]) -> bool:
         for stem in WEEKDAY_STEMS:
             if word in (stem, stem + "s", stem + "day", stem + "days"):
                 return True
-    return any(w in text for w in THAI_VARIABLE)
+    return any(w in s for w in THAI_VARIABLE)
 
 
 def daily_marker(text: str) -> bool:
@@ -489,7 +632,7 @@ def _walk(text: str) -> tuple[list[tuple[str, str]], _Walk]:
 def reference_parse(text: str) -> tuple[str, float | None, str | None, float | None, str | None]:
     pairs, walk = _walk(text)
     leftover = [j for j in range(len(pairs)) if walk.numericish(j) and not walk.used[j]]
-    if _variable(text, pairs):
+    if _variable(walk.s, pairs):
         reason = "variable_regimen"
     elif walk.liquid:
         reason = "liquid_volume"
@@ -501,7 +644,7 @@ def reference_parse(text: str) -> tuple[str, float | None, str | None, float | N
         reason = "range"
     elif len(walk.quantities) > 1 or walk.daily_total or walk.half_conflict:
         reason = "ambiguous_quantity"
-    elif leftover or walk.broken_tail:
+    elif leftover or walk.broken_tail or not c1_ok(walk):
         reason = "unparsed_token"
     else:
         reason = None
@@ -514,6 +657,11 @@ def reference_parse(text: str) -> tuple[str, float | None, str | None, float | N
     return "resolved", float(value), unit, quantity, None
 
 
+def c1_ok(walk: "_Walk") -> bool:
+    free = _free_text(walk)
+    return free is None or free_words_ok(free)
+
+
 def reference_closure(text: str) -> dict[str, bool]:
     """§F.5 inputs: an INVISIBLE character; a SLASH-LIKE character other than an ASCII "/" consumed by FRAC, S2 or
     L1; a D1 marker. A line with any of these is never resolved."""
@@ -522,6 +670,7 @@ def reference_closure(text: str) -> dict[str, bool]:
         "invisible": any(kind == "I" for kind, _ in pairs),
         "slash_like": any(kind == "L" and not (ch == "/" and walk.used[j]) for j, (kind, ch) in enumerate(pairs)),
         "daily_total": daily_marker(text),
+        "c1": not c1_ok(walk),
     }
 
 
@@ -529,6 +678,6 @@ def reference_reason_hint(text: str) -> str:
     """Diagnostic only (printed on failure): which unverifiable condition the reference saw."""
     pairs, walk = _walk(text)
     left = [pairs[j][1] for j in range(len(pairs)) if walk.numericish(j) and not walk.used[j]]
-    return (f"variable={_variable(text, pairs)} liquid={walk.liquid} strengths={sorted(walk.strengths)} "
+    return (f"variable={_variable(walk.s, pairs)} liquid={walk.liquid} strengths={sorted(walk.strengths)} "
             f"per_unit={walk.per_unit} quantities={sorted(walk.quantities)} daily_total={walk.daily_total} "
-            f"half_conflict={walk.half_conflict} broken_tail={walk.broken_tail} leftover={left}")
+            f"half_conflict={walk.half_conflict} broken_tail={walk.broken_tail} leftover={left} free={_free_text(walk)!r}")
