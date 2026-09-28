@@ -5,7 +5,7 @@ description = "Research prototype — not for clinical use. Slices s0-s1 (backen
 requires-python = ">=3.11"
 
 [tool.pytest.ini_options]
-testpaths = ["backend/tests", "casegraph/tests", "data_factory/tests", "research/tests", "eval/tests", "eval/adapters/tests", "eval_i2/tests"]
+testpaths = ["backend/tests", "casegraph/tests", "data_factory/tests", "research/tests", "eval/tests", "eval/adapters/tests", "eval_i2/tests", "tests/e1r"]
 pythonpath = [".", "backend"]
 addopts = "--disable-socket --allow-unix-socket -p no:cacheprovider"
 markers = [

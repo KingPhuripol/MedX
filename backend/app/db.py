@@ -81,7 +81,37 @@ triage_reviews = Table(
     Column("reason_sha256", String(64), nullable=True),
 )
 
-APPEND_ONLY_TRIAGE_TABLES = ("triage_assessments", "triage_reviews")
+# Slice s6: immutable care assessments and single physician reviews (append-only).
+care_assessments = Table(
+    "care_assessments",
+    metadata,
+    Column("assessment_id", String(32), primary_key=True),
+    Column("case_id", String(64), nullable=False, index=True),
+    Column("decision_point", String(8), nullable=False),
+    Column("as_of", String(40), nullable=False),
+    Column("created_at", String(40), nullable=False),
+    Column("created_by", Integer, nullable=False),
+    Column("rules_version", String(32), nullable=False),
+    Column("payload_json", Text, nullable=False),
+)
+
+care_reviews = Table(
+    "care_reviews",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("assessment_id", String(32), ForeignKey("care_assessments.assessment_id"), nullable=False, unique=True),
+    Column("action", String(16), nullable=False),
+    Column("final_codes_json", Text, nullable=True),
+    Column("reviewer_id", Integer, nullable=False),
+    Column("reviewer_role", String(16), nullable=False),
+    Column("ts_utc", String(40), nullable=False),
+    Column("acknowledged_alert_ids_json", Text, nullable=False),
+    Column("screening_acknowledged", Integer, nullable=False),
+    Column("reason", Text, nullable=True),
+    Column("reason_sha256", String(64), nullable=True),
+)
+
+APPEND_ONLY_TRIAGE_TABLES = ("triage_assessments", "triage_reviews", "care_assessments", "care_reviews")
 
 _SQLITE_TRIGGERS = (
     """CREATE TRIGGER IF NOT EXISTS audit_events_no_update BEFORE UPDATE ON audit_events

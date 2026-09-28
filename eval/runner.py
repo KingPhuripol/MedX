@@ -21,7 +21,7 @@ from typing import Any
 import numpy as np
 
 from . import __version__
-from .bootstrap import cluster_bootstrap, paired_cluster_bootstrap
+from .bootstrap import RatioStat, cluster_bootstrap, paired_cluster_bootstrap
 from .jsonschema_lite import validate
 from .errors import LedgerIntegrityError, RunRefused
 from .jsonio import loads_strict
@@ -36,7 +36,7 @@ from .manifest import (
     sha256_bytes,
     utc_now,
 )
-from .metrics import MissingPredictionError
+from .metrics import MissingPredictionError, Undefined, exact_binomial_ci
 from .registry import ABSTENTION_AWARE, population_for, prepare
 from .report import labels_for, render_html, render_md
 
@@ -264,6 +264,52 @@ def _threshold(row: dict[str, Any], th: dict[str, Any]) -> dict[str, Any]:
     return {"op": th["op"], "value": th["value"], "rule": th["rule"], "compared_value": v, "status": status}
 
 
+EXACT_CI_RULE = "patient_all_success"
+
+
+def exact_interval(spec: dict[str, Any], stat: Any, ids: Sequence[str], res: dict[str, Any],
+                   ci_level: float) -> dict[str, Any] | None:
+    """Clopper-Pearson interval next to a zero-width or unstable bootstrap CI (slice s6, opt-in).
+
+    Declared per metric with ``params.exact_ci = "patient_all_success"``: computed at patient level, where a
+    patient succeeds only if every eligible decision point (den > 0) succeeds. Conservative; labelled so.
+    """
+    if spec["params"].get("exact_ci") != EXACT_CI_RULE or not isinstance(stat, RatioStat) or res["point"] is None:
+        return None
+    zero_width = res["ci_low"] is not None and res["ci_low"] == res["ci_high"]
+    if not (zero_width or res["unstable"]):
+        return None
+    num: dict[str, float] = {}
+    den: dict[str, float] = {}
+    for pid, a, b in zip(ids, stat.num, stat.den):
+        if not (0 <= a <= b <= 1):
+            raise ValueError(f"{spec['id']}: exact_ci needs binary per-decision-point outcomes")
+        num[pid] = num.get(pid, 0.0) + float(a)
+        den[pid] = den.get(pid, 0.0) + float(b)
+    eligible = [p for p in den if den[p] > 0]
+    x = sum(1 for p in eligible if num[p] == den[p])
+    ci = exact_binomial_ci(x, len(eligible), ci_level)
+    return {
+        "method": "clopper_pearson",
+        "unit": "patient (success only if all eligible decision points succeed; conservative)",
+        "trigger": "bootstrap CI has zero width" if zero_width else "bootstrap CI unstable (>1% degenerate)",
+        "x": x,
+        "n": len(eligible),
+        "ci_level": ci_level,
+        "ci_low": None if isinstance(ci, Undefined) else ci[0],
+        "ci_high": None if isinstance(ci, Undefined) else ci[1],
+    }
+
+
+def scored_counts(stat: Any, ids: Sequence[str]) -> dict[str, int]:
+    """Patients / decision points that enter the metric denominator (den > 0; answered rows for abstention-aware
+    metrics). ``n_patients`` / ``n_decision_points`` stay the population denominators (s6, additive)."""
+    if not isinstance(stat, RatioStat):
+        return {}
+    keep = [p for p, d in zip(ids, stat.den) if d > 0]
+    return {"n_patients_scored": len(set(keep)), "n_decision_points_scored": len(keep)}
+
+
 def evaluate(m: dict[str, Any], rows: list[dict[str, Any]], cmp_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     tasks = {x["task"] for x in m["metrics"]}
     sys_by_task = _by_task(rows, "predictions")
@@ -308,7 +354,11 @@ def evaluate(m: dict[str, Any], rows: list[dict[str, Any]], cmp_rows: list[dict[
         prep = prepare(spec["name"], task_rows, spec["params"])
         res = cluster_bootstrap(ids, prep.stat, **bkw).to_dict()
         row = {"metric_id": spec["id"], "item": spec["item"], "task": spec["task"], "metric": spec["name"],
-               "params": spec["params"], "primary": spec["primary"], **res, "details": prep.details}
+               "params": spec["params"], "primary": spec["primary"], **res,
+               **scored_counts(prep.stat, ids), "details": prep.details}
+        exact = exact_interval(spec, prep.stat, ids, res, b["ci_level"])
+        if exact is not None:
+            row["exact_ci"] = exact
         comps = []
         for name, ctasks in declared.items():
             if spec["task"] not in ctasks:
@@ -318,19 +368,29 @@ def evaluate(m: dict[str, Any], rows: list[dict[str, Any]], cmp_rows: list[dict[
                 comps.append({"comparator": name, "status": "not provided", "comparator_point": None, "diff": None})
                 continue
             crs = restrict(spec, crs)
+            cids = [r["patient_id"] for r in crs]
             cprep = prepare(spec["name"], crs, spec["params"])
-            cres = cluster_bootstrap([r["patient_id"] for r in crs], cprep.stat, **bkw).to_dict()
-            diff = paired_cluster_bootstrap(ids, prep.stat, [r["patient_id"] for r in crs], cprep.stat, **bkw)
+            cres = cluster_bootstrap(cids, cprep.stat, **bkw).to_dict()
+            diff = paired_cluster_bootstrap(ids, prep.stat, cids, cprep.stat, **bkw)
             d = diff.to_dict()
-            comps.append({
+            comp = {
                 "comparator": name,
                 "status": "computed",
                 "comparator_point": cres["point"],
                 "comparator_ci_low": cres["ci_low"],
                 "comparator_ci_high": cres["ci_high"],
                 "comparator_reason": cres["reason"],
+                "comparator_unstable": cres["unstable"],
+                "comparator_n_degenerate": cres["n_degenerate"],
+                "comparator_n_patients": cres["n_patients"],
+                "comparator_n_decision_points": cres["n_decision_points"],
+                **{f"comparator_{k}": v for k, v in scored_counts(cprep.stat, cids).items()},
                 "diff": {k: d[k] for k in ("point", "ci_low", "ci_high", "n_degenerate", "unstable", "reason")},
-            })
+            }
+            cexact = exact_interval(spec, cprep.stat, cids, cres, b["ci_level"])
+            if cexact is not None:
+                comp["comparator_exact_ci"] = cexact
+            comps.append(comp)
         row["comparisons"] = comps
         row["thresholds"] = [_threshold(row, t) for t in m["thresholds"] if t["metric"] == spec["id"]]
         out.append(row)
@@ -376,13 +436,28 @@ def build_results(m: dict[str, Any], digest: str, rows, cmp_rows, pred_sha: str,
     return results
 
 
+def results_json_bytes(results: dict[str, Any]) -> bytes:
+    """The exact results.json bytes whose sha256 is the ledger's ``results_sha256``."""
+    return (json.dumps(results, sort_keys=True, indent=2, ensure_ascii=False, allow_nan=False) + "\n").encode("utf-8")
+
+
 def render_all(results: dict[str, Any]) -> dict[str, bytes]:
-    js = json.dumps(results, sort_keys=True, indent=2, ensure_ascii=False, allow_nan=False) + "\n"
     return {
-        "results.json": js.encode("utf-8"),
+        "results.json": results_json_bytes(results),
         "results.md": render_md(results).encode("utf-8"),
         "results.html": render_html(results).encode("utf-8"),
     }
+
+
+def rerender_of(m: dict[str, Any], ledger: Ledger, digest: str, pred_sha: str, cmp_sha: str | None
+                ) -> dict[str, Any] | None:
+    """Slice s6r: on the test split, identical manifest + predictions + comparator hashes to an existing run line
+    make a re-render (report only, no second result). Dev keeps the s8 rule (every run appends a line)."""
+    if m["split"] != "test":
+        return None
+    same = [e for e in ledger.runs(m["evaluation_id"])
+            if (e["manifest_sha256"], e["predictions_sha256"], e.get("comparator_sha256")) == (digest, pred_sha, cmp_sha)]
+    return same[0] if same else None
 
 
 def run(manifest_path: str | os.PathLike[str], predictions_path: str | os.PathLike[str],
@@ -411,6 +486,10 @@ def run(manifest_path: str | os.PathLike[str], predictions_path: str | os.PathLi
     out.mkdir(parents=True, exist_ok=True)
     for name, data in files.items():
         (out / name).write_bytes(data)
+    prior = rerender_of(m, ledger, digest, pred_sha, cmp_sha)
+    if prior is not None:
+        print(f"re-render of run seq {prior['seq']}; no ledger line appended")
+        return results
     ledger.append_run({
         "evaluation_id": m["evaluation_id"],
         "split": m["split"],

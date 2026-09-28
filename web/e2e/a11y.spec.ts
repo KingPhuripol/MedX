@@ -78,3 +78,22 @@ test("login and logout work with the keyboard alone", async ({ page }) => {
   await page.goto("/nurse");
   await expect(page).toHaveURL("/login");
 });
+
+for (const vp of VIEWPORTS) {
+  test(`care list and review pages have no serious/critical axe violations at ${vp.width}x${vp.height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(vp);
+    await login(page, "physician");
+    await page.goto("/physician/care");
+    await expect(page.getByTestId("care-case-list")).toBeVisible();
+    expect(await seriousViolations(page)).toEqual([]);
+    for (const [caseId, dp] of [["SYNE-0011", "T2"], ["SYNE-0071", "T1"]]) {
+      await page.goto("/physician/care");
+      await page.getByRole("button", { name: `Assess ${caseId} at ${dp}` }).click();
+      await expect(page.getByRole("heading", { level: 1 })).toContainText(caseId);
+      await expect(page.getByTestId("redflag-section")).toBeVisible();
+      expect(await seriousViolations(page)).toEqual([]);
+    }
+  });
+}

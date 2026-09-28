@@ -1,4 +1,4 @@
-"""CLI: ``python -m data_factory generate --seed N --out DIR [--splits-only] [--replace]`` and ``audit --dataset DIR``."""
+"""CLI: ``python -m data_factory generate --seed N --out DIR [--splits-only] [--replace] [--heldout]`` and ``audit --dataset DIR``."""
 
 import argparse
 import json
@@ -30,6 +30,7 @@ def main(argv=None) -> int:
     g.add_argument("--out", type=Path, required=True)
     g.add_argument("--splits-only", action="store_true")
     g.add_argument("--replace", action="store_true", help="delete an existing factory dataset at OUT first")
+    g.add_argument("--heldout", action="store_true", help="s6r held-out set: 72 patients SYNH-/SYNHE-, test split only")
     a = sub.add_parser("audit", help="schema, gold separation, identifier scan, manifest hashes, snapshot times")
     a.add_argument("--dataset", type=Path, required=True)
     args = ap.parse_args(argv)
@@ -46,7 +47,7 @@ def main(argv=None) -> int:
             shutil.rmtree(real)
         from .generate import generate
 
-        m = generate(args.seed, Path(real), splits_only=args.splits_only)
+        m = generate(args.seed, Path(real), splits_only=args.splits_only, heldout=args.heldout)
         print(json.dumps({"out": str(args.out), "tree_sha256": m["tree_sha256"] if m else None,
                           "counts": m["counts"] if m else None}, ensure_ascii=False, indent=2))
         return 0

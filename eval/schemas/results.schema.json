@@ -77,6 +77,8 @@
           "seed": {"type": "integer"},
           "n_patients": {"type": "integer", "minimum": 0},
           "n_decision_points": {"type": "integer", "minimum": 0},
+          "n_patients_scored": {"type": "integer", "minimum": 0},
+          "n_decision_points_scored": {"type": "integer", "minimum": 0},
           "n_degenerate": {"type": ["integer", "null"]},
           "unstable": {"type": "boolean"},
           "reason": {"type": ["string", "null"]},
@@ -85,7 +87,14 @@
             "items": {
               "type": "object",
               "required": ["comparator", "status", "comparator_point", "diff"],
-              "properties": {"status": {"type": "string", "enum": ["computed", "not provided"]}}
+              "properties": {
+                "status": {"type": "string", "enum": ["computed", "not provided"]},
+                "comparator_n_patients": {"type": "integer", "minimum": 0},
+                "comparator_n_decision_points": {"type": "integer", "minimum": 0},
+                "comparator_n_patients_scored": {"type": "integer", "minimum": 0},
+                "comparator_n_decision_points_scored": {"type": "integer", "minimum": 0},
+                "comparator_exact_ci": {"type": "object", "required": ["method", "x", "n", "ci_low", "ci_high"]}
+              }
             }
           },
           "thresholds": {

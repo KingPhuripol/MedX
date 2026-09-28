@@ -17,6 +17,7 @@ Conventions
 from __future__ import annotations
 
 import functools
+import math
 from collections.abc import Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
@@ -37,6 +38,8 @@ __all__ = [
     "dice",
     "dice_summary",
     "hit_at_k",
+    "selective_hit_at_k",
+    "exact_binomial_ci",
     "set_prf",
     "calls_per_patient",
     "latency_per_patient",
@@ -354,6 +357,70 @@ def hit_at_k(suggested: Sequence[Sequence[Hashable]], ordered: Sequence[Iterable
     if not suggested:
         return Undefined("no decision points")
     return float(np.mean([_hit(s, o, k) for s, o in zip(suggested, ordered)]))
+
+
+def selective_hit_at_k(suggested: Sequence[Sequence[Hashable] | None], ordered: Sequence[Iterable[Hashable]],
+                       k: int) -> float | Undefined:
+    """Abstention-aware hit@k (slice s6): ``None`` = abstain. hit@k over answered decision points only.
+
+    An abstained decision point never enters the answered set; coverage 0 -> Undefined.
+    """
+    _same_len(suggested, ordered, "selective_hit_at_k")
+    check_finite(list(suggested), "selective_hit_at_k suggested")
+    check_finite(list(ordered), "selective_hit_at_k ordered")
+    answered = [(s, o) for s, o in zip(suggested, ordered) if not _is_missing(s)]
+    if not answered:
+        return Undefined("coverage is 0; selective hit@k is undefined")
+    return float(np.mean([_hit(s, o, k) for s, o in answered]))
+
+
+def _binom_cdf(x: int, n: int, p: float) -> float:
+    """P(X <= x) for X ~ Binomial(n, p), summed in log space (stdlib only)."""
+    if p <= 0.0:
+        return 1.0
+    if p >= 1.0:
+        return 1.0 if x >= n else 0.0
+    lp, lq = math.log(p), math.log1p(-p)
+    terms = [math.lgamma(n + 1) - math.lgamma(i + 1) - math.lgamma(n - i + 1) + i * lp + (n - i) * lq
+             for i in range(x + 1)]
+    m = max(terms)
+    return min(1.0, math.exp(m) * math.fsum(math.exp(t - m) for t in terms))
+
+
+def _bisect(f, target: float) -> float:
+    """Root of a function decreasing in p on [0, 1]: f(p) = target."""
+    lo, hi = 0.0, 1.0
+    for _ in range(200):
+        mid = (lo + hi) / 2.0
+        if f(mid) > target:
+            lo = mid
+        else:
+            hi = mid
+        if hi - lo < 1e-15:
+            break
+    return (lo + hi) / 2.0
+
+
+def exact_binomial_ci(x: int, n: int, ci_level: float = 0.95) -> tuple[float, float] | Undefined:
+    """Clopper-Pearson (exact) two-sided interval for ``x`` successes out of ``n`` (slice s6).
+
+    Reported next to a bootstrap CI that has zero width or is unstable; conservative by construction.
+    Inverts the binomial CDF by bisection (stdlib only; matches ``scipy.stats.binomtest`` exact CI).
+    """
+    if isinstance(x, bool) or isinstance(n, bool) or int(x) != x or int(n) != n:
+        raise ValueError("exact_binomial_ci: x and n must be integers")
+    x, n = int(x), int(n)
+    if n <= 0:
+        return Undefined("n is 0; exact interval is undefined")
+    if not 0 <= x <= n:
+        raise ValueError("exact_binomial_ci: need 0 <= x <= n")
+    if not 0.0 < ci_level < 1.0:
+        raise ValueError("ci_level must be in (0, 1)")
+    a = (1.0 - ci_level) / 2.0
+    # lower: P(X >= x | p) = a  <=>  cdf(x-1, p) = 1 - a ;  upper: cdf(x, p) = a
+    lo = 0.0 if x == 0 else (a ** (1.0 / n) if x == n else _bisect(lambda p: _binom_cdf(x - 1, n, p), 1.0 - a))
+    hi = 1.0 if x == n else (1.0 - a ** (1.0 / n) if x == 0 else _bisect(lambda p: _binom_cdf(x, n, p), a))
+    return lo, hi
 
 
 def _set_counts(suggested: Iterable[Hashable], ordered: Iterable[Hashable]) -> tuple[int, int, int]:
