@@ -425,6 +425,8 @@ def test_dose_fuzz_vs_reference():
     # s5r4 A12: (c) P markers and (d) C1 firings are never resolved; (e) th_normalise == its standard spelling.
     assert min(report.closure_counts[k] for k in ("per_word", "c1")) >= 20, report.closure_counts
     assert report.canonical == [], "\n".join(report.canonical[:20])
+    # s5r4 rev 5 A12: (e) a bare period word and (f) a DAILY + MULTI statement are never resolved.
+    assert min(report.closure_counts[k] for k in ("bare_period", "daily_multi")) >= 20, report.closure_counts
 
 
 def _piecewise_stub(text: str):

@@ -19,7 +19,7 @@ from fractions import Fraction
 from .pharma_dose_reference import reference_closure, reference_parse
 
 SEED = 5303
-N_PHRASES = 5000
+N_PHRASES = 6000  # rev 5: 4 more cycled classes; every rev-3 choice list still cycles in full
 Parsed = tuple[str, float | None, str | None, float | None, str | None]
 
 
@@ -338,7 +338,75 @@ def _rev4_classes() -> dict[str, tuple[str, list]]:
 
 REV4_CLASSES = _rev4_classes()
 ADVERSARIAL.update(REV4_CLASSES)
-_CYCLED = {**REV3_CLASSES, **REV4_CLASSES}
+
+# ---- rev 5 classes (s5r4 rev 5). Controls use the "only" slot (no other frequency or tail) and must resolve.
+_BARE = [("dose", "1000 mg day"), ("dose", "1000 mg days"), ("dose", "70 mg week"), ("dose", "100 mg month"),
+         ("dose", "1000 มก. วัน"), ("dose", "1000 มก.วัน"), ("dose", "1000 mg day, bid"), ("dose", "1000 mg po day"),
+         ("dose", "1000 mg po day bid"), ("dose", "1000 mg oral with meals day"), ("dose", "1000 mg take days tid"),
+         ("dose", "1000 มก. รับประทาน วัน"), ("dose", "1000 มก. กินวัน วันละ 2 ครั้ง"), ("dose", "1000 มก. วัน วันละ 2 ครั้ง"),
+         ("dose", "1000 มก. รับประทาน หลังอาหาร วัน"), ("dose", "70 mg po weeks"), ("dose", "1000 mg with food months"),
+         ("quantity", "2 tabs day"), ("quantity", "2 tabs po day"), ("quantity", "1 tab week"), ("quantity", "2 เม็ด วัน"),
+         ("quantity", "2 เม็ด กิน วัน วันละ 2 ครั้ง"), ("quantity", "2 tabs day q12h")]
+_BARE_CONTROLS = ["500 mg every day", "500 mg every other day", "70 mg every week", "100 mg every month",
+                  "500 มก. วันเว้นวัน", "500 มก. ทุกวัน", "70 mg every-other-week", "500 mg every. day"]
+_DAILY = ["daily", "every day", "everyday", "ทุกวัน", "q24h", "every 24 hours", "ทุก 24 ชั่วโมง", "once daily", "once a day",
+          "1 time per day", "one time daily", "วันละครั้ง", "วันละ 1 ครั้ง", "od", "qd"]
+_DAILY_VOCAB = ["", "po ", "oral ", "take ", "with meals ", "pc ", "รับประทาน", "กิน", "ทาน", "ให้", "หลังอาหาร",
+                "po with meals "]
+_MULTI = ["bid", "tid", "q12h", "twice daily", "วันละ 2 ครั้ง", "b.i.d.", "every 8 hours", "ทุก 12 ชั่วโมง",
+          "3 times a day"]
+_DAILY_HEADS = [("dose", "1000 mg", ("S1",)), ("dose", "1000 มก.", ("S1",)), ("quantity", "2 tabs", ("Q1",)),
+                ("quantity", "2 เม็ด", ("Q1",))]
+_DAILY_CONTROLS = ["500 mg po daily", "500 มก. รับประทานทุกวัน", "500 mg q24h pc", "500 mg once daily with meals",
+                   "500 มก. หลังอาหาร วันละครั้ง", "500 mg twice daily po"]
+_SLOTS_EN = [("morning", "evening"), ("breakfast", "dinner"), ("morning", "noon", "evening"), ("morning", "bedtime"),
+             ("lunch", "supper"), ("breakfast", "lunch", "dinner"), ("morning", "night"), ("before breakfast", "before dinner")]
+_SLOTS_TH = [("เช้า", "เย็น"), ("เช้า", "กลางวัน", "เย็น"), ("เช้า", "ก่อนนอน"), ("เที่ยง", "ค่ำ"), ("หลังอาหารเช้า", "เย็น"),
+             ("เช้า", "เที่ยง", "เย็น", "ก่อนนอน")]
+_SLOT_DAILY = {"en": ["daily", "every day", "qd", "once a day"], "th": ["ทุกวัน", "วันละครั้ง", "วันละ 1 ครั้ง"]}
+_SLOT_JOIN = {"en": [" ", ", ", "-"], "th": [" ", "-", "", ", "]}
+_SLOT_CONTROLS = ["500 mg daily at bedtime", "500 mg daily with breakfast", "500 มก. ทุกวัน หลังอาหารเช้า",
+                  "500 มก. เช้า-เย็น", "500 mg morning evening", "500 มก. วันละครั้ง ก่อนนอน"]
+_ABBREV = ["qd", "q.d.", "QD", "od", "o.d."]
+_ABBREV_MULTI = ["bid", ", bid", "tid", "q12h", "twice daily", "วันละ 2 ครั้ง"]
+_ABBREV_CONTROLS = ["500 mg qd", "500 mg o.d.", "500 mg OD pc", "500 mg q.d. with meals"]
+
+
+def _rev5_classes() -> dict[str, tuple[str, list]]:
+    bare = [(slot, (t, ("S1", "C1") if slot == "dose" else ("Q1", "C1"))) for slot, t in _BARE]
+    bare += [("only", (c, ("S1",))) for c in _BARE_CONTROLS]
+    anywhere = []
+    for k in range(30):
+        slot, head, pids = _DAILY_HEADS[k % len(_DAILY_HEADS)]
+        daily, vocab, multi = _DAILY[k % len(_DAILY)], _DAILY_VOCAB[k % len(_DAILY_VOCAB)], _MULTI[k % len(_MULTI)]
+        stmt = vocab + daily if k % 2 == 0 else (daily + " " + vocab).strip()  # vocabulary before or after DAILY
+        parts = [stmt, multi] if k % 3 else [multi, stmt]
+        anywhere.append((slot, (" ".join([head, *parts]), (*pids, "D1"))))
+    anywhere += [("only", (c, ("S1",))) for c in _DAILY_CONTROLS]
+    slots = []
+    for k in range(24):
+        lang = "en" if k % 2 == 0 else "th"
+        words = (_SLOTS_EN if lang == "en" else _SLOTS_TH)[k // 2 % (len(_SLOTS_EN) if lang == "en" else len(_SLOTS_TH))]
+        join = _SLOT_JOIN[lang][k // 2 % len(_SLOT_JOIN[lang])]
+        daily = _SLOT_DAILY[lang][k // 2 % len(_SLOT_DAILY[lang])]
+        head = "1000 mg" if lang == "en" else "1000 มก."
+        schedule = join.join(words)
+        text = f"{head} {daily} {schedule}" if k % 4 < 2 else f"{head} {schedule} {daily}"
+        slots.append(("dose", (text, ("S1", "D1"))))
+    slots += [("only", (c, ("S1",))) for c in _SLOT_CONTROLS]
+    abbrev = [("dose", (f"1000 mg {a} {m}".replace(" ,", ",") if k % 2 == 0 else f"1000 mg {m.lstrip(', ')} {a}",
+                        ("S1", "D1")))
+              for k, (a, m) in enumerate((a, m) for a in _ABBREV for m in _ABBREV_MULTI)]
+    abbrev += [("only", (c, ("S1",))) for c in _ABBREV_CONTROLS]
+    classes = {"bare_period": bare, "daily_anywhere": anywhere, "daily_slots": slots, "daily_abbrev": abbrev}
+    for choices in classes.values():
+        random.Random(SEED).shuffle(choices)
+    return {cls: ("*", choices) for cls, choices in classes.items()}
+
+
+REV5_CLASSES = _rev5_classes()
+ADVERSARIAL.update(REV5_CLASSES)
+_CYCLED = {**REV3_CLASSES, **REV4_CLASSES, **REV5_CLASSES}
 _NO_JOIN = set(".,/-–—~")
 
 
@@ -355,7 +423,7 @@ def _join(rng: random.Random, left: str, right: str) -> str:
 
 def generate(seed: int = SEED, n: int = N_PHRASES) -> list[Phrase]:
     rng = random.Random(seed)
-    # Round-robin over the classes; each rev-3/rev-4 class has 4 turns per round, so its whole choice list is cycled.
+    # Round-robin over the classes; each rev-3/4/5 class has 4 turns per round, so its whole choice list is cycled.
     classes = list(ADVERSARIAL) + [c for c in _CYCLED for _ in range(3)]
     turns: collections.Counter = collections.Counter()
     out: list[Phrase] = []
@@ -368,7 +436,7 @@ def generate(seed: int = SEED, n: int = N_PHRASES) -> list[Phrase]:
         if k % 2:  # every other phrase carries one adversarial segment (round-robin over the classes)
             cls = classes[(k // 2) % len(classes)]
             slot, choices = ADVERSARIAL[cls]
-            if cls in _CYCLED:  # cycle, so every rev-3/rev-4 sub-form is generated
+            if cls in _CYCLED:  # cycle, so every rev-3/4/5 sub-form is generated
                 choice = choices[turns[cls] % len(choices)]
                 turns[cls] += 1
             else:

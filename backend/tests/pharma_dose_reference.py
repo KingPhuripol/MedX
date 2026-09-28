@@ -837,7 +837,30 @@ def reference_closure(text: str) -> dict[str, bool]:
         "daily_total": daily_marker(text) or p4(walk),
         "per_word": any(_per_follows(walk.s, stop) for stop in walk.tail_stops),
         "c1": not c1_ok(walk),
+        "bare_period": bare_period(walk),
+        "daily_multi": p4(walk),
     }
+
+
+def bare_period(walk: "_Walk") -> bool:
+    """rev 5 A12(e): a bare day/days/week(s)/month(s) left after the FREE_PHRASES are blanked, or a Thai วัน outside
+    ทุกวัน / วันเว้นวัน / ทั้งวัน / กลางวัน, in the unread free text of the dose region."""
+    free = _free_text(walk)
+    if free is None:
+        return False
+    text = blank_phrases(undot(free.casefold()))
+    if any(w in BARE_PERIODS for _, _, w in latin_words(text)):
+        return True
+    k = 0
+    while k < len(text):
+        compound = next((c for c in THAI_DAY_COMPOUNDS if text[k:k + len(c)] == c), "")
+        if compound:
+            k += len(compound)
+        elif text[k:k + 3] == "วัน":
+            return True
+        else:
+            k += 1
+    return False
 
 
 def reference_reason_hint(text: str) -> str:

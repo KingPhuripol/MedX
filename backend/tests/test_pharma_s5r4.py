@@ -25,7 +25,7 @@ from app.pharma.mock_rules import is_invisible, is_slash_like, normalise, normal
 from . import pharma_dose_reference as ref
 from . import test_pharma_s5r3 as s5r3
 from .conftest import REPO_ROOT
-from .pharma_dose_fuzz import REV3_CLASSES, REV4_CLASSES, entry_tuple, generate, harness
+from .pharma_dose_fuzz import REV3_CLASSES, REV4_CLASSES, REV5_CLASSES, entry_tuple, generate, harness
 from .pharma_dose_reference import reference_parse
 from .pharma_helpers import of_type, run, snapshot
 
@@ -345,7 +345,7 @@ def test_t1_r1_frequency_neutral():
 PARTNER = {"warfarin": "Warfarin 3 mg od", "metformin": "Metformin 500 mg bid"}
 
 
-@pytest.mark.parametrize("probe", ["I1", "SL1", "DT1", "D1", "QF1", "M1", "M6", "PU1", "N6"])
+@pytest.mark.parametrize("probe", ["I1", "SL1", "DT1", "D1", "QF1", "M1", "M6", "PU1", "N6", "B1", "B6", "B12", "B16"])
 def test_negative_raises_missing_dose(probe):
     text, expected, _, _ = ALL_PROBES[probe]
     reason = expected[1]
@@ -651,3 +651,94 @@ def test_rev5_neutral_on_existing():
     assert len(texts) >= 2000, len(texts)
     changed = [t for t in texts if tuple(parse_entry(t)[f] for f in FIELDS) != tuple(legacy.parse_entry(t)[f] for f in FIELDS)]
     assert changed == P3_NARROWED_EXISTING, [ascii(t) for t in changed[:10]]
+
+
+# ---------------------------------------------------------------- S5R4-A13 (rev 5) the fuzz has teeth on the d2ff98c parser
+
+
+def test_fuzz_catches_d2ff98c():
+    legacy = _load_legacy(LEGACY_D2FF98C, LEGACY_D2FF98C_SHA256)
+    assert legacy.MOCK_RULES_VERSION == "s5-mock-rules-2.3.0"
+    report = harness(entry_tuple(legacy.parse_entry), generate())  # same harness, same seed
+    for cls in REV5_CLASSES:
+        assert report.safety_classes[cls] >= 1, (cls, report.safety_classes)
+
+
+def test_fuzz_rev5_classes():
+    """A11: each rev-5 class has >= 20 phrases and cycles its whole list; its controls ("only" slot) resolve."""
+    phrases = generate()
+    counts = collections.Counter(a for p in phrases for a in p.adversarial)
+    assert set(REV5_CLASSES) == {"bare_period", "daily_anywhere", "daily_slots", "daily_abbrev"}
+    for cls, (_, choices) in REV5_CLASSES.items():
+        assert counts[cls] >= max(20, len(choices)), (cls, counts[cls], len(choices))
+        controls = [text for slot, (text, _) in choices if slot == "only"]
+        assert len(controls) >= 4, cls
+        for text in controls:
+            assert _dose(f"Metformin {text}")[0] == "resolved", (cls, text)
+        for slot, (text, _) in choices:
+            if slot != "only":
+                assert _dose(f"Metformin {text}")[0] == "unverifiable", (cls, text)
+    # The cycled rev-3 and rev-4 lists are still generated in full with the rev-5 classes added.
+    for cls, (_, choices) in {**REV3_CLASSES, **REV4_CLASSES}.items():
+        assert counts[cls] >= max(20, len(choices)), (cls, counts[cls], len(choices))
+
+
+# ---------------------------------------------------------------- S5R4-A08 the checker's B-sibling sweep (454 phrases)
+# Copied from tests/e2e/s5r4_r2_sibling_sweep.py (checker, round 2): heads, words and schedules unchanged.
+SW_EN_HEADS = ["Metformin 1000 mg", "Metformin 500 mg 2 tabs", "Metformin 1000 mg,"]
+SW_TH_HEADS = ["เมทฟอร์มิน 1000 มก.", "เมทฟอร์มิน 500 มก. 2 เม็ด"]
+SW_EN_MULTI = [" bid", ", bid", " b.i.d.", " twice", " q12h", " every 12 hours", " 2 times a day", " tid", " bd"]
+SW_TH_MULTI = [" วันละ 2 ครั้ง", " ทุก 12 ชั่วโมง", " เช้า เย็น", " เช้า-เย็น"]
+SIBLINGS = {
+    "B1_en_day": [f"{h} {w}{m}" for h in SW_EN_HEADS for w in ("day", "days") for m in [""] + SW_EN_MULTI],
+    "B1_th_wan": [f"{h} วัน{m}" for h in SW_TH_HEADS for m in [""] + SW_TH_MULTI],
+    "B2_en_word_daily": [f"{h} {v} daily{m}" for h in SW_EN_HEADS for v in (
+        "po", "PO", "oral", "orally", "by mouth", "take", "with food", "with meals", "pc", "ac", "after meals")
+        for m in SW_EN_MULTI],
+    "B2_th_word_thukwan": [f"{h} {v}ทุกวัน{m}" for h in SW_TH_HEADS for v in (
+        "รับประทาน", "กิน", "ทาน", "ให้", "หลังอาหาร", "ก่อนอาหาร") for m in (" วันละ 2 ครั้ง", " ทุก 12 ชั่วโมง")],
+    "B3_en_daily_times": [f"{h} daily {t}" for h in SW_EN_HEADS for t in (
+        "morning evening", "morning, evening", "before breakfast, before dinner", "breakfast dinner", "morning night")],
+    "B3_th_thukwan_times": [f"{h} ทุกวัน {t}" for h in SW_TH_HEADS for t in (
+        "เช้า เย็น", "เช้า-เย็น", "เช้าเย็น", "ก่อนอาหารเช้า เย็น", "หลังอาหารเช้า เย็น", "เช้า ก่อนนอน")],
+    "B4_qd_multi": [f"{h} {q}{m}" for h in SW_EN_HEADS for q in ("qd", "q.d.", "QD") for m in (" bid", ", bid", " tid", " q12h")],
+}
+
+
+def test_rev5_sibling_sweep():
+    sizes = {cls: len(texts) for cls, texts in SIBLINGS.items()}
+    assert sizes == {"B1_en_day": 60, "B1_th_wan": 10, "B2_en_word_daily": 297, "B2_th_word_thukwan": 24,
+                     "B3_en_daily_times": 15, "B3_th_thukwan_times": 12, "B4_qd_multi": 36}
+    assert sum(sizes.values()) == 454
+    resolved = [(cls, t) for cls, texts in SIBLINGS.items() for t in texts
+                if parse_entry(t)["dose_status"] == "resolved" or reference_parse(t)[0] == "resolved"]
+    assert resolved == [], resolved[:10]
+
+
+# ---------------------------------------------------------------- §D "Name read" may show the §N spelling
+
+
+def test_name_read_uses_normalised_spelling():
+    rows = [(N_PROBES["N12"][0], "วาร์ฟาริน"), (f"{EE}อมโลดิปีน 5 มก. 1 เม็ด วันละ 1 ครั้ง", f"{EE}อมโลดิปีน"),
+            (f"{EE}อมลอดิปีน 5 mg 1 tab od", f"{EE}อมลอดิปีน")]
+    for text, name in rows:
+        e = parse_entry(text)
+        assert e["drug_name_raw"] == normalise_grammar(name), ascii(text)
+        assert e["raw_span"] == normalise(text) == " ".join(unicodedata.normalize("NFC", text).split()), ascii(text)
+    # With a doubled sara e the two differ: the name is read as แ, the raw span keeps the entry as typed.
+    e = parse_entry(rows[1][0])
+    assert e["drug_name_raw"] == "แอมโลดิปีน" and EE in e["raw_span"] and EE not in e["drug_name_raw"]
+
+
+def test_invisible_thai_code_point_is_its_own_token():
+    """Rev-3 G1 conformance (found by the rev-5 fuzz): an unassigned Thai-block code point (e.g. U+0E3B) directly before
+    Thai text stays its own never-consumed token, so the entry is never resolved."""
+    hidden = [cp for cp in range(0x0E00, 0x0E80) if is_invisible(chr(cp))]
+    assert 0x0E3B in hidden
+    base = "วาร์ฟาริน 3 มก. 1 เม็ด วันละ 1 ครั้ง"
+    assert _dose(base)[0] == "resolved"
+    for cp in hidden:
+        for at in (0, 4, 9, len(base)):
+            text = base[:at] + chr(cp) + base[at:]
+            assert _dose(text)[0] != "resolved", (hex(cp), at)
+            assert reference_parse(text)[0] != "resolved", (hex(cp), at)

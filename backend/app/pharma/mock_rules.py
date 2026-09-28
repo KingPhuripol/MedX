@@ -221,7 +221,8 @@ def tokenise(raw: str) -> list[Token]:
             if lexeme:
                 toks.append(Token("TH", lexeme, i, i + len(lexeme)))
                 i += len(lexeme)
-            elif toks and toks[-1].kind == "OTHER" and toks[-1].end == i and _is_thai(toks[-1].text[0]):
+            elif (toks and toks[-1].kind == "OTHER" and toks[-1].end == i and _is_thai(toks[-1].text[0])
+                  and not is_invisible(toks[-1].text[0])):  # an unassigned Thai code point stays its own token
                 toks[-1] = Token("OTHER", toks[-1].text + c, toks[-1].start, i + 1)
                 i += 1
             else:
