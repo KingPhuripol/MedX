@@ -1,7 +1,7 @@
 # Slice int2: Integration: port S6 care onto the I2 Case Graph type system
 
 - Owner (Gantt): ธัญรดา / ภูริณัฐ.
-- Branch: slice id `int2`, built in the worktree `Full-Agent-i2`. At planning time the worktree has `factory/i2` checked out, and no `factory/int2` ref exists, so this spec is committed on `factory/i2`. Base: `factory/i2` at c15ac93. That branch holds merge 1c59c7f (`factory/int`: S6r, E1r2 and the posthoc projection fix, merged into the I2 wiring) plus the orchestrator's snapshot port.
+- Branch: `factory/int2` in the worktree `Full-Agent-i2`. It forks from `factory/i2` at ff65677 (this spec, first revision), whose parent c15ac93 holds merge 1c59c7f (`factory/int`: S6r, E1r2 and the posthoc projection fix, merged into the I2 wiring) plus the orchestrator's snapshot port. Diff baselines below are 1c59c7f unless stated.
 - Source of truth: `docs/PROPOSAL.md` v8:
   - 3.2.1 / Table 3.1: typed data. The Red-flag node is mandatory, and its screening block is a typed output.
   - 3.4: time-valid evidence, no leakage.
@@ -10,7 +10,7 @@
 - Governing specs: `slices/i2/SPEC.md` (the screening block, the MOCK label rule, one registry, one type system) and `slices/s6/SPEC.md` + `slices/s6r/SPEC.md` (frozen care behaviour and evaluation).
   - Where they meet, the rule is: I2 decides representation, and S6 decides behaviour and results.
 - Tier 0 only: CPU, synthetic data, offline, mock provider. E2E ports are **8122 / 3122**.
-- Status: PLAN (planner).
+- Status: PLAN (planner), revision 2 (2026-09-28). Revision 2 changes no criterion's meaning. It fixes the branch line and defines "clean checkout" for INT2-A01 (see the note under the table).
   - No approval is recorded or implied here.
   - No ledger line may be appended.
   - No S6 evaluation is re-run.
@@ -90,7 +90,7 @@ The physician care page also renders two pre-I2 strings that I2 bans:
 
 | ID | Criterion | Threshold | How measured |
 |---|---|---|---|
-| INT2-A01 | Build green | `make test` exits 0 with **0 failed, 0 errors**. The pytest collected count is ≥ 1466 (the count at c15ac93). The Vitest test count is ≥ the count at c15ac93. There are 0 new `skip`/`xfail` markers vs 1c59c7f. | `make test` from a clean checkout; `git diff 1c59c7f -- '*.py' '*.ts' '*.tsx' \| grep -E '^\+.*(skip\|xfail)'` is empty |
+| INT2-A01 | Build green | `make test` exits 0 with **0 failed, 0 errors**. The pytest collected count is ≥ 1466 (the count at c15ac93). The Vitest test count is ≥ the count at c15ac93. There are 0 new `skip`/`xfail` markers vs 1c59c7f. | `make test` in the worktree **and** in a clean checkout (see note A01); `git diff 1c59c7f -- '*.py' '*.ts' '*.tsx' \| grep -E '^\+.*(skip\|xfail)'` is empty |
 | INT2-A02 | Data audit | `make data && make audit` prints `STEP leakage: PASS` and `STEP factory: PASS` | checker |
 | INT2-A03 | Ledgers intact | `python -m eval ledger verify --git-history` exits 0. `python -m eval ledger verify --ledger-dir slices/s6/eval/ledger` exits 0. The line counts of every `**/ledger/*.jsonl` equal those at 1c59c7f. | ledger CLI; `wc -l` at both commits |
 | INT2-A04 | E1 posthoc unchanged | `python -m eval.posthoc.e1_findings --check` prints `CHECK OK` | checker |
@@ -106,6 +106,8 @@ The physician care page also renders two pre-I2 strings that I2 bans:
 | INT2-A14 | Physician pages render the I2 block | Vitest `care-review.screening.test.tsx` covers 4 states: evaluated with 0 alerts shows "0 of 16 declared rules fired" and the scope; evaluated with alerts; partial shows the INCOMPLETE banner with role=alert; unavailable shows NOT PERFORMED. The scope, `rf-1.1.0` and the not-evaluated rules are visible, and the red-flag region precedes the suggestion in the DOM. Playwright `care.spec.ts` (existing tests unchanged, plus 1 new test on SYNE-0011 T2 on 8122/3122) passes: `screening-scope` contains `rf-1.1.0`; the page text has 0 overclaim matches; `screening-readings` lists the vitals. `a11y.spec.ts` passes. `web/tests/TriageReview.screening.test.tsx` passes unchanged. | `cd web && npm test`; `API_PORT=8122 WEB_PORT=3122 make e2e` |
 | INT2-A15 | Test-edit discipline, no safety loosening | Every modified pre-existing test file is in "Sanctioned test edits" below, with its reason. `git diff 1c59c7f` is **empty** for: `casegraph/tests/`, `backend/tests/triage/`, `backend/tests/voice/`, `web/tests/TriageReview.screening.test.tsx`, `eval/tests/`, `data_factory/tests/`, `backend/tests/care/test_engine.py`, `test_api.py`, `test_static.py`, `test_evaluate.py`. 0 `assert` lines are removed from any listed file except the replacements named below. | checker `git diff 1c59c7f --stat -- '**/tests/**' web/tests web/e2e` and a line review |
 | INT2-A16 | Scope fence | `git diff 1c59c7f` is empty for `casegraph/`, `backend/app/triage/`, `backend/app/voice/`, `backend/app/gateway/`, `eval/`, `data_factory/`, `backend/app/care/rules/`. The export schema stays `casegraph-export/0.3`. | checker `git diff --stat` |
+
+**Note A01 (clean checkout).** A clean checkout is `git clone --branch factory/int2 <worktree> <dir>`, where `<dir>` is **not** under `tempfile.gettempdir()` or `/tmp`. The S1r out-path guard (`data_factory/__main__.py`) deliberately allows the temp roots as scratch output. So, in a clone under a temp dir, 5 pre-existing `data_factory/tests/test_factory.py` guard tests fail by design: `test_out_path_guard[parent|absolute|symlink|repo_root]` and `test_make_data_rejects_out_of_tree`. `data_factory/` is fenced (A16), and this is not an int2 regression. A clone at such a path does not count as evidence for or against A01. It must be re-run at a non-temp path, for example next to the worktree.
 
 ## Sanctioned test edits (exhaustive; the builder lists each one in its result)
 
@@ -156,7 +158,8 @@ Anything else found necessary goes back to the planner. It is not edited silentl
 
 ```bash
 cd /Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent-i2
-make test
+make test                                   # worktree
+git clone -q --branch factory/int2 . ../int2-clean && (cd ../int2-clean && make test)   # clean checkout, NOT under a temp dir (note A01)
 make data && make audit
 python -m eval ledger verify --git-history
 python -m eval ledger verify --ledger-dir slices/s6/eval/ledger
