@@ -233,16 +233,38 @@ B_PROBES = {
     "B3": ("Metformin 500 mg 2 tabs day bid", UNP, "q12h", "day"),
     "B4": ("เมทฟอร์มิน 1000 มก. วัน", UNP, None, None),
     "B5": ("เมทฟอร์มิน 1000 มก. วัน วันละ 2 ครั้ง", UNP, "q12h", "วัน"),
+    "B6": ("Metformin 1000 mg po daily bid", PER, None, None),
+    "B7": ("Metformin 1000 mg oral daily, bid", PER, None, None),
+    "B8": ("Metformin 500 mg 2 tabs po daily bid", PER, None, None),
+    "B9": ("Metformin 1000 mg with meals daily q12h", PER, None, None),
+    "B10": ("เมทฟอร์มิน 1000 มก. รับประทานทุกวัน วันละ 2 ครั้ง", PER, "q12h", "รับประทานทุกวัน"),
+    "B11": ("เมทฟอร์มิน 1000 มก. กินทุกวัน วันละ 2 ครั้ง", PER, "q12h", "กินทุกวัน"),
+    "B12": ("Metformin 1000 mg daily morning, evening", PER, None, None),
+    "B13": ("Metformin 1000 mg daily, before breakfast, before dinner", PER, None, None),
+    "B14": ("เมทฟอร์มิน 1000 มก. ทุกวัน เช้า เย็น", PER, "q12h", "ทุกวัน"),
+    "B15": ("เมทฟอร์มิน 1000 มก. ทุกวัน เช้า-เย็น", PER, "q12h", "ทุกวัน"),
+    "B16": ("Metformin 1000 mg qd bid", PER, None, None),
+    "B17": ("Metformin 1000 mg q.d., bid", PER, None, None),
+    "B18": ("Metformin 1000 mg od bid", PER, None, None),
+    "B19": ("Metformin 1000 mg q24h bid", PER, None, None),
+    "B20": ("Metformin 1000 mg once daily, bid", PER, None, None),
+    "B21": ("เมทฟอร์มิน 1000 มก. วันละครั้ง เช้า เย็น", PER, None, None),
     "B22": ("Metformin 1000 mg po day", UNP, None, None),
     "B23": ("เมทฟอร์มิน 1000 มก. รับประทาน วัน วันละ 2 ครั้ง", UNP, "q12h", "วัน"),
+    "B24": ("เมทฟอร์มิน 500 มก. 2 เม็ด ทุกวัน เช้า ก่อนนอน", PER, None, None),
 }
 K5_PROBES = {
     "K9": ("Alendronate 70 mg weekly", ("resolved", None, 70.0, "mg", None), None, None),
     "K10": ("Alendronate 70 mg every week", ("resolved", None, 70.0, "mg", None), None, None),
     "K11": ("Metformin 500 mg every day", ("resolved", None, 500.0, "mg", None), "q24h", None),
+    "K12": ("เมทฟอร์มิน 500 มก. 1 เม็ด ทุกวัน", ("resolved", None, 500.0, "mg", 1.0), None, None),
+    "K13": ("เมทฟอร์มิน 500 มก. 1 เม็ด หลังอาหารเช้า ทุกวัน", ("resolved", None, 500.0, "mg", 1.0), None, None),
+    "K14": ("เมทฟอร์มิน 500 มก. 1 เม็ด เช้า-เย็น", ("resolved", None, 500.0, "mg", 1.0), "q12h", None),
+    "K15": ("Metformin 500 mg daily at bedtime", ("resolved", None, 500.0, "mg", None), "q24h", None),
     "K16": ("Perindopril 4 mg od", ("resolved", None, 4.0, "mg", None), "q24h", None),
     "K17": ("Perphenazine 4 mg tid", ("resolved", None, 4.0, "mg", None), "q8h", None),
     "K18": ("เมทฟอร์มิน 500 มก. วันเว้นวัน", ("resolved", None, 500.0, "mg", None), None, None),
+    "K19": ("Metformin 500 mg daily with breakfast", ("resolved", None, 500.0, "mg", None), "q24h", None),
 }
 K_PROBES.update(K5_PROBES)  # test_probe_controls runs K1-K8 and the rev-5 rows K9-K19
 REV4_PROBES = {**N_PROBES, **M_PROBES, **PU_PROBES, **{k: v for k, v in K_PROBES.items() if k not in K5_PROBES}}
@@ -505,7 +527,16 @@ def test_vocab_sets_match_spec():
     assert mock_rules.P1_KEYS["en"] == ("per", "aday", "aweek", "amonth", "kg", "tdd", "dailydose", "dailytotal") == ref.PER_KEYS
     assert set(mock_rules.P1_KEYS["th"]) == {"ต่อ", "กก", "กิโล"} == set(ref.PER_THAI)
     assert mock_rules.P4_MULTI_DOSE["words"] == {"bd", "bid", "tid", "qid", "twice", "thrice"} == set(ref.MULTI_WORDS)
-    assert mock_rules.P4_MULTI_DOSE["daily_keys"] == ("daily", "everyday") == ref.EVERY_DAY_KEYS
+    # rev 5 P4: the DAILY words (d1), the MULTI words (m1) and TIME_SLOTS (m2), each one constant.
+    assert mock_rules.P4_DAILY["words"] == {"daily", "everyday", "od", "qd"} == set(ref.DAILY_WORDS)
+    assert mock_rules.P4_DAILY["phrase"] == ("every", "day") == ref.DAILY_PHRASE
+    assert mock_rules.P4_DAILY["th"] == "ทุกวัน" == ref.EVERY_DAY_THAI
+    assert (mock_rules.P4_DAILY["f1_hours"], mock_rules.P4_DAILY["count"]) == (24, 1)
+    assert set(mock_rules.P4_MULTI_DOSE) == {"words", "f1_hours", "f2_periods", "count_words", "min_count"}
+    slots = {"AM": ({"morning", "breakfast"}, {"เช้า"}), "MID": ({"noon", "midday", "lunch"}, {"กลางวัน", "เที่ยง"}),
+             "PM": ({"evening", "dinner", "supper"}, {"เย็น", "ค่ำ"}), "HS": ({"night", "bedtime", "hs"}, {"นอน"})}
+    assert {k: (set(en), set(th)) for k, (en, th) in mock_rules.TIME_SLOTS.items()} == slots
+    assert {k: (set(en), set(th)) for k, (en, th) in ref.SLOTS.items()} == slots
     assert mock_rules.D1_LEXICON["en_p2"] == {"tdd"}
     assert mock_rules.D1_LEXICON["daily_followers"] == {"dose", "doses", "total"} == set(ref.DAILY_AFTER)
     # rev 5 P3: a closed whole-word list (no "per" prefix rule).

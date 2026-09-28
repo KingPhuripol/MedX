@@ -50,7 +50,12 @@ KEY_GLUE = " -._"
 DAILY_AFTER = ("dose", "doses", "total")
 NAME_PER_WORDS = ("per", "perday", "perdiem", "perdose", "perweek", "permonth", "perkg", "daily", "day", "days", "aday",
                   "dose")  # rev 5 P3: whole words only
-EVERY_DAY_KEYS = ("daily", "everyday")
+# rev 5 P4: a once-daily statement (DAILY) next to a multi-dose one (MULTI) anywhere in the dose region.
+DAILY_WORDS = ("daily", "everyday", "od", "qd")
+DAILY_PHRASE = ("every", "day")
+EVERY_DAY_THAI = "ทุกวัน"
+SLOTS = {"AM": (("morning", "breakfast"), ("เช้า",)), "MID": (("noon", "midday", "lunch"), ("กลางวัน", "เที่ยง")),
+         "PM": (("evening", "dinner", "supper"), ("เย็น", "ค่ำ")), "HS": (("night", "bedtime", "hs"), ("นอน",))}
 MULTI_WORDS = ("bd", "bid", "tid", "qid", "twice", "thrice")
 COUNTS = {"once": 1, "twice": 2, "thrice": 3, "one": 1, "two": 2, "three": 3, "four": 4}
 HALF = "ครึ่ง"
@@ -253,12 +258,6 @@ def _per_follows(s: str, pos: int) -> bool:
     return any(s[pos:pos + len(t)] == t for t in PER_THAI) or any(key[:len(k)] == k for k in PER_KEYS)
 
 
-def _every_day_follows(s: str, pos: int) -> bool:
-    """rev 4 P4 (first half): the key starts with daily / everyday, or Thai text begins with ทุกวัน."""
-    key = tail_key(s, pos)
-    return s[pos:pos + 6] == "ทุกวัน" or any(key[:len(k)] == k for k in EVERY_DAY_KEYS)
-
-
 class _Walk:
     """One left-to-right pass over the scanned pairs."""
 
@@ -275,7 +274,6 @@ class _Walk:
         self.daily_total = False
         self.half_conflict = False  # "INT เม็ด ครึ่ง<time>": half a tablet or half an hour
         self.per_unit = False
-        self.every_day = False  # rev 4 P4: some anchor is followed by daily / every day / ทุกวัน
         self.tail_stops: list[int] = []  # offset right after each checked anchor's tail
 
     # -- primitives
@@ -421,8 +419,6 @@ class _Walk:
                 stop += 1
             tail = self.s[start:stop]
             self.tail_stops.append(stop)
-            if _every_day_follows(self.s, stop):
-                self.every_day = True
             if any(slashy(c) for c in tail) or _per_follows(self.s, stop):
                 self.per_unit = True
             elif any(c not in TAIL_OK for c in tail):
@@ -700,6 +696,55 @@ def multi_dose(walk: "_Walk") -> bool:
     return False
 
 
+def _first_numericish(walk: "_Walk") -> int | None:
+    return next((j for j in range(len(walk.p)) if walk.numericish(j)), None)
+
+
+def daily_statement(walk: "_Walk") -> bool:
+    """rev 5 P4 DAILY: daily / everyday / od / qd, the phrase every-day or ทุกวัน in the unread free text; or, where it
+    touches the dose region, q/every/ทุก 24 hours, once / one time / 1 time (a/per) day/daily, or วันละ (1) ครั้ง."""
+    free = _free_text(walk)
+    if free is None:
+        return False
+    text = undot(free.casefold())
+    if EVERY_DAY_THAI in text or any(w in DAILY_WORDS for _, _, w in latin_words(text)):
+        return True
+    if any(phrase == DAILY_PHRASE for _, _, phrase in phrase_spans(text)):
+        return True
+    for i in range(max(_first_numericish(walk) - 1, 0), len(walk.p)):
+        t, n = walk.t(i), walk.whole(i + 1)
+        if n == 24 and ((t in ("q", "every") and walk.t(i + 2) in ("h", "hr", "hrs", "hour", "hours"))
+                        or (t == "ทุก" and walk.t(i + 2) in ("ชั่วโมง", "ชม."))):
+            return True
+        if t == "วันละ" and (walk.t(i + 1) == "ครั้ง" or (n == 1 and walk.t(i + 2) == "ครั้ง")):
+            return True
+        j = None
+        if t == "once":
+            j = i + 1
+        elif (walk.whole(i) == 1 or t == "one") and walk.t(i + 1) in ("time", "times"):
+            j = i + 2
+        if j is not None:
+            j += 1 if walk.t(j) in ("a", "per") else 0
+            if walk.t(j) in ("day", "daily"):
+                return True
+    return False
+
+
+def slot_count(walk: "_Walk") -> int:
+    """rev 5 P4 m2: how many distinct time-of-day slots the dose region names."""
+    first = _first_numericish(walk)
+    if first is None:
+        return 0
+    region = undot(walk.s[walk.ends[first] - len(walk.p[first][1]):].casefold())
+    words = {w for _, _, w in latin_words(region)}
+    return sum(1 for en, th in SLOTS.values() if any(w in words for w in en) or any(x in region for x in th))
+
+
+def p4(walk: "_Walk") -> bool:
+    """rev 5 P4: DAILY and MULTI (the rev-4 list over the entry, or >= 2 slots in the dose region)."""
+    return daily_statement(walk) and (multi_dose(walk) or slot_count(walk) >= 2)
+
+
 def daily_marker(text: str) -> bool:
     """rev 3 D1: TH markers in the line with whitespace removed, "วันละ" + strength, or an EN marker word.
     rev 4 P2 (tdd; daily + dose/doses/total) and P3 (per-day words before the first numeric-ish pair)."""
@@ -758,7 +803,7 @@ def reference_parse(text: str) -> tuple[str, float | None, str | None, float | N
         reason = "liquid_volume"
     elif len(walk.strengths) > 1:
         reason = "multiple_strengths"
-    elif walk.per_unit or daily_marker(text) or (walk.every_day and multi_dose(walk)):
+    elif walk.per_unit or daily_marker(text) or p4(walk):
         reason = "per_unit_amount"
     elif any(walk.t(j) in RANGE_LINKS and walk.numericish(j - 1) and walk.numericish(j + 1) for j in leftover):
         reason = "range"
@@ -789,7 +834,7 @@ def reference_closure(text: str) -> dict[str, bool]:
     return {
         "invisible": any(kind == "I" for kind, _ in pairs),
         "slash_like": any(kind == "L" and not (ch == "/" and walk.used[j]) for j, (kind, ch) in enumerate(pairs)),
-        "daily_total": daily_marker(text) or (walk.every_day and multi_dose(walk)),
+        "daily_total": daily_marker(text) or p4(walk),
         "per_word": any(_per_follows(walk.s, stop) for stop in walk.tail_stops),
         "c1": not c1_ok(walk),
     }

@@ -97,17 +97,32 @@ D1_LEXICON = {
 # these. A word that only starts with "per" (Perindopril, Perphenazine) does not fire.
 P3_WORDS = frozenset({"per", "perday", "perdiem", "perdose", "perweek", "permonth", "perkg", "daily", "day", "days",
                       "aday", "dose"})
-# P4 (rev 4): an anchor key starting with "daily_keys" (or Thai "th_daily" after the TAIL) is a daily total when the
-# entry also holds a multi-dose frequency: one of "words" (after dot compaction), F1 with an interval in "f1_hours",
-# F2 with a count >= "min_count" per one of "f2_periods", or F3 "วันละ INT ครั้ง" with INT >= "min_count".
+# P4 (rev 5): D1 fires when the dose region holds >= 1 DAILY statement and >= 1 MULTI statement, anywhere in it.
+# DAILY: d1 = a whole word in "words", a V_EN_PHRASES match equal to "phrase", or the substring "th", in the C1 free
+# text (so a word consumed by a production, e.g. the "daily" of F2 "twice daily", is not one); d2 = F1 with interval
+# "f1_hours"; d3 = F2 with count "count" per "day"/"daily"; d4 = F3 "วันละ ␣? 1? ␣? ครั้ง".
+P4_DAILY = {
+    "words": frozenset({"daily", "everyday", "od", "qd"}),
+    "phrase": ("every", "day"),
+    "th": "ทุกวัน",
+    "f1_hours": 24,
+    "count": 1,
+}
+# MULTI m1 (the rev-4 list): one of "words" (whole words, after dot compaction), F1 with an interval in "f1_hours", F2
+# with a count >= "min_count" per one of "f2_periods", or F3 "วันละ INT ครั้ง" with INT >= "min_count".
 P4_MULTI_DOSE = {
-    "daily_keys": ("daily", "everyday"),
-    "th_daily": "ทุกวัน",
     "words": frozenset({"bd", "bid", "tid", "qid", "twice", "thrice"}),
     "f1_hours": range(1, 24),
     "f2_periods": frozenset({"day", "daily"}),
     "count_words": {"once": 1, "twice": 2, "thrice": 3, "one": 1, "two": 2, "three": 3, "four": 4},
     "min_count": 2,
+}
+# MULTI m2: >= 2 distinct slots in the dose region. Slot -> (EN whole words, casefolded; TH substrings).
+TIME_SLOTS = {
+    "AM": (frozenset({"morning", "breakfast"}), ("เช้า",)),
+    "MID": (frozenset({"noon", "midday", "lunch"}), ("กลางวัน", "เที่ยง")),
+    "PM": (frozenset({"evening", "dinner", "supper"}), ("เย็น", "ค่ำ")),
+    "HS": (frozenset({"night", "bedtime", "hs"}), ("นอน",)),
 }
 _UFRACTIONS = {"½": Fraction(1, 2), "¼": Fraction(1, 4), "¾": Fraction(3, 4)}
 _SLASH_FRACTIONS = {("1", "2"): Fraction(1, 2), ("1", "4"): Fraction(1, 4), ("3", "4"): Fraction(3, 4)}
@@ -503,33 +518,42 @@ def _name_region_word(toks: list[Token], i: int) -> bool:
     return True in numeric and i < numeric.index(True)
 
 
-def _multi_dose(toks: list[Token]) -> bool:
-    """P4: the entry holds a multi-dose frequency."""
-    p4 = P4_MULTI_DOSE
-    if any(w in p4["words"] for w in _LETTER_RUN.findall(_compact_dots(_surface(toks)))):
-        return True
-    for k, t in enumerate(toks):
-        if _f1(toks, k) and int(toks[k + 1].text) in p4["f1_hours"]:
-            return True
+def _f_count(t: Token) -> int:
+    return int(t.text) if t.kind == "NUM" else P4_MULTI_DOSE["count_words"].get(t.text, 0)
+
+
+def _p4(toks: list[Token], numeric: list[bool], spans: list[tuple[int, int]]) -> list[Match]:
+    """P4 (rev 5): one D1 at the dose region's start if it holds a DAILY and a MULTI statement (see P4_DAILY).
+
+    The dose region starts at the first numeric-ish token; an F1-F3 match counts when it overlaps it ("q24h 1000 mg"
+    included). m1 is read over the whole entry, as in rev 4, so no rev-4 per_unit_amount becomes resolved."""
+    if True not in numeric:
+        return []
+    fi = numeric.index(True)
+    daily_c, multi_c = P4_DAILY, P4_MULTI_DOSE
+    free = _free_text(toks, fi, spans)
+    daily = (bool(daily_c["words"] & set(_latin_words(free))) or daily_c["th"] in free
+             or any(tuple(_latin_words(m.group())) == daily_c["phrase"] for m in _phrases(free)))
+    region = _compact_dots(_surface(toks)[toks[fi].start:].casefold())
+    words = set(_latin_words(region))
+    multi = sum(bool(en & words) or any(th in region for th in ths) for en, ths in TIME_SLOTS.values()) >= 2  # m2
+    multi = multi or any(w in multi_c["words"] for w in _LETTER_RUN.findall(_compact_dots(_surface(toks))))
+    for k in range(len(toks)):
+        in_region = k >= fi - 1
+        if _f1(toks, k):
+            hours = int(toks[k + 1].text)
+            daily = daily or (in_region and hours == daily_c["f1_hours"])
+            multi = multi or hours in multi_c["f1_hours"]
         f2 = _f2(toks, k)
-        if f2 and toks[f2.end - 1].text in p4["f2_periods"]:
-            count = int(t.text) if t.kind == "NUM" else p4["count_words"].get(t.text, 0)
-            if count >= p4["min_count"]:
-                return True
-        if _f3(toks, k) and t.text == "วันละ" and (_int(toks, k + 1) or 0) >= p4["min_count"]:
-            return True
-    return False
-
-
-def _daily_anchor(toks: list[Token], a: int) -> bool:
-    _, j, key = _after_tail(toks, a)
-    return key.startswith(P4_MULTI_DOSE["daily_keys"]) or _surface(toks).startswith(P4_MULTI_DOSE["th_daily"], j)
-
-
-def _p4(toks: list[Token], anchors: list[int]) -> list[Match]:
-    """P4: D1 on each anchor whose key starts with a daily word (or Thai "ทุกวัน"), if a multi-dose frequency is present."""
-    hits = [a for a in anchors if _daily_anchor(toks, a)]
-    return [Match("D1", a, a) for a in hits] if hits and _multi_dose(toks) else []
+        if f2 and toks[f2.end - 1].text in multi_c["f2_periods"]:
+            count = _f_count(toks[k])
+            daily = daily or (in_region and count == daily_c["count"])
+            multi = multi or count >= multi_c["min_count"]
+        if _f3(toks, k) and toks[k].text == "วันละ":
+            count = _int(toks, k + 1) or 1
+            daily = daily or (in_region and count == daily_c["count"])
+            multi = multi or count >= multi_c["min_count"]
+    return [Match("D1", fi, fi)] if daily and multi else []
 
 
 def _d1(toks: list[Token], i: int) -> Match | None:
@@ -569,6 +593,11 @@ _PHRASE_RE = re.compile("|".join(_JOINER_RUN.join(map(re.escape, p.split())) for
 def _is_latin_letter(c: str) -> bool:
     """A letter of a C1 Latin word: category L*, not Thai."""
     return unicodedata.category(c)[0] == "L" and not _is_thai(c)
+
+
+def _latin_words(text: str) -> list[str]:
+    """The whole Latin words of ``text`` (maximal runs of _is_latin_letter characters)."""
+    return "".join(c if _is_latin_letter(c) else " " for c in text).split()
 
 
 def _phrases(free: str) -> list[re.Match[str]]:
@@ -735,13 +764,14 @@ def read_dose(raw: str) -> DoseParse:
     # R1 is checked on every anchor of the productions that fired; it flags and consumes nothing.
     tails = [r for m in matches if m.last is not None and (r := _r1(toks, m.last))]
     per_unit = [r for r in tails if not r.broken]
+    numeric = numeric_ish(toks)
+    spans = _consumed_spans(toks, matches)
     daily = [m for k in range(len(toks)) if (m := _d1(toks, k))]
-    daily += _p4(toks, [m.last for m in matches if m.last is not None])
+    daily += _p4(toks, numeric, spans)
     # Q4b shape whose "ครึ่ง" is not followed by a QF item: half a tablet or not, so no value is chosen.
     half_unfollowed = any(_half_shape(toks, k) and not _qf(toks, k + 3) for k in range(len(toks)))
-    numeric = numeric_ish(toks)
     left = [k for k in range(len(toks)) if numeric[k] and k not in consumed]
-    free = [m for m in [_c1(toks, numeric.index(True), _consumed_spans(toks, matches))] if m] if any(numeric) else []
+    free = [m for m in [_c1(toks, numeric.index(True), spans)] if m] if any(numeric) else []
     strengths = {s for m in matches for s in m.strengths}
     quantities = {m.quantity for m in matches if m.pid in _QUANTITY_PIDS and m.quantity is not None}
 
