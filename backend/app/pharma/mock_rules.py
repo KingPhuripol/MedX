@@ -22,9 +22,9 @@ from typing import Any
 EXTRACT_TASK = "pharma.extract.v2"
 PHRASE_TASK = "pharma.phrase.v1"
 # Bumped when the deterministic parsing changes (recorded on every run).
-MOCK_RULES_VERSION = "s5-mock-rules-2.3.0"
+MOCK_RULES_VERSION = "s5-mock-rules-2.4.0"
 # Bumped when a lexeme, production or value constraint of DOSE_GRAMMAR changes (recorded on every run).
-DOSE_GRAMMAR_VERSION = "s5-dose-grammar-1.3.0"
+DOSE_GRAMMAR_VERSION = "s5-dose-grammar-1.4.0"
 
 # ================================================================ G1: lexicon and tokeniser
 

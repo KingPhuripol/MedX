@@ -1065,7 +1065,7 @@
   }
  },
  "notes": [
-  "Surface-form recall measures a fixed, seeded set of written forms on synthetic lists. The dose is read by a fixed, listed grammar (s5-dose-grammar-1.3.0); any other written dose form is shown as \"could not be verified\" (missing_field on the dose), never read as a value. A phrase that fits the grammar can still be clinically wrong: for example, a dispensed count written as \"2 tabs\" is still read as 2 tablets per dose. Pharmacist review is required before any non-synthetic use.",
+  "Surface-form recall measures a fixed, seeded set of written forms on synthetic lists. The dose is read by a fixed, listed grammar (s5-dose-grammar-1.4.0); any other written dose form is shown as \"could not be verified\" (missing_field on the dose), never read as a value. A phrase that fits the grammar can still be clinically wrong: for example, a dispensed count written as \"2 tabs\" is still read as 2 tablets per dose. Pharmacist review is required before any non-synthetic use.",
   "Quantity not stated: the stated amount is taken as the dose per administration (dose_basis=stated_amount); this convention needs pharmacist sign-off before any non-synthetic use.",
   "SF-EQUIV 'recall' is the fraction of equivalent-dose cases with no dose issue (dose_mismatch or missing_field(dose))."
  ],
@@ -1950,11 +1950,11 @@
  },
  "versions": {
   "cross_reactivity": "s5-cross-reactivity-1.0.0",
-  "dose_grammar": "s5-dose-grammar-1.3.0",
+  "dose_grammar": "s5-dose-grammar-1.4.0",
   "extract_task": "pharma.extract.v2",
   "formulary": "s5-formulary-1.0.0",
-  "mock_rules": "s5-mock-rules-2.3.0",
-  "pipeline": "s5-pipeline-2.5.0",
+  "mock_rules": "s5-mock-rules-2.4.0",
+  "pipeline": "s5-pipeline-2.6.0",
   "provider": "mock",
   "rule_versions": {
    "allergy_class": "1.1.0",
