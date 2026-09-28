@@ -63,6 +63,12 @@ def _fmt(v: Any) -> str:
     return "not recorded" if v is None else str(v)
 
 
+def _count(v: float | None) -> str:
+    """A count-like vital (BP, HR, RR, SpO2) as recorded: I2 stores it as a float, so an integral value is shown
+    without ``.0`` (as S6 showed it) and any other value is shown in full, never rounded (INT2-A18)."""
+    return _fmt(int(v) if isinstance(v, float) and v.is_integer() else v)
+
+
 def summary(view: SnapshotView, fields: dict) -> list[SummaryLine]:
     """Short descriptive lines, each backed by snapshot refs. Unknown is stated as unknown, never as negative."""
     lines: list[tuple[str, list[str]]] = []
@@ -78,9 +84,9 @@ def summary(view: SnapshotView, fields: dict) -> list[SummaryLine]:
     v = view.latest("Vitals")
     if v:
         lines.append((
-            f"Latest vital signs at {v.observed_at.isoformat()}: RR {_fmt(v.rr)}/min, SpO2 {_fmt(v.spo2)}%, "
-            f"on oxygen {_fmt(v.on_oxygen)}, temperature {_fmt(v.temp_c)} °C, BP {_fmt(v.sbp)}/{_fmt(v.dbp)} mmHg, "
-            f"HR {_fmt(v.hr)}/min, consciousness {_fmt(v.consciousness)}", [v.item_id]))
+            f"Latest vital signs at {v.observed_at.isoformat()}: RR {_count(v.rr)}/min, SpO2 {_count(v.spo2)}%, "
+            f"on oxygen {_fmt(v.on_oxygen)}, temperature {_fmt(v.temp_c)} °C, BP {_count(v.sbp)}/{_count(v.dbp)} mmHg, "
+            f"HR {_count(v.hr)}/min, consciousness {_fmt(v.consciousness)}", [v.item_id]))
     latest: dict[str, tuple[Any, str]] = {}
     for lab in view.of_type("LabSeries"):
         for res in lab.results:

@@ -8,13 +8,16 @@
 and the S6r held-out set (seed 20260927 ``--heldout``, 160) into a temp dir; its own care engine then assesses every
 snapshot (all splits) through the gateway service with the mock provider, in a subprocess whose import path is that
 checkout only. Per decision point: alert rule ids and evidence refs, ``escalation_required``, status, reason,
-``missing_information`` and the six pre-I2 screening fields. ``--check`` requires byte-identical output.
-``row_of`` is shared with ``backend/tests/care/test_int2.py`` so both sides extract the same fields.
+``missing_information`` and the six pre-I2 screening fields (INT2-A07 i); ``result_sha256`` over the whole result
+minus ``red_flag_screening`` and ``request_sha256`` (A07 ii); ``n_gateway_calls`` and ``request_sha256_normalised``
+(normalisation N, A17). ``--check`` requires byte-identical output. ``row_of``, ``result_sha256`` and ``normalised``
+are shared with ``backend/tests/care/test_int2.py`` so both sides extract the same fields.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -40,6 +43,53 @@ def row_of(r: Any) -> dict[str, Any]:
                           for k in SCREENING_FIELDS}}
 
 
+def _sha(obj: Any) -> str:
+    return hashlib.sha256(json.dumps(obj, sort_keys=True, separators=(",", ":"),
+                                     ensure_ascii=False).encode("utf-8")).hexdigest()
+
+
+def result_sha256(r: Any) -> str:
+    """sha256 of the canonical JSON of the whole result minus ``red_flag_screening`` and ``request_sha256``."""
+    d = r.model_dump(mode="json")
+    return _sha({k: v for k, v in d.items() if k not in ("red_flag_screening", "request_sha256")})
+
+
+def _drop_if(d: dict[str, Any], key: str, value: Any) -> None:
+    if key in d and d[key] == value and type(d[key]) is type(value):
+        del d[key]
+
+
+def _int_floats(x: Any) -> Any:
+    if isinstance(x, float) and x.is_integer():
+        return int(x)
+    if isinstance(x, dict):
+        return {k: _int_floats(v) for k, v in x.items()}
+    if isinstance(x, list):
+        return [_int_floats(v) for v in x]
+    return x
+
+
+def normalise(req: Any) -> dict[str, Any]:
+    """Normalisation N (INT2-A17), steps 1-3: removes only the enumerated I2 representation deltas."""
+    d = json.loads(json.dumps(req.model_dump(mode="json")))
+    for k in ("request_id", "created_at", "requested_at"):
+        d.pop(k, None)
+    for item in (d.get("inputs") or {}).get("items") or []:
+        _drop_if(item, "data_class", "synthetic")
+        if item.get("data_type") == "Vitals":
+            for k in ("new_confusion", "capillary_glucose_mg_dl"):
+                _drop_if(item, k, None)
+        for turn in item.get("turns") or []:
+            for k in ("ended_at", "turn_id"):
+                _drop_if(turn, k, None)
+    return _int_floats(d)
+
+
+def request_sha256_normalised(req: Any) -> str:
+    """Step 4 of N."""
+    return _sha(normalise(req))
+
+
 def snapshots(root: Path) -> list[tuple[str, str, str, Path]]:
     """(split, case_id, decision point, path) for every snapshot in the dataset, sorted."""
     out = []
@@ -60,8 +110,13 @@ def assess_all(roots: dict[str, Path]) -> list[dict[str, Any]]:
     for name, root in roots.items():
         for split, case_id, dp, path in snapshots(root):
             doc = json.loads(path.read_text("utf-8"))
-            r = engine.assess(doc, lambda q: invoke_provider(provider, q), decision_point=dp)
-            rows.append({"dataset": name, "split": split, "case_id": case_id, "dp": dp, **row_of(r)})
+            reqs: list[Any] = []
+            r = engine.assess(doc, lambda q: (reqs.append(q), invoke_provider(provider, q))[1], decision_point=dp)
+            if len(reqs) > 1:
+                raise AssertionError(f"{case_id} {dp}: {len(reqs)} gateway calls")
+            rows.append({"dataset": name, "split": split, "case_id": case_id, "dp": dp, **row_of(r),
+                         "result_sha256": result_sha256(r), "n_gateway_calls": len(reqs),
+                         "request_sha256_normalised": request_sha256_normalised(reqs[0]) if reqs else None})
     return rows
 
 
@@ -111,14 +166,19 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         rows = json.loads(res.stdout)
         header = {
-            "slice": "int2", "criterion": "INT2-A07",
+            "slice": "int2", "criterion": "INT2-A07, INT2-A17",
             "generated_from_commit": COMMIT,
             "command": COMMAND,
             "datasets": {name: {"seed": seed, "heldout": heldout, "tree_sha256": _tree_sha(roots[name]),
                                 "n_decision_points": sum(1 for r in rows if r["dataset"] == name)}
                          for name, seed, heldout in DATASETS},
             "fields": ["alerts[].rule_id", "alerts[].evidence_refs", "escalation_required", "status", "reason",
-                       "missing_information", *(f"screening.{k}" for k in SCREENING_FIELDS)],
+                       "missing_information", *(f"screening.{k}" for k in SCREENING_FIELDS),
+                       "result_sha256", "n_gateway_calls", "request_sha256_normalised"],
+            "result_sha256": "sha256 of json.dumps(CareResult.model_dump(mode='json') minus red_flag_screening and "
+                             "request_sha256, sort_keys=True, separators=(',', ':'), ensure_ascii=False)",
+            "request_sha256_normalised": "normalisation N of slices/int2/SPEC.md (INT2-A17) on the one gateway "
+                                         "request; null when the decision point makes no gateway call",
             "note": "Synthetic data, mock provider, offline. Care engine at the pinned commit (S6 frozen behaviour).",
         }
     data = render(header, rows)

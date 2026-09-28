@@ -21,12 +21,13 @@ from app.care.redflag_adapter import CARE_SCREENING_SCOPE
 from app.care.snapshot import SnapshotView
 from app.gateway import MOCK_LABEL, mock_tasks
 from app.gateway import service as gateway_service
+from app.gateway.contract import GatewayRequest
 from app.triage import redflags
 from casegraph.data import RF_110, RULE_SET_LABELS, RULE_SET_SCOPES, RedFlagScreening
 from casegraph.triage_bridge import stale_input
 
 from ..conftest import REPO_ROOT
-from .conftest import factory_generate, run
+from .conftest import _PROVIDER, complete_dev_row, factory_generate, run
 from .test_api import CLAIMS, physician  # noqa: F401  (fixture)
 
 OVERCLAIM = re.compile(r"no red.?flags?|all clear|ไม่มี.*(สัญญาณอันตราย|red flag)", re.IGNORECASE)
@@ -84,7 +85,13 @@ def test_s6_frozen_predictions_reproduce(which, dataset, heldout, monkeypatch):
         assert hashlib.sha256(evaluate._dump_jsonl(rows)).hexdigest() == hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def test_urgency_parity_d423d15(dataset, heldout):
+URGENCY_KEYS = ("dataset", "split", "case_id", "dp", "alerts", "escalation_required", "status", "reason",
+                "missing_information", "screening")
+
+
+@pytest.fixture(scope="module")
+def parity(dataset, heldout):
+    """(fixture rows recorded at d423d15, the same rows computed now by this checkout), aligned by DP."""
     doc = json.loads(FIXTURE.read_text("utf-8"))
     head = doc["header"]
     assert head["generated_from_commit"].startswith("d423d15") and "int2_dump_s6_urgency.py" in head["command"]
@@ -95,8 +102,93 @@ def test_urgency_parity_d423d15(dataset, heldout):
         assert head["datasets"][name]["tree_sha256"] == meta["tree_sha256"], name
     now = _script().assess_all(trees)
     assert len(now) == len(doc["rows"]) == 560
-    mismatches = [(a["dataset"], a["case_id"], a["dp"]) for a, b in zip(now, doc["rows"], strict=True) if a != b]
-    assert mismatches == []
+    for a, b in zip(now, doc["rows"], strict=True):
+        assert (a["dataset"], a["case_id"], a["dp"]) == (b["dataset"], b["case_id"], b["dp"])
+    return doc["rows"], now
+
+
+def _mismatches(parity, keys) -> list[tuple[str, str, str]]:
+    then, now = parity
+    return [(a["dataset"], a["case_id"], a["dp"]) for a, b in zip(now, then, strict=True)
+            if {k: a[k] for k in keys} != {k: b[k] for k in keys}]
+
+
+def test_urgency_parity_d423d15(parity):
+    assert _mismatches(parity, URGENCY_KEYS) == []
+
+
+def test_result_parity_d423d15(parity):
+    """INT2-A07 ii / A18: the whole CareResult (incl. case_summary text) minus the I2 block and request_sha256."""
+    assert _mismatches(parity, ("result_sha256",)) == []
+
+
+def test_gateway_request_parity_d423d15(parity):
+    """INT2-A17: same number of gateway calls, and the same request under normalisation N."""
+    then, _ = parity
+    assert sum(r["n_gateway_calls"] == 1 for r in then) == 442 and sum(r["n_gateway_calls"] == 0 for r in then) == 118
+    assert all((r["n_gateway_calls"] == 0) == (r["request_sha256_normalised"] is None) for r in then)
+    assert _mismatches(parity, ("n_gateway_calls", "request_sha256_normalised")) == []
+
+
+def _captured_request(dataset):
+    """A real care gateway request with at least one alert and one Vitals item."""
+    for row in dataset.rows:
+        reqs = []
+        r = engine.assess(dataset.row_snapshot(row),
+                          lambda q: (reqs.append(q), gateway_service.invoke_provider(_PROVIDER, q))[1],
+                          decision_point=row["dp"])
+        items = reqs[0].inputs["items"] if reqs else []
+        if r.alerts and any(it["data_type"] == "Vitals" and it.get("hr") is not None for it in items):
+            return reqs[0]
+    raise AssertionError("no calling DP with an alert")
+
+
+def _vitals(d):
+    return next(it for it in d["inputs"]["items"] if it["data_type"] == "Vitals")
+
+
+MUTATIONS = {
+    "a": lambda d: _vitals(d).update(hr=_vitals(d)["hr"] + 1),
+    "b": lambda d: _vitals(d).update(new_confusion=True),
+    "c": lambda d: d["inputs"]["items"][0].update(data_class="real"),
+    "d": lambda d: d["inputs"]["items"][0].update(added_key="x"),
+    "e": lambda d: d["inputs"]["items"].__setitem__(slice(0, 2), d["inputs"]["items"][1::-1]),
+    "f": lambda d: d["inputs"]["alerts"].pop(),
+}
+
+
+@pytest.mark.parametrize("which", sorted(MUTATIONS))
+def test_request_normalisation_is_sensitive(which, dataset):
+    """N removes only the enumerated representation deltas; every real change still changes the hash."""
+    script = _script()
+    req = _captured_request(dataset)
+    base = script.request_sha256_normalised(req)
+    d = copy.deepcopy(req.model_dump(mode="json"))
+    assert len(d["inputs"]["items"]) >= 2 and d["inputs"]["alerts"]
+    MUTATIONS[which](d)
+    assert script.request_sha256_normalised(GatewayRequest.model_validate(d)) != base
+    # the enumerated deltas themselves are absorbed: an S6-shaped request hashes the same
+    s6 = copy.deepcopy(req.model_dump(mode="json"))
+    for it in s6["inputs"]["items"]:
+        it.pop("data_class", None)
+        if it["data_type"] == "Vitals":
+            for k in ("new_confusion", "capillary_glucose_mg_dl"):
+                it.pop(k, None)
+    assert script.request_sha256_normalised(GatewayRequest.model_validate(s6)) == base
+
+
+def test_case_summary_format(dataset):
+    """INT2-A18: integral counts print as at d423d15; recorded decimals are never rounded; null is not recorded."""
+    doc = copy.deepcopy(dataset.row_snapshot(complete_dev_row(dataset)))
+    view0 = SnapshotView(doc)
+    vs_id = view0.latest("Vitals").item_id
+    vs = next(it for it in doc["items"] if it["item_id"] == vs_id)
+    vs.update(hr=83.5, spo2=94.5, temp_c=37.0, rr=16, sbp=120.0, dbp=None)
+    view = SnapshotView(doc)
+    line = next(x.text for x in engine.summary(view, view.fields()) if x.text.startswith("Latest vital signs"))
+    assert "HR 83.5/min" in line and "SpO2 94.5%" in line and "temperature 37.0 °C" in line
+    assert "RR 16/min" in line and "BP 120/not recorded mmHg" in line
+    assert ".0/min" not in line and "120.0" not in line
 
 
 def test_fixture_trees_match_recorded(dataset, heldout):
