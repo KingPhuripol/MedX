@@ -10,6 +10,7 @@ DEFAULT_DATABASE_URL = "sqlite:///./backend/dev.db"
 PUBLIC_DEMO_DATABASE_URL = "sqlite:////tmp/medx-demo.sqlite3"
 MIN_SESSION_SECRET_LEN = 32
 KNOWN_PROVIDERS = ("mock", "openai_compatible")
+VOICE_MAX_SESSION_RANGE = (60, 900)
 
 
 def _bool(value: str | None, default: bool = False) -> bool:
@@ -36,8 +37,18 @@ class Settings:
     # Slice d1: public demo mode — mock provider only, one-click role login, HMAC-signed stateless sessions.
     public_demo: bool = False
     session_secret: str = field(default="", repr=False)
+    # Slice v1: MedX Live voice session endpoint (DECISIONS.md 2026-09-29). Read only by app.voice_realtime;
+    # never part of the PUBLIC_DEMO external-provider refusal and never reaches the Model Gateway.
+    voice_enabled: bool = False
+    voice_api_key: str = field(default="", repr=False)
+    voice_access_code: str = field(default="", repr=False)
+    voice_max_session_seconds: int = 300
+    voice_realtime_model: str = "gpt-realtime-2.1-mini"
+    voice_transcribe_model: str = "gpt-4o-mini-transcribe"
 
     def __post_init__(self) -> None:
+        if not VOICE_MAX_SESSION_RANGE[0] <= self.voice_max_session_seconds <= VOICE_MAX_SESSION_RANGE[1]:
+            raise ValueError(f"VOICE_MAX_SESSION_SECONDS must be within {VOICE_MAX_SESSION_RANGE}")
         if not self.public_demo:
             return
         # Fail closed at startup: the public demo never reaches an external provider.
@@ -69,4 +80,10 @@ class Settings:
             casegraph_dir=env.get("CASEGRAPH_DIR", "").strip(),
             public_demo=public_demo,
             session_secret=env.get("SESSION_SECRET", ""),
+            voice_enabled=_bool(env.get("VOICE_ENABLED")),
+            voice_api_key=env.get("OPENAI_API_KEY", "").strip(),
+            voice_access_code=env.get("VOICE_ACCESS_CODE", "").strip(),
+            voice_max_session_seconds=int(env.get("VOICE_MAX_SESSION_SECONDS", "300") or 300),
+            voice_realtime_model=env.get("VOICE_REALTIME_MODEL", "").strip() or "gpt-realtime-2.1-mini",
+            voice_transcribe_model=env.get("VOICE_TRANSCRIBE_MODEL", "").strip() or "gpt-4o-mini-transcribe",
         )

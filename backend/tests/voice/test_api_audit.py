@@ -240,7 +240,11 @@ def test_no_voice_mutation_routes(app):
     assert len(voice_routes) == 5
     for route in voice_routes:
         assert not (route.methods & {"PUT", "PATCH", "DELETE"}), route.path
-    paths = {p: ops for p, ops in app.openapi()["paths"].items() if p.startswith("/api/voice")}
+    # Slice v1: /api/voice/realtime/* (vendor client-secret mint) lives in app.voice_realtime, tested there.
+    paths = {
+        p: ops for p, ops in app.openapi()["paths"].items()
+        if p.startswith("/api/voice") and not p.startswith("/api/voice/realtime")
+    }
     assert len(paths) == 5
     methods = {m.upper() for ops in paths.values() for m in ops}
     assert methods == {"GET", "POST"}
