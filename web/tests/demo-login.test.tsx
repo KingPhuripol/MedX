@@ -26,7 +26,7 @@ describe("public demo role picker (slice d1)", () => {
     for (const name of [/Nurse · พยาบาล/, /Physician · แพทย์/, /Pharmacist · เภสัชกร/]) {
       expect(screen.getByRole("button", { name })).toBeInTheDocument();
     }
-    expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Password", { exact: true })).not.toBeInTheDocument();
     expect(screen.getByRole("group")).toHaveTextContent("synthetic data only");
   });
 
