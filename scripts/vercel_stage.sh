@@ -4,7 +4,7 @@
 #   <outdir>/api/index.py  FastAPI as a Vercel Python function (PUBLIC_DEMO forced)
 #   <outdir>/backend/app, casegraph/   runtime Python packages
 #   <outdir>/data/synthetic/v1         synthetic inputs + manifest only (no gold labels)
-#   <outdir>/requirements.txt, vercel.json, .vercelignore, .python-version
+#   <outdir>/requirements.txt, vercel.json, .vercelignore
 # Usage: scripts/vercel_stage.sh <outdir>   (outdir must be empty, missing, or a previous stage)
 set -euo pipefail
 
@@ -34,7 +34,6 @@ rsync -a --exclude __pycache__ "$ROOT/backend/app" "$OUT/backend/"
 rsync -a --exclude __pycache__ --exclude tests "$ROOT/casegraph" "$OUT/"
 rsync -a "$DATA/manifest.json" "$DATA/DATACARD.md" "$DATA/inputs" "$OUT/data/synthetic/v1/"
 rsync -a "$ROOT/deploy/vercel/" "$OUT/"
-echo "3.12" > "$OUT/.python-version"
 printf 'source_rev=%s\nstaged_at=%s\n' "$(git -C "$ROOT" rev-parse HEAD)" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$OUT/$MARKER"
 
 echo "staged MedX public demo -> $OUT ($(du -sh "$OUT" | cut -f1))"
