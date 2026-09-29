@@ -13,9 +13,8 @@
 }
 .question { margin: 0; font-size: 20px; font-weight: 700; }
 .turnForm { display: grid; gap: 16px; align-items: end; }
-@media (min-width: 768px) {
-  .turnForm { grid-template-columns: 160px minmax(0, 1fr) auto; }
-}
+.turnForm > :first-child { max-width: 240px; }
+.turnForm > button { justify-self: start; }
 .transcript { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .turn, .turnAgent { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; padding: 8px 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); }
 .turnAgent { background: var(--nav); }
