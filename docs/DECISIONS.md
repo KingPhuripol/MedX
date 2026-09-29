@@ -119,3 +119,9 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
 - **2026-09-29 addendum (V1 spec, `slices/v1/SPEC.md`):**
   - **D-V1-1:** V1 uses direct browser WebRTC to OpenAI Realtime for speech in and out only. It does not use LiveKit with function-calling extraction as PROPOSAL §3.1 describes for Realtime mode. The policy picks every question, and extraction stays on the existing rules path. Recorded by the orchestrator under the owner's 2026-09-29 approval.
   - **D-V1-2 (default pending owner):** handoff from `/live` navigates to `/nurse/triage`, or to the case triage tab when the page was opened with a case. No new voice→triage API is added in V1.
+
+## 2026-09-29 — Merge u6 into main and redeploy the hospital-blue demo
+- **What:** merge `factory/u6` (V2 Overview as the shared case summary; checker PASS, reviewer PASS, `slices/u6/VERDICTS.md`) into main, then redeploy Vercel project `medx-demo-u4` from main. Main already carries U5, so the redeployed demo also shows the U5 UI overhaul.
+- **Scope and limits:** same as the 2026-09-29 public demo entry. Synthetic data only, mock provider only, research-prototype disclaimer on every page, no password with `PUBLIC_DEMO=1`.
+- **Also approved:** a step-by-step journey slide, a short screen-recording demo, a PDF export of the Gate 2 deck, and extending V2 so it opens several synthetic cases (a separate slice, deployed only after its checker and reviewer pass).
+- **Approved by:** project owner (chat, 2026-09-29).
