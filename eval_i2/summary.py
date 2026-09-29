@@ -15,7 +15,7 @@ from eval.exact import clopper_pearson, wilson
 
 from eval.adapters import mapping
 from .arms import ARM_A, ARM_B
-from .score import TEXT_S1R, TEXT_S4, gold_dp, is_text_near_miss, miss_reason
+from .score import TEXT_S1R, TEXT_S4, gold_dp, is_text_near_miss, miss_reason, s1r_targets
 
 BANNER = "System Evaluation on synthetic data — not clinical performance"
 CIRCULARITY = ("Circularity note: rules, fixtures, extractor lexicon and gold share authors, so these results are "
@@ -76,11 +76,11 @@ def _counts(r: dict[str, Any], rs: list[dict[str, Any]]) -> tuple[int, int]:
 
 def red_flags(records: list[dict[str, Any]], gold: dict[str, dict[str, Any]], results: dict[str, Any]
               ) -> dict[str, Any]:
-    pairs: dict[str, list[tuple[str, str, bool]]] = {r: [] for r in mapping.s1r_rule_targets()}
+    pairs: dict[str, list[tuple[str, str, bool]]] = {r: [] for r in s1r_targets()}
     missed, fp_neg, fp_nm = [], Counter(), Counter()
     n_neg = n_nm = 0
     text_fired_on_positive: Counter[str] = Counter()
-    targets = mapping.s1r_rule_targets()
+    targets = s1r_targets()
     for rec in records:
         g = gold[rec["case_id"]]
         d = gold_dp(g, rec["decision_point"])

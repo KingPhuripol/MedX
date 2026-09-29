@@ -23,7 +23,7 @@ from typing import Any
 from sqlalchemy import Engine
 
 from casegraph.compiler import build_snapshot, compile_graph
-from casegraph.data import RF_110, RedFlagScreening
+from casegraph.data import RF_120, RedFlagScreening
 from casegraph.executor import Executor, ResumeError
 from casegraph.export import ExportedGraph, import_graph
 from casegraph.library import VOICE_EXTRACT, ProviderConfig
@@ -102,7 +102,7 @@ def run_graph(stores: GraphStores, case: Case, as_of: datetime, engine: Engine, 
 
 def unavailable_screening() -> dict[str, Any]:
     """The screening block when no graph ran: ``unavailable`` (NOT PERFORMED), never an all-clear."""
-    return RedFlagScreening.from_alerts(None, RF_110).model_dump(mode="json")
+    return RedFlagScreening.from_alerts(None, RF_120).model_dump(mode="json")
 
 
 def screening_block(graph: ExportedGraph) -> dict[str, Any]:

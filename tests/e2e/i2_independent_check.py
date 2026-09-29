@@ -111,12 +111,12 @@ def over_split(split: str, ex=None, cfg=None):
                         time_bad.append(f"{snap.dp_id}:turn")
         rf = g.by_type(NodeType.RED_FLAG)
         a = rf.output["Alerts"]
-        if a["rule_set_version"] != "rf-1.1.0" or len(a["rule_results"]) != 16 or any(
+        if a["rule_set_version"] != "rf-1.2.0" or len(a["rule_results"]) != 17 or any(
                 r["rule_id"].startswith("RF-PH") for r in a["rule_results"]):
             rf_bad.append(snap.dp_id)
         s = g.red_flag_screening
         status_hist[s.status] += 1
-        if not (s.rule_set_version and s.label and s.scope and s.n_declared == 16):
+        if not (s.rule_set_version and s.label and s.scope and s.n_declared == 17):
             screening_missing.append(snap.dp_id)
         text = to_json(g) + "\n".join(inspect_lines(g))
         m = OVERCLAIM.search(text)

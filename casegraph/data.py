@@ -412,20 +412,20 @@ def _check_aggregate(status: str, results: Sequence[_CheckResult], missing: tupl
 
 # Declared rule sets (slice i2, S2r MEDIUM): an Alerts output lists exactly these rule ids, once each.
 # rf-1.1.0 is the S4 engine (``app/triage/rules/redflag_rules_v1.json``; equality is tested there).
-RF_110 = "rf-1.1.0"
+RF_120 = "rf-1.2.0"
 PLACEHOLDER_RULE_SET = "placeholder-redflag-0.2"
 DECLARED_RULES: dict[str, tuple[str, ...]] = {
     PLACEHOLDER_RULE_SET: ("RF-PH-001", "RF-PH-002", "RF-PH-003", "RF-PH-004"),
-    RF_110: ("RF-SPO2", "RF-RR", "RF-SBP", "RF-HR", "RF-CONSC", "RF-TEMP", "RF-QSOFA", "RF-CHEST", "RF-STROKE",
-             "RF-THUNDER", "RF-ANAPH", "RF-SUICIDE", "RF-GIBLEED", "RF-ECTOPIC", "RF-MENING", "RF-HYPOGLY"),
+    RF_120: ("RF-SPO2", "RF-RR", "RF-SBP", "RF-HR", "RF-CONSC", "RF-TEMP", "RF-QSOFA", "RF-CHEST", "RF-STROKE",
+             "RF-THUNDER", "RF-ANAPH", "RF-SUICIDE", "RF-GIBLEED", "RF-ECTOPIC", "RF-MENING", "RF-HYPOGLY", "RF-NEWS-AGG5"),
 }
 RULE_SET_LABELS: dict[str, str] = {
     PLACEHOLDER_RULE_SET: PLACEHOLDER_LABEL,
-    RF_110: "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+    RF_120: "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
 }
 RULE_SET_SCOPES: dict[str, str] = {
     PLACEHOLDER_RULE_SET: "placeholder-redflag-0.2: 4 placeholder vitals thresholds only; PLACEHOLDER — not clinical",
-    RF_110: ("rf-1.1.0: 16 declared rules over vitals within their freshness windows and symptoms mentioned in "
+    RF_120: ("rf-1.2.0: 17 declared rules over vitals within their freshness windows and symptoms mentioned in "
              "the intake transcript; an unmentioned symptom is unknown, not absent"),
 }
 

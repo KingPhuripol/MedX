@@ -13,7 +13,7 @@ from .helpers import DROP, T0, make_case, snap
 
 RULE_IDS = [
     "RF-SPO2", "RF-RR", "RF-SBP", "RF-HR", "RF-CONSC", "RF-TEMP", "RF-QSOFA", "RF-CHEST", "RF-STROKE",
-    "RF-THUNDER", "RF-ANAPH", "RF-SUICIDE", "RF-GIBLEED", "RF-ECTOPIC", "RF-MENING", "RF-HYPOGLY",
+    "RF-THUNDER", "RF-ANAPH", "RF-SUICIDE", "RF-GIBLEED", "RF-ECTOPIC", "RF-MENING", "RF-HYPOGLY", "RF-NEWS-AGG5",
 ]
 
 
@@ -35,7 +35,7 @@ def test_every_rule_has_source():
 
 
 def test_ruleset_hash_pinned_to_version(tmp_path):
-    assert redflags.RULESET_VERSION == "rf-1.1.0"
+    assert redflags.RULESET_VERSION == "rf-1.2.0"
     assert redflags.file_sha256() == redflags.RULESET_SHA256
     assert json.loads(redflags.RULES_PATH.read_text())["version"] == redflags.RULESET_VERSION
     tampered = tmp_path / "rules.json"
@@ -54,6 +54,9 @@ def test_ruleset_hash_pinned_to_version(tmp_path):
         redflags.load_rules(tampered, pinned_sha256=hashlib.sha256(tampered.read_bytes()).hexdigest())
 
 
+# rf-1.2.0: the S4 author gold predates the aggregate rule; it may fire in addition, so it is compared apart.
+AGG = "RF-NEWS-AGG5"
+AGG4 = {"vital.rr": 22, "vital.sbp": 105, "vital.temp_c": 38.5}
 BOUNDARIES = {
     "RF-SPO2": [({"vital.spo2": 91}, True), ({"vital.spo2": 92}, False)],
     "RF-RR": [({"vital.rr": 8}, True), ({"vital.rr": 9}, False), ({"vital.rr": 25}, True), ({"vital.rr": 24}, False)],
@@ -101,6 +104,8 @@ BOUNDARIES = {
         ({"symptom.fever": "absent", "vital.temp_c": 39.8}, False),
     ],
     "RF-HYPOGLY": [({"vital.capillary_glucose_mg_dl": 53}, True), ({"vital.capillary_glucose_mg_dl": 54}, False)],
+    # NEWS2 aggregate on BASE (score 0): rr 22 = 2, sbp 105 = 1, temp 38.5 = 1 -> 4; hr 100 = +1, hr 120 = +2.
+    "RF-NEWS-AGG5": [(AGG4, False), (AGG4 | {"vital.hr": 100}, True), (AGG4 | {"vital.hr": 120}, True)],
 }
 BOUNDARY_CASES = [(rule, ov, exp) for rule, cases in BOUNDARIES.items() for ov, exp in cases]
 
@@ -169,8 +174,8 @@ def test_snapshot_as_of():
         if e.gold.temporal:
             early, _ = redflags.evaluate(Snapshot(e.case, e.gold.temporal.early_as_of))
             late, _ = redflags.evaluate(Snapshot(e.case, e.as_of))
-            assert sorted(a.rule_id for a in early) == e.gold.temporal.red_flag_rules
-            assert sorted(a.rule_id for a in late) == e.gold.red_flag_rules
+            assert sorted(a.rule_id for a in early if a.rule_id != AGG) == e.gold.temporal.red_flag_rules
+            assert sorted(a.rule_id for a in late if a.rule_id != AGG) == e.gold.red_flag_rules
             assert set(e.gold.red_flag_rules) - set(e.gold.temporal.red_flag_rules)
 
 
@@ -275,3 +280,20 @@ def test_anaph_breathing_denied_but_hypoxic_still_escalates():
                                         "symptom.airway_breathing_compromise": "absent",
                                         "vital.spo2": 88, "vital.rr": 26}))
     assert {"RF-SPO2", "RF-RR"} <= {a.rule_id for a in alerts}
+
+
+def test_news_aggregate_missing_vital_is_not_evaluable_not_negative():
+    # Aggregate 4 from present vitals; spo2 missing could add up to 3, so the rule cannot be called negative.
+    alerts, ne = redflags.evaluate(snap(AGG4 | {"vital.spo2": DROP}))
+    assert "RF-NEWS-AGG5" not in {a.rule_id for a in alerts}
+    assert {n.rule_id: n.missing_inputs for n in ne}["RF-NEWS-AGG5"] == ["vital.spo2"]
+    # A present score of 5 fires even with a vital missing (lower bound is enough); 0 with spo2 missing -> false.
+    alerts, _ = redflags.evaluate(snap(AGG4 | {"vital.hr": 100, "vital.spo2": DROP}))
+    assert "RF-NEWS-AGG5" in {a.rule_id for a in alerts}
+    _, ne = redflags.evaluate(snap({"vital.spo2": DROP}))
+    assert "RF-NEWS-AGG5" not in {n.rule_id for n in ne}
+
+
+def test_news_aggregate_rule_is_labelled_proposed():
+    rule = next(r for r in redflags.rules() if r["id"] == "RF-NEWS-AGG5")
+    assert rule["label"] == "PROPOSED — pending clinical sign-off" and rule["source"]["citation"]

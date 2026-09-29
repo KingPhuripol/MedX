@@ -19,7 +19,14 @@ from .arms import ARM_A, ARM_B
 
 TEXT_S4 = set(mapping.TEXT_RULES_S4)
 TEXT_S1R = set(mapping.TEXT_RULES_S1R)
+# rf-1.2.0 (slice g2): RF-NEWS-AGG5 is now detected by the S4 rule of the same id. e1_mapping_v1.json stays frozen
+# (hash-bound to the e1 protocol), so the i2 comparison overlays this one row instead of editing it.
+AGG5_OVERLAY = {"RF-NEWS-AGG5": ["RF-NEWS-AGG5"]}
 VITAL_S1R = ("RF-NEWS-SINGLE3", "RF-QSOFA", "RF-NEWS-AGG5")
+
+
+def s1r_targets() -> dict[str, list[str] | None]:
+    return {**mapping.s1r_rule_targets(), **AGG5_OVERLAY}
 
 
 def gold_dp(g: dict[str, Any], dp: str) -> dict[str, Any]:
@@ -53,7 +60,7 @@ def rows_for(rec: dict[str, Any], g: dict[str, Any]) -> tuple[list[dict[str, Any
             out.append({**_base(rec, "abstention"), **extra, "y_true": e or mapping.NOT_EVALUABLE,
                         "y_pred": ranked[0] if ranked else None})
         out.append({**_base(rec, "calls"), **extra, "n_calls": rec[arm]["calls"]})
-    targets = mapping.s1r_rule_targets()
+    targets = s1r_targets()
     fired = set(rec[ARM_A]["red_flag"]["fired"])
     for rf in d["red_flags"]:
         tg = targets[rf["rule_id"]]
@@ -66,7 +73,7 @@ def rows_for(rec: dict[str, Any], g: dict[str, Any]) -> tuple[list[dict[str, Any
 def gold_tasks(g: dict[str, Any]) -> list[tuple[str, str]]:
     """(task, dp_id) memberships from gold alone (manifest task lists; checked against the scored rows)."""
     out = []
-    targets = mapping.s1r_rule_targets()
+    targets = s1r_targets()
     for d in g["decision_times"]:
         dp_id = f"{g['case_id']}/{d['decision_point']}"
         _, route = dept_gold(d)
@@ -84,7 +91,7 @@ def gold_tasks(g: dict[str, Any]) -> list[tuple[str, str]]:
 
 def miss_reason(rule: str, rec: dict[str, Any], d: dict[str, Any]) -> str:
     """Why a gold (DP, S1r rule) pair was not detected by Arm A."""
-    tg = mapping.s1r_rule_targets()[rule]
+    tg = s1r_targets()[rule]
     if tg is None:
         return "unmappable"
     rf = rec[ARM_A]["red_flag"]

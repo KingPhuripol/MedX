@@ -15,7 +15,7 @@ import pytest
 
 from app.triage import casegraph_run
 from app.triage.fixtures import load_entries
-from casegraph.data import RF_110, RULE_SET_LABELS, RULE_SET_SCOPES, ConfirmedEvidence
+from casegraph.data import RF_120, RULE_SET_LABELS, RULE_SET_SCOPES, ConfirmedEvidence
 from casegraph.executor import PENDING_KEY
 from casegraph.types import NodeType
 
@@ -63,11 +63,11 @@ def test_checkpoint_via_triage_endpoints(app, client, login, audit_rows, action)
     hc = graph.by_type(NodeType.HUMAN_CHECKPOINT)
     # /assess ran the graph: rf-1.1.0 Red-flag, nurse checkpoint pending, screening block returned
     assert (hc.provider, hc.status) == ("human:nurse", "pending_confirmation")
-    assert graph.by_type(NodeType.RED_FLAG).model_version == RF_110
+    assert graph.by_type(NodeType.RED_FLAG).model_version == RF_120
     s = a["screening"]
     assert (s["rule_set_version"], s["label"], s["scope"], s["n_declared"]) == (
-        RF_110, RULE_SET_LABELS[RF_110], RULE_SET_SCOPES[RF_110], 16)
-    assert s["n_evaluated"] + s["n_not_evaluated"] == 16 and s["summary"] == graph.red_flag_screening.summary()
+        RF_120, RULE_SET_LABELS[RF_120], RULE_SET_SCOPES[RF_120], 17)
+    assert s["n_evaluated"] + s["n_not_evaluated"] == 17 and s["summary"] == graph.red_flag_screening.summary()
     assert sorted(x["rule_id"] for x in hc.output[PENDING_KEY]["alerts"]["alerts"]) == sorted(
         x["rule_id"] for x in a["alerts"])  # graph and engine agree on this fresh-vitals case
     url = f"/api/triage/assessments/{a['assessment_id']}/{action}"
@@ -136,7 +136,7 @@ def test_never_no_red_flags_api(client, login):
             assert not OVERCLAIM.search(text), ref
         s = a["screening"]
         if s["status"] == "evaluated" and s["n_fired"] == 0:
-            assert s["summary"].startswith("0 of 16 declared rules fired")
+            assert s["summary"].startswith("0 of 17 declared rules fired")
         else:
             assert s["banner"] is not None or s["n_fired"] > 0
     assert statuses

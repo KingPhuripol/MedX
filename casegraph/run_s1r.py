@@ -26,7 +26,7 @@ from pathlib import Path
 from typing import Any
 
 from .compiler import GraphValidationError, build_snapshot, compile_graph
-from .data import RF_110, IntakeTranscript
+from .data import RF_120, IntakeTranscript
 from .executor import Executor
 from .export import ExportedGraph
 from .library import ProviderAssignment
@@ -72,9 +72,9 @@ def check_graph(snap: S1rSnapshot, graph: ExportedGraph) -> list[str]:
     rf = graph.by_type(NodeType.RED_FLAG)
     if rf is not None and rf.output is not None:
         alerts = rf.output["Alerts"]
-        if alerts.get("rule_set_version") != RF_110:
+        if alerts.get("rule_set_version") != RF_120:
             bad.append("red_flag_not_rf110")
-        if len(alerts.get("rule_results", [])) != 16:
+        if len(alerts.get("rule_results", [])) != 17:
             bad.append("red_flag_rule_count")
     bad += [f"future:{x}" for x in _time_violations(graph)]
     return bad
