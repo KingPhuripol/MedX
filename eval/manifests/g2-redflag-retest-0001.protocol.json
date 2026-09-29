@@ -82,6 +82,5 @@
     "rf_rule_RF-THUNDERCLAP": 6,
     "rf_rulematched_dp": 46,
     "rf_surfaced": 46
-  },
-  "frozen_by": "orchestrator (Opus 5.5), 2026-09-29, after dev dry-run 24/24 and manifest check"
+  }
 }

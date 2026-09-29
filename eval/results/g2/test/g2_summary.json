@@ -1,0 +1,281 @@
+{
+ "circularity_note": "Circularity: rules, lexicon, fixtures and gold share authors and the mock model is deterministic; this measures coverage of the authors' own scenarios.",
+ "evaluation_id": "g2-redflag-retest-0001",
+ "false_alerts_on_gold_negative_dps": {},
+ "frozen": true,
+ "label": "System Evaluation on synthetic data — not clinical performance",
+ "manifest_sha256": "cedf6bd70f9107397e96a4f282ff4923dead0966b99e9590e5dfd114f0e6503c",
+ "metrics": {
+  "rf_case_agg": {
+   "bootstrap_patient_level": {
+    "ci": [
+     1.0,
+     1.0
+    ],
+    "n_degenerate": 0,
+    "point": 1.0
+   },
+   "clopper_pearson_95": [
+    0.867725,
+    1.0
+   ],
+   "n": 26,
+   "n_patients": 26,
+   "point": 1.0,
+   "x": 26
+  },
+  "rf_case_agg_rulematched": {
+   "bootstrap_patient_level": {
+    "ci": [
+     1.0,
+     1.0
+    ],
+    "n_degenerate": 0,
+    "point": 1.0
+   },
+   "clopper_pearson_95": [
+    0.867725,
+    1.0
+   ],
+   "n": 26,
+   "n_patients": 26,
+   "point": 1.0,
+   "x": 26
+  },
+  "rf_case_recall": {
+   "bootstrap_patient_level": {
+    "ci": [
+     1.0,
+     1.0
+    ],
+    "n_degenerate": 0,
+    "point": 1.0
+   },
+   "clopper_pearson_95": [
+    0.922938,
+    1.0
+   ],
+   "n": 46,
+   "n_patients": 26,
+   "point": 1.0,
+   "x": 46
+  },
+  "rf_fpr": {
+   "bootstrap_patient_level": {
+    "ci": [
+     0.0,
+     0.0
+    ],
+    "n_degenerate": 0,
+    "point": 0.0
+   },
+   "clopper_pearson_95": [
+    0.0,
+    0.031841
+   ],
+   "n": 114,
+   "n_patients": 54,
+   "point": 0.0,
+   "x": 0
+  },
+  "rf_rule_RF-ACUTE-CHEST-PAIN": {
+   "bootstrap_patient_level": {
+    "ci": [
+     1.0,
+     1.0
+    ],
+    "n_degenerate": 0,
+    "point": 1.0
+   },
+   "clopper_pearson_95": [
+    0.540742,
+    1.0
+   ],
+   "n": 6,
+   "n_patients": 3,
+   "point": 1.0,
+   "x": 6
+  },
+  "rf_rule_RF-ANAPHYLAXIS": {
+   "bootstrap_patient_level": {
+    "ci": [
+     1.0,
+     1.0
+    ],
+    "n_degenerate": 0,
+    "point": 1.0
+   },
+   "clopper_pearson_95": [
+    0.540742,
+    1.0
+   ],
+   "n": 6,
+   "n_patients": 3,
+   "point": 1.0,
+   "x": 6
+  },
+  "rf_rule_RF-FAST": {
+   "bootstrap_patient_level": {
+    "ci": [
+     1.0,
+     1.0
+    ],
+    "n_degenerate": 0,
+    "point": 1.0
+   },
+   "clopper_pearson_95": [
+    0.630583,
+    1.0
+   ],
+   "n": 8,
+   "n_patients": 4,
+   "point": 1.0,
+   "x": 8
+  },
+  "rf_rule_RF-NEWS-AGG5": {
+   "bootstrap_patient_level": {
+    "ci": [
+     1.0,
+     1.0
+    ],
+    "n_degenerate": 0,
+    "point": 1.0
+   },
+   "clopper_pearson_95": [
+    0.735352,
+    1.0
+   ],
+   "n": 12,
+   "n_patients": 8,
+   "point": 1.0,
+   "x": 12
+  },
+  "rf_rule_RF-NEWS-SINGLE3": {
+   "bootstrap_patient_level": {
+    "ci": [
+     1.0,
+     1.0
+    ],
+    "n_degenerate": 0,
+    "point": 1.0
+   },
+   "clopper_pearson_95": [
+    0.590384,
+    1.0
+   ],
+   "n": 7,
+   "n_patients": 5,
+   "point": 1.0,
+   "x": 7
+  },
+  "rf_rule_RF-QSOFA": {
+   "bootstrap_patient_level": {
+    "ci": [
+     1.0,
+     1.0
+    ],
+    "n_degenerate": 0,
+    "point": 1.0
+   },
+   "clopper_pearson_95": [
+    0.630583,
+    1.0
+   ],
+   "n": 8,
+   "n_patients": 5,
+   "point": 1.0,
+   "x": 8
+  },
+  "rf_rule_RF-THUNDERCLAP": {
+   "bootstrap_patient_level": {
+    "ci": [
+     1.0,
+     1.0
+    ],
+    "n_degenerate": 0,
+    "point": 1.0
+   },
+   "clopper_pearson_95": [
+    0.540742,
+    1.0
+   ],
+   "n": 6,
+   "n_patients": 3,
+   "point": 1.0,
+   "x": 6
+  },
+  "rf_rulematched_dp": {
+   "bootstrap_patient_level": {
+    "ci": [
+     1.0,
+     1.0
+    ],
+    "n_degenerate": 0,
+    "point": 1.0
+   },
+   "clopper_pearson_95": [
+    0.922938,
+    1.0
+   ],
+   "n": 46,
+   "n_patients": 26,
+   "point": 1.0,
+   "x": 46
+  },
+  "rf_surfaced": {
+   "bootstrap_patient_level": {
+    "ci": [
+     1.0,
+     1.0
+    ],
+    "n_degenerate": 0,
+    "point": 1.0
+   },
+   "clopper_pearson_95": [
+    0.922938,
+    1.0
+   ],
+   "n": 46,
+   "n_patients": 26,
+   "point": 1.0,
+   "x": 46
+  }
+ },
+ "missed_gold_pairs": [],
+ "missed_reason_counts": {},
+ "n_dp": 160,
+ "n_patients": 72,
+ "primary": {
+  "bootstrap_patient_level": {
+   "ci": [
+    1.0,
+    1.0
+   ],
+   "n_degenerate": 0,
+   "point": 1.0
+  },
+  "clopper_pearson_95": [
+   0.922938,
+   1.0
+  ],
+  "decision_rule": "PASS iff rf_case_recall = 1.00 exactly (point estimate, x = n) on the held-out test split. Any miss is FAIL. Clopper-Pearson 95% interval reported; a PASS is a point-estimate statement on a small circular synthetic sample, not evidence of clinical safety. Secondaries are descriptive, never gating, and cannot rescue a FAIL.",
+  "metric": "rf_case_recall",
+  "n": 46,
+  "n_patients": 26,
+  "point": 1.0,
+  "verdict": "PASS",
+  "x": 46
+ },
+ "replay": {
+  "checked": 160,
+  "identical": 160
+ },
+ "rule_set_versions_seen": [
+  "rf-1.2.0"
+ ],
+ "screening_status": {
+  "partially_evaluated": 160
+ },
+ "silent_escalation_failures": [],
+ "split": "test"
+}
