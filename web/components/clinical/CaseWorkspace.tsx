@@ -32,7 +32,9 @@ import {
   formatThaiTime,
   RUN_KEY,
   type CaseOverview,
+  type LabResult,
   type MedicationData,
+  type VitalReading,
   type TimelineItem,
   type User,
 } from "@/lib/demo";
@@ -94,6 +96,9 @@ export default function CaseWorkspace({ caseId, section }: { caseId: string; sec
       }
       if (section === "medications") {
         setMeds(await api<MedicationData>(`/api/demo/v1/runs/${run}/cases/${caseId}/medications`));
+      } else if (section === "overview") {
+        // U6: the shared summary shows medications on first open; a failure leaves them "not loaded", never empty.
+        setMeds(await api<MedicationData>(`/api/demo/v1/runs/${run}/cases/${caseId}/medications`).catch(() => null));
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "โหลดข้อมูลไม่สำเร็จ");
@@ -264,7 +269,7 @@ export default function CaseWorkspace({ caseId, section }: { caseId: string; sec
           <p>{error} — โหลดข้อมูลล่าสุดก่อนลองอีกครั้ง</p>
         </Notice>
       ) : null}
-      {section === "overview" ? <Overview data={data} ownTab={ownTab} runId={runId} /> : null}
+      {section === "overview" ? <Overview data={data} ownTab={ownTab} runId={runId} meds={meds} /> : null}
       {section === "intake" ? (
         <>
           <Intake data={data} />
@@ -358,17 +363,25 @@ export default function CaseWorkspace({ caseId, section }: { caseId: string; sec
   );
 }
 
-function Overview({ data, ownTab, runId }: { data: CaseOverview; ownTab?: string; runId: string }) {
+function Overview({
+  data,
+  ownTab,
+  runId,
+  meds,
+}: {
+  data: CaseOverview;
+  ownTab?: string;
+  runId: string;
+  meds: MedicationData | null;
+}) {
   return (
-    <div className="content-grid">
+    <div className="page-stack">
+      <CaseSummary data={data} meds={meds} runId={runId} />
+      <div className="content-grid">
       <section className="card stack">
         <h2>สรุปเคส</h2>
         <p className={css.summary}>{data.summary}</p>
         <dl className="detail-list">
-          <dt>อาการสำคัญ</dt>
-          <dd>{data.intake.chief_complaint}</dd>
-          <dt>เริ่มมีอาการ</dt>
-          <dd>{data.intake.onset}</dd>
           <dt>สถานะ intake</dt>
           <dd className={`success ${css.inlineIcon}`}>
             <CheckCircle2 size={16} aria-hidden="true" /> ตรวจทานแล้ว
@@ -393,6 +406,201 @@ function Overview({ data, ownTab, runId }: { data: CaseOverview; ownTab?: string
           ดู timeline ทั้งหมด <ArrowRight size={16} aria-hidden="true" />
         </Link>
       </aside>
+    </div>
+    </div>
+  );
+}
+
+type VitalKey = "hr" | "rr" | "sbp" | "dbp" | "spo2" | "temp_c";
+const VITAL_FIELDS: [VitalKey, string, string][] = [
+  ["hr", "ชีพจร", "ครั้ง/นาที"],
+  ["rr", "หายใจ", "ครั้ง/นาที"],
+  ["sbp", "ความดันตัวบน", "mmHg"],
+  ["dbp", "ความดันตัวล่าง", "mmHg"],
+  ["spo2", "SpO₂", "%"],
+  ["temp_c", "อุณหภูมิ", "°C"],
+];
+/** Change between two recorded values. Describes the recorded numbers only, never a clinical judgement. */
+export function vitalDirection(now: number | null, before: number | null | undefined) {
+  if (now == null || before == null) return null;
+  if (now > before) return { arrow: "↑", word: "เพิ่มขึ้น" };
+  if (now < before) return { arrow: "↓", word: "ลดลง" };
+  return { arrow: "→", word: "เท่าเดิม" };
+}
+/** "high" / "low" outside the reference range, "unclassified" when a bound or value is missing, else null. */
+export function labFlag(lab: LabResult): "high" | "low" | "unclassified" | null {
+  if (lab.value == null) return "unclassified";
+  if (lab.ref_low == null && lab.ref_high == null) return "unclassified";
+  if (lab.ref_high != null && lab.value > lab.ref_high) return "high";
+  if (lab.ref_low != null && lab.value < lab.ref_low) return "low";
+  return null;
+}
+
+/** U6: the shared case summary (UI-SPEC "Overview"). Shows recorded facts only; missing is shown as missing. */
+export function CaseSummary({ data, meds, runId }: { data: CaseOverview; meds: MedicationData | null; runId: string }) {
+  const vitals = [...(data.vitals ?? [])].sort((a, b) => a.observed_at.localeCompare(b.observed_at));
+  const latest: VitalReading | undefined = vitals[vitals.length - 1];
+  const previous: VitalReading | undefined = vitals.length > 1 ? vitals[vitals.length - 2] : undefined;
+  const allergies = data.allergies ?? null;
+  const labs = data.labs ?? [];
+  const flagged = labs.map((lab) => [lab, labFlag(lab)] as const).filter(([, f]) => f !== null);
+  const openDiscrepancies = meds ? meds.discrepancies.filter((d) => d.status === "pending").length : null;
+  return (
+    <div className={css.summaryGrid} data-testid="case-summary">
+      <section className={`${css.tile} ${css.vitals}`} aria-labelledby="sum-vitals" data-testid="summary-vitals">
+        <h2 id="sum-vitals" className={css.flush}>
+          สัญญาณชีพล่าสุด
+        </h2>
+        {latest ? (
+          <>
+            <p className={`muted ${css.tight}`}>
+              บันทึกเมื่อ {formatThaiTime(latest.observed_at)}
+              {previous ? ` · เทียบกับค่าที่บันทึกเมื่อ ${formatThaiTime(previous.observed_at)}` : " · ยังไม่มีค่าก่อนหน้าให้เทียบ"}
+            </p>
+            <ul className={css.vitalList}>
+              {VITAL_FIELDS.map(([key, label, unit]) => {
+                const value = latest[key];
+                const dir = vitalDirection(value, previous?.[key]);
+                return (
+                  <li key={key} className={css.vital} data-testid={`vital-${key}`}>
+                    <span className="muted">{label}</span>
+                    <span className={css.vitalRow}>
+                      {value == null ? (
+                        <strong className={css.missing}>ไม่มีบันทึก</strong>
+                      ) : (
+                        <strong>
+                          {value} <span className={css.unit}>{unit}</span>
+                        </strong>
+                      )}
+                      <span className={css.dir} data-testid={`vital-${key}-dir`}>
+                        {dir ? `${dir.arrow} ${dir.word}` : value == null ? "" : "ไม่มีค่าเทียบ"}
+                      </span>
+                    </span>
+                  </li>
+                );
+              })}
+              <li className={css.vital} data-testid="vital-consciousness">
+                <span className="muted">รู้สึกตัว (ACVPU)</span>
+                <strong className={latest.consciousness == null ? css.missing : undefined}>
+                  {latest.consciousness ?? "ไม่มีบันทึก"}
+                </strong>
+              </li>
+              <li className={css.vital} data-testid="vital-on_oxygen">
+                <span className="muted">ออกซิเจนเสริม</span>
+                <strong className={latest.on_oxygen == null ? css.missing : undefined}>
+                  {latest.on_oxygen == null ? "ไม่มีบันทึก" : latest.on_oxygen ? "ใช้ออกซิเจน" : "ไม่ใช้ออกซิเจน"}
+                </strong>
+              </li>
+            </ul>
+            <p className={`muted ${css.tight}`}>ลูกศรแสดงการเปลี่ยนของค่าที่บันทึกเท่านั้น ไม่ใช่การประเมินทางคลินิก</p>
+          </>
+        ) : (
+          <p className={css.missing} data-testid="vitals-missing">
+            ยังไม่มีบันทึกสัญญาณชีพ
+          </p>
+        )}
+      </section>
+      <section className={css.tile} aria-labelledby="sum-complaint" data-testid="summary-complaint">
+        <h2 id="sum-complaint" className={css.flush}>
+          อาการสำคัญ
+        </h2>
+        <dl className={css.facts}>
+          <dt className="muted">อาการ</dt>
+          <dd>{data.intake.chief_complaint}</dd>
+          <dt className="muted">เริ่มมีอาการ</dt>
+          <dd>{data.intake.onset}</dd>
+        </dl>
+      </section>
+      <section className={css.tile} aria-labelledby="sum-allergy" data-testid="summary-allergy">
+        <h2 id="sum-allergy" className={css.flush}>
+          ประวัติแพ้
+        </h2>
+        {allergies === null ? (
+          <p className={css.missing} data-testid="allergy-unknown">
+            ไม่ทราบสถานะการแพ้ — ต้องถาม
+          </p>
+        ) : allergies.length === 0 ? (
+          <p className={css.tight} data-testid="allergy-none">
+            ไม่มีประวัติแพ้ที่บันทึกไว้
+          </p>
+        ) : (
+          <ul className={css.plainList}>
+            {allergies.map((a) => (
+              <li key={a.substance} data-testid="allergy-item">
+                <strong>{a.substance}</strong> — {a.reaction}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+      <section className={css.tile} aria-labelledby="sum-meds" data-testid="summary-meds">
+        <h2 id="sum-meds" className={css.flush}>
+          ยาที่ใช้อยู่
+        </h2>
+        {meds === null ? (
+          <p className={css.missing} data-testid="meds-missing">
+            ยังไม่ได้โหลดข้อมูลยา
+          </p>
+        ) : (
+          <>
+            {meds.sources.length === 0 ? (
+              <p className={css.missing}>ยังไม่มีรายการยาที่บันทึก</p>
+            ) : (
+              <ul className={css.plainList}>
+                {meds.sources.map((m) => (
+                  <li key={m.source_id} data-testid="med-item">
+                    {m.recorded_value} <span className="muted">({m.label})</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className={css.tight} data-testid="med-discrepancy-count">
+              ความคลาดเคลื่อนที่ยังไม่ตรวจทาน: <strong>{openDiscrepancies} รายการ</strong>
+            </p>
+          </>
+        )}
+        <Link className={css.inlineIcon} href={`/app/cases/${data.case_id}/medications?run=${runId}`}>
+          ดูรายละเอียดยา <ArrowRight size={16} aria-hidden="true" />
+        </Link>
+      </section>
+      <section className={css.tile} aria-labelledby="sum-labs" data-testid="summary-labs">
+        <h2 id="sum-labs" className={css.flush}>
+          ผลแล็บผิดปกติล่าสุด
+        </h2>
+        {labs.length === 0 ? (
+          <p className={css.missing} data-testid="labs-none-yet">
+            ยังไม่มีผลแล็บ
+          </p>
+        ) : flagged.length === 0 ? (
+          <p className={css.tight} data-testid="labs-normal">
+            ไม่มีผลแล็บผิดปกติ
+          </p>
+        ) : (
+          <ul className={css.plainList}>
+            {flagged.map(([lab, flag]) => (
+              <li key={lab.test} data-testid="lab-item">
+                <strong>{lab.test}</strong>{" "}
+                {lab.value == null ? (
+                  <span className={css.missing}>ไม่มีค่า</span>
+                ) : (
+                  <>
+                    {lab.value} {lab.unit}
+                  </>
+                )}{" "}
+                <span className={css.dir}>
+                  {flag === "high" ? "↑ สูงกว่าช่วงอ้างอิง" : flag === "low" ? "↓ ต่ำกว่าช่วงอ้างอิง" : "ไม่มีช่วงอ้างอิงให้เทียบ"}
+                </span>
+                {lab.ref_low != null || lab.ref_high != null ? (
+                  <span className="muted">
+                    {" "}
+                    (ช่วงอ้างอิง {lab.ref_low ?? "–"}–{lab.ref_high ?? "–"})
+                  </span>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

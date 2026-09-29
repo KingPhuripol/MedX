@@ -13,3 +13,21 @@
 .source p { margin: 0; }
 .timeline { margin-top: 24px; }
 .tight { margin: 4px 0; }
+.summaryGrid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(240px, 1fr); gap: 16px; align-items: stretch; }
+.tile { display: grid; align-content: start; gap: 8px; min-width: 0; padding: 16px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-card); }
+.tile h2 { margin: 0; font-size: 16px; }
+.vitals { grid-column: 1; grid-row: 1 / span 2; }
+.vitalList { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.vital { display: grid; gap: 4px; padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--muted); min-width: 0; }
+.vitalRow { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 16px; margin: 0; }
+.facts dd { margin: 0; font-weight: 700; }
+.unit { font-size: 14px; font-weight: 400; color: var(--muted-foreground); }
+.dir { font-size: 14px; font-weight: 700; color: var(--foreground); min-height: 20px; }
+.missing { color: var(--muted-foreground); font-weight: 700; margin: 0; }
+.plainList { margin: 0; padding-left: 24px; display: grid; gap: 4px; }
+@media (max-width: 900px) {
+  .summaryGrid { grid-template-columns: minmax(0, 1fr); }
+  .vitals { grid-column: 1; grid-row: auto; }
+  .vitalList { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

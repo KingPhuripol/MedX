@@ -21,6 +21,29 @@ export type TaskSummary = {
   next_action: string;
   version: number;
 };
+/** A null field is missing/not recorded. It is never 0 and never normal. */
+export type VitalReading = {
+  observed_at: string;
+  available_at_time: string;
+  evidence_id?: string;
+  hr: number | null;
+  rr: number | null;
+  sbp: number | null;
+  dbp: number | null;
+  spo2: number | null;
+  temp_c: number | null;
+  consciousness: string | null;
+  on_oxygen: boolean | null;
+};
+export type LabResult = {
+  test: string;
+  value: number | null;
+  unit: string;
+  ref_low: number | null;
+  ref_high: number | null;
+  resulted_at: string;
+  available_at_time?: string;
+};
 export type CaseOverview = {
   run_id: string;
   case_id: string;
@@ -35,6 +58,11 @@ export type CaseOverview = {
   intake: Record<string, string>;
   triage: { suggestion: string; department: string; confidence: string; evidence_ids: string[] };
   care: { status: string; suggestion: string; evidence_ids: string[] };
+  decision_time?: string;
+  vitals?: VitalReading[];
+  /** [] = no known allergy recorded; null/undefined = allergy status unknown. */
+  allergies?: { substance: string; reaction: string }[] | null;
+  labs?: LabResult[];
   timestamp: string;
   version: number;
 };
