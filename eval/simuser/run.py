@@ -13,10 +13,11 @@ Tool mapping (the synthetic snapshot has these data types only; nothing is inven
          get_labs           LabSeries
          get_medications    MedicationList (home_list / patient_reported / new_order)
          get_vitals         Vitals
-  env B  get_queue / get_case_overview / get_timeline / get_medications on one case page. The same items
-         are reachable (overview: demographics, allergy, intake transcript; timeline: vitals + labs in full,
-         other events as headers; medications: all lists side by side). No system-computed red-flag or
-         discrepancy hints are shown, so B differs from A only in consolidation.
+  env B  get_queue / get_case_overview / get_intake / get_medications / get_timeline: one screen per tool,
+         mirroring what the V2 web UI renders (see UI_MAP; web/components/clinical/CaseWorkspace.tsx). The same
+         facts are reachable as in A. System-authored content of the demo (red-flag banner, discrepancy card)
+         is NOT reproduced (no engine computes it for dataset cases; it would leak gold), so B differs from
+         A only in consolidation.
 Both envs filter available_at_time > T (T = snapshot as_of).
 
 Arm B ("single-case consolidated view (MedX case-page schema)") is a schema-faithful adapter of the MedX case-page routes, populated from the snapshot: the shipped
@@ -49,7 +50,9 @@ import os
 import re
 import sys
 import tempfile
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -72,6 +75,19 @@ DEFAULT_MODEL = "gpt-6-luna"
 DEFAULT_BASE_URL = "https://api.openai.com/v1"
 ALLOWED_SPLITS = ("train", "dev", "test")  # test only via check_test_access (FROZEN manifest + dataset sha match)
 ENV_FILE = Path("/Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent/.env")
+RF_PHRASES = {
+    "RF-QSOFA": "sepsis risk, qSOFA 2 or more", "RF-NEWS-SINGLE3": "single extreme NEWS parameter",
+    "RF-NEWS-AGG5": "aggregate NEWS 5 or more", "RF-FAST": "sudden face/arm/speech deficit, stroke sign",
+    "RF-ACUTE-CHEST-PAIN": "acute chest pain", "RF-THUNDERCLAP": "thunderclap headache", "RF-ANAPHYLAXIS": "anaphylaxis",
+}
+RF_ALIASES = {**{v.lower(): k.lower() for k, v in RF_PHRASES.items()}}
+# Closed vocabulary of missing-input codes that can occur in gold (union of care.required_inputs_missing over train/dev).
+MISSING_VOCAB = {
+    "chief_complaint": "no chief complaint stated in the intake conversation",
+    "duration": "symptom duration not stated",
+    "allergy_status": "allergy status unknown / not documented",
+    "vitals.temp_c": "temperature not recorded in the vitals",
+}
 ANSWER_KEYS = ("vitals_trend", "current_meds", "medication_issues", "red_flags", "escalate", "missing_info")
 TRENDS = ("worsening", "improving", "stable", "single_reading")
 ARMS = ("A", "B")
@@ -82,6 +98,17 @@ PERSONAS = {
     "pharmacist": "clinical pharmacist doing the pre-consult medication review",
 }
 BOOT_SEED = 20260929
+UI_MAP = [
+    "", "## Arm B: V2 UI screen to tool mapping (single-case consolidated view, MedX case-page schema; adapter, not a MedX app run)", "",
+    "| V2 web UI (file:line) | Tool | What the tool returns |", "|---|---|---|",
+    "| web/components/clinical/WorkQueue.tsx:29,53 (queue API, row link to case) | get_queue | role tasks (task_id, case_id, kind, label, status) |",
+    "| web/components/clinical/CaseWorkspace.tsx:189-215 (case header: case id, name, sex, age, HN, stage, owner, next task); :34-42 (tabs) | get_case_overview | the header fields + intake status + tab list; nothing else is on the first-open overview |",
+    "| CaseWorkspace.tsx:216-231 (red-flag banner), :343-373 (Overview: summary, chief complaint, onset) | not reproduced | authored/system content in the demo; no engine computes it for dataset cases and it would leak gold. Chief complaint/onset are only in the transcript, so the model must open intake |",
+    "| CaseWorkspace.tsx:251,374-403 (Intake tab), :81-87 (tab data fetched only on open) | get_intake | intake record incl. the conversation turns (assumption: the UI intake tab shows only extracted fields; the adapter exposes the transcript so the same facts are reachable as in A) |",
+    "| CaseWorkspace.tsx:284,459-517 (Medications tab: one card per source with recorded_value, captured_at) | get_medications | one source per list with a recorded_value string (drug, dose, frequency, ATC) and captured_at; the discrepancy card (:475-513) is not reproduced |",
+    "| CaseWorkspace.tsx:285,518-549 (Timeline tab: title, detail text, actor, time, version) | get_timeline | one event per record; detail text carries vitals, labs, allergy and registration facts (the V2 UI has no separate vitals/labs/allergy screen; assumption: they appear as timeline detail text) |",
+    "",
+]
 FORBIDDEN_IN_TOOL_OUTPUT = ("medication_issues", "required_inputs_missing", "INJ-", "expected_action", "rule_id")
 
 
@@ -230,20 +257,13 @@ def load_cases(dataset: Path, split: str, dp: str, allow_test: bool = False) -> 
 
 
 def select_cases(cases: list[Case], n: int, seed: int) -> list[Case]:
-    """Deterministic stratified pick: round-robin over (red_flag, med_issue, missing_info) strata."""
+    """Predeclared, seeded: every case with a gold red flag first, then random fill (sha256 order), up to n."""
     def h(c: Case) -> str:
         return hashlib.sha256(f"{seed}:{c.case_id}".encode()).hexdigest()
 
-    buckets: dict[tuple, list[Case]] = {}
-    for c in sorted(cases, key=h):
-        buckets.setdefault(c.strata, []).append(c)
-    keys = sorted(buckets, reverse=True)
-    picked: list[Case] = []
-    while len(picked) < min(n, len(cases)):
-        for k in keys:
-            if buckets[k] and len(picked) < n:
-                picked.append(buckets[k].pop(0))
-    return picked
+    rf = sorted((c for c in cases if c.ref.red_flags), key=h)
+    rest = sorted((c for c in cases if not c.ref.red_flags), key=h)
+    return (rf + rest)[:n]
 
 
 # ---------------------------------------------------------------- environments
@@ -320,14 +340,16 @@ class MultiSystemEnv(Env):
 
 
 class CasePageEnv(Env):
-    """MedX V2 case page. Response shapes follow backend/app/demo/router.py (queue/case/timeline/medications)."""
+    """Single-case consolidated view (MedX case-page schema). Shapes follow backend/app/demo/router.py and what
+    web/components/clinical/CaseWorkspace.tsx renders per tab; see UI_MAP."""
 
     name = "B"
     tools = [
         _tool("get_queue", "MedX work queue for your role: tasks waiting for you.", needs_case=False),
-        _tool("get_case_overview", "MedX case page overview: demographics, allergy list and the intake conversation."),
-        _tool("get_timeline", "MedX case page timeline: chronological events, with vitals readings and lab results in full."),
-        _tool("get_medications", "MedX case page medications: every medication list side by side."),
+        _tool("get_case_overview", "Case page first screen: case header (id, patient, sex, age, HN, stage, owner, next task) and the case tabs."),
+        _tool("get_intake", "Case page Intake tab: the intake record and conversation."),
+        _tool("get_medications", "Case page Medications tab: one card per medication source."),
+        _tool("get_timeline", "Case page Timeline tab: chronological events with their detail text (vitals, labs, allergy, registration)."),
     ]
 
     def __init__(self, snapshot: dict, role: str, queue_case_ids: list[str] | None = None):
@@ -337,6 +359,9 @@ class CasePageEnv(Env):
     def _meta(self) -> dict:
         return {"data_class": "synthetic", "as_of": self.snapshot["as_of"], "actor": {"role": self.role}}
 
+    def _first(self, dt: str) -> dict | None:
+        return next((i for i in self.items if i["data_type"] == dt), None)
+
     def _t_get_queue(self):
         ids = sorted(set(self.queue_case_ids) | {self.case_id})
         items = [{"task_id": f"task-prep-{c}", "case_id": c, "role": self.role, "kind": "case_prep",
@@ -344,32 +369,61 @@ class CasePageEnv(Env):
         return {"items": items} | self._meta()
 
     def _t_get_case_overview(self):
-        demo = next((_clean(i) for i in self.items if i["data_type"] == "Demographics"), None)
-        allergy = next((_clean(i) for i in self.items if i["data_type"] == "AllergyList"), None)
-        intake = next((_clean(i) for i in self.items if i["data_type"] == "IntakeTranscript"), None)
-        return {"case_id": self.case_id, "demographics": demo, "allergies": allergy, "intake": intake} | self._meta()
+        demo = self._first("Demographics") or {}
+        intake = self._first("IntakeTranscript")
+        return {"case_id": self.case_id, "display_name": f"Synthetic patient {self.case_id}",
+                "demographics": {"sex": demo.get("sex", "not recorded"), "age": demo.get("age_years", "not recorded"), "hn": self.snapshot.get("encounter_ref")},
+                "stage": "care_review", "owner": {"role": self.role, "display": f"team {self.role}"},
+                "next_action": "Prepare case for consult",
+                "intake": {"status": "recorded" if intake else "not recorded"},
+                "tabs": ["overview", "intake", "medications", "timeline"]} | self._meta()
+
+    def _t_get_intake(self):
+        tx = self._first("IntakeTranscript")
+        if tx is None:
+            return {"case_id": self.case_id, "intake": None, "note": "no intake recorded"} | self._meta()
+        return {"case_id": self.case_id, "intake": {"source": tx["source"], "status": "recorded", "recorded_at": tx["available_at_time"],
+                                                    "turns": tx["turns"]}} | self._meta()
+
+    @staticmethod
+    def _v(x, unit=""):
+        return "not recorded" if x is None else f"{x}{unit}"
+
+    def _detail(self, i: dict) -> str:
+        t, v = i["data_type"], self._v
+        if t == "Vitals":
+            return (f"HR {v(i.get('hr'))}, RR {v(i.get('rr'))}, SBP {v(i.get('sbp'))}, DBP {v(i.get('dbp'))}, SpO2 {v(i.get('spo2'), '%')}, "
+                    f"Temp {v(i.get('temp_c'), ' C')}, consciousness {v(i.get('consciousness'))}, on oxygen {v(i.get('on_oxygen'))}")
+        if t == "LabSeries":
+            return "; ".join(f"{r['test']} {r['value']} {r.get('unit', '')} (ref {r.get('ref_low', '?')}-{r.get('ref_high', '?')})".replace("  ", " ")
+                             for r in i["results"])
+        if t == "AllergyList":
+            ent = "; ".join(f"{e['substance']} (ATC class {e.get('atc_class')}): {e.get('reaction', 'n/a')}" for e in i["entries"])
+            return f"allergy status {i.get('status')}" + (f" - {ent}" if ent else "")
+        if t == "Demographics":
+            return f"{v(i.get('sex'))}, {v(i.get('age_years'))} years"
+        if t == "MedicationList":
+            return "see Medications tab"
+        return "see Intake tab"
 
     def _t_get_timeline(self):
-        full = {"Vitals", "LabSeries"}
         kinds = {"Vitals": "vitals", "LabSeries": "lab", "MedicationList": "medication_list", "AllergyList": "allergy",
                  "Demographics": "registration", "IntakeTranscript": "intake"}
         events = []
         for i in self.items:
-            ev = {"event_id": i["item_id"], "kind": kinds.get(i["data_type"], i["data_type"]),
-                  "timestamp": i["available_at_time"], "title": i["data_type"]}
-            if i["data_type"] in full:
-                ev["detail"] = {k: v for k, v in _clean(i).items() if k not in ("item_id", "data_type", "available_at_time")}
-            elif i["data_type"] == "MedicationList":
-                ev["title"] = f"MedicationList ({i.get('list_source')}) - see medications"
-            elif i["data_type"] == "IntakeTranscript":
-                ev["title"] = "IntakeTranscript - see case overview"
-            events.append(ev)
+            title = i["data_type"] + (f" ({i.get('list_source')})" if i["data_type"] == "MedicationList" else "")
+            events.append({"event_id": i["item_id"], "kind": kinds.get(i["data_type"], i["data_type"]), "title": title,
+                           "detail": self._detail(i), "actor": {"role": "system", "display": i["source"]},
+                           "timestamp": i["available_at_time"], "version": 1})
         return {"case_id": self.case_id, "items": events} | self._meta()
 
     def _t_get_medications(self):
+        def rec(e):
+            return (f"{e['generic_name']} {e['dose_value']} {e['dose_unit']} {e['frequency']} "
+                    f"(ATC {e['atc_code']}{', ' + e['route'] if e.get('route') else ''})")
         srcs = [{"source_id": i["item_id"], "label": i.get("list_source"), "system": i["source"],
-                 "captured_at": i["available_at_time"], "entries": i["entries"]}
-                for i in self.items if i["data_type"] == "MedicationList"]
+                 "recorded_value": "; ".join(rec(e) for e in i["entries"]) or "no medications recorded",
+                 "captured_at": i["available_at_time"]} for i in self.items if i["data_type"] == "MedicationList"]
         return {"case_id": self.case_id, "sources": srcs} | self._meta()
 
     def systems_opened(self, called: set[str]) -> int:
@@ -380,10 +434,10 @@ class CasePageEnv(Env):
 
 
 def build_system_prompt(persona: str) -> str:
-    rf = "\n".join(f"- {r['rule_id']}: {r['description']} Criterion: {json.dumps(r['criterion'], ensure_ascii=False)}"
+    rf = "\n".join(f"- {r['rule_id']} ({RF_PHRASES[r['rule_id']]}): {r['description']} Criterion: {json.dumps(r['criterion'], ensure_ascii=False)}"
                    for r in _templ("red_flags.json"))
     it = "\n".join(f"- {x['issue_type']}: {x['definition']}" for x in _templ("issue_types.json"))
-    req = ", ".join(x["input"] for x in _templ("care_required_inputs.json")["required_inputs"])
+    req = "\n".join(f"- {c}: {d}" for c, d in MISSING_VOCAB.items())
     return (
         f"You are a {PERSONAS[persona]}. All data is SYNTHETIC (research prototype, not for clinical use). "
         "You prepare a case before the consult; a clinician decides, you do not diagnose or treat.\n"
@@ -396,10 +450,10 @@ def build_system_prompt(persona: str) -> str:
         f"vitals_trend rule: {TREND_RULE}\n"
         "current_meds: every distinct generic drug name (lowercase) on ANY medication list (home, patient-reported, order).\n"
         f"medication_issues: differences between the lists or order problems, using these issue_type values:\n{it}\n"
-        f"red_flags: the rule_ids below whose criterion is met by the retrieved data (empty list if none):\n{rf}\n"
+        f"red_flags: the ids (RF-...) below whose criterion is met by the retrieved data (empty list if none):\n{rf}\n"
         "escalate: true if any red flag is present, otherwise false.\n"
-        f"missing_info: required inputs that are missing or unknown in the retrieved data (unknown is missing, "
-        f"never negative). Allowed codes: {req}.\n"
+        "missing_info: which of these required inputs are missing or unknown in the retrieved data (unknown counts as missing, "
+        f"never as negative). Closed list of allowed codes, use only these:\n{req}\n"
         "Empty list [] when nothing applies."
     )
 
@@ -555,6 +609,27 @@ class Budget:
     price_cached: float = 0.01
     spent: float = 0.0
     stopped: bool = False
+    reserved: float = 0.0
+    lock: Any = field(default_factory=threading.Lock, repr=False, compare=False)
+
+    def reserve(self, messages: list, max_tokens: int) -> float:
+        """Worst-case cost of the next call, held until settled: spend can never exceed the limit under concurrency."""
+        est = (len(json.dumps(messages, ensure_ascii=False).encode()) / 2 * self.price_in + max_tokens * self.price_out) / 1e6
+        with self.lock:
+            if self.stopped or self.spent + self.reserved + est > self.limit_usd:
+                self.stopped = True
+                raise BudgetStop
+            self.reserved += est
+        return est
+
+    def settle(self, est: float, usage: dict) -> None:
+        with self.lock:
+            self.reserved -= est
+            self.spent += self.cost(usage)
+
+    def release(self, est: float) -> None:
+        with self.lock:
+            self.reserved -= est
 
     def cost(self, u: dict) -> float:
         cached = min(u.get("cached_tokens", 0), u["prompt_tokens"])
@@ -598,11 +673,15 @@ def run_trial(llm, env: Env, persona: str, case: Case, cfg: TrialCfg, budget: Bu
     status, answer_raw, t0, turns = "turn_cap", None, time.monotonic(), 0
     try:
         for turns in range(1, cfg.max_turns + 1):
-            budget.check()
-            comp = llm.complete(messages, env.tools, cfg.tool_mode, cfg.max_tokens, cfg.temperature)
+            est = budget.reserve(messages, cfg.max_tokens)
+            try:
+                comp = llm.complete(messages, env.tools, cfg.tool_mode, cfg.max_tokens, cfg.temperature)
+            except BaseException:
+                budget.release(est)
+                raise
             for k in usage:
                 usage[k] += comp.usage.get(k, 0)
-            budget.add(comp.usage)
+            budget.settle(est, comp.usage)
             models.add(comp.model)
             log.append({"event": "assistant", "turn": turns, "content": comp.content, "tool_calls": comp.tool_calls, "usage": comp.usage})
             requests: list[tuple[str | None, str, Any]] = []  # (call id, name, args | parse-error)
@@ -651,7 +730,7 @@ def run_trial(llm, env: Env, persona: str, case: Case, cfg: TrialCfg, budget: Bu
         "cost_usd": round(budget.cost(usage), 6), "turns": turns, "wall_s": round(wall, 3),
         "tool_calls": len(calls), "distinct_tools": len(called), "systems_opened": env.systems_opened(called),
         "repeated_opens": len(calls) - len(set(calls)),
-        "tokens": usage["prompt_tokens"] + usage["completion_tokens"],
+        "tokens": usage["prompt_tokens"] + usage["completion_tokens"], "input_tokens": usage["prompt_tokens"],
     }
     log.append({"event": "end", "status": status, "score": score})
     rec["_log"] = log
@@ -690,6 +769,8 @@ def score_trial(ref: Reference, ans: dict | None) -> dict:
             ok_issues = False
     f["medication_issues"] = ok_issues and rep_issues == {(_norm(t), d) for t, d in ref.medication_issues}
     rf = _set(ans.get("red_flags"))
+    if rf is not None:
+        rf = frozenset(RF_ALIASES.get(x, x) for x in rf)
     f["red_flags"] = rf is not None and rf == frozenset(_norm(x) for x in ref.red_flags)
     f["escalate"] = isinstance(ans.get("escalate"), bool) and ans["escalate"] == ref.escalate
     f["missing_info"] = _set(ans.get("missing_info")) == frozenset(_norm(x) for x in ref.missing_info)
@@ -711,34 +792,35 @@ def make_env(arm: str, case: Case, persona: str, queue_ids: list[str]) -> Env:
     return MultiSystemEnv(case.snapshot, persona) if arm == "A" else CasePageEnv(case.snapshot, persona, queue_ids)
 
 
-def run_benchmark(llm, cases: list[Case], personas: list[str], k: int, cfg: TrialCfg, budget: Budget, out: Path | None = None) -> list[dict]:
-    """Case-major order so a budget stop leaves complete A/B pairs. Returns trial records."""
-    trials: list[dict] = []
+def run_benchmark(llm, cases: list[Case], personas: list[str], k: int, cfg: TrialCfg, budget: Budget, out: Path | None = None,
+                  workers: int = 1) -> list[dict]:
+    """Jobs = (case, persona, trial), each running arm A then arm B. Case-major submission, thread pool, exact budget."""
     queue_ids = [c.case_id for c in cases]
     tdir = None
     if out is not None:
         tdir = out / "transcripts"
         tdir.mkdir(parents=True, exist_ok=True)
-    try:
-        for case in cases:
-            for persona in personas:
-                for n in range(k):
-                    pair = []
-                    for arm in ARMS:
-                        rec = run_trial(llm, make_env(arm, case, persona, queue_ids), persona, case, cfg, budget)
-                        rec["trial"] = n
-                        pair.append(rec)
-                        if tdir is not None:
-                            with (tdir / f"{arm}__{persona}__{case.case_id}__k{n}.jsonl").open("w", encoding="utf-8") as fh:
-                                for ev in rec["_log"]:
-                                    fh.write(json.dumps(ev, ensure_ascii=False) + "\n")
-                        del rec["_log"]
-                    trials.extend(pair)
-                    if any(r["status"] == "budget_stop" for r in pair):
-                        raise BudgetStop
-    except BudgetStop:
-        budget.stopped = True
-    return trials
+    jobs = [(case, persona, n) for case in cases for persona in personas for n in range(k)]
+
+    def job(j) -> list[dict]:
+        case, persona, n = j
+        pair: list[dict] = []
+        for arm in ARMS:
+            if budget.stopped:
+                break
+            rec = run_trial(llm, make_env(arm, case, persona, queue_ids), persona, case, cfg, budget)
+            rec["trial"] = n
+            if tdir is not None:
+                with (tdir / f"{arm}__{persona}__{case.case_id}__k{n}.jsonl").open("w", encoding="utf-8") as fh:
+                    for ev in rec["_log"]:
+                        fh.write(json.dumps(ev, ensure_ascii=False) + "\n")
+            del rec["_log"]
+            pair.append(rec)
+        return pair
+
+    with ThreadPoolExecutor(max_workers=max(1, workers)) as ex:
+        results = list(ex.map(job, jobs))
+    return [t for pair in results for t in pair]
 
 
 def _arr(vals) -> np.ndarray:
@@ -795,7 +877,7 @@ def summarize(trials: list[dict], k: int, n_boot: int = 2000) -> dict:
             [t["score"][flag] for t in A], [t["score"][flag] for t in B])
     anyd = lambda ts: [t["score"]["has_red_flag"] or t["score"]["has_med_issue"] for t in ts]  # noqa: E731
     add("critical_miss_any", [t["score"]["critical_miss_any"] for t in A], [t["score"]["critical_miss_any"] for t in B], anyd(A), anyd(B))
-    for name in ("tool_calls", "systems_opened", "distinct_tools", "repeated_opens", "turns", "tokens", "wall_s", "cost_usd"):
+    for name in ("tool_calls", "systems_opened", "distinct_tools", "repeated_opens", "turns", "tokens", "input_tokens", "wall_s", "cost_usd"):
         add(name, [t[name] for t in A], [t[name] for t in B])
     # pass^k: (case, persona) succeeds only if all k trials succeed (tau-bench). Rows are (case, persona).
     def passk(arm):
@@ -822,10 +904,10 @@ def render_md(res: dict) -> str:
          f"Evaluation `{res['evaluation_id']}` - generated {res['created_utc']}. Manifest: `{res['manifest']['id']}` "
          f"(status {res['manifest']['status']}).", "",
          "## Setup", "",
-         f"- Arms: A = {ARM_NAMES['A']} (4 tools, one per snapshot source); B = {ARM_NAMES['B']} (4 tools, one page; an adapter, not a MedX app run). Same model, temperature, prompts, task.",
+         f"- Arms: A = {ARM_NAMES['A']} (4 tools, one per snapshot source); B = {ARM_NAMES['B']} (5 tools, one screen each; an adapter, not a MedX app run). Same model, temperature, prompts, task.",
          f"- Model ids reported by the endpoint: {', '.join(res['model_ids']) or 'none'}; requested `{res['protocol']['model']}`; tool mode `{res['protocol']['tool_mode']}`; temperature {res['protocol']['temperature']}.",
          f"- Dataset `{res['dataset']['path']}` split `{res['dataset']['split']}` decision point {res['dataset']['decision_point']}; "
-         f"{len(res['cases'])} cases (stratified, seed {res['protocol']['seed']}), personas {', '.join(res['protocol']['personas'])}, k={res['protocol']['k']}.",
+         f"{len(res['cases'])} cases (every gold-red-flag case, then seeded random fill; seed {res['protocol']['seed']}), personas {', '.join(res['protocol']['personas'])}, k={res['protocol']['k']}.",
          f"- Trials planned {res['integrity']['planned_trials']}, run {res['integrity']['run_trials']}, complete A/B pairs analysed "
          f"{res['summary'].get('n_pairs', 0)}, excluded {res['summary'].get('excluded_trials', 0)}. Budget {res['budget']['spent_usd']:.4f} of "
          f"{res['budget']['limit_usd']:.2f} USD{' - STOPPED at budget, partial results' if res['budget']['stopped'] else ''}.",
@@ -846,6 +928,7 @@ def render_md(res: dict) -> str:
               "Criteria (all required): (a) lower 95% bound of task_success B-A >= -0.10; (b) lower 95% bound of tool_calls A-B > 0; (c) critical-miss rate B <= A (point estimate). "
               f"Observed: (a) {_f(v['a_lower_bound_B_minus_A'])}, (b) {_f(v['b_tool_calls_A_minus_B_ci_low'])}, (c) A/B {v['c_critical_miss_A_B']}. pass^k per arm is in the table (pass_hat_k).",
               "This reading is about simulated users only."]
+    L += UI_MAP
     L += ["", "## Limitations", "",
           "- Simulated users are one LLM role-playing personas; behaviour is not human behaviour. No usability, satisfaction, learning or clinical-outcome claim is supported.",
           "- Gold is synthetic reference labels from predeclared rules (not expert-reviewed, not clinical ground truth); vitals_trend and current_meds references are derived by the stated rules.",
@@ -857,7 +940,7 @@ def render_md(res: dict) -> str:
     return "\n".join(L)
 
 
-_CONT = {"tool_calls", "systems_opened", "distinct_tools", "repeated_opens", "turns", "tokens", "wall_s", "cost_usd"}
+_CONT = {"tool_calls", "systems_opened", "distinct_tools", "repeated_opens", "turns", "tokens", "input_tokens", "wall_s", "cost_usd"}
 
 
 def load_env_file(path: Path | None = None) -> None:
@@ -901,7 +984,7 @@ def execute(args, llm, cases: list[Case], out: Path, dataset: Path) -> dict:
     cfg = TrialCfg(args.tool_mode, args.max_turns, args.max_tokens, args.temperature)
     budget = Budget(args.budget_usd, args.price_in, args.price_out, args.price_cached)
     out.mkdir(parents=True, exist_ok=True)
-    trials = run_benchmark(llm, cases, personas, args.k, cfg, budget, out)
+    trials = run_benchmark(llm, cases, personas, args.k, cfg, budget, out, getattr(args, "workers", 1))
     manifest_path = Path(args.manifest) if args.manifest else None
     manifest = _load(manifest_path) if manifest_path and manifest_path.is_file() else {}
     res = {
@@ -909,7 +992,7 @@ def execute(args, llm, cases: list[Case], out: Path, dataset: Path) -> dict:
         "manifest": {"id": manifest.get("evaluation_id", "none"), "status": manifest.get("status", "none"),
                      "sha256": file_sha(manifest_path) if manifest_path else None},
         "protocol": {"model": getattr(llm, "model", ""), "tool_mode": cfg.tool_mode, "temperature": cfg.temperature,
-                     "max_turns": cfg.max_turns, "max_tokens": cfg.max_tokens, "k": args.k, "personas": personas, "seed": args.seed,
+                     "max_turns": cfg.max_turns, "max_tokens": cfg.max_tokens, "workers": getattr(args, "workers", 1), "k": args.k, "personas": personas, "seed": args.seed,
                      "price_usd_per_1m": {"in": args.price_in, "out": args.price_out, "cached_in": args.price_cached},
                      "notes": "; ".join(getattr(llm, "notes", []))},
         "dataset": {"path": str(dataset), "split": cases[0].split if cases else args.split, "decision_point": args.decision_point,
@@ -978,9 +1061,9 @@ def _policy(answers: dict, sloppy_repeat: bool = False, bad: set | None = None, 
 
     def policy(env, case_id, trial_no, turn):
         steps = {"A": ["get_opd_note", "get_vitals", "get_medications", "get_labs"],
-                 "B": ["get_queue", "get_case_overview", "get_timeline", "get_medications"]}[env]
+                 "B": ["get_queue", "get_case_overview", "get_intake", "get_timeline", "get_medications"]}[env]
         if sloppy_repeat and env == "A":
-            steps = steps + ["get_vitals"]
+            steps = steps + ["get_vitals", "get_labs"]
         if turn < len(steps):
             return {"type": "tools", "calls": [(steps[turn], {} if steps[turn] == "get_queue" else {"case_id": case_id})]}
         ans = copy.deepcopy(answers[case_id])
@@ -992,7 +1075,7 @@ def _policy(answers: dict, sloppy_repeat: bool = False, bad: set | None = None, 
 
 
 def _args(**kw):
-    ns = argparse.Namespace(personas="nurse,physician", k=1, tool_mode="native", max_turns=12, max_tokens=400, temperature=0.0,
+    ns = argparse.Namespace(personas="nurse,physician", k=1, tool_mode="native", max_turns=12, max_tokens=400, temperature=0.0, workers=1,
                             budget_usd=3.0, price_in=0.10, price_out=0.50, price_cached=0.01, manifest=None, evaluation_id="selfcheck",
                             seed=1, split="dev", decision_point="T2", n_boot=200)
     ns.__dict__.update(kw)
@@ -1031,6 +1114,7 @@ def selfcheck() -> None:
     ok(os.environ["SIMUSER_MODEL"] == "envfile-model" and os.environ["SIMUSER_BASE_URL"] == "keep" and "OTHER" not in os.environ, ".env fills only missing SIMUSER_* vars")
     os.environ.pop("SIMUSER_MODEL", None)
     os.environ.pop("SIMUSER_BASE_URL", None)
+    ok({c.case_id for c in select_cases(cases, 2, 3)} == {"S0", "S1"}, "selection includes every gold-red-flag case first")
     ok(select_cases(cases, 4, 1) == select_cases(cases, 4, 1) and len({c.case_id for c in select_cases(cases, 3, 1)}) == 3, "stratified selection deterministic")
     ok({c.strata for c in select_cases(cases, 4, 7)} == {c.strata for c in cases}, "selection covers strata")
 
@@ -1051,16 +1135,20 @@ def selfcheck() -> None:
         ok(A.call("get_vitals", {"case_id": "OTHER"}) == {"error": "case_not_found"} and A.call("nope", {})["error"] == "unknown_tool", "A error paths")
         a_ids = {i["item_id"] for r in o.values() for i in r["records"]}
         b_out = [B.call("get_case_overview", {"case_id": c.case_id}), B.call("get_timeline", {"case_id": c.case_id}),
-                 B.call("get_medications", {"case_id": c.case_id}), B.call("get_queue", {})]
-        b_ids = {b_out[0][k]["item_id"] for k in ("demographics", "allergies", "intake") if b_out[0][k]}
-        b_ids |= {e["event_id"] for e in b_out[1]["items"]} | {s["source_id"] for s in b_out[2]["sources"]}
+                 B.call("get_medications", {"case_id": c.case_id}), B.call("get_queue", {}), B.call("get_intake", {"case_id": c.case_id})]
+        b_ids = {e["event_id"] for e in b_out[1]["items"]} | {s["source_id"] for s in b_out[2]["sources"]}
+        vis_items = visible_items(c.snapshot)
+        ok(b_out[4]["intake"]["turns"] == next(i for i in vis_items if i["data_type"] == "IntakeTranscript")["turns"], "B intake carries the transcript")
+        ok(all(str(m["dose_value"]) in json.dumps(b_out[2]) and m["atc_code"] in json.dumps(b_out[2]) for i in vis_items if i["data_type"] == "MedicationList" for m in i["entries"]), "B medication cards carry dose and ATC")
+        ok("ATC class J01D" in json.dumps(b_out[1], ensure_ascii=False) and "50 years" in json.dumps(b_out[1]) and c.snapshot["case_id"] in json.dumps(b_out[0]), "B carries allergy class and demographics")
+        ok(set(b_out[0]) >= {"display_name", "demographics", "stage", "owner", "next_action", "tabs"} and "safety" not in b_out[0] and "red_flags" not in json.dumps(b_out[0]), "B overview = UI header only, no system flags")
         vis = {i["item_id"] for i in visible_items(c.snapshot)}
         ok(a_ids == vis and b_ids == vis, "same information reachable in A and B (= visible items)")
         ok(not any(i["item_id"].endswith("FUT") for i in [x for r in o.values() for x in r["records"]]) and not any("FUT" in json.dumps(b) for b in b_out), "temporal filter (available_at_time > T) in A and B")
         blob = json.dumps([o, b_out], ensure_ascii=False)
         ok(not any(t in blob for t in FORBIDDEN_IN_TOOL_OUTPUT), "no gold keys in tool output")
         vit = [e for e in b_out[1]["items"] if e["kind"] == "vitals"]
-        ok(len(vit) == 2 and "hr" in vit[0]["detail"], "B timeline carries vitals in full")
+        ok(len(vit) == 2 and "HR " in vit[0]["detail"] and "Temp 37.0 C" in vit[0]["detail"], "B timeline carries vitals in full")
         ok({i["case_id"] for i in b_out[3]["items"]} == {c.case_id, "S0", "S1"}, "B queue lists role tasks")
     ok(CasePageEnv(cases[0].snapshot, "nurse").systems_opened({"get_timeline", "get_medications"}) == 1 and MultiSystemEnv(cases[0].snapshot, "nurse").systems_opened({"get_labs", "get_vitals"}) == 2, "systems_opened")
 
@@ -1094,8 +1182,8 @@ def selfcheck() -> None:
         tr = res["trials"]
         a_s0 = next(t for t in tr if t["env"] == "A" and t["case_id"] == "S0" and t["persona"] == "nurse")
         b_s0 = next(t for t in tr if t["env"] == "B" and t["case_id"] == "S0" and t["persona"] == "nurse")
-        ok(a_s0["tool_calls"] == 5 and a_s0["repeated_opens"] == 1 and a_s0["systems_opened"] == 4 and a_s0["distinct_tools"] == 4, f"{mode}: A effort counts")
-        ok(b_s0["tool_calls"] == 4 and b_s0["systems_opened"] == 1 and b_s0["repeated_opens"] == 0, f"{mode}: B effort counts")
+        ok(a_s0["tool_calls"] == 6 and a_s0["repeated_opens"] == 2 and a_s0["systems_opened"] == 4 and a_s0["distinct_tools"] == 4, f"{mode}: A effort counts")
+        ok(b_s0["tool_calls"] == 5 and b_s0["systems_opened"] == 1 and b_s0["repeated_opens"] == 0, f"{mode}: B effort counts")
         ok(a_s0["score"]["critical_miss_any"] and b_s0["score"]["task_success"], f"{mode}: A bad / B perfect scored")
         m = res["summary"]["metrics"]
         ok(res["summary"]["n_pairs"] == 8 and res["summary"]["excluded_trials"] == 0, f"{mode}: all pairs analysed")
@@ -1122,10 +1210,17 @@ def selfcheck() -> None:
 
     # budget stop writes partial results with complete pairs only
     llm = ScriptedLLM(_policy(answers))
-    res = execute(_args(budget_usd=0.0009, price_in=1.0, price_out=1.0), llm, cases, tmp / "run-budget", ds)
-    ok(res["budget"]["stopped"] and res["integrity"]["run_trials"] < res["integrity"]["planned_trials"], "budget stop is clean")
+    res = execute(_args(budget_usd=0.03, price_in=1.0, price_out=1.0), llm, cases, tmp / "run-budget", ds)
+    ok(res["budget"]["spent_usd"] <= 0.03 and res["budget"]["stopped"] and res["integrity"]["run_trials"] < res["integrity"]["planned_trials"], "budget stop is clean")
     ok((tmp / "run-budget" / "results.json").is_file() and "STOPPED at budget" in (tmp / "run-budget" / "results.md").read_text(encoding="utf-8"), "partial results written and flagged")
     ok(res["summary"]["excluded_trials"] == res["integrity"]["run_trials"] - res["summary"].get("n_pairs", 0) * 2, "incomplete pair excluded from analysis")
+
+    # concurrency: same results as sequential; budget exact (never exceeded) with 4 workers
+    r1 = execute(_args(k=2), ScriptedLLM(_policy(answers)), cases, tmp / "run-w1", ds)
+    r4 = execute(_args(k=2, workers=4), ScriptedLLM(_policy(answers)), cases, tmp / "run-w4", ds)
+    ok(r1["summary"]["metrics"]["task_success"] == r4["summary"]["metrics"]["task_success"] and len(r1["trials"]) == len(r4["trials"]) == 32, "workers=4 matches workers=1")
+    rb = execute(_args(k=2, workers=4, budget_usd=0.05, price_in=1.0, price_out=1.0), ScriptedLLM(_policy(answers)), cases, tmp / "run-w4b", ds)
+    ok(rb["budget"]["stopped"] and rb["budget"]["spent_usd"] <= 0.05 and rb["integrity"]["run_trials"] < 32, "budget exact under concurrency")
 
     # cost accounting incl. cached tokens
     b = Budget(1.0, 0.10, 0.50, 0.01)
@@ -1213,7 +1308,9 @@ def selfcheck() -> None:
     if (real / "manifest.json").is_file():
         rc = load_cases(real, "dev", "T2")
         pick = select_cases(rc, 8, 1)
-        ok(len(pick) == 8 and len({c.strata for c in pick}) >= 3, "real dev cases load and stratify")
+        ok(len(pick) == 8 and all(c.ref.red_flags for c in pick[: sum(bool(c.ref.red_flags) for c in rc)][:8]), "real dev cases load; red-flag cases first")
+        allmiss = {m for sp in ("train", "dev") for c in load_cases(real, sp, "T2") + load_cases(real, sp, "T1") for m in c.ref.missing_info}
+        ok(allmiss <= set(MISSING_VOCAB), "gold missing-info values are inside the closed vocabulary")
         est = {}
         for arm in ARMS:
             tot = []
@@ -1222,7 +1319,7 @@ def selfcheck() -> None:
                 sysp = build_system_prompt("nurse") + task_prompt(c)
                 ctx = len(sysp.encode()) / 3
                 inp = 0.0
-                steps = ["get_opd_note", "get_vitals", "get_medications", "get_labs"] if arm == "A" else ["get_queue", "get_case_overview", "get_timeline", "get_medications"]
+                steps = ["get_opd_note", "get_vitals", "get_medications", "get_labs"] if arm == "A" else ["get_queue", "get_case_overview", "get_intake", "get_timeline", "get_medications"]
                 for s in steps:
                     inp += ctx + 40  # each call resends the context so far
                     ctx += len(json.dumps(env.call(s, {"case_id": c.case_id}), ensure_ascii=False).encode()) / 3 + 40
@@ -1248,17 +1345,18 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--dataset", default=DEFAULT_DATASET)
     ap.add_argument("--split", default="dev", choices=ALLOWED_SPLITS)
     ap.add_argument("--decision-point", default="T2", choices=("T1", "T2"))
-    ap.add_argument("--cases", type=int, default=12)
-    ap.add_argument("--k", type=int, default=3)
+    ap.add_argument("--cases", type=int, default=40)
+    ap.add_argument("--k", type=int, default=4)
     ap.add_argument("--personas", default="nurse,physician,pharmacist")
     ap.add_argument("--seed", type=int, default=20260929)
     ap.add_argument("--out", default=None)
     ap.add_argument("--manifest", default=None)
     ap.add_argument("--evaluation-id", default=None)
-    ap.add_argument("--tool-mode", default="native", choices=("native", "json"))
+    ap.add_argument("--tool-mode", default="json", choices=("native", "json"), help="gpt-6-luna rejects native tools")
+    ap.add_argument("--workers", type=int, default=8)
     ap.add_argument("--temperature", type=float, default=0.0)
     ap.add_argument("--max-turns", type=int, default=12)
-    ap.add_argument("--max-tokens", type=int, default=400)
+    ap.add_argument("--max-tokens", type=int, default=2500, help="hidden reasoning needs headroom (400 gave empty output)")
     ap.add_argument("--price-in", type=float, default=0.10, help="USD per 1M input tokens")
     ap.add_argument("--price-out", type=float, default=0.50, help="USD per 1M output tokens")
     ap.add_argument("--price-cached", type=float, default=0.01, help="USD per 1M cached input tokens")

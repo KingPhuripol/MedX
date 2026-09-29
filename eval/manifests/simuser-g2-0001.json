@@ -20,40 +20,84 @@
   "test_split_access": "final run only: fresh held-out dataset (test split, SYNH-/SYNHE- ids) under artifacts/g2-heldout-*/; run.py opens test only if this manifest is FROZEN and dataset_manifest_sha256 matches"
  },
  "case_selection": {
-  "n_cases": 12,
-  "rule": "round-robin over strata (gold red_flag, gold med_issue, gold missing_info), within stratum ordered by sha256(seed:case_id)",
+  "n_cases": 40,
+  "rule": "every case with a gold red flag at the decision point first (seeded sha256 order), then seeded random fill from the remaining cases, up to n_cases",
   "seed": 20260929,
   "unit_of_analysis": "case (synthetic patient); persona and trial are repeats inside the case cluster"
  },
  "arms": {
   "A": "multi-system: get_opd_note, get_labs, get_medications, get_vitals (only sources that exist in the snapshot; every fact reachable in both arms)",
-  "B": "single-case consolidated view (MedX case-page schema): get_queue, get_case_overview, get_timeline, get_medications; schema-faithful adapter over the snapshot, not a MedX app run; no system-computed red-flag or discrepancy hints"
+  "B": "single-case consolidated view (MedX case-page schema): get_queue, get_case_overview (header only), get_intake, get_medications, get_timeline; one tool per V2 UI screen (web/components/clinical/CaseWorkspace.tsx), adapter over the snapshot, not a MedX app run; system-authored red-flag banner and discrepancy card not reproduced; UI to tool mapping in results.md"
  },
  "simulator": {
-  "personas": ["nurse", "physician", "pharmacist"],
-  "k_trials": 3,
+  "personas": [
+   "nurse",
+   "physician",
+   "pharmacist"
+  ],
+  "k_trials": 4,
   "model_env": "SIMUSER_MODEL (default gpt-6-luna)",
   "endpoint_env": "SIMUSER_BASE_URL (default https://api.openai.com/v1); key in SIMUSER_API_KEY, never recorded",
   "temperature": 0.0,
   "max_turns": 12,
-  "max_tokens_per_response": 400,
-  "tool_mode": "native (fallback json if endpoint rejects tools)",
+  "max_tokens_per_response": 2500,
+  "tool_mode": "json (gpt-6-luna rejects native tools)",
   "same_model_prompts_temperature_both_arms": true,
-  "simulator_sees_gold": false
+  "simulator_sees_gold": false,
+  "workers": 8,
+  "max_tokens_note": "400 gave empty output (hidden reasoning); 2500 gives valid answers",
+  "closed_vocabularies": "missing_info codes (chief_complaint, duration, allergy_status, vitals.temp_c), vitals_trend labels, red-flag ids with clinical phrases: identical prompt text in both arms, lists only, never per-case gold"
  },
- "budget": {"usd_limit": 3.0, "price_in_per_1m": 0.10, "price_out_per_1m": 0.50, "price_cached_in_per_1m": 0.01, "stop_rule": "stop cleanly, write partial results, analyse complete A/B pairs only"},
+ "budget": {
+  "usd_limit": 3.0,
+  "price_in_per_1m": 0.1,
+  "price_out_per_1m": 0.5,
+  "price_cached_in_per_1m": 0.01,
+  "stop_rule": "worst-case cost reserved before every call (exact under concurrency); stop cleanly, write partial results, analyse complete A/B pairs only"
+ },
  "task_success_rule": "all six fields correct: vitals_trend (derived by stated rule), current_meds (set of generic names on any list at T), medication_issues (set of (issue_type, drug set) equal to gold), red_flags (set of gold rule_ids), escalate (== gold expected_action escalate), missing_info (set of gold care.required_inputs_missing)",
  "critical_miss_rule": "gold red flag not reported or escalate != true when gold escalates; or gold medication issue whose drugs appear in no reported issue. No answer counts as a miss.",
  "denominators": "every started trial stays in the denominator (invalid answer, turn cap, provider error = failed). Only budget-stopped incomplete pairs are excluded and counted.",
- "metrics": ["task_success", "pass_hat_k", "field_* (6)", "critical_miss_redflag", "critical_miss_med", "critical_miss_any", "tool_calls", "systems_opened", "distinct_tools", "repeated_opens", "turns", "tokens", "wall_s", "cost_usd", "answer_valid", "no_answer"],
- "primary_comparison": "paired A-B difference in tool_calls (effort), with task_success non-inferiority and critical-miss check",
- "statistics": {"ci": "percentile 95%, patient(case)-level cluster bootstrap, 2000 resamples, paired draws A vs B", "seed": 20260929, "code": "eval/bootstrap.py"},
+ "metrics": [
+  "task_success",
+  "pass_hat_k",
+  "field_* (6)",
+  "critical_miss_redflag",
+  "critical_miss_med",
+  "critical_miss_any",
+  "tool_calls",
+  "systems_opened",
+  "distinct_tools",
+  "repeated_opens",
+  "turns",
+  "tokens",
+  "wall_s",
+  "cost_usd",
+  "answer_valid",
+  "no_answer",
+  "input_tokens"
+ ],
+ "primary_comparison": "paired A-B difference in tool_calls per trial (effort), with task_success non-inferiority and critical-miss check; input_tokens per trial reported as reading burden",
+ "statistics": {
+  "ci": "percentile 95%, patient(case)-level cluster bootstrap, 2000 resamples, paired draws A vs B",
+  "seed": 20260929,
+  "code": "eval/bootstrap.py"
+ },
  "reading_thresholds": {
-  "supported_iff_all": ["(a) lower 95% bound of task_success (B - A) >= -0.10", "(b) lower 95% bound of paired tool_calls difference (A - B) > 0", "(c) critical_miss_any rate B <= A (point estimate)"],
+  "supported_iff_all": [
+   "(a) lower 95% bound of task_success (B - A) >= -0.10",
+   "(b) lower 95% bound of paired tool_calls difference (A - B) > 0",
+   "(c) critical_miss_any rate B <= A (point estimate)"
+  ],
   "otherwise": "not supported; report failed criteria; pass^k reported per arm"
  },
  "multiplicity": "one primary comparison (effort); all other metrics exploratory",
- "hashes_TO_FREEZE": {"code_revision": null, "run_py_sha256": null, "config_sha256": null},
+ "hashes_TO_FREEZE": {
+  "code_revision": null,
+  "run_py_sha256": null,
+  "config_sha256": null
+ },
  "output": "eval/results/simuser/<evaluation_id>/{results.json,results.md,transcripts/}",
- "notes": "Small n, one simulator model: hypothesis-generating support for the Gate 2 assumption, not human usability and not clinical performance."
+ "notes": "Small n, one simulator model: hypothesis-generating support for the Gate 2 assumption, not human usability and not clinical performance.",
+ "planned_trials": "40 cases x 3 personas x k=4 x 2 arms = 960"
 }
