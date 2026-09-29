@@ -1,0 +1,6 @@
+# Slice d1: only what the FastAPI backend imports at runtime (verified by importing the app and running the
+# demo flow in a clean venv built from this file). Versions match requirements.lock. No torch/transformers/ML.
+fastapi==0.141.1
+pydantic==2.13.5
+sqlalchemy==2.0.54
+httpx==0.28.1
