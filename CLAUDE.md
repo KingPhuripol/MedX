@@ -79,7 +79,7 @@ Every run requires a validated manifest, code revision, config hash, data/split 
 - Human confirmation is required before a recommendation affects care.
 - Log model/provider version, contract version, timestamps, inputs by approved reference, outputs, overrides, and reviewer identity.
 - External providers are prototype dependencies, never ground truth. Provider-specific SDKs remain inside gateway adapters.
-- The MedX web UI uses only the design tokens in `web/app/theme.css` (SCBX R&D visual system: grey/purple palette, SCBXBeta2 font, `x` motif, `→` next-step strip) with a MedX wordmark — never the SCBX logo, and never ad-hoc colors.
+- The MedX web UI uses only the design tokens in `web/app/theme.css` (MedX clinical hospital-blue palette per `docs/UI-SPEC.md`, SCBXBeta2 font; owner decision 2026-09-29 replaced the grey/purple SCBX palette) with a MedX wordmark — never the SCBX logo, and never ad-hoc colors.
 
 ## Human approval gates
 
