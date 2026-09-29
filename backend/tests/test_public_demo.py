@@ -12,7 +12,6 @@ from app.config import PUBLIC_DEMO_DATABASE_URL, Settings
 from app.db import audit_events, make_engine, users
 from app.demo import bootstrap, sign_session, verify_session
 from app.deps import SESSION_COOKIE
-from app.gateway.adapters.mock import MockProvider
 from app.main import create_app
 from app.roles import Role
 
@@ -85,7 +84,7 @@ def test_off_by_default():
 
 def test_cold_start_seeds_and_uses_mock(demo_client):
     app = demo_client.app
-    assert isinstance(app.state.provider, MockProvider)
+    assert app.state.provider.name == "mock"
     with app.state.engine.connect() as conn:
         assert conn.execute(select(func.count()).select_from(users)).scalar() == 3
 
