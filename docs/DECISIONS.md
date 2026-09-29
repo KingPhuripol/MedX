@@ -74,3 +74,11 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
 - **Login:** no password. With `PUBLIC_DEMO=1` (Vercel only), the login page offers one-click nurse, physician and pharmacist buttons; RBAC still applies per role. Local and dev builds keep password login.
 - **Approved by:** project owner (chat, 2026-09-29), including uploading code to Vercel and "no password" for the demo accounts.
 - **Take-down:** `vercel remove <project>` by the owner, or on request.
+
+## 2026-09-29 — Public Vercel demo deployed (both links live)
+- **Links:** grey/purple T1: https://medx-demo-t1.vercel.app (project `medx-demo-t1`, source `factory/d1` aa3b557 = main b0f668c + D1). Hospital blue U4: https://medx-demo-u4.vercel.app (project `medx-demo-u4`, source `factory/u4` 138153b = U4 + D1, plus `DEMO_MODE=1` for the `/demo` launcher).
+- **Env (both):** `PUBLIC_DEMO=1`, `NEXT_PUBLIC_PUBLIC_DEMO=1`, a random `SESSION_SECRET` per project (not recorded).
+- **Smoke-tested live:** `/api/health` reports mock; one-click role login; physician sees 40 synthetic cases (80 assess buttons); other roles' APIs give 403; password login 404; forged cookie 401; blue nurse lands on `/app/queue`.
+- **Incident:** the first T1 attempt auto-created a project named `t1` without env vars (the `--scope` flag failed). It was removed within minutes.
+- **main** now carries U4 + D1 (hospital blue is the main design). The U4 route change (role homes go to `/app/queue`; real triage/care/voice pages stay at their routes inside the shell, with no demo-case embedding) is pending owner confirmation.
+- **Take-down:** `vercel project rm medx-demo-t1` / `vercel project rm medx-demo-u4`.
