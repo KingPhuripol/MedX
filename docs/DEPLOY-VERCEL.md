@@ -22,11 +22,29 @@ vercel deploy --prod
 
 For the second link, repeat with `~/medx-vercel/u4` and `--project medx-demo-u4`. Use a different `SESSION_SECRET` for each project.
 
-Env vars: `SESSION_SECRET` (at least 32 characters, required), `PUBLIC_DEMO=1` (`api/index.py` forces it anyway), `NEXT_PUBLIC_PUBLIC_DEMO=1`. Never set `GATEWAY_PROVIDER`, `GATEWAY_EXTERNAL_ENABLED` or `EXTERNAL_*`: the function refuses to start if any of them is set.
+Env vars: `SESSION_SECRET` (at least 32 characters, required), `PUBLIC_DEMO=1` (`api/index.py` forces it anyway), `NEXT_PUBLIC_PUBLIC_DEMO=1`. Never set `GATEWAY_PROVIDER`, `GATEWAY_EXTERNAL_ENABLED` or `EXTERNAL_*`: the function refuses to start if any of them is set. `OPENAI_API_KEY` is used only by the voice session endpoint (see "Voice (blue link only)" below); the Model Gateway stays mock.
 
 Smoke test after deploying:
 - `curl https://<url>/api/health` should show `"default_provider":"mock"`.
 - Open `/login`, choose Physician, then check that `/physician/care` lists `SYNE-*` cases and that `/pharmacist` shows 403.
+
+## Voice (blue link only)
+
+MedX Live (`/live`) gets a 60-second browser client secret from `POST /api/voice/realtime/session`. This is a scoped exception to "mock only" (DECISIONS 2026-09-29) and covers the voice session endpoint only. Synthetic role-play or scripted audio only. Set these on the blue project (`medx-demo-u4`) and redeploy:
+
+```bash
+printf 1 | vercel env add VOICE_ENABLED production
+vercel env add OPENAI_API_KEY production          # owner pastes; sensitive
+openssl rand -hex 6 | tee /dev/tty | vercel env add VOICE_ACCESS_CODE production   # hand the code to the owner
+printf 300 | vercel env add VOICE_MAX_SESSION_SECONDS production
+printf 1 | vercel env add NEXT_PUBLIC_VOICE_ENABLED production   # build-time: shows the entry points
+```
+
+With `PUBLIC_DEMO=1` and no `VOICE_ACCESS_CODE`, the endpoint answers 503 `access_code_not_configured`. Optional: `VOICE_REALTIME_MODEL`, `VOICE_TRANSCRIBE_MODEL`. `VOICE_MAX_SESSION_SECONDS` must be 60-900.
+
+Smoke test: sign in as nurse, then `GET /api/voice/realtime/config` should return `enabled:true, access_code_required:true`; a wrong code on `POST /api/voice/realtime/session` returns 403.
+
+Recommended (owner): set a monthly budget on the vendor project. The rate limit (10 attempts per 10 minutes) is per warm instance, not global.
 
 ## 3. Take down
 

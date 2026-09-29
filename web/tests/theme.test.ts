@@ -80,6 +80,15 @@ const PAIRS: [string, string, string, number][] = [
   ["focus ring on background (non-text)", "primary", "background", 3],
   ["cover text on darkest stop", "card", "primary-deep", 4.5],
   ["cover text on middle stop", "card", "primary", 4.5],
+  ["live: text on call surface", "call-fg", "call-bg", 4.5],
+  ["live: muted text on call surface", "call-muted", "call-bg", 4.5],
+  ["live: control label on control fill", "call-fg", "call-control", 4.5],
+  ["live: end icon on end fill", "card", "call-end", 4.5],
+  ["live: start icon on start fill", "card", "orb-mid", 4.5],
+  ["live: control border (non-text)", "call-control-border", "call-bg", 3],
+  ["live: end fill (non-text)", "call-end", "call-bg", 3],
+  ["live: focus ring on call surface (non-text)", "call-focus", "call-bg", 3],
+  ["live: focus ring on control fill (non-text)", "call-focus", "call-control", 3],
 ];
 
 const NAMED_COLOURS =
@@ -122,6 +131,15 @@ describe("MedX hospital-blue theme", () => {
       (p) => p.ratio < p.min,
     );
     expect(failures).toEqual([]);
+  });
+
+  it("the PWA manifest colours equal the call-bg token", () => {
+    const manifest = JSON.parse(readFileSync(join(WEB, "public", "manifest.webmanifest"), "utf8"));
+    const want = resolveHex("call-bg").toLowerCase();
+    expect(String(manifest.theme_color).toLowerCase()).toBe(want);
+    expect(String(manifest.background_color).toLowerCase()).toBe(want);
+    expect(manifest.start_url).toBe("/live");
+    expect(manifest.icons.map((i: { src: string }) => i.src).every((src: string) => !/logo/i.test(src))).toBe(true);
   });
 
   it("no hard-coded colours outside theme.css (all web sources, tests included)", () => {

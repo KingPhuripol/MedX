@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
-import { ClipboardList, FlaskConical, LogOut, Mic, Pill, ShieldAlert, ShieldCheck, Stethoscope } from "lucide-react";
+import { AudioLines, ClipboardList, FlaskConical, LogOut, Mic, Pill, ShieldAlert, ShieldCheck, Stethoscope } from "lucide-react";
 import Wordmark from "@/components/Wordmark";
 import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -22,6 +22,10 @@ const roleTools: Record<Role, { href: string; label: string; en: string; icon: R
     { href: "/pharmacist/reconcile", label: "ทบทวนยา", en: "Medication reconciliation", icon: <Pill size={18} /> },
   ],
 };
+
+// MedX Live entry (slice v1): shown only when the build enables voice; the /live route itself always works.
+const liveTool = { href: "/live", label: "MedX Live", en: "Live voice intake", icon: <AudioLines size={18} /> };
+const voiceEnabled = () => process.env.NEXT_PUBLIC_VOICE_ENABLED === "1";
 
 function NavLink({ href, label, en, icon, active }: { href: string; label: string; en?: string; icon: ReactNode; active: boolean }) {
   return (
@@ -88,7 +92,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           </div>
           <nav className="nav-links">
             <NavLink href="/app/queue" label="คิวงาน" icon={<ClipboardList size={18} />} active={pathname === "/app/queue"} />
-            {(user ? roleTools[user.role] : []).map((t) => (
+            {(user ? [...roleTools[user.role], ...(user.role === "nurse" && voiceEnabled() ? [liveTool] : [])] : []).map((t) => (
               <NavLink key={t.href} {...t} active={pathname.startsWith(t.href)} />
             ))}
             <NavLink href="/demo" label="รอบเดโม" icon={<FlaskConical size={18} />} active={pathname === "/demo"} />

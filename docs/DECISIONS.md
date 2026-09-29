@@ -125,3 +125,31 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
 - **Scope and limits:** same as the 2026-09-29 public demo entry. Synthetic data only, mock provider only, research-prototype disclaimer on every page, no password with `PUBLIC_DEMO=1`.
 - **Also approved:** a step-by-step journey slide, a short screen-recording demo, a PDF export of the Gate 2 deck, and extending V2 so it opens several synthetic cases (a separate slice, deployed only after its checker and reviewer pass).
 - **Approved by:** project owner (chat, 2026-09-29).
+
+## 2026-09-29 — Redeploy medx-demo-u4 from main including V1 MedX Live voice
+- **What:** deploy main HEAD (u6 Overview summary plus the V1 MedX Live voice merge, `/live`) to `medx-demo-u4`, rather than u6 alone. The existing production env vars for voice stay as the voice session set them.
+- **Why:** the owner chose "deploy main ทั้งหมด (u6 + voice)" when told that main now contains the voice agent. The voice agent's own approval is entry 61ab4c9 (synthetic audio only, local + blue link).
+- **Approved by:** project owner (chat, 2026-09-29).
+
+## 2026-09-29 — V1 MedX Live shipped (main 61460fc, blue link redeployed)
+- **What:** `/live`, a mobile ChatGPT-Voice-style screen, plus `POST /api/voice/realtime/session` and `GET /api/voice/realtime/config`, per `slices/v1/SPEC.md`. Models: `gpt-realtime-2.1-mini`, with `gpt-4o-mini-transcribe` for transcription. The rules-based policy picks every question and extraction stays server-side.
+- **Vercel `medx-demo-u4` env added:** `VOICE_ENABLED`, `NEXT_PUBLIC_VOICE_ENABLED`, `OPENAI_API_KEY` (piped from `.env`, never printed), `VOICE_ACCESS_CODE` (given to the owner in chat). The Model Gateway stays mock.
+- **Verified:**
+  - Tests: OpenAI mocked in all automated tests. v1-voice e2e: 86 passed, 1 known voice-intake failure.
+  - Live endpoint checks:
+    - `/api/voice/realtime/config` reports enabled with the right models;
+    - a wrong access code gets 403;
+    - a correct code gets 200 and a real client secret from OpenAI, so the session config was accepted upstream (SPEC risk R3 cleared).
+  - **Not yet verified:** the full audio round trip (phone mic → WebRTC → transcription → turn → spoken question). The owner tests this on a phone with synthetic role-play.
+- **Pytest note:** 5 data_factory out-path-guard failures appear only in the `/private/tmp` integration worktree, and `repo_root` flakes in the main checkout while another session writes `web/.next`. V1 does not touch data_factory.
+
+## 2026-09-29 — Demo redeployed with u6 + V1 voice (medx-demo-u4)
+- **Source:** main `43aa1d3` (code tree `fe7892f`), staged with `scripts/vercel_stage.sh` and deployed with `vercel deploy --prod`. Inspect id `2rjB7a6UV1EGX5U1bNQwaNSgYquA`. Env vars unchanged; `medx-demo-t1` untouched.
+- **Pre-deploy checks:** vitest 133/133 and tsc clean. `make test` had one failure on the first run and passed on rerun (2206 passed, 3 skipped). e2e was 45/46 on the first run; the theme-token check failed once and passed when rerun alone. Both are recorded as unexplained transients.
+- **Live smoke (browser, 2026-09-29):**
+  - `/api/health` reports ok with `default_provider: mock`.
+  - One-click nurse login works.
+  - Opening the seeded demo run shows the u6 Overview for SYN-2026-0017: 8 vitals with direction words, "ไม่มีบันทึก" for the missing temperature, allergy, meds with 1 open discrepancy, abnormal Troponin I, and the red-flag banner first.
+  - `/live` loads. No OpenAI key pattern appears in the HTML or in any of the 9 loaded scripts (word-bounded `sk-` check; `mask-image` CSS was a false positive).
+  - RBAC: as a nurse, `/api/home/physician` and `/api/home/pharmacist` return 403.
+- **Approved by:** project owner (chat, 2026-09-29), per the entry above.

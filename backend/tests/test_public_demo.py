@@ -194,3 +194,13 @@ def test_concurrent_cold_starts_same_file(tmp_path):
     assert errors == []
     with make_engine(url).connect() as conn:
         assert conn.execute(select(func.count()).select_from(users)).scalar() == 3
+
+
+def test_public_demo_allows_voice_config_but_stays_mock(tmp_path):
+    """Slice v1: the voice realtime config is not part of the external-provider refusal."""
+    s = Settings(
+        database_url=f"sqlite:///{tmp_path / 'v.db'}", public_demo=True, session_secret=SECRET,
+        voice_enabled=True, voice_api_key="x", voice_access_code="c",
+    )
+    with TestClient(create_app(s)) as c:
+        assert c.get("/api/health").json()["default_provider"] == "mock"
