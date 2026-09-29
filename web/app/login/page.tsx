@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 
-import DemoLogin, { PUBLIC_DEMO } from "@/components/DemoLogin";
+import DemoLogin from "@/components/DemoLogin";
 import LoginForm from "@/components/LoginForm";
+import { PUBLIC_DEMO } from "@/lib/publicDemo";
 import Wordmark from "@/components/Wordmark";
 
 export const metadata: Metadata = { title: "เข้าสู่ระบบ" };

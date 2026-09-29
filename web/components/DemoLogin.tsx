@@ -5,11 +5,9 @@ import { useState } from "react";
 
 import { ROLES, ROLE_LABELS, type Role } from "@/lib/copy";
 
-/** Slice d1: public demo build (NEXT_PUBLIC_PUBLIC_DEMO=1) — one-click sign-in as the synthetic user of a role. */
-export const PUBLIC_DEMO = process.env.NEXT_PUBLIC_PUBLIC_DEMO === "1";
-
 const ROLE_LABELS_TH: Record<Role, string> = { nurse: "พยาบาล", physician: "แพทย์", pharmacist: "เภสัชกร" };
 
+/** Slice d1: one-click sign-in as the synthetic user of a role (public demo builds only; see lib/publicDemo). */
 export default function DemoLogin() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
