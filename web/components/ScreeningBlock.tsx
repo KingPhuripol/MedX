@@ -1,4 +1,10 @@
+import { AlertTriangle } from "lucide-react";
+
+import Notice from "@/components/ui/Notice";
+import Section from "@/components/ui/Section";
 import { BANNER_INCOMPLETE, BANNER_NOT_PERFORMED, type Screening } from "@/lib/triage";
+
+import "./ScreeningBlock.css";
 
 /**
  * The Case Graph red-flag screening block (slice i2, C1/C2). It states which rule set ran, its label and
@@ -17,53 +23,65 @@ export default function ScreeningBlock({
   const s = screening;
   if (!s || s.status === "unavailable" || s.status === "not_evaluated") {
     return (
-      <section aria-labelledby="screening-title" data-testid="screening-section" data-status={s?.status ?? "unavailable"}>
-        <h2 id="screening-title">Red-flag screening</h2>
-        <p role="alert" data-testid="screening-banner">
-          <strong>{BANNER_NOT_PERFORMED}.</strong> The red-flag rules did not run on this case. Do not regard it as
-          screened: check red flags yourself and escalate if in doubt.
-        </p>
-        {s && <ScreeningDetails s={s} staleText={staleText} />}
-      </section>
+      <Section
+        title="Red-flag screening"
+        titleId="screening-title"
+        data-testid="screening-section"
+        data-status={s?.status ?? "unavailable"}
+      >
+        <div data-part="stack">
+          <Notice
+            tone="warning"
+            icon={<AlertTriangle size={20} />}
+            role="alert"
+            data-testid="screening-banner"
+          >
+            <strong>{BANNER_NOT_PERFORMED}.</strong> The red-flag rules did not run on this case. Do not regard it as
+            screened: check red flags yourself and escalate if in doubt.
+          </Notice>
+          {s && <ScreeningDetails s={s} staleText={staleText} />}
+        </div>
+      </Section>
     );
   }
   return (
-    <section aria-labelledby="screening-title" data-testid="screening-section" data-status={s.status}>
-      <h2 id="screening-title">Red-flag screening</h2>
-      {s.status === "partially_evaluated" ? (
-        <p role="alert" data-testid="screening-banner">
-          <strong>{BANNER_INCOMPLETE}.</strong> {s.n_evaluated} of {s.n_declared} declared rules were evaluated;{" "}
-          {s.n_not_evaluated} could not be checked (data missing or stale — not a negative result).{" "}
-          {s.n_fired} of {s.n_declared} declared rules fired.
-        </p>
-      ) : (
-        <p role="status" data-testid="screening-count">
-          <strong>
-            {s.n_fired} of {s.n_declared} declared rules fired
-          </strong>{" "}
-          ({s.n_evaluated} evaluated). Scope: {s.scope}
-        </p>
-      )}
-      <ScreeningDetails s={s} staleText={staleText} />
-    </section>
+    <Section title="Red-flag screening" titleId="screening-title" data-testid="screening-section" data-status={s.status}>
+      <div data-part="stack">
+        {s.status === "partially_evaluated" ? (
+          <Notice tone="warning" icon={<AlertTriangle size={20} />} role="alert" data-testid="screening-banner">
+            <strong>{BANNER_INCOMPLETE}.</strong> {s.n_evaluated} of {s.n_declared} declared rules were evaluated;{" "}
+            {s.n_not_evaluated} could not be checked (data missing or stale — not a negative result). {s.n_fired} of{" "}
+            {s.n_declared} declared rules fired.
+          </Notice>
+        ) : (
+          <p role="status" data-testid="screening-count" data-part="count">
+            <strong>
+              {s.n_fired} of {s.n_declared} declared rules fired
+            </strong>{" "}
+            ({s.n_evaluated} evaluated). Scope: {s.scope}
+          </p>
+        )}
+        <ScreeningDetails s={s} staleText={staleText} />
+      </div>
+    </Section>
   );
 }
 
 function ScreeningDetails({ s, staleText }: { s: Screening; staleText: string }) {
   return (
     <>
-      <p data-testid="screening-scope">
+      <p data-testid="screening-scope" data-part="detail">
         Rule set {s.rule_set_version} — {s.label}. Scope: {s.scope}
       </p>
       {s.rules_not_evaluated.length > 0 && (
-        <p data-testid="screening-not-evaluated">
+        <p data-testid="screening-not-evaluated" data-part="not-evaluated">
           Not evaluated: {s.rules_not_evaluated.join(", ")}
           {s.missing_inputs.length > 0 ? `. Missing or stale inputs: ${s.missing_inputs.join("; ")}` : ""}
         </p>
       )}
       {s.readings.length > 0 && (
-        <>
-          <h3>Vital readings used</h3>
+        <details data-part="readings">
+          <summary>Vital readings used ({s.readings.length})</summary>
           <ul data-testid="screening-readings">
             {s.readings.map((r) => (
               <li key={r.vital}>
@@ -72,7 +90,7 @@ function ScreeningDetails({ s, staleText }: { s: Screening; staleText: string })
               </li>
             ))}
           </ul>
-        </>
+        </details>
       )}
     </>
   );

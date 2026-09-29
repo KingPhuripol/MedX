@@ -6,6 +6,18 @@
 }
 html {
   background: var(--background);
+  scroll-padding-bottom: 96px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 body {
   margin: 0;
@@ -135,17 +147,22 @@ main {
   color: var(--foreground);
 }
 .clinical-shell {
-  min-height: calc(100vh - 44px);
+  min-height: calc(100vh - 60px);
   display: grid;
   grid-template-columns: 240px minmax(0, 1fr);
+  align-items: stretch;
 }
+/* The column itself stretches (full-height background); the inner block sticks. */
 .app-nav {
-  position: sticky;
-  top: 0;
-  height: calc(100vh - 44px);
-  padding: 24px 16px;
   background: var(--nav);
   border-right: 1px solid var(--border);
+}
+.app-nav-inner {
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: 24px 16px;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -188,12 +205,20 @@ main {
   background: var(--card);
   color: var(--primary);
 }
+.nav-link.active {
+  font-weight: 700;
+}
 .nav-meta {
   margin-top: auto;
   display: grid;
   gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
   font-size: 14px;
   color: var(--muted-foreground);
+}
+.nav-meta .ui-button {
+  justify-content: flex-start;
 }
 .app-main {
   min-width: 0;
@@ -205,6 +230,7 @@ main {
   display: grid;
   gap: 24px;
 }
+/* legacy — remove after U5 merge */
 .page-heading {
   display: flex;
   align-items: start;
@@ -254,6 +280,7 @@ main {
 .success {
   color: var(--success);
 }
+/* legacy — remove after U5 merge */
 .safety-banner {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -267,6 +294,7 @@ main {
 .safety-banner p {
   margin: 0;
 }
+/* legacy — remove after U5 merge */
 .case-header {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(120px, 0.6fr));
@@ -285,6 +313,7 @@ main {
   color: var(--muted-foreground);
   font-size: 14px;
 }
+/* legacy — remove after U5 merge */
 .case-tabs {
   display: flex;
   gap: 4px;
@@ -308,6 +337,7 @@ main {
   background: var(--card);
   font-weight: 700;
 }
+/* legacy — remove after U5 merge */
 .queue-table {
   width: 100%;
   border-collapse: collapse;
@@ -323,6 +353,7 @@ main {
   color: var(--muted-foreground);
   font-size: 14px;
 }
+/* legacy — remove after U5 merge */
 .priority {
   display: inline-flex;
   align-items: center;
@@ -378,6 +409,7 @@ main {
   border: 4px solid var(--primary);
   z-index: 1;
 }
+/* legacy — remove after U5 merge */
 .review-bar {
   position: sticky;
   bottom: 16px;
@@ -392,6 +424,7 @@ main {
   border-radius: 12px;
   box-shadow: var(--shadow-floating);
 }
+/* legacy — remove after U5 merge */
 .form-field {
   display: grid;
   gap: 4px;
@@ -409,12 +442,14 @@ main {
   border-radius: 8px;
   background: var(--card);
 }
+/* legacy — remove after U5 merge */
 .state-panel {
   padding: 24px;
   border: 1px dashed var(--border);
   border-radius: 12px;
   text-align: center;
 }
+/* legacy — remove after U5 merge */
 .error-panel {
   padding: 16px 24px;
   color: var(--critical-fg);
@@ -472,9 +507,15 @@ main {
   border-radius: 12px;
   box-shadow: var(--shadow-panel);
 }
-.cover-form h1 {
-  margin-top: 0;
+.cover-form {
+  display: grid;
+  gap: 16px;
 }
+.cover-form h1,
+.cover-form p {
+  margin: 0;
+}
+/* legacy — remove after U5 merge */
 .field {
   display: grid;
   gap: 4px;
@@ -490,21 +531,7 @@ main {
   border: 1px solid var(--border);
   border-radius: 8px;
 }
-.cover-form button {
-  width: 100%;
-  min-height: 44px;
-  border: 0;
-  border-radius: 8px;
-  background: var(--primary);
-  color: var(--card);
-  font-weight: 700;
-}
-.cover-form .error {
-  padding: 16px;
-  color: var(--critical-fg);
-  background: var(--critical-bg);
-  border-radius: 8px;
-}
+/* legacy — remove after U5 merge */
 .domain-panel {
   overflow: hidden;
 }
@@ -568,10 +595,12 @@ main {
   border-left: 4px solid var(--critical);
   border-radius: 8px;
 }
+/* legacy — remove after U5 merge */
 .meta {
   color: var(--muted-foreground);
   font-size: 14px;
 }
+/* legacy — remove after U5 merge */
 .page {
   width: min(720px, calc(100% - 48px));
   margin: 32px auto;
@@ -580,6 +609,7 @@ main {
   width: auto;
   margin: 0;
 }
+/* legacy — remove after U5 merge */
 .eyebrow {
   display: inline-flex;
   align-items: center;
@@ -598,11 +628,13 @@ main {
   border-radius: 50%;
   background: var(--primary);
 }
+/* legacy — remove after U5 merge */
 .claim {
   margin: 0 0 16px;
   font-weight: 400;
   color: var(--muted-foreground);
 }
+/* legacy — remove after U5 merge */
 .next-step {
   margin: 32px 0 0;
   padding-top: 16px;
@@ -617,29 +649,55 @@ main {
 @media (max-width: 1023px) {
   .clinical-shell {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    align-content: start;
+    min-height: 0;
   }
   .app-nav {
-    position: static;
-    width: 100%;
-    min-width: 0;
-    height: auto;
-    padding: 16px 24px;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
     border-right: 0;
     border-bottom: 1px solid var(--border);
   }
-  .nav-links {
-    display: flex;
-    flex-wrap: wrap;
-    margin-left: auto;
+  /* Top bar row (brand + account) above one scrollable row of nav links. Total <= 128px. */
+  .app-nav-inner {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    padding: 8px 24px 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "brand meta"
+      "links links";
+    align-items: center;
+    gap: 0 16px;
+  }
+  .nav-brand {
+    grid-area: brand;
+    justify-content: flex-start;
+    min-width: 0;
   }
   .nav-meta {
-    margin: 0;
+    grid-area: meta;
+    order: 0;
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0;
+    border: 0;
   }
-  .nav-meta .run-label,
-  .nav-meta .user-label {
+  .nav-links {
+    grid-area: links;
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    padding: 4px 0 8px;
+  }
+  .nav-link {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .nav-meta .run-label {
     display: none;
   }
   .app-main {
@@ -657,22 +715,16 @@ main {
 }
 @media (max-width: 767px) {
   .disclaimer {
-    padding: 8px 16px;
+    padding: 4px 16px;
     flex-direction: column;
     gap: 0;
+    line-height: 1.4;
   }
-  .app-nav {
-    align-items: flex-start;
-    flex-wrap: wrap;
+  .app-nav-inner {
+    padding: 8px 16px 0;
   }
-  .nav-links {
-    order: 3;
-    width: 100%;
-    overflow-x: auto;
-    margin: 0;
-  }
-  .nav-link {
-    flex: 0 0 auto;
+  .nav-meta .user-label {
+    display: none;
   }
   .app-main {
     padding: 24px 16px 64px;
@@ -729,12 +781,38 @@ main {
   .cover {
     grid-template-columns: 1fr;
   }
+  /* Compact brand band (<= 140px) so the sign-in form is above the fold at 390x844. */
+  .cover {
+    min-height: 0;
+    align-content: start;
+  }
+  .cover-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 16px;
+  }
   .cover-panel {
-    min-height: 220px;
-    padding: 32px 24px;
+    min-height: 0;
+    max-height: 140px;
+    overflow: hidden;
+    gap: 8px;
+    padding: 16px 24px;
+  }
+  .cover-panel .cover-detail {
+    display: none;
+  }
+  .cover-sub {
+    margin: 0;
+    font-size: 14px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
   .cover-form {
-    margin: 24px auto;
+    margin: 16px auto;
     padding: 24px;
   }
 }
@@ -744,5 +822,398 @@ main {
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== U5 shared layout primitives (slices/u5/AUDIT.md section 6.2). Prefix ui-. ===== */
+.ui-page-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 24px;
+  align-items: start;
+}
+.ui-page-header h1 {
+  margin: 0;
+}
+.ui-page-header__subtitle {
+  margin: 4px 0 0;
+  font-size: 16px;
+}
+.ui-page-header__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  color: var(--muted-foreground);
+  font-size: 14px;
+}
+.ui-page-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.ui-section {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+}
+.ui-section__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+.ui-section__head h2 {
+  margin: 0;
+  font-size: 20px;
+}
+.ui-section--critical,
+.ui-section--warning {
+  border-left-width: 4px;
+}
+.ui-section--critical {
+  background: var(--critical-bg);
+  border-color: var(--critical-border);
+  border-left-color: var(--critical);
+}
+.ui-section--critical .ui-section__head h2 {
+  color: var(--critical-fg);
+}
+.ui-section--warning {
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+  border-left-color: var(--warning);
+}
+.ui-section--warning .ui-section__head h2 {
+  color: var(--warning-fg);
+}
+.ui-chip {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--foreground);
+  background: var(--muted);
+}
+.ui-chip__icon {
+  display: inline-flex;
+}
+.ui-chip--critical {
+  color: var(--critical-fg);
+  background: var(--critical-bg);
+  border-color: var(--critical-border);
+}
+.ui-chip--warning {
+  color: var(--warning-fg);
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+}
+.ui-chip--success {
+  color: var(--success);
+  background: var(--success-bg);
+  border-color: var(--success);
+}
+.ui-chip--info {
+  color: var(--primary);
+  background: var(--nav);
+  border-color: var(--border);
+}
+.ui-notice {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px 24px;
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  border-radius: 8px;
+}
+.ui-notice:has(.ui-notice__icon) {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+.ui-notice__icon {
+  display: inline-flex;
+  padding-top: 2px;
+}
+.ui-notice__body > * {
+  margin: 0;
+}
+.ui-notice__body > * + * {
+  margin-top: 8px;
+}
+.ui-notice__title {
+  font-weight: 700;
+}
+.ui-notice__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ui-notice--critical {
+  color: var(--critical-fg);
+  background: var(--critical-bg);
+  border-color: var(--critical-border);
+  border-left-color: var(--critical);
+}
+.ui-notice--warning {
+  color: var(--warning-fg);
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+  border-left-color: var(--warning);
+}
+.ui-notice--info {
+  color: var(--foreground);
+  background: var(--nav);
+  border-color: var(--border);
+  border-left-color: var(--primary);
+}
+.ui-notice--success {
+  color: var(--foreground);
+  background: var(--success-bg);
+  border-color: var(--success);
+  border-left-color: var(--success);
+}
+.ui-empty {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 32px 24px;
+  text-align: center;
+  background: var(--card);
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+}
+.ui-empty h1,
+.ui-empty h2 {
+  margin: 0;
+}
+.ui-empty__icon {
+  display: inline-flex;
+  color: var(--primary);
+}
+.ui-empty__description {
+  max-width: 560px;
+  color: var(--muted-foreground);
+}
+.ui-empty__description p {
+  margin: 0;
+}
+.ui-empty__action {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.ui-loading {
+  display: grid;
+  gap: 16px;
+}
+.ui-loading p {
+  margin: 0;
+}
+.ui-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.ui-table th {
+  padding: 8px 16px;
+  text-align: left;
+  color: var(--muted-foreground);
+  font-size: 14px;
+  font-weight: 700;
+  border-bottom: 1px solid var(--border);
+}
+.ui-table td {
+  padding: 8px 16px;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border);
+}
+.ui-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.ui-table__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ui-action-bar {
+  position: static;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-floating);
+}
+.ui-action-bar--pinned {
+  position: sticky;
+  bottom: 16px;
+}
+.ui-action-bar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-left: auto;
+}
+.ui-field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.ui-field > label {
+  font-size: 14px;
+  font-weight: 700;
+}
+.ui-field input:not([type="checkbox"]):not([type="radio"]),
+.ui-field select,
+.ui-field textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.ui-field small {
+  color: var(--muted-foreground);
+  font-size: 14px;
+}
+.ui-field-error {
+  margin: 0;
+  color: var(--critical-fg);
+  font-size: 14px;
+  font-weight: 700;
+}
+.ui-tool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+.ui-tool-card {
+  display: grid;
+  gap: 4px;
+  min-height: 44px;
+  padding: 16px;
+  color: var(--foreground);
+  text-decoration: none;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.ui-tool-card:hover {
+  border-color: var(--primary);
+}
+.ui-tool-card strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary);
+}
+.ui-tool-card span {
+  color: var(--muted-foreground);
+  font-size: 14px;
+}
+.nav-skeleton {
+  height: 44px;
+}
+.ui-block {
+  width: 100%;
+}
+.ui-flush {
+  margin: 0;
+}
+.ui-table td.ui-cell-actions[data-label]::before {
+  display: none;
+}
+.ui-nowrap {
+  white-space: nowrap;
+}
+.ui-form {
+  display: grid;
+  gap: 16px;
+}
+.ui-form p {
+  margin: 0;
+}
+.ui-standalone {
+  width: min(720px, calc(100% - 32px));
+  margin: 48px auto;
+}
+@media (max-width: 767px) {
+  .ui-page-header {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ui-page-header__actions {
+    justify-content: flex-start;
+  }
+  .ui-section {
+    padding: 16px;
+  }
+  .ui-notice {
+    padding: 16px;
+  }
+  .ui-table thead {
+    display: none;
+  }
+  .ui-table,
+  .ui-table tbody,
+  .ui-table tr,
+  .ui-table td {
+    display: block;
+    width: 100%;
+  }
+  .ui-table tr {
+    display: grid;
+    gap: 4px;
+    margin-bottom: 16px;
+    padding: 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .ui-table td {
+    padding: 4px 0;
+    border: 0;
+  }
+  .ui-table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--muted-foreground);
+    font-size: 14px;
+  }
+  .ui-table__actions .ui-button,
+  .ui-cell-actions .ui-button {
+    width: 100%;
+  }
+  .ui-action-bar {
+    position: static;
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .ui-action-bar__actions {
+    display: grid;
+    margin-left: 0;
   }
 }

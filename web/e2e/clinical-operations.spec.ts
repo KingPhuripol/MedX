@@ -29,7 +29,7 @@ test("login and seeded launcher preserve authentication and synthetic boundary",
   await page.goto("/login");
   await expect(page.getByText("ต้นแบบเพื่อการวิจัย ไม่ใช้กับผู้ป่วยจริง", { exact: false })).toBeVisible();
   await login(page, "nurse");
-  await expect(page.getByRole("heading", { name: "คิวงานตามบทบาท" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /คิวงานตามบทบาท|คิวรับเข้าและคัดกรอง/ })).toBeVisible();
   await startDemoRun(page);
   await expect(page.getByRole("heading", { name: "คิวรับเข้าและคัดกรอง" })).toBeVisible();
   await expect(page.getByText("SYN-2026-0017").first()).toBeVisible();
@@ -122,4 +122,52 @@ test("review flow is keyboard operable and guarded by acknowledgement", async ({
   await confirm.focus();
   await page.keyboard.press("Enter");
   await expect(page.getByText("ตรวจทานโดยบุคลากรแล้ว")).toBeVisible();
+});
+
+// U5 WP-A: role tool links (A-4), compact tablet/phone nav (A-2), 403/404 exits (A-5).
+const TOOL_LINKS = { nurse: 2, physician: 1, pharmacist: 1 } as const;
+for (const role of ["nurse", "physician", "pharmacist"] as const) {
+  test(`${role} queue lists ${TOOL_LINKS[role]} role tool link(s) without a demo run`, async ({ page }) => {
+    await login(page, role);
+    const tools = page.getByRole("region", { name: "เครื่องมือของบทบาท" });
+    await expect(tools).toBeVisible();
+    await expect(tools.getByRole("link")).toHaveCount(TOOL_LINKS[role]);
+    await expect(page.getByRole("link", { name: "ไปที่รอบเดโม" })).toBeVisible();
+  });
+}
+
+test("tablet and phone shell: compact top bar and nav, sign-out never below the nav", async ({ page }) => {
+  await login(page, "nurse");
+  await startDemoRun(page);
+  for (const [width, height, maxH1] of [
+    [768, 1024, 260],
+    [390, 844, 340],
+  ]) {
+    await page.setViewportSize({ width, height });
+    const m = await page.evaluate(() => {
+      const box = (el: Element | null) => (el ? el.getBoundingClientRect() : null);
+      const links = [...document.querySelectorAll(".nav-link")];
+      const logout = [...document.querySelectorAll("button")].find((b) => /ออกจากระบบ/.test(b.textContent || ""));
+      return {
+        nav: box(document.querySelector(".app-nav"))!.height,
+        h1: box(document.querySelector("h1"))!.top + scrollY,
+        lastNav: box(links[links.length - 1])!.top,
+        logout: box(logout || null)!.top,
+      };
+    });
+    expect(m.nav, `nav height at ${width}`).toBeLessThanOrEqual(128);
+    expect(m.h1, `h1 top at ${width}`).toBeLessThanOrEqual(maxH1);
+    expect(m.logout, "sign-out sits in the top bar row").toBeLessThanOrEqual(m.lastNav);
+    await assertNoOverflow(page);
+  }
+});
+
+test("403 and 404 offer a way back to the queue", async ({ page }) => {
+  await login(page, "nurse");
+  await page.goto("/physician/care");
+  await expect(page.getByTestId("forbidden")).toBeVisible();
+  await expect(page.getByRole("link", { name: "กลับไปคิวงาน" })).toBeVisible();
+  await page.goto("/definitely-missing");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("404");
+  await expect(page.getByRole("link", { name: "กลับไปคิวงาน" })).toBeVisible();
 });

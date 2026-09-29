@@ -16,7 +16,7 @@ export default function LoginPage() {
         </p>
         <div>
           <p className="cover-sub">พื้นที่ทำงานเดียวสำหรับรับข้อมูล คัดกรอง ตรวจทาน และส่งต่อเคสสังเคราะห์</p>
-          <p>ออกแบบให้ red flags มาก่อนข้อเสนอ และทุกการตัดสินใจต้องยืนยันโดยบุคลากร</p>
+          <p className="cover-detail">ออกแบบให้ red flags มาก่อนข้อเสนอ และทุกการตัดสินใจต้องยืนยันโดยบุคลากร</p>
         </div>
       </div>
       <section className="cover-form" aria-labelledby="login-title">

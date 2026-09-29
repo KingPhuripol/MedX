@@ -1,8 +1,16 @@
 "use client";
 
+import { AlertOctagon, AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useRef, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Field } from "@/components/ui/Field";
+import { Notice } from "@/components/ui/Notice";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Section } from "@/components/ui/Section";
+import { StatusChip } from "@/components/ui/StatusChip";
+import { formatThaiTime } from "@/lib/demo";
 import {
   FIELD_LABELS,
   REASON_LABELS,
@@ -12,6 +20,13 @@ import {
   type SessionState,
   type Speaker,
 } from "@/lib/voice";
+
+import css from "./VoiceIntake.module.css";
+
+function localTime(iso: string): string {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? iso : formatThaiTime(iso);
+}
 
 async function call<T>(url: string, init?: RequestInit): Promise<{ status: number; data: T | null }> {
   const resp = await fetch(url, {
@@ -24,7 +39,7 @@ async function call<T>(url: string, init?: RequestInit): Promise<{ status: numbe
 }
 
 /** Nurse-run Thai intake. The agent question shown here is only ever the server's allowlisted utterance. */
-export default function VoiceIntake() {
+export default function VoiceIntake({ embedded = false }: { embedded?: boolean }) {
   const router = useRouter();
   const [ref, setRef] = useState("SYN-");
   const [state, setState] = useState<SessionState | null>(null);
@@ -134,186 +149,232 @@ export default function VoiceIntake() {
   const speakerById = new Map((state?.turns ?? []).map((t) => [t.turn_id, t.speaker]));
   const missing = (state?.field_statuses ?? []).filter((s) => s.status === "MISSING");
 
+  const intro =
+    "Synthetic patients only. The agent asks fixed intake questions; every extracted fact is for nurse review and confirmation.";
+
   return (
-    <section aria-labelledby="intake-title">
-      <h1 id="intake-title">Voice intake (Thai, text first)</h1>
-      <p>
-        Synthetic patients only. The agent asks fixed intake questions; every extracted fact is for nurse review and
-        confirmation.
-      </p>
+    <div className={embedded ? css.embedded : `page-stack ${css.page}`}>
+      {embedded ? (
+        <div className={css.embeddedHead}>
+          <h2 id="intake-title">Voice intake (Thai, text first)</h2>
+          <p className={css.muted}>{intro}</p>
+        </div>
+      ) : (
+        <PageHeader titleId="intake-title" title="Voice intake (Thai, text first)" subtitle={intro} />
+      )}
 
       {error && (
-        <p role="alert" className="error">
-          {error}
-        </p>
+        <Notice tone="critical" role="alert" icon={<AlertOctagon size={24} aria-hidden="true" />}>
+          <p>{error}</p>
+        </Notice>
       )}
 
       {!sessionId && (
-        <form onSubmit={start}>
-          <div className="field">
-            <label htmlFor="patient-ref">Synthetic patient ref</label>
-            <input
-              id="patient-ref"
-              name="patient-ref"
-              value={ref}
-              onChange={(e) => setRef(e.target.value)}
-              pattern="SYN-[A-Za-z0-9-]+"
-              aria-describedby="patient-ref-hint"
-              required
-            />
-            <small id="patient-ref-hint">Must start with SYN- (synthetic data only).</small>
-          </div>
-          <button type="submit" disabled={busy}>
-            Start intake
-          </button>
-        </form>
+        <Section>
+          <form onSubmit={start} className={css.startForm}>
+            <Field
+              label="Synthetic patient ref"
+              htmlFor="patient-ref"
+              hint="Must start with SYN- (synthetic data only)."
+            >
+              <input
+                id="patient-ref"
+                name="patient-ref"
+                value={ref}
+                onChange={(e) => setRef(e.target.value)}
+                pattern="SYN-[A-Za-z0-9-]+"
+                aria-describedby="patient-ref-hint"
+                required
+              />
+            </Field>
+            <Button type="submit" disabled={busy}>
+              Start intake
+            </Button>
+          </form>
+        </Section>
       )}
 
       {state && action && (
         <>
-          <h2 id="question-title">Agent question</h2>
-          <p role="status" aria-live="polite" aria-labelledby="question-title" lang="th" data-testid="agent-question">
-            {action.utterance_th}
-          </p>
-
           {action.action === "handoff" && (
-            <div role="alert" data-testid="handoff-banner" className="disclaimer">
+            <Notice
+              tone="warning"
+              role="alert"
+              data-testid="handoff-banner"
+              icon={<AlertTriangle size={24} aria-hidden="true" />}
+            >
               <p>
                 <strong>Hand off to nurse:</strong> {REASON_LABELS[action.reason ?? ""] ?? action.reason}
               </p>
               {action.missing_fields.length > 0 && (
                 <p>Still missing: {action.missing_fields.map((f) => FIELD_LABELS[f] ?? f).join(", ")}</p>
               )}
-            </div>
+            </Notice>
           )}
 
           {state.session.allergy_conflict && (
-            <div role="alert" data-testid="allergy-conflict-banner" className="disclaimer">
+            <Notice
+              tone="warning"
+              role="alert"
+              data-testid="allergy-conflict-banner"
+              icon={<AlertTriangle size={24} aria-hidden="true" />}
+            >
               <p>
                 <strong>Drug allergy conflict:</strong> a later answer did not match the drug allergy already recorded.
                 The recorded allergy was kept. Nurse to confirm with the patient.
               </p>
-            </div>
+            </Notice>
           )}
 
-          {!finished && (
-            <form onSubmit={addTurn} aria-label="Add a turn">
-              <div className="field">
-                <label htmlFor="turn-speaker">Speaker</label>
-                <select
-                  id="turn-speaker"
-                  value={speaker}
-                  onChange={(e) => setSpeaker(e.target.value as Speaker)}
-                >
-                  <option value="patient">Patient</option>
-                  <option value="relative">Relative</option>
-                  <option value="nurse">Nurse</option>
-                </select>
-              </div>
-              <div className="field">
-                <label htmlFor="turn-text">Turn text</label>
-                <input
-                  id="turn-text"
-                  ref={textRef}
+          <div className={css.columns}>
+            <div className={css.col}>
+              <Section title="Agent question" titleId="question-title">
+                <p
+                  role="status"
+                  aria-live="polite"
+                  aria-labelledby="question-title"
                   lang="th"
-                  value={text}
-                  autoComplete="off"
-                  onChange={(e) => {
-                    if (typingSince === null) setTypingSince(Date.now());
-                    setText(e.target.value);
-                  }}
-                  required
-                />
-              </div>
-              <button type="submit" disabled={busy}>
-                Add turn
-              </button>
-            </form>
-          )}
+                  data-testid="agent-question"
+                  className={css.question}
+                >
+                  {action.utterance_th}
+                </p>
+              </Section>
 
-          <h2 id="facts-title">Extracted facts (for nurse review)</h2>
-          <table aria-labelledby="facts-title" data-testid="facts-table">
-            <thead>
-              <tr>
-                <th scope="col">Field</th>
-                <th scope="col">State</th>
-                <th scope="col">Value</th>
-                <th scope="col">Source turn(s)</th>
-                <th scope="col">Available at</th>
-              </tr>
-            </thead>
-            <tbody>
-              {state.facts.map((f) => (
-                <tr key={f.fact_id} data-testid="fact-row" data-field={f.field}>
-                  <th scope="row">{FIELD_LABELS[f.field] ?? f.field}</th>
-                  <td>{f.state}</td>
-                  <td lang="th">
-                    {displayValue(
-                      f,
-                      f.span_turn_ids.flatMap((id) => speakerById.get(id) ?? []),
-                    )}
-                  </td>
-                  <td>
-                    {f.span_turn_ids.map((id) => (
-                      <a key={id} href={`#turn-${id}`} data-testid="source-link">
-                        turn {seqById.get(id) ?? "?"}
-                      </a>
+              {!finished && (
+                <Section>
+                  <form onSubmit={addTurn} aria-label="Add a turn" className={css.turnForm}>
+                    <Field label="Speaker" htmlFor="turn-speaker">
+                      <select id="turn-speaker" value={speaker} onChange={(e) => setSpeaker(e.target.value as Speaker)}>
+                        <option value="patient">Patient</option>
+                        <option value="relative">Relative</option>
+                        <option value="nurse">Nurse</option>
+                      </select>
+                    </Field>
+                    <Field label="Turn text" htmlFor="turn-text">
+                      <input
+                        id="turn-text"
+                        ref={textRef}
+                        lang="th"
+                        value={text}
+                        autoComplete="off"
+                        onChange={(e) => {
+                          if (typingSince === null) setTypingSince(Date.now());
+                          setText(e.target.value);
+                        }}
+                        required
+                      />
+                    </Field>
+                    <Button type="submit" disabled={busy}>
+                      Add turn
+                    </Button>
+                  </form>
+                </Section>
+              )}
+
+              <Section title="Transcript" titleId="transcript-title">
+                <ol aria-labelledby="transcript-title" data-testid="transcript" className={css.transcript}>
+                  {state.turns.map((t) => (
+                    <li key={t.turn_id} id={`turn-${t.turn_id}`} className={t.speaker === "agent" ? css.turnAgent : css.turn}>
+                      <StatusChip tone={t.speaker === "agent" ? "info" : "neutral"}>{SPEAKER_LABELS[t.speaker]}</StatusChip>
+                      <span lang="th">{t.text}</span>
+                    </li>
+                  ))}
+                </ol>
+              </Section>
+            </div>
+
+            <div className={css.col}>
+              <Section title="Extracted facts (for nurse review)" titleId="facts-title">
+                <div className={css.tableWrap}>
+                  <table aria-labelledby="facts-title" data-testid="facts-table" className={css.facts}>
+                    <thead>
+                      <tr>
+                        <th scope="col">Field</th>
+                        <th scope="col">State</th>
+                        <th scope="col">Value</th>
+                        <th scope="col">Source turn(s)</th>
+                        <th scope="col">Available at</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {state.facts.map((f) => (
+                        <tr key={f.fact_id} data-testid="fact-row" data-field={f.field}>
+                          <th scope="row" data-label="Field">
+                            {FIELD_LABELS[f.field] ?? f.field}
+                          </th>
+                          <td data-label="State">
+                            <StatusChip tone={f.state === "KNOWN" ? "success" : "warning"}>{f.state}</StatusChip>
+                          </td>
+                          <td lang="th" data-label="Value">
+                            {displayValue(
+                              f,
+                              f.span_turn_ids.flatMap((id) => speakerById.get(id) ?? []),
+                            )}
+                          </td>
+                          <td data-label="Source turn(s)">
+                            {f.span_turn_ids.map((id) => (
+                              <a key={id} href={`#turn-${id}`} data-testid="source-link" className={css.source}>
+                                turn {seqById.get(id) ?? "?"}
+                              </a>
+                            ))}
+                          </td>
+                          <td data-label="Available at" className={css.muted}>
+                            <time dateTime={f.available_at_time}>{localTime(f.available_at_time)}</time>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Section>
+
+              <Section title="Missing fields" titleId="missing-title" tone={missing.length ? "warning" : "default"}>
+                {missing.length > 0 ? (
+                  <ul aria-labelledby="missing-title" data-testid="missing-list" className={css.missing}>
+                    {missing.map((s) => (
+                      <li key={s.field}>
+                        <StatusChip tone="warning">
+                          {FIELD_LABELS[s.field] ?? s.field}
+                          {s.not_elicited ? " — not elicited after two attempts" : ""}
+                        </StatusChip>
+                      </li>
                     ))}
-                  </td>
-                  <td>
-                    <time dateTime={f.available_at_time}>{f.available_at_time}</time>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </ul>
+                ) : (
+                  <p data-testid="missing-list" className={css.none}>
+                    None missing.
+                  </p>
+                )}
+              </Section>
 
-          <h2 id="missing-title">Missing fields</h2>
-          {missing.length > 0 ? (
-            <ul aria-labelledby="missing-title" data-testid="missing-list">
-              {missing.map((s) => (
-                <li key={s.field}>
-                  {FIELD_LABELS[s.field] ?? s.field}
-                  {s.not_elicited ? " — not elicited after two attempts" : ""}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p data-testid="missing-list">None missing.</p>
-          )}
-
-          <h2 id="transcript-title">Transcript</h2>
-          <ol aria-labelledby="transcript-title" data-testid="transcript">
-            {state.turns.map((t) => (
-              <li key={t.turn_id} id={`turn-${t.turn_id}`}>
-                <strong>{SPEAKER_LABELS[t.speaker]}:</strong> <span lang="th">{t.text}</span>
-              </li>
-            ))}
-          </ol>
-
-          {!finished && (
-            <button type="button" onClick={finish} disabled={busy}>
-              Finish intake
-            </button>
-          )}
+              {!finished && (
+                <div>
+                  <Button type="button" onClick={finish} disabled={busy}>
+                    Finish intake
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
 
           {summary && (
-            <section aria-labelledby="summary-title" data-testid="intake-summary">
-              <h2 id="summary-title" ref={summaryRef} tabIndex={-1}>
+            <Section title={null} aria-labelledby="summary-title" data-testid="intake-summary">
+              <h2 id="summary-title" ref={summaryRef} tabIndex={-1} className={css.flush}>
                 Intake summary
               </h2>
-              <p>Handoff reason: {REASON_LABELS[summary.handoff_reason] ?? summary.handoff_reason}</p>
-              <p>
+              <p className={css.flush}>Handoff reason: {REASON_LABELS[summary.handoff_reason] ?? summary.handoff_reason}</p>
+              <p className={css.flush}>
                 Missing fields:{" "}
                 {summary.missing_fields.length
                   ? summary.missing_fields.map((f) => FIELD_LABELS[f] ?? f).join(", ")
                   : "none"}
               </p>
-              <p>Evidence items recorded: {summary.evidence.length}</p>
-            </section>
+              <p className={css.flush}>Evidence items recorded: {summary.evidence.length}</p>
+            </Section>
           )}
         </>
       )}
-    </section>
+    </div>
   );
 }

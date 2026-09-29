@@ -1,0 +1,12 @@
+.stack { display: grid; gap: 16px; }
+.filter { max-width: 360px; }
+@media (min-width: 768px) {
+  td.cell { padding-top: 0 !important; padding-bottom: 0 !important; }
+}
+@media (max-width: 767px) {
+  /* Card mode: T1 and T2 sit side by side. */
+  td.dp { display: inline-block !important; width: 49% !important; vertical-align: top; }
+  td.dp button { width: 100%; font-size: 14px; padding: 4px 8px; white-space: nowrap; }
+  td.cell { padding: 0 !important; }
+  td.cell::before { display: none !important; }
+}

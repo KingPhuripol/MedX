@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
 
 import Forbidden from "@/components/Forbidden";
+import { LoadingState } from "@/components/ui/LoadingState";
+import { Notice } from "@/components/ui/Notice";
 import type { Role } from "@/lib/copy";
 
 type GuardState = "loading" | "allowed" | "forbidden" | "error";
@@ -34,6 +36,11 @@ export default function RoleGuard({ role, children }: { role: Role; children: Re
 
   if (state === "forbidden") return <Forbidden />;
   if (state === "allowed") return <>{children}</>;
-  if (state === "error") return <p role="alert">The service is unavailable. Please try again.</p>;
-  return <p aria-live="polite">Checking access…</p>;
+  if (state === "error")
+    return (
+      <Notice tone="critical" role="alert" title="ไม่สามารถตรวจสอบสิทธิ์ได้">
+        <p>บริการไม่พร้อมใช้งาน โปรดลองอีกครั้ง · The service is unavailable. Please try again.</p>
+      </Notice>
+    );
+  return <LoadingState label="กำลังตรวจสอบสิทธิ์…" />;
 }

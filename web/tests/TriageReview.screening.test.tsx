@@ -130,6 +130,18 @@ describe("TriageReview red-flag screening block (I2-A10)", () => {
     expect(screen.getByTestId("screening-readings")).toHaveTextContent("read at 2026-09-02T09:35:00+07:00");
   });
 
+  it("action bar summary never reads as all-clear when screening was not fully evaluated (C2)", () => {
+    for (const key of ["partial", "unavailable"]) {
+      const { container, unmount } = renderState(STATES[key]);
+      const bar = container.querySelector(".ui-action-bar")!;
+      expect(bar).toHaveTextContent("การคัดกรอง red flag ไม่ครบหรือไม่ได้ทำ — ต้องประเมินผู้ป่วยโดยตรง");
+      expect(bar).not.toHaveTextContent("ไม่มีรายการที่ต้องรับทราบ");
+      unmount();
+    }
+    const ok = renderState(STATES.evaluated_zero);
+    expect(ok.container.querySelector(".ui-action-bar")).toHaveTextContent("ไม่มีรายการที่ต้องรับทราบ");
+  });
+
   it("evaluated with alerts renders the fired count and the alert list", () => {
     renderState(STATES.evaluated_alerts);
     expect(screen.getByTestId("screening-count")).toHaveTextContent("1 of 16 declared rules fired");

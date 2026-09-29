@@ -37,6 +37,8 @@ for (const path of ["/app/queue", ...Object.values(ROLE_PAGES).flat()]) {
 
 test("bad credentials show an error and stay on /login", async ({ page }) => {
   await page.goto("/login");
+  // F1 regression: locally (NEXT_PUBLIC_PUBLIC_DEMO != 1) the password form renders, not the role picker.
+  await expect(page.locator("#username")).toBeVisible();
   await page.getByLabel("ชื่อผู้ใช้สังเคราะห์").fill("nurse1");
   await page.getByLabel("รหัสผ่าน").fill("wrong-password");
   await page.getByRole("button", { name: "เข้าสู่ระบบเดโม" }).click();
