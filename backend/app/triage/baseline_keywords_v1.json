@@ -1,0 +1,56 @@
+{
+ "version": "kw-1.0.0",
+ "note": "Deterministic keyword/rule baseline for the mock provider. Written from general clinical vocabulary; tuning may look only at the dev split. English keywords match at a word start (case-insensitive); Thai keywords match as substrings.",
+ "departments": {
+  "MED": {
+   "en": ["fever", "cough", "vomit", "diarrh", "dizz", "faint", "fatigue", "allerg", "rash", "breath", "diabet", "sugar", "sweat", "spots", "confus", "drows", "tarry", "stool"],
+   "th": ["ไข้", "ไอ", "อาเจียน", "ท้องเสีย", "เวียนหัว", "หน้ามืด", "อ่อนเพลีย", "แพ้", "ผื่น", "หอบ", "เหนื่อย", "เบาหวาน", "น้ำตาล", "เหงื่อ", "ซึม", "สับสน", "ตัวเย็น", "ถ่ายดำ"],
+   "symptoms": {"fever": 1, "cough": 1, "dyspnea": 1, "dizziness": 1, "diabetes_known": 1, "hematemesis": 0.5, "melena": 0.5, "allergen_exposure": 1, "airway_breathing_compromise": 1, "non_blanching_rash": 1, "neck_stiffness": 0.5}
+  },
+  "CARD": {
+   "en": ["chest", "heart", "palpitat", "sweat"],
+   "th": ["หน้าอก", "หัวใจ", "ใจสั่น", "แน่น"],
+   "symptoms": {"acute_chest_pain": 2, "palpitations": 2}
+  },
+  "NEURO": {
+   "en": ["headache", "weakness", "numb", "speech", "slurred", "facial", "droop", "seizure", "stroke"],
+   "th": ["ปวดศีรษะ", "ปวดหัว", "อ่อนแรง", "ชา", "พูดไม่ชัด", "หน้าเบี้ยว", "ชัก"],
+   "symptoms": {"thunderclap_headache": 2, "headache": 1, "sudden_facial_droop": 2, "sudden_limb_weakness": 2, "sudden_speech_disturbance": 2, "sudden_vision_disturbance": 1, "neck_stiffness": 0.5}
+  },
+  "SURG": {
+   "en": ["abdominal", "abdomen", "belly", "lump", "hernia", "groin", "vomiting blood", "tarry", "stool"],
+   "th": ["ปวดท้อง", "ก้อน", "ไส้เลื่อน", "อาเจียนเป็นเลือด", "ถ่ายดำ", "อุจจาระดำ"],
+   "symptoms": {"abdominal_pain": 1, "hematemesis": 1, "melena": 1, "groin_lump": 2}
+  },
+  "ORTHO": {
+   "en": ["knee", "back pain", "wrist", "joint", "fracture", "fell", "fall", "sprain", "bone", "hip", "ankle", "shoulder"],
+   "th": ["เข่า", "ปวดหลัง", "ข้อมือ", "ข้อเท้า", "กระดูก", "ล้ม", "ไหล่", "สะโพก"],
+   "symptoms": {"joint_pain": 2, "back_pain": 2}
+  },
+  "URO": {
+   "en": ["urin", "flank", "kidney", "bladder"],
+   "th": ["ปัสสาวะ", "บั้นเอว", "ไต", "นิ่ว"],
+   "symptoms": {"dysuria": 2, "hematuria": 2, "flank_pain": 2}
+  },
+  "OBGYN": {
+   "en": ["vagina", "pregnan", "period", "menstru", "pelvic", "lower abdominal"],
+   "th": ["ช่องคลอด", "ตั้งครรภ์", "ประจำเดือน", "ท้องน้อย", "ตกขาว", "มดลูก"],
+   "symptoms": {"vaginal_bleeding": 2, "vaginal_discharge": 2, "abdominal_pain": 0.5}
+  },
+  "EYE": {
+   "en": ["eye", "vision", "visual", "blurr"],
+   "th": ["ตามัว", "ตาแดง", "ปวดตา", "ตาพร่า", "มองไม่เห็น", "ตาบวม"],
+   "symptoms": {"red_eye": 2, "eye_pain": 2, "blurred_vision_gradual": 2, "sudden_vision_disturbance": 1}
+  },
+  "ENT": {
+   "en": ["ear", "throat", "nose", "nosebleed", "sinus", "hearing", "swallow", "tonsil"],
+   "th": ["หู", "คอ", "จมูก", "เลือดกำเดา", "กลืน", "ทอนซิล"],
+   "symptoms": {"ear_pain": 2, "sore_throat": 2, "epistaxis": 2}
+  },
+  "PSY": {
+   "en": ["suicid", "hopeless", "depress", "sad", "anxi", "self-harm", "cut my", "overdose", "sleeping pill"],
+   "th": ["ซึมเศร้า", "เศร้า", "ฆ่าตัวตาย", "อยากตาย", "นอนไม่หลับ", "เครียด", "เกินขนาด", "ยานอนหลับ", "ทำร้ายตัวเอง"],
+   "symptoms": {"suicidal_ideation": 2, "self_harm": 2, "low_mood": 2}
+  }
+ }
+}

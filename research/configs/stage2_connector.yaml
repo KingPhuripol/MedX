@@ -1,0 +1,44 @@
+# Slice s9, stage 2 (proposal 3.3): frozen backbone + frozen 3D encoder; only the connector trains,
+# on paired (CT volume, report) samples. Real run: CT-RATE. Dry run: synthetic.
+# Research prototype, not for clinical use.
+stage: stage2_connector
+seed: 1234
+device: cpu
+data:
+  data_class: synthetic
+  real_source: CT-RATE (CT volume, report) pairs, local_only, patient-level split
+modality_dropout: {}
+report_substitution: false
+train:
+  lr: 1.0e-3
+  micro_batch: 2
+  max_steps: 4
+  ckpt_every: 2
+  seq_len: 24
+# Intended real run (not executed in s9). Mirrors research/estimate/inputs/plan.json.
+real_run:
+  precision: bf16
+  micro_batch: 1
+  seq_len: 1024
+  grad_accum_8gpu: 8
+  gradient_checkpointing: true
+  deepspeed_config: research/configs/deepspeed/zero2.json
+  encoder3d: {name: CT-CLIP CTViT (frozen), volume_shape_hwd: [480, 480, 240], patch_hw: 20, patch_d: 10, out_dim: 512}
+  connector: {d_model: 1024, n_query: 256, n_layers: 2, n_heads: 8}
+  external_api: false
+# CPU dry run (Tier 0): tiny randomly initialised model built from config only (no hub access).
+dry_run:
+  backbone:
+    model_type: llama
+    vocab_size: 4096
+    hidden_size: 128
+    intermediate_size: 256
+    num_hidden_layers: 4
+    num_attention_heads: 4
+    num_key_value_heads: 2
+    max_position_embeddings: 128
+    tie_word_embeddings: false
+  encoder3d: {out_dim: 16, patch: [4, 8, 8]}
+  volume_shape: [8, 32, 32]
+  connector: {d_model: 16, n_query: 4, n_layers: 1, n_heads: 2}
+  dataset: {n: 64, prompt_len: 4, report_len: 6, target_len: 6, modalities: [ct]}

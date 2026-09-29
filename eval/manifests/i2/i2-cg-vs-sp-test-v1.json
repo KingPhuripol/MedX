@@ -1,0 +1,330 @@
+{
+ "$comment": "Slice i2 manifest: Case Graph vs single prompt (System Evaluation on synthetic data — not clinical performance). Hash bindings follow as canonical JSON after the prefix 'i2-hashes '. i2-hashes {\"dataset_tree_sha256\":\"e76e38cc67d6317d82196f105cb9781bedf3451b9ba74a1585b19662d4d1162b\",\"handler_versions\":{\"triage.department.v1\":\"baseline-kw-1.0.0\",\"voice.intake_extract\":\"voice-mock-rules-0.3.0\",\"voice.symptom_extract.v1\":\"symptom-lex-1.0.0\"},\"i2_adapters_sha256\":\"cff1d9477cb221ec513ba9697b28cc316423e291f492eef12db79578fb1048ce\",\"mapping_sha256\":\"7748c53b041870a56b815d0f815456bd571422adb4b70d32b59610cc19d68787\",\"split_sha256\":\"fb9454a2bc7433b663c6d921ebd68d3a1897bdbffb02dc3849e9d37976c828e9\",\"system_sha256\":\"12896a37ac77153dc3d6623dcd89f6a72cb9d395e813cd063408f45fc99a5f8a\"}",
+ "manifest_version": "1.0",
+ "evaluation_id": "i2-cg-vs-sp-test-v1",
+ "slice": "i2",
+ "dataset": {
+  "name": "s1r-synthetic",
+  "version": "s1r-1.1.1+tree:e76e38cc67d6317d82196f105cb9781bedf3451b9ba74a1585b19662d4d1162b",
+  "data_class": "synthetic"
+ },
+ "split": "test",
+ "split_version": "fb9454a2bc7433b663c6d921ebd68d3a1897bdbffb02dc3849e9d37976c828e9",
+ "split_patient_list": [
+  "SYNP-0008",
+  "SYNP-0013",
+  "SYNP-0015",
+  "SYNP-0021",
+  "SYNP-0026",
+  "SYNP-0028",
+  "SYNP-0030",
+  "SYNP-0033",
+  "SYNP-0034",
+  "SYNP-0035",
+  "SYNP-0038",
+  "SYNP-0040",
+  "SYNP-0046",
+  "SYNP-0047",
+  "SYNP-0049",
+  "SYNP-0053",
+  "SYNP-0054",
+  "SYNP-0057",
+  "SYNP-0071",
+  "SYNP-0082",
+  "SYNP-0089",
+  "SYNP-0103",
+  "SYNP-0108",
+  "SYNP-0111",
+  "SYNP-0117",
+  "SYNP-0120",
+  "SYNP-0124",
+  "SYNP-0127",
+  "SYNP-0135",
+  "SYNP-0140",
+  "SYNP-0158",
+  "SYNP-0160",
+  "SYNP-0161",
+  "SYNP-0169",
+  "SYNP-0170",
+  "SYNP-0172"
+ ],
+ "task_patient_lists": {
+  "abstention": [
+   "SYNP-0008",
+   "SYNP-0013",
+   "SYNP-0015",
+   "SYNP-0026",
+   "SYNP-0030",
+   "SYNP-0033",
+   "SYNP-0034",
+   "SYNP-0035",
+   "SYNP-0038",
+   "SYNP-0040",
+   "SYNP-0046",
+   "SYNP-0047",
+   "SYNP-0049",
+   "SYNP-0054",
+   "SYNP-0057",
+   "SYNP-0071",
+   "SYNP-0103",
+   "SYNP-0108",
+   "SYNP-0124",
+   "SYNP-0127",
+   "SYNP-0135",
+   "SYNP-0140",
+   "SYNP-0161",
+   "SYNP-0170",
+   "SYNP-0172"
+  ],
+  "calls": [
+   "SYNP-0008",
+   "SYNP-0013",
+   "SYNP-0015",
+   "SYNP-0021",
+   "SYNP-0026",
+   "SYNP-0028",
+   "SYNP-0030",
+   "SYNP-0033",
+   "SYNP-0034",
+   "SYNP-0035",
+   "SYNP-0038",
+   "SYNP-0040",
+   "SYNP-0046",
+   "SYNP-0047",
+   "SYNP-0049",
+   "SYNP-0053",
+   "SYNP-0054",
+   "SYNP-0057",
+   "SYNP-0071",
+   "SYNP-0082",
+   "SYNP-0089",
+   "SYNP-0103",
+   "SYNP-0108",
+   "SYNP-0111",
+   "SYNP-0117",
+   "SYNP-0120",
+   "SYNP-0124",
+   "SYNP-0127",
+   "SYNP-0135",
+   "SYNP-0140",
+   "SYNP-0158",
+   "SYNP-0160",
+   "SYNP-0161",
+   "SYNP-0169",
+   "SYNP-0170",
+   "SYNP-0172"
+  ],
+  "dept": [
+   "SYNP-0008",
+   "SYNP-0013",
+   "SYNP-0015",
+   "SYNP-0026",
+   "SYNP-0030",
+   "SYNP-0033",
+   "SYNP-0034",
+   "SYNP-0035",
+   "SYNP-0038",
+   "SYNP-0040",
+   "SYNP-0047",
+   "SYNP-0049",
+   "SYNP-0054",
+   "SYNP-0057",
+   "SYNP-0071",
+   "SYNP-0103",
+   "SYNP-0108",
+   "SYNP-0124",
+   "SYNP-0135",
+   "SYNP-0140",
+   "SYNP-0161",
+   "SYNP-0170",
+   "SYNP-0172"
+  ],
+  "rf_rule_RF-ACUTE-CHEST-PAIN": [
+   "SYNP-0111",
+   "SYNP-0169"
+  ],
+  "rf_rule_RF-ANAPHYLAXIS": [
+   "SYNP-0120"
+  ],
+  "rf_rule_RF-FAST": [
+   "SYNP-0028",
+   "SYNP-0117"
+  ],
+  "rf_rule_RF-NEWS-SINGLE3": [
+   "SYNP-0040",
+   "SYNP-0082",
+   "SYNP-0120"
+  ],
+  "rf_rule_RF-QSOFA": [
+   "SYNP-0021",
+   "SYNP-0035",
+   "SYNP-0046"
+  ],
+  "rf_rule_RF-THUNDERCLAP": [
+   "SYNP-0127"
+  ]
+ },
+ "metrics": [
+  {
+   "id": "dept_top1",
+   "item": "Case Graph",
+   "task": "dept",
+   "name": "topk_accuracy",
+   "params": {
+    "k": 1,
+    "estimand": "top-1 in E over evaluable DPs with a mappable gold; an abstention counts as wrong"
+   },
+   "primary": true
+  },
+  {
+   "id": "dept_top3",
+   "item": "Case Graph",
+   "task": "dept",
+   "name": "topk_accuracy",
+   "params": {
+    "k": 3,
+    "estimand": "top-3 in E, same population"
+   },
+   "primary": false
+  },
+  {
+   "id": "coverage",
+   "item": "Case Graph",
+   "task": "abstention",
+   "name": "coverage",
+   "params": {
+    "estimand": "answered share of the dept population plus the NOT_EVALUABLE DPs"
+   },
+   "primary": false
+  },
+  {
+   "id": "selective_top1",
+   "item": "Case Graph",
+   "task": "abstention",
+   "name": "selective_accuracy",
+   "params": {
+    "estimand": "top-1 among answered DPs; answering a NOT_EVALUABLE DP is wrong"
+   },
+   "primary": false
+  },
+  {
+   "id": "calls_per_dp",
+   "item": "Case Graph",
+   "task": "calls",
+   "name": "latency_summary",
+   "params": {
+    "field": "n_calls",
+    "stat": "mean",
+    "estimand": "mean gateway calls per DP"
+   },
+   "primary": false
+  },
+  {
+   "id": "rf_rule_RF-ACUTE-CHEST-PAIN",
+   "item": "Case Graph",
+   "task": "rf_rule_RF-ACUTE-CHEST-PAIN",
+   "name": "accuracy",
+   "params": {
+    "estimand": "Arm A recall of RF-ACUTE-CHEST-PAIN: gold DPs where a mapped S4 rule fired"
+   },
+   "primary": false
+  },
+  {
+   "id": "rf_rule_RF-ANAPHYLAXIS",
+   "item": "Case Graph",
+   "task": "rf_rule_RF-ANAPHYLAXIS",
+   "name": "accuracy",
+   "params": {
+    "estimand": "Arm A recall of RF-ANAPHYLAXIS: gold DPs where a mapped S4 rule fired"
+   },
+   "primary": false
+  },
+  {
+   "id": "rf_rule_RF-FAST",
+   "item": "Case Graph",
+   "task": "rf_rule_RF-FAST",
+   "name": "accuracy",
+   "params": {
+    "estimand": "Arm A recall of RF-FAST: gold DPs where a mapped S4 rule fired"
+   },
+   "primary": false
+  },
+  {
+   "id": "rf_rule_RF-NEWS-SINGLE3",
+   "item": "Case Graph",
+   "task": "rf_rule_RF-NEWS-SINGLE3",
+   "name": "accuracy",
+   "params": {
+    "estimand": "Arm A recall of RF-NEWS-SINGLE3: gold DPs where a mapped S4 rule fired"
+   },
+   "primary": false
+  },
+  {
+   "id": "rf_rule_RF-QSOFA",
+   "item": "Case Graph",
+   "task": "rf_rule_RF-QSOFA",
+   "name": "accuracy",
+   "params": {
+    "estimand": "Arm A recall of RF-QSOFA: gold DPs where a mapped S4 rule fired"
+   },
+   "primary": false
+  },
+  {
+   "id": "rf_rule_RF-THUNDERCLAP",
+   "item": "Case Graph",
+   "task": "rf_rule_RF-THUNDERCLAP",
+   "name": "accuracy",
+   "params": {
+    "estimand": "Arm A recall of RF-THUNDERCLAP: gold DPs where a mapped S4 rule fired"
+   },
+   "primary": false
+  }
+ ],
+ "comparators": [
+  {
+   "name": "single_prompt",
+   "tasks": [
+    "dept",
+    "abstention",
+    "calls"
+   ],
+   "description": "Arm B: one gateway call per DP (casegraph.single_prompt.v1) over the whole serialized snapshot; same registered handler versions; without the graph-only steps (Red-flag node, required-input gate, freshness check, checkpoint), so it emits no screening output by design"
+  }
+ ],
+ "thresholds": [
+  {
+   "metric": "rf_rule_RF-FAST",
+   "op": ">=",
+   "value": 1.0,
+   "rule": "point"
+  },
+  {
+   "metric": "rf_rule_RF-ACUTE-CHEST-PAIN",
+   "op": ">=",
+   "value": 1.0,
+   "rule": "point"
+  },
+  {
+   "metric": "rf_rule_RF-THUNDERCLAP",
+   "op": ">=",
+   "value": 1.0,
+   "rule": "point"
+  },
+  {
+   "metric": "rf_rule_RF-ANAPHYLAXIS",
+   "op": ">=",
+   "value": 1.0,
+   "rule": "point"
+  }
+ ],
+ "bootstrap": {
+  "n_boot": 2000,
+  "seed": 20260926,
+  "ci_level": 0.95,
+  "method": "percentile"
+ },
+ "expert_review": {
+  "done": false,
+  "n_reviewers": 0
+ }
+}

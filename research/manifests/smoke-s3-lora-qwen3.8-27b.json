@@ -1,0 +1,92 @@
+{
+  "schema_version": "2.0.0",
+  "experiment_id": "smoke-s3-lora-qwen3.8-27b",
+  "owner": "ธนาพล",
+  "slice": "s9",
+  "research_question": "What peak GPU memory and throughput does stage3_lora training of Qwen3.8-27B (Qwen/Qwen3.8-27B) reach on one B200, does the loss decrease, and does the trainable-only checkpoint round-trip?",
+  "hypothesis": "Peak memory stays at or below the estimate for this configuration (ESTIMATE.md: 72.8 GB, 1x B200, r=16 for LoRA; estimate, not measurement) with at least 10% headroom; loss over the last 20 steps is below the first 20.",
+  "measurement_goals": [
+    "peak GPU memory (torch.cuda.max_memory_allocated) vs ESTIMATE.md",
+    "tokens per second",
+    "loss decreases (mean of last 20 steps < first 20)",
+    "checkpoint save/load round-trip bit-identical outputs"
+  ],
+  "status": "planned",
+  "run_tier": 2,
+  "created_at": "2026-09-26",
+  "code": {
+    "revision": "UNPINNED",
+    "config_path": "research/configs/stage3_lora.yaml",
+    "config_sha256": "ca8513a89beefb72522219fb06a6c0607d3cb9c4fd2fe00efbf41ac14a15a2e5"
+  },
+  "model": {
+    "candidate": "qwen3.8-27b",
+    "hf_repo_id": "Qwen/Qwen3.8-27B",
+    "hub_revision": "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0",
+    "parameter_count": 27781427952,
+    "license": "Apache-2.0",
+    "stage": "stage3_lora"
+  },
+  "data": {
+    "data_class": "mimic",
+    "locality": "local_only",
+    "external_api": false,
+    "datasets": [
+      {
+        "name": "MIMIC-IV",
+        "dataset_version": "UNRESOLVED:PhysioNet credentialed access pending",
+        "split_version": "UNRESOLVED:patient-level split not yet built"
+      },
+      {
+        "name": "MIMIC-CXR",
+        "dataset_version": "UNRESOLVED:PhysioNet credentialed access pending",
+        "split_version": "UNRESOLVED:patient-level split not yet built"
+      },
+      {
+        "name": "CT-RATE",
+        "dataset_version": "UNRESOLVED:CT-RATE access pending",
+        "split_version": "UNRESOLVED:patient-level split not yet built"
+      }
+    ]
+  },
+  "training": {
+    "seed": 1234,
+    "precision": "bf16",
+    "micro_batch": 1,
+    "grad_accum": 1,
+    "seq_len": 4096,
+    "max_steps": 200,
+    "lora_rank": 16
+  },
+  "resources": {
+    "devices": "1x NVIDIA B200 (team-controlled)",
+    "gpu_count": 1,
+    "max_minutes": 60,
+    "budget": {
+      "gpu_hours": 1.0,
+      "cost_usd_max": 8.0,
+      "storage_gb_max": 150
+    }
+  },
+  "metrics": [
+    "peak_gpu_memory_bytes",
+    "tokens_per_second",
+    "loss_per_step",
+    "checkpoint_roundtrip_identical"
+  ],
+  "stop_rules": [
+    "non-finite loss: stop, keep diagnostics, no automatic retry",
+    "CUDA OOM: stop; do not silently change batch or sequence length",
+    "wall clock reaches 60 minutes",
+    "peak memory above 90% of GPU memory",
+    "any frozen parameter changes",
+    "any data or temporal-leakage audit failure"
+  ],
+  "artifacts": {
+    "root": "runs/smoke-s3-lora-qwen3.8-27b/<run_id>/ on team-controlled storage (never uploaded)",
+    "logs": "runs/smoke-s3-lora-qwen3.8-27b/<run_id>/run.json",
+    "checkpoints": "runs/smoke-s3-lora-qwen3.8-27b/<run_id>/checkpoints/ (trainable state only)",
+    "retention": "keep the last 2 checkpoints and run.json; deletion of evidence needs human approval"
+  },
+  "approval_note": "Tier-3/4 runs (beyond 1 GPU or 60 min, including any 8x B200 or ~27B full run) require explicit human approval recorded in docs/DECISIONS.md before launch."
+}

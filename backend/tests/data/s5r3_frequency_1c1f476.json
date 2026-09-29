@@ -1,0 +1,7274 @@
+{
+ "entries": {
+  "1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "2 times a day": [
+   "q12h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg": [
+   null,
+   "not_stated"
+  ],
+  "Allopurinol 100 mg + 50 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg 1.5 tabs OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg 1.5 tabs daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg 2 caps OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg 2 tablets once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg 2x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg 3 caps OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg 3 caps daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg 3 capsules OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg 3 capsules once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg 3 tablets daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg 3 tabs daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg 3x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg OD except 50 mg on Sunday": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg PO BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg PO twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg alternating with 50 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg alternating with 50 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg and 50 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg and 50 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg and 50 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg every other day": [
+   null,
+   "not_recognised"
+  ],
+  "Allopurinol 100 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg oral 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg oral OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg oral daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg oral once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 100 mg q4h": [
+   null,
+   "not_recognised"
+  ],
+  "Allopurinol 100 mg/5 ml 5 ml daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 200 mg 1/2 tab OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 200 mg 1/2 tab daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 200 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 200 mg PO every 24 hours": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 200 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 200 mg every 24 hours": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 50 mg 2 tabs OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 50 mg 2 tabs once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol 50 mg 2x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol syrup 100 mg/5 ml 5 ml daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Allopurinol syrup 100 mg/5 ml 5 ml once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 10 mg 1/2 tab daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 10 mg PO every 24 hours": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 10 mg PO q.d.": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 2.5 mg 2 tabs OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 2.5 mg 2 tabs daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 2.5 mg 2 tabs od": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 2.5 mg 2x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg": [
+   null,
+   "not_stated"
+  ],
+  "Amlodipine 5 mg + 2.5 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg + 2.5 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg 1.5 tabs once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg 1/2 tab daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg 1/2 tab once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg 2 caps daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg 2 capsules daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg 2 tablets OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg 2 tablets daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg 2 tabs OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg 2 times a day": [
+   "q12h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg 2x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg 3 caps OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg 3 capsules OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg 3 tablets OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg 3 tabs OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg 3 times a week": [
+   null,
+   "not_recognised"
+  ],
+  "Amlodipine 5 mg 3x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg PO": [
+   null,
+   "not_stated"
+  ],
+  "Amlodipine 5 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg PO 1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg PO bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg alternating with 2.5 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg alternating with 2.5 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg and 2.5 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg and 2.5 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg daily except 2.5 mg on Sunday": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg every other day": [
+   null,
+   "not_recognised"
+  ],
+  "Amlodipine 5 mg od": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg oral 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg oral OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg oral daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg oral once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg twice a day": [
+   "q12h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg ½ tab OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg ½ tab once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine 5 mg/5 ml 5 ml daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine syrup 5 mg/5 ml 5 ml OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine syrup 5 mg/5 ml 5 ml daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amlodipine syrup 5 mg/5 ml 5 ml once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Amoxicillin 500 mg 1x3 pc": [
+   "q8h",
+   "recognised"
+  ],
+  "Amoxicillin 500 mg PO 1x3 pc": [
+   "q8h",
+   "recognised"
+  ],
+  "Amoxicillin 500 mg PO three times daily": [
+   "q8h",
+   "recognised"
+  ],
+  "Amoxicillin 500 mg PO tid": [
+   "q8h",
+   "recognised"
+  ],
+  "Amoxicillin 500 mg three times daily": [
+   "q8h",
+   "recognised"
+  ],
+  "Amoxicillin 500 mg tid": [
+   "q8h",
+   "recognised"
+  ],
+  "Amoxicillin 500 มก. PO วันละ 3 ครั้ง": [
+   "q8h",
+   "recognised"
+  ],
+  "Amoxil 500 mg oral 1x3 pc": [
+   "q8h",
+   "recognised"
+  ],
+  "Amoxil 500 mg oral tid": [
+   "q8h",
+   "recognised"
+  ],
+  "Amoxil 500 mg three times daily": [
+   "q8h",
+   "recognised"
+  ],
+  "Amoxil 500 mg tid": [
+   "q8h",
+   "recognised"
+  ],
+  "Apixaban 5 mg PO BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Apixaban 5 mg PO twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Apixaban 5 มก. PO 1x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "Apixaban 5 มก. PO วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "Aspirin 81 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 100 mg 1/2 tab OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 100 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 100 mg PO once a day": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 100 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 100 mg every 24 hours": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 100 mg once a day": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 100 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 25 mg 2 tabs OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 25 mg 2 tabs daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 25 mg 2x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg": [
+   null,
+   "not_stated"
+  ],
+  "Atenolol 50 mg + 25 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg + 25 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg 1/2 tab once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg 2 caps OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg 2 caps once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg 2 capsules OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg 2 tablets daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg 2 tablets once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg 2 tabs daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg 2x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg 3 capsules once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg 3 tablets OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg 3x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg alternating with 25 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg alternating with 25 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg and 25 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg and 25 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg every other day": [
+   null,
+   "not_recognised"
+  ],
+  "Atenolol 50 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg once daily except 25 mg on Sunday": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg oral 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg oral OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg oral daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg oral once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg q 12 h": [
+   "q12h",
+   "recognised"
+  ],
+  "Atenolol 50 mg q4h": [
+   null,
+   "not_recognised"
+  ],
+  "Atenolol 50 mg twice weekly": [
+   null,
+   "not_recognised"
+  ],
+  "Atenolol 50 mg ½ tab daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol 50 mg/5 ml 5 ml OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol every morning": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol syrup 50 mg/5 ml 5 ml OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Atenolol syrup 50 mg/5 ml 5 ml once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atorvastatin 20 mg 2x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Atorvastatin 40 mg 1.5 tabs daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atorvastatin 40 mg 1/2 tab OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Atorvastatin 40 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Atorvastatin 40 mg 2 caps once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atorvastatin 40 mg 3 caps daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atorvastatin 40 mg 3x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Atorvastatin 40 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Atorvastatin 40 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Atorvastatin 40 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Atorvastatin 40 mg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atorvastatin 40 mg PO twice a day": [
+   "q12h",
+   "recognised"
+  ],
+  "Atorvastatin 40 mg alternating with 20 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Atorvastatin 40 mg alternating with 20 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atorvastatin 40 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atorvastatin 40 mg daily except 20 mg on Sunday": [
+   "q24h",
+   "recognised"
+  ],
+  "Atorvastatin 40 mg every other day": [
+   null,
+   "not_recognised"
+  ],
+  "Atorvastatin 40 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atorvastatin 40 mg oral OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Atorvastatin 40 mg oral once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atorvastatin 40 mg twice weekly": [
+   null,
+   "not_recognised"
+  ],
+  "Atorvastatin 40 mg ½ tab daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atorvastatin 40 mg ½ tab once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atorvastatin 40 mg/5 ml 5 ml OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Atorvastatin 40 mg/5 ml 5 ml once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Atorvastatin 80 mg 1/2 tab OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Atorvastatin 80 mg 1/2 tab daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Augmentin 1 g": [
+   null,
+   "not_stated"
+  ],
+  "Augmentin 1 g 1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Augmentin 1 g PO bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Augmentin 1 g PO twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Augmentin 1 g bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Augmentin 1 กรัม 1x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "Augmentin 875/125 mg bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Azithromycin 250 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Bactrim DS 1 tab bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Berlontin 150 มก. 2 เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Berlontin 300 mg": [
+   null,
+   "not_stated"
+  ],
+  "Berlontin 300 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Berlontin 300 mg 2 times a day": [
+   "q12h",
+   "recognised"
+  ],
+  "Berlontin 300 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Berlontin 300 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Berlontin 300 mg PO BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Berlontin 300 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Berlontin 300 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Berlontin 300 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Berlontin 300 mg every 12 hours": [
+   "q12h",
+   "recognised"
+  ],
+  "Berlontin 300 mg once a day": [
+   "q24h",
+   "recognised"
+  ],
+  "Berlontin 300 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Berlontin 300 mg oral 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Berlontin 300 mg oral OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Berlontin 300 mg oral daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Berlontin 300 mg oral once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Berlontin 300 mg twice a day": [
+   "q12h",
+   "recognised"
+  ],
+  "Berlontin 300 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Berlontin 600 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Berlontin 600 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Bisoprolol 5 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Bisoprolol 5 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Bisoprolol 5 มก. PO 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Bisoprolol 5 มก. PO วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Brufen 400 mg PO three times daily": [
+   "q8h",
+   "recognised"
+  ],
+  "Brufen 400 mg PO tid": [
+   "q8h",
+   "recognised"
+  ],
+  "Brufen 400 mg oral three times daily": [
+   "q8h",
+   "recognised"
+  ],
+  "Brufen 400 mg t.i.d.": [
+   "q8h",
+   "recognised"
+  ],
+  "Brufen 400 mg tid": [
+   "q8h",
+   "recognised"
+  ],
+  "Brufen 400 มก. 1x3 หลังอาหาร": [
+   "q8h",
+   "recognised"
+  ],
+  "Brufen 400 มก. วันละ 3 ครั้ง": [
+   "q8h",
+   "recognised"
+  ],
+  "Carvedilol 6.25 mg PO BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Carvedilol 6.25 mg PO bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Carvedilol 6.25 มก. PO 1x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "Carvedilol 6.25 มก. PO วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "Cefuroxime 250 mg PO 1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Cefuroxime 250 mg bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Cefuroxime 250 มก. PO 1x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "Celecoxib 200 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Celecoxib 200 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Celecoxib 200 มก. PO 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Celecoxib 200 มก. PO วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Cephalexin 500 mg PO four times daily": [
+   "q6h",
+   "recognised"
+  ],
+  "Cephalexin 500 mg PO qid": [
+   "q6h",
+   "recognised"
+  ],
+  "Cephalexin 500 mg four times daily": [
+   "q6h",
+   "recognised"
+  ],
+  "Cephalexin 500 mg oral four times daily": [
+   "q6h",
+   "recognised"
+  ],
+  "Cephalexin 500 mg q6h": [
+   "q6h",
+   "recognised"
+  ],
+  "Cephalexin 500 mg qid": [
+   "q6h",
+   "recognised"
+  ],
+  "Cephalexin 500 มก. PO วันละ 4 ครั้ง": [
+   "q6h",
+   "recognised"
+  ],
+  "Cephalexin q6h": [
+   "q6h",
+   "recognised"
+  ],
+  "Clopidogrel 150 mg 1/2 tab daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Clopidogrel 150 mg 1/2 tab once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Clopidogrel 75 mg + 37.5 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Clopidogrel 75 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Clopidogrel 75 mg 2 caps OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Clopidogrel 75 mg 2 caps once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Clopidogrel 75 mg 2 capsules once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Clopidogrel 75 mg 3 times a week": [
+   null,
+   "not_recognised"
+  ],
+  "Clopidogrel 75 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Clopidogrel 75 mg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Clopidogrel 75 mg alternating with 37.5 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Clopidogrel 75 mg and 37.5 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Clopidogrel 75 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Clopidogrel 75 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Clopidogrel 75 mg oral 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Clopidogrel 75 mg oral OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Clopidogrel 75 mg oral once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Clopidogrel 75 mg q4h": [
+   null,
+   "not_recognised"
+  ],
+  "Clopidogrel 75 mg ½ tab once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Clopidogrel 75 mg/5 ml 5 ml daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Clopidogrel once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Coumadin 3 mg once a day": [
+   "q24h",
+   "recognised"
+  ],
+  "Cozaar 100 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Cozaar 100 mg every morning": [
+   "q24h",
+   "recognised"
+  ],
+  "Cozaar 100 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Cozaar 25 mg 2x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Cozaar 50 mg": [
+   null,
+   "not_stated"
+  ],
+  "Cozaar 50 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Cozaar 50 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Cozaar 50 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Cozaar 50 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Cozaar 50 mg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Cozaar 50 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Cozaar 50 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Cozaar 50 มก.": [
+   null,
+   "not_stated"
+  ],
+  "Cozaar 50 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Cozaar 50 มก. รับประทาน": [
+   null,
+   "not_stated"
+  ],
+  "Cozaar 50 มก. รับประทาน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Cozaar 50 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Cozaar OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Cozaar PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Diclofenac 25 mg PO three times daily": [
+   "q8h",
+   "recognised"
+  ],
+  "Diclofenac 25 mg oral three times daily": [
+   "q8h",
+   "recognised"
+  ],
+  "Diclofenac 25 mg oral tid": [
+   "q8h",
+   "recognised"
+  ],
+  "Diclofenac 25 mg tid": [
+   "q8h",
+   "recognised"
+  ],
+  "Diclofenac 25 มก. PO 1x3 หลังอาหาร": [
+   "q8h",
+   "recognised"
+  ],
+  "Diclofenac 25 มก. PO วันละ 3 ครั้ง": [
+   "q8h",
+   "recognised"
+  ],
+  "Dicloxacillin 250 mg PO four times daily": [
+   "q6h",
+   "recognised"
+  ],
+  "Dicloxacillin 250 mg PO q6h": [
+   "q6h",
+   "recognised"
+  ],
+  "Dicloxacillin 250 mg PO qid": [
+   "q6h",
+   "recognised"
+  ],
+  "Dicloxacillin 250 mg four times daily": [
+   "q6h",
+   "recognised"
+  ],
+  "Dicloxacillin 250 mg oral four times daily": [
+   "q6h",
+   "recognised"
+  ],
+  "Dicloxacillin 250 mg oral qid": [
+   "q6h",
+   "recognised"
+  ],
+  "Dicloxacillin 250 mg qid": [
+   "q6h",
+   "recognised"
+  ],
+  "Dicloxacillin 250 มก. PO วันละ 4 ครั้ง": [
+   "q6h",
+   "recognised"
+  ],
+  "Dicloxacillin q6h": [
+   "q6h",
+   "recognised"
+  ],
+  "Eliquis 5 mg bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 10 mg 1/2 tab bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 10 mg PO 1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 2.5 mg 2 tabs BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 2.5 mg 2 tabs bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 2.5 mg 2x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 5 mg": [
+   null,
+   "not_stated"
+  ],
+  "Enalapril 5 mg 1.5 tabs BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 5 mg 1.5 tabs twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 5 mg 1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 5 mg 2 capsules BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 5 mg 2x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 5 mg 3 tablets BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 5 mg 3 tablets twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 5 mg 3 times a week": [
+   null,
+   "not_recognised"
+  ],
+  "Enalapril 5 mg BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 5 mg BID except 2.5 mg on Sunday": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 5 mg PO BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 5 mg PO bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 5 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Enalapril 5 mg PO twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 5 mg alternating with 2.5 mg bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 5 mg and 2.5 mg BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 5 mg and 2.5 mg bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 5 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Enalapril 5 mg oral BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 5 mg oral bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 5 mg oral twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 5 mg twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Enalapril 5 mg ½ tab bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Esomeprazole 20 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Euthyrox 100 mcg 1/2 tab OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Euthyrox 100 mcg PO every 24 hours": [
+   "q24h",
+   "recognised"
+  ],
+  "Euthyrox 100 mcg PO every morning": [
+   "q24h",
+   "recognised"
+  ],
+  "Euthyrox 100 mcg every morning": [
+   "q24h",
+   "recognised"
+  ],
+  "Euthyrox 25 mcg 2 tabs once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Euthyrox 50 mcg": [
+   null,
+   "not_stated"
+  ],
+  "Euthyrox 50 mcg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Euthyrox 50 mcg 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Euthyrox 50 mcg PO": [
+   null,
+   "not_stated"
+  ],
+  "Euthyrox 50 mcg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Euthyrox 50 mcg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Euthyrox 50 mcg PO every morning": [
+   "q24h",
+   "recognised"
+  ],
+  "Euthyrox 50 mcg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Euthyrox 50 mcg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Euthyrox 50 mcg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Euthyrox 50 mcg oral OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Euthyrox 50 mcg oral daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Euthyrox 50 mcg q 12 h": [
+   "q12h",
+   "recognised"
+  ],
+  "Euthyrox 50 mcg twice a day": [
+   "q12h",
+   "recognised"
+  ],
+  "Euthyrox 50 mcg twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Euthyrox 50 mcg รับประทาน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Euthyrox 50 mcg รับประทาน วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "Euthyrox 50 mcg วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Euthyrox 50 mcg วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Euthyrox วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Furosemide 20 mg 2 tabs OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Furosemide 20 mg 2x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Furosemide 40 mg + 20 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Furosemide 40 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Furosemide 40 mg 2x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Furosemide 40 mg 3 caps daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Furosemide 40 mg 3 times a week": [
+   null,
+   "not_recognised"
+  ],
+  "Furosemide 40 mg BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Furosemide 40 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Furosemide 40 mg PO": [
+   null,
+   "not_stated"
+  ],
+  "Furosemide 40 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Furosemide 40 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Furosemide 40 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Furosemide 40 mg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Furosemide 40 mg PO q 12 h": [
+   "q12h",
+   "recognised"
+  ],
+  "Furosemide 40 mg alternating with 20 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Furosemide 40 mg and 20 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Furosemide 40 mg and 20 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Furosemide 40 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Furosemide 40 mg every other day": [
+   null,
+   "not_recognised"
+  ],
+  "Furosemide 40 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Furosemide 40 mg once daily except 20 mg on Sunday": [
+   "q24h",
+   "recognised"
+  ],
+  "Furosemide 40 mg oral daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Furosemide 40 mg oral once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Furosemide 40 mg twice a day": [
+   "q12h",
+   "recognised"
+  ],
+  "Furosemide 80 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Furosemide 80 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Furosemide 80 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Furosemide 80 mg every morning": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 150 mg 2 tabs once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 150 mg 2x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg": [
+   null,
+   "not_stated"
+  ],
+  "Gabapentin 300 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg 1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg 2 caps OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg 2 caps once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg 2 capsules daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg 2 capsules once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg 2 tabs OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg 2 tabs daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg 2x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg 3 capsules daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg 3 tablets once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg 3 tabs daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg 3 tabs once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg 3 times a week": [
+   null,
+   "not_recognised"
+  ],
+  "Gabapentin 300 mg 3x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg alternating with 150 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg oral 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg oral OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg oral daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg oral once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg q 12 h": [
+   "q12h",
+   "recognised"
+  ],
+  "Gabapentin 300 mg twice weekly": [
+   null,
+   "not_recognised"
+  ],
+  "Gabapentin 600 mg every 24 hours": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin syrup 300 mg/5 ml 5 ml daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Gabapentin syrup 300 mg/5 ml 5 ml once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Gliclazide 80 mg PO bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Gliclazide 80 mg PO twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Gliclazide 80 มก. PO วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "Glipizide 10 mg 1/2 tab OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Glipizide 2.5 mg 2 tabs OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Glipizide 2.5 mg 2x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Glipizide 5 mg + 2.5 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Glipizide 5 mg + 2.5 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Glipizide 5 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Glipizide 5 mg 2 tabs OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Glipizide 5 mg 2x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Glipizide 5 mg 3 times a week": [
+   null,
+   "not_recognised"
+  ],
+  "Glipizide 5 mg BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Glipizide 5 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Glipizide 5 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Glipizide 5 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Glipizide 5 mg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Glipizide 5 mg and 2.5 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Glipizide 5 mg and 2.5 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Glipizide 5 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Glipizide 5 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Glipizide 5 mg oral OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Glipizide 5 mg/5 ml 5 ml once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Glucophage 1 g twice a day": [
+   "q12h",
+   "recognised"
+  ],
+  "Glucophage 1000 mg 1/2 tab BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Glucophage 1000 mg PO q 12 h": [
+   "q12h",
+   "recognised"
+  ],
+  "Glucophage 1000 มก. ครึ่งเม็ด วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "Glucophage 250 มก. 2 เม็ด วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "Glucophage 500 mg 1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Glucophage 500 mg BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Glucophage 500 mg PO BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Glucophage 500 mg PO bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Glucophage 500 mg PO twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Glucophage 500 mg bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Glucophage 500 mg once a day": [
+   "q24h",
+   "recognised"
+  ],
+  "Glucophage 500 mg oral 1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Glucophage 500 mg oral twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Glucophage 500 mg twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Glucophage 500 มก. 1x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "Glucophage 500 มก. รับประทาน 1x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "Glucophage 500 มก. รับประทาน วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "Glucophage PO every 12 hours": [
+   "q12h",
+   "recognised"
+  ],
+  "Glucophage PO q 12 h": [
+   "q12h",
+   "recognised"
+  ],
+  "Glucophage วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "HCTZ 25 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "HCTZ 25 mg PO": [
+   null,
+   "not_stated"
+  ],
+  "HCTZ 25 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "HCTZ 25 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "HCTZ 25 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "HCTZ 25 mg oral OD": [
+   "q24h",
+   "recognised"
+  ],
+  "HCTZ 25 mg oral once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "HCTZ 25 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "HCTZ 25 มก. รับประทาน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "HCTZ 25 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "HCTZ 50 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "HCTZ 50 มก. รับประทาน 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "HCTZ every 24 hours": [
+   "q24h",
+   "recognised"
+  ],
+  "HCTZ รับประทาน 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 12.5 mg 2x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg": [
+   null,
+   "not_stated"
+  ],
+  "Hydrochlorothiazide 25 mg + 12.5 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg 1.5 tabs once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg 1/2 tab daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg 2 caps daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg 2 tablets OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg 2 tabs OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg 3 caps daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg 3 tablets OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg 3x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg OD except 12.5 mg on Sunday": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg PO q 12 h": [
+   "q12h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg alternating with 12.5 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg alternating with 12.5 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg and 12.5 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg every other day": [
+   null,
+   "not_recognised"
+  ],
+  "Hydrochlorothiazide 25 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg once daily except 12.5 mg on Sunday": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg oral 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg oral OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg oral daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg oral once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg q 12 h": [
+   "q12h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 25 mg twice a day": [
+   "q12h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 50 mg 1/2 tab OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 50 mg 1/2 tab daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide 50 mg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide once a day": [
+   "q24h",
+   "recognised"
+  ],
+  "Hydrochlorothiazide syrup 25 mg/5 ml 5 ml OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Ibuprofen 400 mg 1x3 pc": [
+   "q8h",
+   "recognised"
+  ],
+  "Ibuprofen 400 mg PO three times daily": [
+   "q8h",
+   "recognised"
+  ],
+  "Ibuprofen 400 mg PO tid": [
+   "q8h",
+   "recognised"
+  ],
+  "Ibuprofen 400 mg three times daily": [
+   "q8h",
+   "recognised"
+  ],
+  "Ibuprofen 400 mg tid": [
+   "q8h",
+   "recognised"
+  ],
+  "Ibuprofen 400 มก. PO วันละ 3 ครั้ง": [
+   "q8h",
+   "recognised"
+  ],
+  "Januvia 100 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Januvia 100 mg BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Januvia 100 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Januvia 100 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Januvia 100 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Januvia 100 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Januvia 100 mg oral OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Januvia 100 มก. + 50 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Januvia 100 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Januvia 100 มก. 3 แคปซูล วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Januvia 100 มก. 3 แคปซูล วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Januvia 100 มก. 3x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "Januvia 100 มก. ½ เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Januvia 100 มก. รับประทาน": [
+   null,
+   "not_stated"
+  ],
+  "Januvia 100 มก. รับประทาน 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Januvia 100 มก. รับประทาน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Januvia 100 มก. รับประทาน วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Januvia 100 มก. รับประทาน เช้า-เย็น": [
+   "q12h",
+   "recognised"
+  ],
+  "Januvia 100 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Januvia 100 มก. วันละ 1 ครั้ง ยกเว้นวันอาทิตย์ 50 มก.": [
+   "q24h",
+   "recognised"
+  ],
+  "Januvia 100 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Januvia 100 มก. วันละครั้ง ยกเว้นวันอาทิตย์ 50 มก.": [
+   "q24h",
+   "recognised"
+  ],
+  "Januvia 100 มก. สัปดาห์ละ 1 ครั้ง": [
+   null,
+   "not_recognised"
+  ],
+  "Januvia 100 มก. เช้า เย็น": [
+   "q12h",
+   "recognised"
+  ],
+  "Januvia 100 มก./5 มล. 5 มล. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Januvia 200 มก. ครึ่งเม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Januvia 50 มก. 2 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Januvia น้ำเชื่อม 100 มก./5 มล. 5 มล. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Januvia รับประทาน ทุก 24 ชั่วโมง": [
+   "q24h",
+   "recognised"
+  ],
+  "Keflex 500 mg four times daily": [
+   "q6h",
+   "recognised"
+  ],
+  "Keflex 500 mg q.i.d.": [
+   "q6h",
+   "recognised"
+  ],
+  "Keflex 500 mg qid": [
+   "q6h",
+   "recognised"
+  ],
+  "Lantus 10 mg hs": [
+   "q24h",
+   "recognised"
+  ],
+  "Lantus 10 units hs": [
+   "q24h",
+   "recognised"
+  ],
+  "Lasix 20 มก. 2x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "Lasix 40 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Lasix 40 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Lasix 40 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Lasix 40 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Lasix 40 mg oral 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Lasix 40 mg oral daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Lasix 40 mg oral once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Lasix 40 mg q.d.": [
+   "q24h",
+   "recognised"
+  ],
+  "Lasix 40 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Lasix 40 มก. รับประทาน วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Lasix 40 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Lasix 80 mg every morning": [
+   "q24h",
+   "recognised"
+  ],
+  "Lasix วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 0.05 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 100 mcg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 100 mcg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 25 mcg 2 tabs OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 25 mcg 2 tabs daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 25 mcg 2x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg": [
+   null,
+   "not_stated"
+  ],
+  "Levothyroxine 50 mcg 1.5 tabs once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg 1/2 tab once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg 1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg 2 tablets daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg 2 tabs daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg 2x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg 3 caps once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg 3 tablets daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg 3 times a week": [
+   null,
+   "not_recognised"
+  ],
+  "Levothyroxine 50 mcg 3x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg PO": [
+   null,
+   "not_stated"
+  ],
+  "Levothyroxine 50 mcg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg PO every 12 hours": [
+   "q12h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg alternating with 25 mcg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg alternating with 25 mcg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg and 25 mcg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg daily except 25 mcg on Sunday": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg oral OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg oral daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg/5 ml 5 ml OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine 50 mcg/5 ml 5 ml once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine once a day": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine syrup 50 mcg/5 ml 5 ml OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Levothyroxine syrup 50 mcg/5 ml 5 ml daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Lipitor 40 mg PO BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Lipitor 40 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Lipitor 40 mg PO bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Lipitor 40 mg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Lipitor 40 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Lipitor 40 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Lipitor 40 mg oral OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Lipitor 40 mg oral daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Lipitor 40 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Lipitor 40 มก. รับประทาน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Lipitor 40 มก. รับประทาน วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Lipitor q.d.": [
+   "q24h",
+   "recognised"
+  ],
+  "Lipitor รับประทาน ทุก 24 ชั่วโมง": [
+   "q24h",
+   "recognised"
+  ],
+  "Lisinopril 10 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 100 mg 1/2 tab daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 100 mg 1/2 tab once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 100 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 100 mg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 100 mg PO q.d.": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 100 mg every 24 hours": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 50 mg": [
+   null,
+   "not_stated"
+  ],
+  "Losartan 50 mg + 25 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 50 mg + 25 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 50 mg 1.5 tabs once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 50 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 50 mg 2 tablets OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 50 mg 2x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 50 mg 3 caps daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 50 mg 3 tabs daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 50 mg 3 times a week": [
+   null,
+   "not_recognised"
+  ],
+  "Losartan 50 mg 3x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 50 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 50 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 50 mg PO BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Losartan 50 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 50 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 50 mg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 50 mg alternating with 25 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 50 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 50 mg daily except 25 mg on Sunday": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 50 mg every other day": [
+   null,
+   "not_recognised"
+  ],
+  "Losartan 50 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 50 mg oral 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 50 mg oral once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan 50 mg ½ tab once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Losartan syrup 50 mg/5 ml 5 ml once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Losec 20 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Losec 20 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Losec 20 mg once a day": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 0.5 g bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 1 g 1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 1 g PO 2 times a day": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 1 g bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 1000 mg": [
+   null,
+   "not_stated"
+  ],
+  "Metformin 1000 mg PO bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 1000 mg bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 1000 mg tid": [
+   "q8h",
+   "recognised"
+  ],
+  "Metformin 250 mg 2 tabs twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 250 mg 2x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg": [
+   null,
+   "not_stated"
+  ],
+  "Metformin 500 mg ": [
+   null,
+   "not_stated"
+  ],
+  "Metformin 500 mg + 250 mg bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg 1 tab bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg 1-2x2": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg 1.5 tabs twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg 1/2 tab BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg 1/2 tab bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg 1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg 1x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg 1x3 pc": [
+   "q8h",
+   "recognised"
+  ],
+  "Metformin 500 mg 1x3 หลังอาหาร": [
+   "q8h",
+   "recognised"
+  ],
+  "Metformin 500 mg 2 caps BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg 2 caps bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg 2 capsules BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg 2 tablets bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg 2 tabs 1x2": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg 2 tabs BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg 2 tabs bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg 2 times a day": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg 2x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg 3 caps bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg 3 tablets BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg 3 tablets twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg 3 times a week": [
+   null,
+   "not_recognised"
+  ],
+  "Metformin 500 mg 3x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Amlodipine 5 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Amlodipine daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Amoxicillin 500 mg tid": [
+   "q8h",
+   "recognised"
+  ],
+  "Metformin 500 mg Aspirin 81 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Atorvastatin 40 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Augmentin 1 g PO bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Augmentin 1 g bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Augmentin 875/125 mg bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Azithromycin 250 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg BID except 250 mg on Sunday": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Bactrim DS 1 tab bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Brufen 400 mg tid": [
+   "q8h",
+   "recognised"
+  ],
+  "Metformin 500 mg Cephalexin 500 mg qid": [
+   "q6h",
+   "recognised"
+  ],
+  "Metformin 500 mg Eliquis 5 mg bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Ibuprofen 400 mg tid": [
+   "q8h",
+   "recognised"
+  ],
+  "Metformin 500 mg Lantus 10 mg hs": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Lantus 10 units hs": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Levothyroxine 0.05 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Levothyroxine 50 mcg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Lipitor 40 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Losartan 50 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Metformin 0.5 g bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Metformin 1 g bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Metformin 1000 mg bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Metformin 1000 mg tid": [
+   "q8h",
+   "recognised"
+  ],
+  "Metformin 500 mg Metformin 500 mg + 250 mg bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Metformin 500 mg 1 tab bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Metformin 500 mg 1-2x2": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Metformin 500 mg 1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Metformin 500 mg 2 tablets bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Metformin 500 mg 2 tabs 1x2": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Metformin 500 mg 2 tabs bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Metformin 500 mg 3 times a week": [
+   null,
+   "not_recognised"
+  ],
+  "Metformin 500 mg Metformin 500 mg bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Metformin 500 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Metformin 500 mg every other day": [
+   null,
+   "not_recognised"
+  ],
+  "Metformin 500 mg Metformin 500 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Metformin 500 mg q4h": [
+   null,
+   "not_recognised"
+  ],
+  "Metformin 500 mg Metformin 500 mg thrice weekly": [
+   null,
+   "not_recognised"
+  ],
+  "Metformin 500 mg Metformin 500 mg tid": [
+   "q8h",
+   "recognised"
+  ],
+  "Metformin 500 mg Metformin 500 mg twice a day": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Metformin 500 mg เช้า-เย็น": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Metformin bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Metformin tid": [
+   "q8h",
+   "recognised"
+  ],
+  "Metformin 500 mg Metformin วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Naprosyn 250 mg bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg PO": [
+   null,
+   "not_stated"
+  ],
+  "Metformin 500 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg PO 1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg PO BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg PO bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg PO twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Paracetamol 1000 mg q6h prn": [
+   "q6h",
+   "recognised"
+  ],
+  "Metformin 500 mg Paracetamol 500 mg 1 or 2 tabs q6h prn": [
+   "q6h",
+   "recognised"
+  ],
+  "Metformin 500 mg Paracetamol 500 mg 1 to 2 tabs q6h prn": [
+   "q6h",
+   "recognised"
+  ],
+  "Metformin 500 mg Paracetamol 500 mg 1-2 tabs q6h prn": [
+   "q6h",
+   "recognised"
+  ],
+  "Metformin 500 mg Paracetamol 500 mg 2 เม็ด วันละ 3 ครั้ง": [
+   "q8h",
+   "recognised"
+  ],
+  "Metformin 500 mg Paracetamol 500 mg prn": [
+   "prn",
+   "recognised"
+  ],
+  "Metformin 500 mg Paracetamol 500 mg q6h": [
+   "q6h",
+   "recognised"
+  ],
+  "Metformin 500 mg Qelvadrine 10 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Qelvadrine 5 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Sara 500 mg prn": [
+   "prn",
+   "recognised"
+  ],
+  "Metformin 500 mg Simvastatin 20 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Simvastatin 40 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Simvastatin daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Tylenol 500 mg prn": [
+   "prn",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 1 mg 1.5 tabs od": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 1 tab daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 1.5 mg od": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 2 mg ½ เม็ด od": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 2 tab daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 3 mg + 1 mg od": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 3 mg 1 - 1/2 tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 3 mg 1 0.5 tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 3 mg 1 1/2 tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 3 mg 1 and 1/2 tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 3 mg 1 tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 3 mg 1-1/2 tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 3 mg 1.5 เม็ดครึ่ง od": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 3 mg 1/0 tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 3 mg 1/2 tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 3 mg 1/2-1 tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 3 mg 1½ tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 3 mg 2 1/2 เม็ด od": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 3 mg 2 tabs od": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 3 mg and 2 mg tabs od": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 3 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 3 mg every other day": [
+   null,
+   "not_recognised"
+  ],
+  "Metformin 500 mg Warfarin 3 mg od": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 3 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 3 mg one tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 3 mg twice a day": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 3 mg ½-1 tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 3 mg วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 3 mg เช้า-เย็น": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 4 mg od": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 5 mg 1 tab daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Warfarin 6 mg 1/2 tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Zocor 20 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg Zorbitrax 5 mg bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg alternating with 250 mg BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg and 250 mg twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg as needed": [
+   "prn",
+   "recognised"
+  ],
+  "Metformin 500 mg bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg bid except 250 mg on Sunday": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg every 12 hours": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg every 24 hours": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg every 4 hours": [
+   null,
+   "not_recognised"
+  ],
+  "Metformin 500 mg every 6 hours": [
+   "q6h",
+   "recognised"
+  ],
+  "Metformin 500 mg every 8 hours": [
+   "q8h",
+   "recognised"
+  ],
+  "Metformin 500 mg every morning": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg every other day": [
+   null,
+   "not_recognised"
+  ],
+  "Metformin 500 mg four times a day": [
+   "q6h",
+   "recognised"
+  ],
+  "Metformin 500 mg four times daily": [
+   "q6h",
+   "recognised"
+  ],
+  "Metformin 500 mg once a day": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg oral 1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg oral BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg oral bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg oral twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg p.r.n.": [
+   "prn",
+   "recognised"
+  ],
+  "Metformin 500 mg prn": [
+   "prn",
+   "recognised"
+  ],
+  "Metformin 500 mg q 12 h": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg q.d.": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg q.i.d.": [
+   "q6h",
+   "recognised"
+  ],
+  "Metformin 500 mg q12h": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg q24h": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg q4h": [
+   null,
+   "not_recognised"
+  ],
+  "Metformin 500 mg q4h prn": [
+   "prn",
+   "recognised"
+  ],
+  "Metformin 500 mg q6h": [
+   "q6h",
+   "recognised"
+  ],
+  "Metformin 500 mg q8h": [
+   "q8h",
+   "recognised"
+  ],
+  "Metformin 500 mg qid": [
+   "q6h",
+   "recognised"
+  ],
+  "Metformin 500 mg t.i.d.": [
+   "q8h",
+   "recognised"
+  ],
+  "Metformin 500 mg three times a day": [
+   "q8h",
+   "recognised"
+  ],
+  "Metformin 500 mg three times daily": [
+   "q8h",
+   "recognised"
+  ],
+  "Metformin 500 mg thrice weekly": [
+   null,
+   "not_recognised"
+  ],
+  "Metformin 500 mg tid": [
+   "q8h",
+   "recognised"
+  ],
+  "Metformin 500 mg twice a day": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg twice daily except 250 mg on Sunday": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg twice weekly": [
+   null,
+   "not_recognised"
+  ],
+  "Metformin 500 mg when needed": [
+   "prn",
+   "recognised"
+  ],
+  "Metformin 500 mg ½ tab BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg ½ tab twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg ซาร่า 500 มก. เวลาปวด": [
+   "prn",
+   "recognised"
+  ],
+  "Metformin 500 mg ซิมวาสแตติน วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg ทุก 12 ชั่วโมง": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg ทุก 24 ชั่วโมง": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg ทุก 6 ชั่วโมง": [
+   "q6h",
+   "recognised"
+  ],
+  "Metformin 500 mg ทุก 8 ชั่วโมง": [
+   "q8h",
+   "recognised"
+  ],
+  "Metformin 500 mg ฟ้าทะลายโจร 2 แคปซูล วันละ 3 ครั้ง": [
+   "q8h",
+   "recognised"
+  ],
+  "Metformin 500 mg วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg วันละ 3 ครั้ง": [
+   "q8h",
+   "recognised"
+  ],
+  "Metformin 500 mg วันละ 4 ครั้ง": [
+   "q6h",
+   "recognised"
+  ],
+  "Metformin 500 mg วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg วันเว้นวัน": [
+   null,
+   "not_recognised"
+  ],
+  "Metformin 500 mg วาร์ฟาริน 3 มก. ครึ่งเม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg วาร์ฟาริน 3 มก. วันละครึ่งเม็ด": [
+   null,
+   "not_recognised"
+  ],
+  "Metformin 500 mg วาร์ฟาริน 3 มก. สองเม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg วาร์ฟาริน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Metformin 500 mg เช้า กลางวัน เย็น": [
+   "q8h",
+   "recognised"
+  ],
+  "Metformin 500 mg เช้า กลางวัน เย็น ก่อนนอน": [
+   "q6h",
+   "recognised"
+  ],
+  "Metformin 500 mg เช้า เย็น": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg เช้า-เย็น": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg เมทฟอร์มิน 500 มก. 1x2": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg เมทฟอร์มิน 500 มก. 2x2": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg เมทฟอร์มิน 500 มก. วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg เมทฟอร์มิน 500 มก. วันละ 3 ครั้ง": [
+   "q8h",
+   "recognised"
+  ],
+  "Metformin 500 mg เมทฟอร์มิน 500 มก. วันเว้นวัน": [
+   null,
+   "not_recognised"
+  ],
+  "Metformin 500 mg เมทฟอร์มิน 500 มก. สัปดาห์ละ 1 ครั้ง": [
+   null,
+   "not_recognised"
+  ],
+  "Metformin 500 mg เมทฟอร์มิน 500 มก. สัปดาห์ละ 3 ครั้ง": [
+   null,
+   "not_recognised"
+  ],
+  "Metformin 500 mg เมทฟอร์มิน วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg เมทฟอร์มิน500มก. 2x2": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin 500 mg เมื่อจำเป็น": [
+   "prn",
+   "recognised"
+  ],
+  "Metformin 500 mg เมื่อมีอาการ": [
+   "prn",
+   "recognised"
+  ],
+  "Metformin 500 mg เวลาปวด": [
+   "prn",
+   "recognised"
+  ],
+  "Metformin 500 mg/5 ml 5 ml twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin PO q 12 h": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin PO twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin syrup 500 mg/5 ml 5 ml BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin syrup 500 mg/5 ml 5 ml twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin tid": [
+   "q8h",
+   "recognised"
+  ],
+  "Metformin twice a day": [
+   "q12h",
+   "recognised"
+  ],
+  "Metformin วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "Metoprolol 100 mg PO 1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Metoprolol 100 มก. PO 1x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "Minidiab 10 mg once a day": [
+   "q24h",
+   "recognised"
+  ],
+  "Minidiab 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Minidiab 5 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Minidiab 5 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Minidiab 5 mg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Minidiab 5 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Minidiab 5 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Minidiab 5 mg oral 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Minidiab 5 mg oral once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Minidiab 5 mg twice a day": [
+   "q12h",
+   "recognised"
+  ],
+  "Minidiab 5 mg twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Minidiab 5 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Minidiab 5 มก. รับประทาน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Miracid 20 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Miracid 20 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Miracid 20 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Miracid 20 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Miracid 20 mg PO q 12 h": [
+   "q12h",
+   "recognised"
+  ],
+  "Miracid 20 mg PO twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Miracid 20 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Miracid 20 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Miracid 20 mg oral 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Miracid 20 mg oral OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Miracid 20 mg oral once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Miracid 20 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Miracid 20 มก. 1x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "Miracid 20 มก. ทุก 12 ชั่วโมง": [
+   "q12h",
+   "recognised"
+  ],
+  "Miracid 20 มก. รับประทาน วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Miracid 20 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Miracid 20 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Miracid 40 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Miracid 40 mg PO every 24 hours": [
+   "q24h",
+   "recognised"
+  ],
+  "Miracid 40 mg once a day": [
+   "q24h",
+   "recognised"
+  ],
+  "Miracid 40 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Miracid 40 มก. ครึ่งเม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Miracid 40 มก. ทุก 24 ชั่วโมง": [
+   "q24h",
+   "recognised"
+  ],
+  "Miracid 40 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Miracid 40 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Miracid รับประทาน วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Naprosyn 250 mg PO BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Naprosyn 250 mg PO every 12 hours": [
+   "q12h",
+   "recognised"
+  ],
+  "Naprosyn 250 mg bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Naprosyn 250 mg oral twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Naprosyn 250 mg twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Naproxen 250 mg 1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Naproxen 250 mg BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Naproxen 250 mg PO 1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Naproxen 250 mg PO bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Naproxen 250 mg PO twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Naproxen 250 mg oral BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Naproxen 250 mg oral bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Naproxen 250 mg twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Naproxen 250 มก. PO 1x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "Neurontin 300 mg PO q.d.": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin 300 mg every morning": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin 300 mg once a day": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin 300 มก. + 150 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin 300 มก. 1.5 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin 300 มก. 1.5 เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin 300 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin 300 มก. 2 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin 300 มก. 2 เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin 300 มก. 2x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin 300 มก. 3 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin 300 มก. 3 แคปซูล วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin 300 มก. 3x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin 300 มก. ½ เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin 300 มก. รับประทาน": [
+   null,
+   "not_stated"
+  ],
+  "Neurontin 300 มก. รับประทาน 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin 300 มก. รับประทาน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin 300 มก. รับประทาน วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin 300 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin 300 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin 300 มก. วันเว้นวัน": [
+   null,
+   "not_recognised"
+  ],
+  "Neurontin 300 มก. สลับกับ 150 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin 300 มก. สัปดาห์ละ 1 ครั้ง": [
+   null,
+   "not_recognised"
+  ],
+  "Neurontin 300 มก. เช้า เย็น": [
+   "q12h",
+   "recognised"
+  ],
+  "Neurontin 300 มก./5 มล. 5 มล. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin 600 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin 600 มก. ครึ่งเม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin 600 มก. ครึ่งเม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin 600 มก. รับประทาน วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin น้ำเชื่อม 300 มก./5 มล. 5 มล. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Neurontin วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Nifedipine 30 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Nifedipine 30 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Nifedipine 30 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Nifedipine 30 mg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Nifedipine 30 มก. PO วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Norvasc 10 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Norvasc 10 mg once a day": [
+   "q24h",
+   "recognised"
+  ],
+  "Norvasc 10 มก. ทุก 24 ชั่วโมง": [
+   "q24h",
+   "recognised"
+  ],
+  "Norvasc 5 mg": [
+   null,
+   "not_stated"
+  ],
+  "Norvasc 5 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Norvasc 5 mg 2 times a day": [
+   "q12h",
+   "recognised"
+  ],
+  "Norvasc 5 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Norvasc 5 mg PO": [
+   null,
+   "not_stated"
+  ],
+  "Norvasc 5 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Norvasc 5 mg PO 1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Norvasc 5 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Norvasc 5 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Norvasc 5 mg PO every morning": [
+   "q24h",
+   "recognised"
+  ],
+  "Norvasc 5 mg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Norvasc 5 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Norvasc 5 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Norvasc 5 mg oral 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Norvasc 5 mg oral OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Norvasc 5 mg oral daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Norvasc 5 mg q 12 h": [
+   "q12h",
+   "recognised"
+  ],
+  "Norvasc 5 มก.": [
+   null,
+   "not_stated"
+  ],
+  "Norvasc 5 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Norvasc 5 มก. รับประทาน 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Norvasc 5 มก. รับประทาน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Norvasc 5 มก. รับประทาน วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Norvasc 5 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Norvasc 5 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Norvasc 5 มก. เช้า เย็น": [
+   "q12h",
+   "recognised"
+  ],
+  "Omeprazole 10 mg 2 tabs OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 10 mg 2 tabs once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 10 mg 2x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg + 10 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg + 10 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg 1.5 tabs daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg 1/2 tab daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg 2 caps once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg 2 capsules OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg 2 tabs daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg 2 tabs once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg 2x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg 3 capsules OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg 3 tablets OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg 3 tabs once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg 3 times a week": [
+   null,
+   "not_recognised"
+  ],
+  "Omeprazole 20 mg 3x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg alternating with 10 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg and 10 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg and 10 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg daily except 10 mg on Sunday": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg every other day": [
+   null,
+   "not_recognised"
+  ],
+  "Omeprazole 20 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg oral OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg oral daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg q4h": [
+   null,
+   "not_recognised"
+  ],
+  "Omeprazole 20 mg twice weekly": [
+   null,
+   "not_recognised"
+  ],
+  "Omeprazole 20 mg ½ tab once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg/5 ml 5 ml OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 20 mg/5 ml 5 ml daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 40 mg 1/2 tab daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 40 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole 40 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole every morning": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole syrup 20 mg/5 ml 5 ml daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Omeprazole syrup 20 mg/5 ml 5 ml once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Orfarin 3 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Orfarin 3 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Orfarin 3 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Orfarin 3 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Orfarin 3 mg oral OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Orfarin 3 มก. รับประทาน วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Orfarin 3 มก. รับประทาน เช้า-เย็น": [
+   "q12h",
+   "recognised"
+  ],
+  "Orfarin 3 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Orfarin 6 mg every 24 hours": [
+   "q24h",
+   "recognised"
+  ],
+  "Orfarin 6 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Pantoprazole 40 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Pantoprazole 40 mg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Pantoprazole 40 มก. PO วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Paracetamol 1 g PO p.r.n.": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 1 g PO when needed": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 1000 mg 1/2 tab as needed": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 1000 mg 1/2 tab prn": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 1000 mg PO when needed": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 1000 mg p.r.n.": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 1000 mg prn": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 1000 mg q6h prn": [
+   "q6h",
+   "recognised"
+  ],
+  "Paracetamol 250 mg 2 tabs as needed": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 250 mg 2 tabs prn": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 500 mg": [
+   null,
+   "not_stated"
+  ],
+  "Paracetamol 500 mg + 250 mg as needed": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 500 mg 1 or 2 tabs q6h prn": [
+   "q6h",
+   "recognised"
+  ],
+  "Paracetamol 500 mg 1 to 2 tabs q6h prn": [
+   "q6h",
+   "recognised"
+  ],
+  "Paracetamol 500 mg 1-2 tabs q6h prn": [
+   "q6h",
+   "recognised"
+  ],
+  "Paracetamol 500 mg 1.5 tabs as needed": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 500 mg 1.5 tabs prn": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 500 mg 1/2 tab as needed": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 500 mg 2 caps prn": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 500 mg 2 capsules as needed": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 500 mg 2 tablets as needed": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 500 mg 2 tabs as needed": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 500 mg 2 เม็ด วันละ 3 ครั้ง": [
+   "q8h",
+   "recognised"
+  ],
+  "Paracetamol 500 mg 3 caps prn": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 500 mg 3 times a week": [
+   null,
+   "not_recognised"
+  ],
+  "Paracetamol 500 mg PO": [
+   null,
+   "not_stated"
+  ],
+  "Paracetamol 500 mg PO as needed": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 500 mg PO prn": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 500 mg PO q6h": [
+   "q6h",
+   "recognised"
+  ],
+  "Paracetamol 500 mg PO qid": [
+   "q6h",
+   "recognised"
+  ],
+  "Paracetamol 500 mg alternating with 250 mg prn": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 500 mg and 250 mg prn": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 500 mg as needed": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 500 mg every 6 hours": [
+   "q6h",
+   "recognised"
+  ],
+  "Paracetamol 500 mg four times a day": [
+   "q6h",
+   "recognised"
+  ],
+  "Paracetamol 500 mg oral as needed": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 500 mg oral prn": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 500 mg prn": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 500 mg q6h": [
+   "q6h",
+   "recognised"
+  ],
+  "Paracetamol 500 mg twice weekly": [
+   null,
+   "not_recognised"
+  ],
+  "Paracetamol 500 mg ½ tab as needed": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 500 mg/5 ml 5 ml as needed": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol 500 mg/5 ml 5 ml prn": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol prn": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol syrup 250 mg/5 ml 10 ml prn": [
+   "prn",
+   "recognised"
+  ],
+  "Paracetamol syrup 250 mg/5 ml 10 ml q6h prn": [
+   "q6h",
+   "recognised"
+  ],
+  "Paracetamol syrup 500 mg/5 ml 5 ml as needed": [
+   "prn",
+   "recognised"
+  ],
+  "Plavix 150 mg 1/2 tab daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Plavix 150 mg PO every morning": [
+   "q24h",
+   "recognised"
+  ],
+  "Plavix 150 mg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Plavix 150 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Plavix 75 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Plavix 75 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Plavix 75 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Plavix 75 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Plavix 75 mg PO q 12 h": [
+   "q12h",
+   "recognised"
+  ],
+  "Plavix 75 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Plavix 75 mg oral 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Plavix 75 mg oral OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Plavix 75 มก. รับประทาน วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Plavix 75 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Plavix ทุก 24 ชั่วโมง": [
+   "q24h",
+   "recognised"
+  ],
+  "Qelvadrine 10 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Qelvadrine 10 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Qelvadrine 5 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Renitec 10 mg 1/2 tab BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Renitec 10 mg PO 2 times a day": [
+   "q12h",
+   "recognised"
+  ],
+  "Renitec 5 mg 1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Renitec 5 mg BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Renitec 5 mg PO BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Renitec 5 mg PO bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Renitec 5 mg PO every 24 hours": [
+   "q24h",
+   "recognised"
+  ],
+  "Renitec 5 mg oral BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Renitec 5 mg twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Rivaroxaban 20 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Rivaroxaban 20 มก. PO วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Rosuvastatin 10 มก. PO 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Rosuvastatin 10 มก. PO วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Sara 1000 mg p.r.n.": [
+   "prn",
+   "recognised"
+  ],
+  "Sara 250 mg 2 tabs prn": [
+   "prn",
+   "recognised"
+  ],
+  "Sara 500 mg PO": [
+   null,
+   "not_stated"
+  ],
+  "Sara 500 mg as needed": [
+   "prn",
+   "recognised"
+  ],
+  "Sara 500 mg oral as needed": [
+   "prn",
+   "recognised"
+  ],
+  "Sara 500 mg oral prn": [
+   "prn",
+   "recognised"
+  ],
+  "Sara 500 mg prn": [
+   "prn",
+   "recognised"
+  ],
+  "Sara 500 มก. ทุก 6 ชั่วโมง": [
+   "q6h",
+   "recognised"
+  ],
+  "Sara 500 มก. รับประทาน เมื่อมีอาการ": [
+   "prn",
+   "recognised"
+  ],
+  "Sara 500 มก. รับประทาน เวลาปวด": [
+   "prn",
+   "recognised"
+  ],
+  "Sara 500 มก. เมื่อมีอาการ": [
+   "prn",
+   "recognised"
+  ],
+  "Sara 500 มก. เวลาปวด": [
+   "prn",
+   "recognised"
+  ],
+  "Simvastatin 10 mg 2 tabs OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin 10 mg 2 tabs daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin 10 mg 2x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin 20 mg": [
+   null,
+   "not_stated"
+  ],
+  "Simvastatin 20 mg + 10 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin 20 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin 20 mg 2x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin 20 mg 3 times a week": [
+   null,
+   "not_recognised"
+  ],
+  "Simvastatin 20 mg 3x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin 20 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin 20 mg PO": [
+   null,
+   "not_stated"
+  ],
+  "Simvastatin 20 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin 20 mg PO BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Simvastatin 20 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin 20 mg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin 20 mg alternating with 10 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin 20 mg and 10 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin 20 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin 20 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin 20 mg oral daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin 20 mg ½ tab once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin 20 mg/5 ml 5 ml once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin 20 มก. PO 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin 40 mg": [
+   null,
+   "not_stated"
+  ],
+  "Simvastatin 40 mg 1/2 tab OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin 40 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin 40 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin 40 mg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin 40 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin 40 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Simvastatin syrup 20 mg/5 ml 5 ml daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Sitagliptin 100 mg": [
+   null,
+   "not_stated"
+  ],
+  "Sitagliptin 100 mg 1/2 tab once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Sitagliptin 100 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Sitagliptin 100 mg 2 tablets OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Sitagliptin 100 mg 2 times a day": [
+   "q12h",
+   "recognised"
+  ],
+  "Sitagliptin 100 mg 3 capsules OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Sitagliptin 100 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Sitagliptin 100 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Sitagliptin 100 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Sitagliptin 100 mg alternating with 50 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Sitagliptin 100 mg and 50 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Sitagliptin 100 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Sitagliptin 100 mg daily except 50 mg on Sunday": [
+   "q24h",
+   "recognised"
+  ],
+  "Sitagliptin 100 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Sitagliptin 100 mg oral 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Sitagliptin 100 mg oral OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Sitagliptin 100 mg oral daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Sitagliptin 100 mg oral once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Sitagliptin 100 mg q4h": [
+   null,
+   "not_recognised"
+  ],
+  "Sitagliptin 100 mg ½ tab OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Sitagliptin 100 mg/5 ml 5 ml OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Sitagliptin 200 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Tenormin 100 mg PO once a day": [
+   "q24h",
+   "recognised"
+  ],
+  "Tenormin 100 mg q.d.": [
+   "q24h",
+   "recognised"
+  ],
+  "Tenormin 50 mg": [
+   null,
+   "not_stated"
+  ],
+  "Tenormin 50 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Tenormin 50 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Tenormin 50 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Tenormin 50 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Tenormin 50 mg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Tenormin 50 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Tenormin 50 mg once a day": [
+   "q24h",
+   "recognised"
+  ],
+  "Tenormin 50 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Tenormin 50 mg oral 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Tenormin 50 mg oral OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Tenormin 50 mg oral daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Tenormin 50 mg oral once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Tenormin 50 mg q 12 h": [
+   "q12h",
+   "recognised"
+  ],
+  "Tenormin 50 mg q.d.": [
+   "q24h",
+   "recognised"
+  ],
+  "Tenormin 50 mg twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "Tenormin 50 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Tenormin 50 มก. รับประทาน 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Tenormin 50 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Tenormin 50 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Tenormin PO once a day": [
+   "q24h",
+   "recognised"
+  ],
+  "Tylenol 500 mg PO p.r.n.": [
+   "prn",
+   "recognised"
+  ],
+  "Tylenol 500 mg prn": [
+   "prn",
+   "recognised"
+  ],
+  "Valsartan 80 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Valsartan 80 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Valsartan 80 มก. PO วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Voltaren 25 mg PO 1x3 pc": [
+   "q8h",
+   "recognised"
+  ],
+  "Voltaren 25 mg PO three times a day": [
+   "q8h",
+   "recognised"
+  ],
+  "Voltaren 25 มก. วันละ 3 ครั้ง": [
+   "q8h",
+   "recognised"
+  ],
+  "Voltaren เช้า กลางวัน เย็น": [
+   "q8h",
+   "recognised"
+  ],
+  "Warfarin 1 mg 1.5 tabs od": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 1 tab daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 1.5 mg 2x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 1.5 mg od": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 2 mg ½ เม็ด od": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 2 tab daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg + 1 mg od": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg 1 - 1/2 tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg 1 0.5 tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg 1 1/2 tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg 1 and 1/2 tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg 1 tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg 1-1/2 tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg 1.5 เม็ดครึ่ง od": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg 1/0 tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg 1/2 tab daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg 1/2 tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg 1/2 tab once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg 1/2-1 tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg 1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Warfarin 3 mg 1½ tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg 2 1/2 เม็ด od": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg 2 tablets OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg 2 tabs OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg 2 tabs od": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg 3 capsules daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg PO every 12 hours": [
+   "q12h",
+   "recognised"
+  ],
+  "Warfarin 3 mg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg alternating with 1.5 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg and 1.5 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg and 2 mg tabs od": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg every 12 hours": [
+   "q12h",
+   "recognised"
+  ],
+  "Warfarin 3 mg every other day": [
+   null,
+   "not_recognised"
+  ],
+  "Warfarin 3 mg od": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg od except 1.5 mg on Sunday": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg once daily except 1.5 mg on Sunday": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg one tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg oral 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg oral daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg oral once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg q 12 h": [
+   "q12h",
+   "recognised"
+  ],
+  "Warfarin 3 mg q4h": [
+   null,
+   "not_recognised"
+  ],
+  "Warfarin 3 mg twice a day": [
+   "q12h",
+   "recognised"
+  ],
+  "Warfarin 3 mg ½ tab once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg ½-1 tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 3 mg เช้า-เย็น": [
+   "q12h",
+   "recognised"
+  ],
+  "Warfarin 4 mg od": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 5 mg 1 tab daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 6 mg 1/2 tab od": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 6 mg PO once a day": [
+   "q24h",
+   "recognised"
+  ],
+  "Warfarin 6 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Zinnat 250 mg": [
+   null,
+   "not_stated"
+  ],
+  "Zinnat 250 mg 1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Zinnat 250 mg BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Zinnat 250 mg bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Zinnat 250 มก. 1x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "Zinnat 250 มก. รับประทาน 1x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "Zinnat 250 มก. รับประทาน วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "Zinnat 250 มก. วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "Zocor 20 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Zocor 20 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Zocor 20 mg PO 1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Zocor 20 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Zocor 20 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Zocor 20 mg oral OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Zocor 20 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Zocor 20 มก. รับประทาน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Zocor 20 มก. รับประทาน วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Zocor 20 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Zocor 20 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Zocor 40 mg 1/2 tab daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Zocor 40 mg every morning": [
+   "q24h",
+   "recognised"
+  ],
+  "Zocor 40 มก. ทุก 24 ชั่วโมง": [
+   "q24h",
+   "recognised"
+  ],
+  "Zorbitrax 5 mg bid": [
+   "q12h",
+   "recognised"
+  ],
+  "Zyloric 100 mg 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "Zyloric 100 mg 1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "Zyloric 100 mg BID": [
+   "q12h",
+   "recognised"
+  ],
+  "Zyloric 100 mg OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Zyloric 100 mg PO 2 times a day": [
+   "q12h",
+   "recognised"
+  ],
+  "Zyloric 100 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Zyloric 100 mg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Zyloric 100 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Zyloric 100 mg every morning": [
+   "q24h",
+   "recognised"
+  ],
+  "Zyloric 100 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Zyloric 100 mg oral OD": [
+   "q24h",
+   "recognised"
+  ],
+  "Zyloric 100 mg oral once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Zyloric 100 มก.": [
+   null,
+   "not_stated"
+  ],
+  "Zyloric 100 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "Zyloric 100 มก. รับประทาน วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Zyloric 100 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "Zyloric 200 mg PO daily": [
+   "q24h",
+   "recognised"
+  ],
+  "Zyloric 200 mg PO once a day": [
+   "q24h",
+   "recognised"
+  ],
+  "Zyloric 200 mg every 24 hours": [
+   "q24h",
+   "recognised"
+  ],
+  "Zyloric 200 mg every morning": [
+   "q24h",
+   "recognised"
+  ],
+  "Zyloric 50 mg 2x1 pc": [
+   "q24h",
+   "recognised"
+  ],
+  "acetaminophen 500 mg prn": [
+   "prn",
+   "recognised"
+  ],
+  "allopurinol 100 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "amlodipine 5 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "amlodipine 5 mg PO q.d.": [
+   "q24h",
+   "recognised"
+  ],
+  "amlodipine 5 mg every morning": [
+   "q24h",
+   "recognised"
+  ],
+  "atenolol 50 mg PO OD": [
+   "q24h",
+   "recognised"
+  ],
+  "atenolol 50 mg once a day": [
+   "q24h",
+   "recognised"
+  ],
+  "bid": [
+   "q12h",
+   "recognised"
+  ],
+  "cefalexin 500 mg q.i.d.": [
+   "q6h",
+   "recognised"
+  ],
+  "cephalexin 500 mg qid": [
+   "q6h",
+   "recognised"
+  ],
+  "clopidogrel 75 mg PO 1x1": [
+   "q24h",
+   "recognised"
+  ],
+  "every 12 hours": [
+   "q12h",
+   "recognised"
+  ],
+  "every 24 hours": [
+   "q24h",
+   "recognised"
+  ],
+  "every 4 hours": [
+   null,
+   "not_recognised"
+  ],
+  "every 6 hours": [
+   "q6h",
+   "recognised"
+  ],
+  "every 8 hours": [
+   "q8h",
+   "recognised"
+  ],
+  "gabapentin 300 mg PO once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "hydrochlorothiazide 25 mg PO every morning": [
+   "q24h",
+   "recognised"
+  ],
+  "hydrochlorothiazide 25 mg q.d.": [
+   "q24h",
+   "recognised"
+  ],
+  "levothyroxine 50 mcg once a day": [
+   "q24h",
+   "recognised"
+  ],
+  "losartan 50 mg once a day": [
+   "q24h",
+   "recognised"
+  ],
+  "losartan 50 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "metformin 500 mg PO every 12 hours": [
+   "q12h",
+   "recognised"
+  ],
+  "metformin 500 mg bid": [
+   "q12h",
+   "recognised"
+  ],
+  "metformin 500 mg q 12 h": [
+   "q12h",
+   "recognised"
+  ],
+  "naproxen 250 mg PO 1x2 pc": [
+   "q12h",
+   "recognised"
+  ],
+  "omeprazole 20 mg PO every morning": [
+   "q24h",
+   "recognised"
+  ],
+  "omeprazole 20 mg daily": [
+   "q24h",
+   "recognised"
+  ],
+  "once a day": [
+   "q24h",
+   "recognised"
+  ],
+  "prn": [
+   "prn",
+   "recognised"
+  ],
+  "q 12 h": [
+   "q12h",
+   "recognised"
+  ],
+  "q.d.": [
+   "q24h",
+   "recognised"
+  ],
+  "q12h": [
+   "q12h",
+   "recognised"
+  ],
+  "q24h": [
+   "q24h",
+   "recognised"
+  ],
+  "q4h": [
+   null,
+   "not_recognised"
+  ],
+  "q4h prn": [
+   "prn",
+   "recognised"
+  ],
+  "q6h": [
+   "q6h",
+   "recognised"
+  ],
+  "q8h": [
+   "q8h",
+   "recognised"
+  ],
+  "simvastatin 20 mg PO q.d.": [
+   "q24h",
+   "recognised"
+  ],
+  "simvastatin 20 mg once a day": [
+   "q24h",
+   "recognised"
+  ],
+  "three times a day": [
+   "q8h",
+   "recognised"
+  ],
+  "twice a day": [
+   "q12h",
+   "recognised"
+  ],
+  "twice daily": [
+   "q12h",
+   "recognised"
+  ],
+  "warfarin 3 mg once daily": [
+   "q24h",
+   "recognised"
+  ],
+  "กลิพิไซด์ 10 มก. ครึ่งเม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "กลิพิไซด์ 2.5 มก. 2 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "กลิพิไซด์ 5 มก. + 2.5 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "กลิพิไซด์ 5 มก. + 2.5 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "กลิพิไซด์ 5 มก. 1.5 เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "กลิพิไซด์ 5 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "กลิพิไซด์ 5 มก. 2 แคปซูล วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "กลิพิไซด์ 5 มก. 2x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "กลิพิไซด์ 5 มก. 3 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "กลิพิไซด์ 5 มก. 3 เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "กลิพิไซด์ 5 มก. 3 แคปซูล วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "กลิพิไซด์ 5 มก. 3x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "กลิพิไซด์ 5 มก. รับประทาน": [
+   null,
+   "not_stated"
+  ],
+  "กลิพิไซด์ 5 มก. รับประทาน 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "กลิพิไซด์ 5 มก. รับประทาน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "กลิพิไซด์ 5 มก. รับประทาน วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "กลิพิไซด์ 5 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "กลิพิไซด์ 5 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "กลิพิไซด์ 5 มก. วันละครั้ง ยกเว้นวันอาทิตย์ 2.5 มก.": [
+   "q24h",
+   "recognised"
+  ],
+  "กลิพิไซด์ 5 มก. วันเว้นวัน": [
+   null,
+   "not_recognised"
+  ],
+  "กลิพิไซด์ 5 มก. สัปดาห์ละ 1 ครั้ง": [
+   null,
+   "not_recognised"
+  ],
+  "กลิพิไซด์ 5 มก./5 มล. 5 มล. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "กลิพิไซด์ น้ำเชื่อม 5 มก./5 มล. 5 มล. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ซาร่า 1000 มก. ครึ่งเม็ด เมื่อมีอาการ": [
+   "prn",
+   "recognised"
+  ],
+  "ซาร่า 1000 มก. ครึ่งเม็ด เวลาปวด": [
+   "prn",
+   "recognised"
+  ],
+  "ซาร่า 250 มก. 2 เม็ด เมื่อมีอาการ": [
+   "prn",
+   "recognised"
+  ],
+  "ซาร่า 250 มก. 2 เม็ด เวลาปวด": [
+   "prn",
+   "recognised"
+  ],
+  "ซาร่า 500 มก. + 250 มก. เวลาปวด": [
+   "prn",
+   "recognised"
+  ],
+  "ซาร่า 500 มก. 1.5 เม็ด เมื่อมีอาการ": [
+   "prn",
+   "recognised"
+  ],
+  "ซาร่า 500 มก. 2 เม็ด เมื่อมีอาการ": [
+   "prn",
+   "recognised"
+  ],
+  "ซาร่า 500 มก. 2 เม็ด เวลาปวด": [
+   "prn",
+   "recognised"
+  ],
+  "ซาร่า 500 มก. 2 แคปซูล เมื่อมีอาการ": [
+   "prn",
+   "recognised"
+  ],
+  "ซาร่า 500 มก. 2 แคปซูล เวลาปวด": [
+   "prn",
+   "recognised"
+  ],
+  "ซาร่า 500 มก. 3 เม็ด เมื่อมีอาการ": [
+   "prn",
+   "recognised"
+  ],
+  "ซาร่า 500 มก. 3 แคปซูล เมื่อมีอาการ": [
+   "prn",
+   "recognised"
+  ],
+  "ซาร่า 500 มก. ½ เม็ด เมื่อมีอาการ": [
+   "prn",
+   "recognised"
+  ],
+  "ซาร่า 500 มก. รับประทาน วันละ 4 ครั้ง": [
+   "q6h",
+   "recognised"
+  ],
+  "ซาร่า 500 มก. รับประทาน เมื่อมีอาการ": [
+   "prn",
+   "recognised"
+  ],
+  "ซาร่า 500 มก. รับประทาน เวลาปวด": [
+   "prn",
+   "recognised"
+  ],
+  "ซาร่า 500 มก. สัปดาห์ละ 1 ครั้ง": [
+   null,
+   "not_recognised"
+  ],
+  "ซาร่า 500 มก. เมื่อมีอาการ": [
+   "prn",
+   "recognised"
+  ],
+  "ซาร่า 500 มก. เวลาปวด": [
+   "prn",
+   "recognised"
+  ],
+  "ซาร่า 500 มก. เวลาปวด ยกเว้นวันอาทิตย์ 250 มก.": [
+   "prn",
+   "recognised"
+  ],
+  "ซาร่า 500 มก./5 มล. 5 มล. เมื่อมีอาการ": [
+   "prn",
+   "recognised"
+  ],
+  "ซาร่า รับประทาน เวลาปวด": [
+   "prn",
+   "recognised"
+  ],
+  "ซิมวาสแตติน 10 มก. 2x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "ซิมวาสแตติน 20 มก. + 10 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ซิมวาสแตติน 20 มก. 1.5 เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ซิมวาสแตติน 20 มก. 2 เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ซิมวาสแตติน 20 มก. 2x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "ซิมวาสแตติน 20 มก. 3 เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ซิมวาสแตติน 20 มก. 3x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "ซิมวาสแตติน 20 มก. ครึ่งเม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ซิมวาสแตติน 20 มก. รับประทาน ทุก 12 ชั่วโมง": [
+   "q12h",
+   "recognised"
+  ],
+  "ซิมวาสแตติน 20 มก. รับประทาน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ซิมวาสแตติน 20 มก. รับประทาน วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ซิมวาสแตติน 20 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ซิมวาสแตติน 20 มก. วันละครั้ง ยกเว้นวันอาทิตย์ 10 มก.": [
+   "q24h",
+   "recognised"
+  ],
+  "ซิมวาสแตติน 20 มก. วันเว้นวัน": [
+   null,
+   "not_recognised"
+  ],
+  "ซิมวาสแตติน 20 มก. สลับกับ 10 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ซิมวาสแตติน 20 มก. สัปดาห์ละ 1 ครั้ง": [
+   null,
+   "not_recognised"
+  ],
+  "ซิมวาสแตติน 20 มก./5 มล. 5 มล. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ซิมวาสแตติน 20 มก./5 มล. 5 มล. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ซิมวาสแตติน น้ำเชื่อม 20 มก./5 มล. 5 มล. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ซิมวาสแตติน น้ำเชื่อม 20 มก./5 มล. 5 มล. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ซิมวาสแตติน วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ทุก 12 ชั่วโมง": [
+   "q12h",
+   "recognised"
+  ],
+  "นอร์วาสก์ 5 มก. รับประทาน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "บรูเฟน 400 มก. วันละ 3 ครั้ง": [
+   "q8h",
+   "recognised"
+  ],
+  "พาราเซตามอล 500 มก. ครั้งละ 1-2 เม็ด ทุก 6 ชั่วโมง เวลาปวด": [
+   "q6h",
+   "recognised"
+  ],
+  "พาราเซตามอล 500 มก. เมื่อมีอาการ": [
+   "prn",
+   "recognised"
+  ],
+  "พาราเซตามอล 500 มก. เวลาปวด": [
+   "prn",
+   "recognised"
+  ],
+  "พาราเซตามอล น้ำเชื่อม 120 มก./5 มล. 5 มล. ทุก 6 ชั่วโมง": [
+   "q6h",
+   "recognised"
+  ],
+  "ฟูโรซีไมด์ 20 มก. 2 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ฟูโรซีไมด์ 20 มก. 2 เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ฟูโรซีไมด์ 20 มก. 2x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "ฟูโรซีไมด์ 40 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "ฟูโรซีไมด์ 40 มก. 3 เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ฟูโรซีไมด์ 40 มก. 3 แคปซูล วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ฟูโรซีไมด์ 40 มก. 3 แคปซูล วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ฟูโรซีไมด์ 40 มก. 3x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "ฟูโรซีไมด์ 40 มก. ครึ่งเม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ฟูโรซีไมด์ 40 มก. ครึ่งเม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ฟูโรซีไมด์ 40 มก. รับประทาน 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "ฟูโรซีไมด์ 40 มก. รับประทาน ทุก 24 ชั่วโมง": [
+   "q24h",
+   "recognised"
+  ],
+  "ฟูโรซีไมด์ 40 มก. รับประทาน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ฟูโรซีไมด์ 40 มก. รับประทาน วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ฟูโรซีไมด์ 40 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ฟูโรซีไมด์ 40 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ฟูโรซีไมด์ 40 มก. วันละครั้ง ยกเว้นวันอาทิตย์ 20 มก.": [
+   "q24h",
+   "recognised"
+  ],
+  "ฟูโรซีไมด์ 40 มก. วันเว้นวัน": [
+   null,
+   "not_recognised"
+  ],
+  "ฟูโรซีไมด์ 40 มก. สัปดาห์ละ 1 ครั้ง": [
+   null,
+   "not_recognised"
+  ],
+  "ฟูโรซีไมด์ 80 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ฟูโรซีไมด์ น้ำเชื่อม 40 มก./5 มล. 5 มล. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ฟูโรซีไมด์ น้ำเชื่อม 40 มก./5 มล. 5 มล. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ฟ้าทะลายโจร 2 แคปซูล วันละ 3 ครั้ง": [
+   "q8h",
+   "recognised"
+  ],
+  "ลอซาร์แทน 100 มก. ครึ่งเม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ลอซาร์แทน 25 มก. 2 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ลอซาร์แทน 25 มก. 2 เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ลอซาร์แทน 25 มก. 2x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "ลอซาร์แทน 50 มก. + 25 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ลอซาร์แทน 50 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "ลอซาร์แทน 50 มก. 2 แคปซูล วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ลอซาร์แทน 50 มก. 2x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "ลอซาร์แทน 50 มก. 3 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ลอซาร์แทน 50 มก. 3 แคปซูล วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ลอซาร์แทน 50 มก. 3x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "ลอซาร์แทน 50 มก. ½ เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ลอซาร์แทน 50 มก. ครึ่งเม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ลอซาร์แทน 50 มก. รับประทาน 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "ลอซาร์แทน 50 มก. รับประทาน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ลอซาร์แทน 50 มก. รับประทาน วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ลอซาร์แทน 50 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ลอซาร์แทน 50 มก. วันละ 1 ครั้ง ยกเว้นวันอาทิตย์ 25 มก.": [
+   "q24h",
+   "recognised"
+  ],
+  "ลอซาร์แทน 50 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ลอซาร์แทน 50 มก. วันเว้นวัน": [
+   null,
+   "not_recognised"
+  ],
+  "ลอซาร์แทน 50 มก. สลับกับ 25 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ลอซาร์แทน 50 มก. สัปดาห์ละ 1 ครั้ง": [
+   null,
+   "not_recognised"
+  ],
+  "ลอซาร์แทน น้ำเชื่อม 50 มก./5 มล. 5 มล. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ลิพิทอร์ 40 มก. ทุก 24 ชั่วโมง": [
+   "q24h",
+   "recognised"
+  ],
+  "ลิพิทอร์ 40 มก. รับประทาน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "วันเว้นวัน": [
+   null,
+   "not_recognised"
+  ],
+  "วาร์ฟาริน 1.5 มก. 2 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "วาร์ฟาริน 1.5 มก. 2x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "วาร์ฟาริน 3 มก. + 1.5 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "วาร์ฟาริน 3 มก. + 1.5 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "วาร์ฟาริน 3 มก. 1 เม็ดครึ่ง วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "วาร์ฟาริน 3 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "วาร์ฟาริน 3 มก. 1และ1/2 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "วาร์ฟาริน 3 มก. 2 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "วาร์ฟาริน 3 มก. 2 เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "วาร์ฟาริน 3 มก. 2 แคปซูล วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "วาร์ฟาริน 3 มก. 2เม็ดครึ่ง วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "วาร์ฟาริน 3 มก. 3 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "วาร์ฟาริน 3 มก. ครึ่งเม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "วาร์ฟาริน 3 มก. รับประทาน 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "วาร์ฟาริน 3 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "วาร์ฟาริน 3 มก. วันละ 1 เม็ด ยกเว้นวันอาทิตย์ครึ่งเม็ด": [
+   "q24h",
+   "recognised"
+  ],
+  "วาร์ฟาริน 3 มก. วันละครั้ง ยกเว้นวันอาทิตย์ 1.5 มก.": [
+   "q24h",
+   "recognised"
+  ],
+  "วาร์ฟาริน 3 มก. วันละครึ่งเม็ด": [
+   null,
+   "not_recognised"
+  ],
+  "วาร์ฟาริน 3 มก. วันเว้นวัน": [
+   null,
+   "not_recognised"
+  ],
+  "วาร์ฟาริน 3 มก. สลับกับ 1.5 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "วาร์ฟาริน 3 มก. สองเม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "วาร์ฟาริน 3 มก. สัปดาห์ละ 1 ครั้ง": [
+   null,
+   "not_recognised"
+  ],
+  "วาร์ฟาริน น้ำเชื่อม 3 มก./5 มล. 5 มล. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "วาร์ฟาริน น้ำเชื่อม 3 มก./5 มล. 5 มล. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "วาร์ฟาริน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ออกเมนติน 1 กรัม 1x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "ออกเมนติน 1 กรัม รับประทาน 1x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "ออกเมนติน 1 กรัม รับประทาน วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "ออกเมนติน 1 กรัม วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "อะทอร์วาสแตติน 20 มก. 2 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทอร์วาสแตติน 40 มก. + 20 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทอร์วาสแตติน 40 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทอร์วาสแตติน 40 มก. 2 เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทอร์วาสแตติน 40 มก. 2x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทอร์วาสแตติน 40 มก. 3 เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทอร์วาสแตติน 40 มก. ½ เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทอร์วาสแตติน 40 มก. รับประทาน 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทอร์วาสแตติน 40 มก. รับประทาน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทอร์วาสแตติน 40 มก. รับประทาน วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทอร์วาสแตติน 40 มก. รับประทาน เช้า-เย็น": [
+   "q12h",
+   "recognised"
+  ],
+  "อะทอร์วาสแตติน 40 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทอร์วาสแตติน 40 มก./5 มล. 5 มล. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทอร์วาสแตติน 80 มก. ครึ่งเม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทอร์วาสแตติน 80 มก. รับประทาน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทอร์วาสแตติน น้ำเชื่อม 40 มก./5 มล. 5 มล. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 100 มก. ครึ่งเม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 25 มก. 2 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 25 มก. 2x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. + 25 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. + 25 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. 1.5 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. 1x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. 2 แคปซูล วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. 2 แคปซูล วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. 2x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. 3 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. 3 เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. 3 แคปซูล วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. 3 แคปซูล วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. 3x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. ½ เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. ½ เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. ครึ่งเม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. ครึ่งเม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. รับประทาน 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. รับประทาน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. รับประทาน วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. วันละ 1 ครั้ง ยกเว้นวันอาทิตย์ 25 มก.": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. วันเว้นวัน": [
+   null,
+   "not_recognised"
+  ],
+  "อะทีโนลอล 50 มก. สลับกับ 25 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล 50 มก. สัปดาห์ละ 1 ครั้ง": [
+   null,
+   "not_recognised"
+  ],
+  "อะทีโนลอล 50 มก./5 มล. 5 มล. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะทีโนลอล น้ำเชื่อม 50 มก./5 มล. 5 มล. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อะม็อกซีซิลลิน 500 มก. 1x3 หลังอาหาร": [
+   "q8h",
+   "recognised"
+  ],
+  "อะม็อกซีซิลลิน 500 มก. วันละ 3 ครั้ง": [
+   "q8h",
+   "recognised"
+  ],
+  "อะม็อกซีซิลลิน 500 มก. เช้า กลางวัน เย็น": [
+   "q8h",
+   "recognised"
+  ],
+  "อัลโลพูรินอล 100 มก.": [
+   null,
+   "not_stated"
+  ],
+  "อัลโลพูรินอล 100 มก. + 50 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อัลโลพูรินอล 100 มก. + 50 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อัลโลพูรินอล 100 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "อัลโลพูรินอล 100 มก. 2 เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อัลโลพูรินอล 100 มก. 2x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "อัลโลพูรินอล 100 มก. 3 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อัลโลพูรินอล 100 มก. 3x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "อัลโลพูรินอล 100 มก. รับประทาน 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "อัลโลพูรินอล 100 มก. รับประทาน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อัลโลพูรินอล 100 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อัลโลพูรินอล 100 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อัลโลพูรินอล 100 มก. วันละครั้ง ยกเว้นวันอาทิตย์ 50 มก.": [
+   "q24h",
+   "recognised"
+  ],
+  "อัลโลพูรินอล 100 มก. สลับกับ 50 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อัลโลพูรินอล 100 มก. สัปดาห์ละ 1 ครั้ง": [
+   null,
+   "not_recognised"
+  ],
+  "อัลโลพูรินอล 100 มก. เช้า เย็น": [
+   "q12h",
+   "recognised"
+  ],
+  "อัลโลพูรินอล 100 มก./5 มล. 5 มล. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อัลโลพูรินอล 200 มก. ครึ่งเม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อัลโลพูรินอล ทุก 24 ชั่วโมง": [
+   "q24h",
+   "recognised"
+  ],
+  "อัลโลพูรินอล น้ำเชื่อม 100 มก./5 มล. 5 มล. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "อัลโลพูรินอล น้ำเชื่อม 100 มก./5 มล. 5 มล. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "เช้า กลางวัน เย็น": [
+   "q8h",
+   "recognised"
+  ],
+  "เช้า กลางวัน เย็น ก่อนนอน": [
+   "q6h",
+   "recognised"
+  ],
+  "เช้า-เย็น": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 1000 มก. ครึ่งเม็ด วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 1000 มก. ทุก 12 ชั่วโมง": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 1000 มก. รับประทาน ทุก 12 ชั่วโมง": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 1000 มก. เช้า-เย็น": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 250 มก. 2 เม็ด วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 250 มก. 2x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 500 มก.": [
+   null,
+   "not_stated"
+  ],
+  "เมทฟอร์มิน 500 มก. + 250 มก. วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 500 มก. 1.5 เม็ด วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 500 มก. 1x2": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 500 มก. 1x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 500 มก. 2 เม็ด วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 500 มก. 2 แคปซูล วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 500 มก. 2x2": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 500 มก. 2x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 500 มก. 3 เม็ด วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 500 มก. 3 แคปซูล วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 500 มก. 3x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 500 มก. ครั้งละ2เม็ด วันละ2ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 500 มก. ครึ่งเม็ด วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 500 มก. รับประทาน 1x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 500 มก. รับประทาน วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 500 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 500 มก. วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 500 มก. วันละ 2 ครั้ง ยกเว้นวันอาทิตย์ 250 มก.": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 500 มก. วันละ 3 ครั้ง": [
+   "q8h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 500 มก. วันเว้นวัน": [
+   null,
+   "not_recognised"
+  ],
+  "เมทฟอร์มิน 500 มก. สลับกับ 250 มก. วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 500 มก. สัปดาห์ละ 1 ครั้ง": [
+   null,
+   "not_recognised"
+  ],
+  "เมทฟอร์มิน 500 มก. สัปดาห์ละ 3 ครั้ง": [
+   null,
+   "not_recognised"
+  ],
+  "เมทฟอร์มิน 500 มก. เช้า เย็น": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน 500 มก./5 มล. 5 มล. วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน น้ำเชื่อม 500 มก./5 มล. 5 มล. วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน เช้า เย็น": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน เช้า-เย็น": [
+   "q12h",
+   "recognised"
+  ],
+  "เมทฟอร์มิน500มก. 2x2": [
+   "q12h",
+   "recognised"
+  ],
+  "เลโวไทร็อกซีน 100 mcg ครึ่งเม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "เลโวไทร็อกซีน 100 mcg รับประทาน ทุก 24 ชั่วโมง": [
+   "q24h",
+   "recognised"
+  ],
+  "เลโวไทร็อกซีน 25 mcg 2 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "เลโวไทร็อกซีน 25 mcg 2x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "เลโวไทร็อกซีน 50 mcg + 25 mcg วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "เลโวไทร็อกซีน 50 mcg + 25 mcg วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "เลโวไทร็อกซีน 50 mcg 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "เลโวไทร็อกซีน 50 mcg 2 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "เลโวไทร็อกซีน 50 mcg 2 แคปซูล วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "เลโวไทร็อกซีน 50 mcg 3 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "เลโวไทร็อกซีน 50 mcg 3 แคปซูล วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "เลโวไทร็อกซีน 50 mcg 3x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "เลโวไทร็อกซีน 50 mcg ½ เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "เลโวไทร็อกซีน 50 mcg ครึ่งเม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "เลโวไทร็อกซีน 50 mcg รับประทาน ทุก 12 ชั่วโมง": [
+   "q12h",
+   "recognised"
+  ],
+  "เลโวไทร็อกซีน 50 mcg รับประทาน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "เลโวไทร็อกซีน 50 mcg รับประทาน วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "เลโวไทร็อกซีน 50 mcg วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "เลโวไทร็อกซีน 50 mcg วันละ 1 ครั้ง ยกเว้นวันอาทิตย์ 25 mcg": [
+   "q24h",
+   "recognised"
+  ],
+  "เลโวไทร็อกซีน 50 mcg วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "เลโวไทร็อกซีน 50 mcg วันละครั้ง ยกเว้นวันอาทิตย์ 25 mcg": [
+   "q24h",
+   "recognised"
+  ],
+  "เลโวไทร็อกซีน 50 mcg วันเว้นวัน": [
+   null,
+   "not_recognised"
+  ],
+  "เลโวไทร็อกซีน 50 mcg สลับกับ 25 mcg วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "เลโวไทร็อกซีน 50 mcg สัปดาห์ละ 1 ครั้ง": [
+   null,
+   "not_recognised"
+  ],
+  "เลโวไทร็อกซีน 50 mcg/5 มล. 5 มล. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "เลโวไทร็อกซีน 50 mcg/5 มล. 5 มล. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "เอนาลาพริล 2.5 มก. 2 เม็ด วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "เอนาลาพริล 2.5 มก. 2x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "เอนาลาพริล 5 มก. + 2.5 มก. วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "เอนาลาพริล 5 มก. 1x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "เอนาลาพริล 5 มก. 3 เม็ด วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "เอนาลาพริล 5 มก. 3 แคปซูล วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "เอนาลาพริล 5 มก. 3x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "เอนาลาพริล 5 มก. ½ เม็ด วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "เอนาลาพริล 5 มก. รับประทาน 1x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "เอนาลาพริล 5 มก. รับประทาน เช้า เย็น": [
+   "q12h",
+   "recognised"
+  ],
+  "เอนาลาพริล 5 มก. วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "เอนาลาพริล 5 มก. วันละ 2 ครั้ง ยกเว้นวันอาทิตย์ 2.5 มก.": [
+   "q12h",
+   "recognised"
+  ],
+  "เอนาลาพริล 5 มก. วันเว้นวัน": [
+   null,
+   "not_recognised"
+  ],
+  "เอนาลาพริล 5 มก. สัปดาห์ละ 1 ครั้ง": [
+   null,
+   "not_recognised"
+  ],
+  "เอนาลาพริล 5 มก./5 มล. 5 มล. วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "เอนาลาพริล น้ำเชื่อม 5 มก./5 มล. 5 มล. วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 10 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 10 มก. ครึ่งเม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 10 มก. ครึ่งเม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 10 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 2.5 มก. 2 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 2.5 มก. 2 เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 2.5 มก. 2x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก.": [
+   null,
+   "not_stated"
+  ],
+  "แอมโลดิพีน 5 มก. + 2.5 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก. + 2.5 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก. 1.5 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก. 1.5 เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก. 2 เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก. 2 แคปซูล วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก. 2x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก. 3 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก. 3 แคปซูล วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก. 3x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก. ½ เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก. ½ เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก. ครึ่งเม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก. ครึ่งเม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก. ทุก 24 ชั่วโมง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก. รับประทาน 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก. รับประทาน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก. รับประทาน วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก. วันละ 1 ครั้ง ยกเว้นวันอาทิตย์ 2.5 มก.": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก. วันเว้นวัน": [
+   null,
+   "not_recognised"
+  ],
+  "แอมโลดิพีน 5 มก. สลับกับ 2.5 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก. สัปดาห์ละ 1 ครั้ง": [
+   null,
+   "not_recognised"
+  ],
+  "แอมโลดิพีน 5 มก./5 มล. 5 มล. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน 5 มก./5 มล. 5 มล. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน น้ำเชื่อม 5 มก./5 มล. 5 มล. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "แอมโลดิพีน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โคลพิโดเกรล 37.5 มก. 2 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โคลพิโดเกรล 37.5 มก. 2x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "โคลพิโดเกรล 75 มก. + 37.5 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โคลพิโดเกรล 75 มก. + 37.5 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โคลพิโดเกรล 75 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "โคลพิโดเกรล 75 มก. 2 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โคลพิโดเกรล 75 มก. 2 เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โคลพิโดเกรล 75 มก. 2 แคปซูล วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โคลพิโดเกรล 75 มก. 3 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โคลพิโดเกรล 75 มก. 3x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "โคลพิโดเกรล 75 มก. ½ เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โคลพิโดเกรล 75 มก. ½ เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โคลพิโดเกรล 75 มก. ครึ่งเม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โคลพิโดเกรล 75 มก. ครึ่งเม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โคลพิโดเกรล 75 มก. ทุก 24 ชั่วโมง": [
+   "q24h",
+   "recognised"
+  ],
+  "โคลพิโดเกรล 75 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โคลพิโดเกรล 75 มก. วันละ 1 ครั้ง ยกเว้นวันอาทิตย์ 37.5 มก.": [
+   "q24h",
+   "recognised"
+  ],
+  "โคลพิโดเกรล 75 มก. สลับกับ 37.5 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โคลพิโดเกรล 75 มก. สลับกับ 37.5 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล 10 มก. 2 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล 20 มก. + 10 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล 20 มก. + 10 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล 20 มก. 1.5 เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล 20 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล 20 มก. 1x2 หลังอาหาร": [
+   "q12h",
+   "recognised"
+  ],
+  "โอเมพราโซล 20 มก. 2 เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล 20 มก. 2 แคปซูล วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล 20 มก. 2 แคปซูล วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล 20 มก. 2x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล 20 มก. 3 เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล 20 มก. 3 แคปซูล วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล 20 มก. ½ เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล 20 มก. ½ เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล 20 มก. ทุก 12 ชั่วโมง": [
+   "q12h",
+   "recognised"
+  ],
+  "โอเมพราโซล 20 มก. รับประทาน 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล 20 มก. รับประทาน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล 20 มก. รับประทาน วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล 20 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล 20 มก. วันละ 1 ครั้ง ยกเว้นวันอาทิตย์ 10 มก.": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล 20 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล 20 มก. วันเว้นวัน": [
+   null,
+   "not_recognised"
+  ],
+  "โอเมพราโซล 20 มก. สัปดาห์ละ 1 ครั้ง": [
+   null,
+   "not_recognised"
+  ],
+  "โอเมพราโซล 20 มก./5 มล. 5 มล. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล 40 มก. ทุก 24 ชั่วโมง": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล น้ำเชื่อม 20 มก./5 มล. 5 มล. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล รับประทาน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล รับประทาน วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "โอเมพราโซล วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ไดคล็อกซาซิลลิน 250 มก. รับประทาน ทุก 6 ชั่วโมง": [
+   "q6h",
+   "recognised"
+  ],
+  "ไดคล็อกซาซิลลิน 250 มก. วันละ 4 ครั้ง": [
+   "q6h",
+   "recognised"
+  ],
+  "ไดโคลฟีแนค 25 มก. 1x3 หลังอาหาร": [
+   "q8h",
+   "recognised"
+  ],
+  "ไดโคลฟีแนค 25 มก. รับประทาน 1x3 หลังอาหาร": [
+   "q8h",
+   "recognised"
+  ],
+  "ไดโคลฟีแนค 25 มก. รับประทาน วันละ 3 ครั้ง": [
+   "q8h",
+   "recognised"
+  ],
+  "ไดโคลฟีแนค 25 มก. วันละ 3 ครั้ง": [
+   "q8h",
+   "recognised"
+  ],
+  "ไอบูโพรเฟน 400 มก. 1x3 หลังอาหาร": [
+   "q8h",
+   "recognised"
+  ],
+  "ไอบูโพรเฟน 400 มก. วันละ 3 ครั้ง": [
+   "q8h",
+   "recognised"
+  ],
+  "ไฮโดรคลอโรไทอะไซด์ 25 มก. + 12.5 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ไฮโดรคลอโรไทอะไซด์ 25 มก. + 12.5 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ไฮโดรคลอโรไทอะไซด์ 25 มก. 1.5 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ไฮโดรคลอโรไทอะไซด์ 25 มก. 1.5 เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ไฮโดรคลอโรไทอะไซด์ 25 มก. 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "ไฮโดรคลอโรไทอะไซด์ 25 มก. 2 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ไฮโดรคลอโรไทอะไซด์ 25 มก. 2x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "ไฮโดรคลอโรไทอะไซด์ 25 มก. 3 เม็ด วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ไฮโดรคลอโรไทอะไซด์ 25 มก. 3 แคปซูล วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ไฮโดรคลอโรไทอะไซด์ 25 มก. 3x1 หลังอาหาร": [
+   "q24h",
+   "recognised"
+  ],
+  "ไฮโดรคลอโรไทอะไซด์ 25 มก. ½ เม็ด วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ไฮโดรคลอโรไทอะไซด์ 25 มก. รับประทาน 1x1 หลังอาหารเช้า": [
+   "q24h",
+   "recognised"
+  ],
+  "ไฮโดรคลอโรไทอะไซด์ 25 มก. รับประทาน วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ไฮโดรคลอโรไทอะไซด์ 25 มก. วันละ 1 ครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ไฮโดรคลอโรไทอะไซด์ 25 มก. วันละ 1 ครั้ง ยกเว้นวันอาทิตย์ 12.5 มก.": [
+   "q24h",
+   "recognised"
+  ],
+  "ไฮโดรคลอโรไทอะไซด์ 25 มก. วันละ 2 ครั้ง": [
+   "q12h",
+   "recognised"
+  ],
+  "ไฮโดรคลอโรไทอะไซด์ 25 มก. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ],
+  "ไฮโดรคลอโรไทอะไซด์ 25 มก. วันละครั้ง ยกเว้นวันอาทิตย์ 12.5 มก.": [
+   "q24h",
+   "recognised"
+  ],
+  "ไฮโดรคลอโรไทอะไซด์ 25 มก. วันเว้นวัน": [
+   null,
+   "not_recognised"
+  ],
+  "ไฮโดรคลอโรไทอะไซด์ น้ำเชื่อม 25 มก./5 มล. 5 มล. วันละครั้ง": [
+   "q24h",
+   "recognised"
+  ]
+ },
+ "note": "Pinned frequency_code/frequency_status from the 1c1f476 parser (s5-mock-rules-1.2.0) for every fixture, demo, injection-log and existing pharma-test input (s5r3 S5R3-A12). Synthetic text only.",
+ "source_commit": "1c1f476"
+}

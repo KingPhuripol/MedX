@@ -1,0 +1,62 @@
+# Slice s9, stage 3 (proposal 3.3): LoRA on the backbone + trainable connector, with modality dropout
+# and report substitution. Substitution is allowed only when the sample's label does not come from
+# that report (proposal 3.4); the collator enforces it. Real run: MIMIC-IV, MIMIC-CXR, CT-RATE.
+# Research prototype, not for clinical use.
+stage: stage3_lora
+seed: 1234
+device: cpu
+data:
+  data_class: synthetic
+  real_source: MIMIC-IV, MIMIC-CXR, CT-RATE; local_only (PhysioNet), patient-level split
+modality_dropout: {ct: 0.3, cxr: 0.3}
+report_substitution: true
+train:
+  lr: 1.0e-3
+  micro_batch: 2
+  max_steps: 4
+  ckpt_every: 2
+  seq_len: 24
+real_run:
+  precision: bf16
+  micro_batch: 1
+  seq_len: 4096
+  grad_accum_8gpu: 8
+  gradient_checkpointing: true
+  deepspeed_config: research/configs/deepspeed/zero3.json
+  lora:
+    ranks: [8, 16, 64]
+    alpha_over_r: 2
+    dropout: 0.05
+    # One anchored regex per candidate (PEFT full-match mode). Bare leaf names would also wrap the
+    # vision tower (Gemma3 SigLIP q/k/v_proj, Qwen2.5-VL visual mlp gate/up/down_proj); these match
+    # only model.language_model.layers.N.{self_attn.{q,k,v,o}_proj, mlp.{gate,up,down}_proj}.
+    # Architectures: medgemma-27b-it Gemma3ForConditionalGeneration, lingshu-32b
+    # Qwen2_5_VLForConditionalGeneration, qwen3.8-27b Qwen3_5ForConditionalGeneration.
+    target_modules:
+      medgemma-27b-it: '^model\.language_model\.layers\.\d+\.(self_attn\.(q|k|v|o)_proj|mlp\.(gate|up|down)_proj)$'
+      lingshu-32b: '^model\.language_model\.layers\.\d+\.(self_attn\.(q|k|v|o)_proj|mlp\.(gate|up|down)_proj)$'
+      qwen3.8-27b: '^model\.language_model\.layers\.\d+\.(self_attn\.(q|k|v|o)_proj|mlp\.(gate|up|down)_proj)$'
+    scope: language model only (2D vision tower, connector/projector and Gated DeltaNet linear_attn projections are not adapted)
+  encoder3d: {name: CT-CLIP CTViT (frozen), volume_shape_hwd: [480, 480, 240], patch_hw: 20, patch_d: 10, out_dim: 512}
+  connector: {d_model: 1024, n_query: 256, n_layers: 2, n_heads: 8}
+  external_api: false
+dry_run:
+  backbone:
+    model_type: llama
+    vocab_size: 4096
+    hidden_size: 128
+    intermediate_size: 256
+    num_hidden_layers: 4
+    num_attention_heads: 4
+    num_key_value_heads: 2
+    max_position_embeddings: 128
+    tie_word_embeddings: false
+  encoder3d: {out_dim: 16, patch: [4, 8, 8]}
+  volume_shape: [8, 32, 32]
+  connector: {d_model: 16, n_query: 4, n_layers: 1, n_heads: 2}
+  lora:
+    r: 1
+    alpha: 2
+    # Applied to the tiny backbone only (LlamaForCausalLM paths); never the 3D encoder or connector.
+    target_modules: '^model\.layers\.\d+\.(self_attn\.(q|k|v|o)_proj|mlp\.(gate|up|down)_proj)$'
+  dataset: {n: 64, prompt_len: 4, report_len: 6, target_len: 6, modalities: [ct, cxr]}

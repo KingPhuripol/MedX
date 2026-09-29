@@ -1,0 +1,23 @@
+{
+  "system": "https://terms.sil-th.org/core/CodeSystem/cs-chi-clinic",
+  "version": "0.1.2",
+  "source_ref": "SIL-TH-CS-CHI-CLINIC",
+  "note": "Complaint-to-department map is a synthetic rule pending clinical expert review (slice s1 decision D1). Red-flag rows map to 12.",
+  "codes": [
+    {"code": "01", "display_th": "อายุรกรรม", "source_ref": "SIL-TH-CS-CHI-CLINIC"},
+    {"code": "02", "display_th": "ศัลยกรรม", "source_ref": "SIL-TH-CS-CHI-CLINIC"},
+    {"code": "03", "display_th": "สูติกรรม", "source_ref": "SIL-TH-CS-CHI-CLINIC"},
+    {"code": "04", "display_th": "นรีเวชกรรม", "source_ref": "SIL-TH-CS-CHI-CLINIC"},
+    {"code": "06", "display_th": "โสต ศอ นาสิก", "source_ref": "SIL-TH-CS-CHI-CLINIC"},
+    {"code": "07", "display_th": "จักษุ", "source_ref": "SIL-TH-CS-CHI-CLINIC"},
+    {"code": "08", "display_th": "ศัลยกรรมกระดูก", "source_ref": "SIL-TH-CS-CHI-CLINIC"},
+    {"code": "09", "display_th": "จิตเวช", "source_ref": "SIL-TH-CS-CHI-CLINIC"},
+    {"code": "11", "display_th": "ทันตกรรม", "source_ref": "SIL-TH-CS-CHI-CLINIC"},
+    {"code": "12", "display_th": "ฉุกเฉิน", "source_ref": "SIL-TH-CS-CHI-CLINIC"}
+  ],
+  "excluded": [
+    {"code": "05", "reason": "paediatrics; cohort is adults 18+"},
+    {"code": "10", "reason": "radiology is a diagnostic service, not an intake destination"},
+    {"code": "99", "reason": "other; not a usable label"}
+  ]
+}

@@ -1,0 +1,547 @@
+{
+ "circularity_note": "Circularity note: rules, fixtures, extractor lexicon and gold share authors, so these results are circular. One deterministic mock model is used in both arms: the comparison measures graph structure (typed extraction, mandatory red-flag screening, abstention, call count, time), not model reasoning.",
+ "label": "System Evaluation on synthetic data — not clinical performance",
+ "predeclared_expectation": "Equal accuracy on DPs where both arms answer; the Case Graph abstains on NOT_EVALUABLE DPs where the single prompt answers; the Case Graph makes more model calls.",
+ "research_question": "With the same mock model, how does the Case Graph compare with one prompt over the whole snapshot? (PROPOSAL Table 3.2, row Case Graph)",
+ "splits": {
+  "dev": {
+   "arms_matched": {
+    "handler_versions_arm_a": {
+     "triage.department.v1": "baseline-kw-1.0.0",
+     "voice.intake_extract": "voice-mock-rules-0.3.0",
+     "voice.symptom_extract.v1": "symptom-lex-1.0.0"
+    },
+    "handler_versions_arm_b": [
+     {
+      "triage.department.v1": "baseline-kw-1.0.0",
+      "voice.intake_extract": "voice-mock-rules-0.3.0",
+      "voice.symptom_extract.v1": "symptom-lex-1.0.0"
+     }
+    ],
+    "handler_versions_manifest": {
+     "triage.department.v1": "baseline-kw-1.0.0",
+     "voice.intake_extract": "voice-mock-rules-0.3.0",
+     "voice.symptom_extract.v1": "symptom-lex-1.0.0"
+    },
+    "identical_handler_versions": true,
+    "n_both_answer": 46,
+    "n_identical_top3_where_both_answer": 46,
+    "only_case_graph_answers": 0,
+    "only_single_prompt_answers": 8
+   },
+   "calls": {
+    "case_graph": {
+     "mean_per_dp": 4.65,
+     "per_node": {
+      "human_checkpoint": 0,
+      "pharma_agent": 0,
+      "reader_text": 280,
+      "reader_vitals_labs": 0,
+      "reasoning": 92,
+      "red_flag": 0
+     },
+     "total": 372
+    },
+    "single_prompt": {
+     "mean_per_dp": 1.0,
+     "per_node": {
+      "single_prompt": 80
+     },
+     "total": 80
+    }
+   },
+   "case_graph_department_status": {
+    "abstained:required_information_missing": 34,
+    "suggested:None": 46
+   },
+   "circularity_note": "Circularity note: rules, fixtures, extractor lexicon and gold share authors, so these results are circular. One deterministic mock model is used in both arms: the comparison measures graph structure (typed extraction, mandatory red-flag screening, abstention, call count, time), not model reasoning.",
+   "comparison": {
+    "calls_per_dp": {
+     "case_graph": {
+      "ci": [
+       4.364864864864865,
+       4.942063953488371
+      ],
+      "n_decision_points": 80,
+      "n_degenerate": 0,
+      "n_patients": 36,
+      "point": 4.65,
+      "reason": null
+     },
+     "paired_difference_A_minus_B": {
+      "ci_high": 3.942063953488371,
+      "ci_low": 3.364864864864865,
+      "n_degenerate": 0,
+      "point": 3.6500000000000004,
+      "reason": null,
+      "unstable": false
+     },
+     "single_prompt": {
+      "ci": [
+       1.0,
+       1.0
+      ],
+      "point": 1.0
+     }
+    },
+    "coverage": {
+     "case_graph": {
+      "ci": [
+       0.375,
+       0.7368421052631579
+      ],
+      "clopper_pearson": [
+       0.414717,
+       0.686564
+      ],
+      "n": 56,
+      "n_decision_points": 56,
+      "n_degenerate": 0,
+      "n_patients": 29,
+      "point": 0.5535714285714286,
+      "reason": null,
+      "reported_interval": "bootstrap",
+      "wilson": [
+       0.424132,
+       0.676133
+      ],
+      "x": 31
+     },
+     "paired_difference_A_minus_B": {
+      "ci_high": 0.0,
+      "ci_low": -0.05660377358490565,
+      "n_degenerate": 0,
+      "point": -0.017857142857142794,
+      "reason": null,
+      "unstable": false
+     },
+     "single_prompt": {
+      "ci": [
+       0.39285714285714285,
+       0.75
+      ],
+      "clopper_pearson": [
+       0.432159,
+       0.702879
+      ],
+      "n": 56,
+      "point": 0.5714285714285714,
+      "reported_interval": "bootstrap",
+      "wilson": [
+       0.441376,
+       0.69231
+      ],
+      "x": 32
+     }
+    },
+    "dept_top1": {
+     "case_graph": {
+      "ci": [
+       0.3076923076923077,
+       0.6923076923076923
+      ],
+      "clopper_pearson": [
+       0.35812,
+       0.64188
+      ],
+      "n": 52,
+      "n_decision_points": 52,
+      "n_degenerate": 0,
+      "n_patients": 27,
+      "point": 0.5,
+      "reason": null,
+      "reported_interval": "bootstrap",
+      "wilson": [
+       0.368859,
+       0.631141
+      ],
+      "x": 26
+     },
+     "paired_difference_A_minus_B": {
+      "ci_high": 0.0,
+      "ci_low": -0.06122448979591838,
+      "n_degenerate": 0,
+      "point": -0.019230769230769273,
+      "reason": null,
+      "unstable": false
+     },
+     "single_prompt": {
+      "ci": [
+       0.3269230769230769,
+       0.7142857142857143
+      ],
+      "clopper_pearson": [
+       0.376313,
+       0.659881
+      ],
+      "n": 52,
+      "point": 0.5192307692307693,
+      "reported_interval": "bootstrap",
+      "wilson": [
+       0.386857,
+       0.648959
+      ],
+      "x": 27
+     }
+    },
+    "dept_top3": {
+     "case_graph": {
+      "ci": [
+       0.3076923076923077,
+       0.6923076923076923
+      ],
+      "clopper_pearson": [
+       0.35812,
+       0.64188
+      ],
+      "n": 52,
+      "n_decision_points": 52,
+      "n_degenerate": 0,
+      "n_patients": 27,
+      "point": 0.5,
+      "reason": null,
+      "reported_interval": "bootstrap",
+      "wilson": [
+       0.368859,
+       0.631141
+      ],
+      "x": 26
+     },
+     "paired_difference_A_minus_B": {
+      "ci_high": 0.0,
+      "ci_low": -0.06122448979591838,
+      "n_degenerate": 0,
+      "point": -0.019230769230769273,
+      "reason": null,
+      "unstable": false
+     },
+     "single_prompt": {
+      "ci": [
+       0.3269230769230769,
+       0.7142857142857143
+      ],
+      "clopper_pearson": [
+       0.376313,
+       0.659881
+      ],
+      "n": 52,
+      "point": 0.5192307692307693,
+      "reported_interval": "bootstrap",
+      "wilson": [
+       0.386857,
+       0.648959
+      ],
+      "x": 27
+     }
+    },
+    "selective_top1": {
+     "case_graph": {
+      "ci": [
+       0.6285714285714286,
+       1.0
+      ],
+      "clopper_pearson": [
+       0.662728,
+       0.945476
+      ],
+      "n": 31,
+      "n_decision_points": 56,
+      "n_degenerate": 0,
+      "n_patients": 29,
+      "point": 0.8387096774193549,
+      "reason": null,
+      "reported_interval": "bootstrap",
+      "wilson": [
+       0.673656,
+       0.929074
+      ],
+      "x": 26
+     },
+     "paired_difference_A_minus_B": {
+      "ci_high": 0.0,
+      "ci_low": -0.02380952380952373,
+      "n_degenerate": 0,
+      "point": -0.005040322580645129,
+      "reason": null,
+      "unstable": false
+     },
+     "single_prompt": {
+      "ci": [
+       0.6451612903225806,
+       1.0
+      ],
+      "clopper_pearson": [
+       0.672121,
+       0.947249
+      ],
+      "n": 32,
+      "point": 0.84375,
+      "reported_interval": "bootstrap",
+      "wilson": [
+       0.682459,
+       0.931356
+      ],
+      "x": 27
+     }
+    }
+   },
+   "department_routes": {
+    "abstention_only": 4,
+    "department": 52,
+    "excluded": 2,
+    "red_flag_metrics": 22
+   },
+   "evaluation_id": "i2-cg-vs-sp-dev-v1",
+   "frozen": false,
+   "graph_shape_histogram": {
+    "reader_text+reader_vitals_labs+red_flag+pharma_agent+reasoning+human_checkpoint": 72,
+    "reader_text+reader_vitals_labs+red_flag+reasoning+human_checkpoint": 8
+   },
+   "label": "System Evaluation on synthetic data — not clinical performance",
+   "manifest_sha256": "806b18668c3cc5a2e55928de60f53b8f7255cd7fca7c287ed75b15d9a73beeb6",
+   "n_dp": 80,
+   "n_patients": 36,
+   "not_evaluated": {
+    "CareSuggestion": "not evaluated: the mock proposes no care items and S1r has no care gold"
+   },
+   "red_flag_screening_status": {
+    "partially_evaluated": 80
+   },
+   "red_flags": {
+    "arm": "case_graph",
+    "false_alerts_per_s4_rule": {
+     "gold_negative_dps": {
+      "alerts": {},
+      "n_dps": 56
+     },
+     "text_near_miss_dps": {
+      "alerts": {},
+      "n_dps": 14
+     }
+    },
+    "missed_gold_red_flags": [
+     {
+      "dp_id": "SYNE-0030/T1",
+      "reason": "unmappable",
+      "rule": "RF-NEWS-AGG5"
+     },
+     {
+      "dp_id": "SYNE-0030/T2",
+      "reason": "unmappable",
+      "rule": "RF-NEWS-AGG5"
+     },
+     {
+      "dp_id": "SYNE-0107/T1",
+      "reason": "unmappable",
+      "rule": "RF-NEWS-AGG5"
+     },
+     {
+      "dp_id": "SYNE-0107/T2",
+      "reason": "unmappable",
+      "rule": "RF-NEWS-AGG5"
+     },
+     {
+      "dp_id": "SYNE-0165/T2",
+      "reason": "unmappable",
+      "rule": "RF-NEWS-AGG5"
+     }
+    ],
+    "missed_reason_counts": {
+     "unmappable": 5
+    },
+    "per_s1r_rule_recall": {
+     "RF-ACUTE-CHEST-PAIN": {
+      "bootstrap": {
+       "ci": [
+        1.0,
+        1.0
+       ],
+       "n_decision_points": 4,
+       "n_degenerate": 0,
+       "n_patients": 2,
+       "point": 1.0,
+       "reason": null
+      },
+      "clopper_pearson": [
+       0.397635,
+       1.0
+      ],
+      "n": 4,
+      "n_patients": 2,
+      "point": 1.0,
+      "reported_interval": "clopper_pearson",
+      "wilson": [
+       0.510109,
+       1.0
+      ],
+      "x": 4
+     },
+     "RF-ANAPHYLAXIS": {
+      "bootstrap": {
+       "ci": [
+        1.0,
+        1.0
+       ],
+       "n_decision_points": 4,
+       "n_degenerate": 0,
+       "n_patients": 2,
+       "point": 1.0,
+       "reason": null
+      },
+      "clopper_pearson": [
+       0.397635,
+       1.0
+      ],
+      "n": 4,
+      "n_patients": 2,
+      "point": 1.0,
+      "reported_interval": "clopper_pearson",
+      "wilson": [
+       0.510109,
+       1.0
+      ],
+      "x": 4
+     },
+     "RF-FAST": {
+      "bootstrap": {
+       "ci": [
+        1.0,
+        1.0
+       ],
+       "n_decision_points": 4,
+       "n_degenerate": 0,
+       "n_patients": 2,
+       "point": 1.0,
+       "reason": null
+      },
+      "clopper_pearson": [
+       0.397635,
+       1.0
+      ],
+      "n": 4,
+      "n_patients": 2,
+      "point": 1.0,
+      "reported_interval": "clopper_pearson",
+      "wilson": [
+       0.510109,
+       1.0
+      ],
+      "x": 4
+     },
+     "RF-NEWS-AGG5": {
+      "n_gold_pairs": 5,
+      "n_patients": 3,
+      "point": null,
+      "reason": "unmappable (e1 mapping v1: S4 has no aggregate-NEWS rule)"
+     },
+     "RF-NEWS-SINGLE3": {
+      "bootstrap": {
+       "ci": [
+        1.0,
+        1.0
+       ],
+       "n_decision_points": 3,
+       "n_degenerate": 0,
+       "n_patients": 2,
+       "point": 1.0,
+       "reason": null
+      },
+      "clopper_pearson": [
+       0.292402,
+       1.0
+      ],
+      "n": 3,
+      "n_patients": 2,
+      "point": 1.0,
+      "reported_interval": "clopper_pearson",
+      "wilson": [
+       0.438503,
+       1.0
+      ],
+      "x": 3
+     },
+     "RF-QSOFA": {
+      "bootstrap": {
+       "ci": [
+        1.0,
+        1.0
+       ],
+       "n_decision_points": 2,
+       "n_degenerate": 0,
+       "n_patients": 1,
+       "point": 1.0,
+       "reason": null
+      },
+      "clopper_pearson": [
+       0.158114,
+       1.0
+      ],
+      "n": 2,
+      "n_patients": 1,
+      "point": 1.0,
+      "reported_interval": "clopper_pearson",
+      "wilson": [
+       0.34238,
+       1.0
+      ],
+      "x": 2
+     },
+     "RF-THUNDERCLAP": {
+      "bootstrap": {
+       "ci": [
+        1.0,
+        1.0
+       ],
+       "n_decision_points": 4,
+       "n_degenerate": 0,
+       "n_patients": 2,
+       "point": 1.0,
+       "reason": null
+      },
+      "clopper_pearson": [
+       0.397635,
+       1.0
+      ],
+      "n": 4,
+      "n_patients": 2,
+      "point": 1.0,
+      "reported_interval": "clopper_pearson",
+      "wilson": [
+       0.510109,
+       1.0
+      ],
+      "x": 4
+     }
+    },
+    "predeclared_targets_not_gating": {
+     "text_rule_alerts_on_text_near_miss_dps": 0,
+     "text_rule_recall_equals_1": {
+      "RF-ACUTE-CHEST-PAIN": "PASS",
+      "RF-ANAPHYLAXIS": "PASS",
+      "RF-FAST": "PASS",
+      "RF-THUNDERCLAP": "PASS"
+     },
+     "zero_text_rule_alerts_on_text_near_miss_dps": "PASS"
+    },
+    "single_prompt": "null: Arm B runs without a Red-flag node by design, so it emits no screening output; the screening is not compared between arms and its absence in Arm B is not a safety result",
+    "text_rule_fired_on_gold_positive_dps": {
+     "RF-ACUTE-CHEST-PAIN": 4,
+     "RF-ANAPHYLAXIS": 4,
+     "RF-FAST": 4,
+     "RF-THUNDERCLAP": 4
+    }
+   },
+   "replay": {
+    "checked": 80,
+    "identical": 80
+   },
+   "split": "dev",
+   "stamp": "UNFROZEN - exploratory (dev split)",
+   "time": "see timing.json (median and p95 wall time per DP; not byte-reproducible by nature)"
+  },
+  "test": {
+   "reason": "the test split runs once, inside the frozen run after both i2 manifests are frozen and committed",
+   "status": "not run"
+  }
+ }
+}

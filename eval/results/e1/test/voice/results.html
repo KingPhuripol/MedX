@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Table 3.2 evaluation results</title>
+<style>body{font-family:sans-serif;margin:2em}table{border-collapse:collapse}td,th{border:1px solid #999;padding:4px 8px;text-align:left}.banner{font-weight:bold;border:2px solid #333;padding:6px;margin:4px 0}</style>
+</head>
+<body>
+<div class="banner">System Evaluation on synthetic data - not clinical performance</div>
+<h1>Table 3.2 evaluation results</h1>
+<div class="banner">System Evaluation, not clinical efficacy</div>
+<div class="banner">Research prototype - not for clinical use</div>
+<div class="banner">Synthetic data</div>
+<ul><li>Evaluation ID: e1-voice-test-v1 (slice e1)</li><li>Dataset: s1r-synthetic vs1r-1.1.1+tree:e76e38cc67d6317d82196f105cb9781bedf3451b9ba74a1585b19662d4d1162b (synthetic); split: test (fb9454a2bc7433b663c6d921ebd68d3a1897bdbffb02dc3849e9d37976c828e9); frozen: yes</li><li>Patients: 36; decision points: 40</li><li>CI: 95% percentile patient-level cluster bootstrap, n_boot=2000, seed=20260926</li><li>Manifest sha256: 460389615be2190180e37c30b6bd1a593c380c40153e31814a54e97358b387b0</li><li>Frozen ledger entry hash: 97cbdee3bbbec4c07b9310024015b2fccd52ab67964607a9fb0a36eb59abc818</li><li>Predictions sha256: ed5e514eebdb5d3c8ea30c5f71db6323df7787c43dca1857d2640fd5dbb8864e</li><li>Comparator sha256: none</li><li>numpy 2.5.3; eval 0.2.0</li></ul>
+<div class="banner">System Evaluation on synthetic data - not clinical performance</div>
+<table>
+<tr><th>Evaluated item</th><th>Metric</th><th>Point estimate</th><th>95% CI</th><th>Comparator</th><th>Difference (95% CI)</th><th>n patients / decision points</th><th>Threshold (predeclared rule)</th></tr>
+<tr><td>Voice Agent</td><td>field_prf(component=precision, field=chief_complaint)</td><td>1.0000</td><td>[1.0000, 1.0000]</td><td>none declared</td><td>-</td><td>23 / 24</td><td>not declared</td></tr>
+<tr><td>Voice Agent</td><td>field_prf(component=recall, field=chief_complaint)</td><td>0.8636</td><td>[0.6957, 1.0000]</td><td>none declared</td><td>-</td><td>23 / 24</td><td>not declared</td></tr>
+<tr><td>Voice Agent</td><td>field_prf(component=f1, field=chief_complaint) *primary*</td><td>0.9268</td><td>[0.8205, 1.0000]</td><td>none declared</td><td>-</td><td>23 / 24</td><td>&gt;= 0.8 on point: met</td></tr>
+<tr><td>Voice Agent</td><td>field_prf(component=precision, field=onset_duration)</td><td>1.0000</td><td>[1.0000, 1.0000]</td><td>none declared</td><td>-</td><td>36 / 40</td><td>not declared</td></tr>
+<tr><td>Voice Agent</td><td>field_prf(component=recall, field=onset_duration)</td><td>1.0000</td><td>[1.0000, 1.0000]</td><td>none declared</td><td>-</td><td>36 / 40</td><td>not declared</td></tr>
+<tr><td>Voice Agent</td><td>field_prf(component=f1, field=onset_duration) *primary*</td><td>1.0000</td><td>[1.0000, 1.0000]</td><td>none declared</td><td>-</td><td>36 / 40</td><td>&gt;= 0.8 on point: met</td></tr>
+<tr><td>Voice Agent</td><td>field_prf(component=precision, field=allergy_status)</td><td>1.0000</td><td>[1.0000, 1.0000]</td><td>none declared</td><td>-</td><td>36 / 40</td><td>not declared</td></tr>
+<tr><td>Voice Agent</td><td>field_prf(component=recall, field=allergy_status)</td><td>1.0000</td><td>[1.0000, 1.0000]</td><td>none declared</td><td>-</td><td>36 / 40</td><td>not declared</td></tr>
+<tr><td>Voice Agent</td><td>field_prf(component=f1, field=allergy_status) *primary*</td><td>1.0000</td><td>[1.0000, 1.0000]</td><td>none declared</td><td>-</td><td>36 / 40</td><td>&gt;= 0.8 on point: met</td></tr>
+<tr><td>Voice Agent</td><td>field_prf(component=precision)</td><td>1.0000</td><td>[1.0000, 1.0000]</td><td>none declared</td><td>-</td><td>36 / 40</td><td>not declared</td></tr>
+<tr><td>Voice Agent</td><td>field_prf(component=recall)</td><td>0.9681</td><td>[0.9310, 1.0000]</td><td>none declared</td><td>-</td><td>36 / 40</td><td>not declared</td></tr>
+<tr><td>Voice Agent</td><td>field_prf(component=f1)</td><td>0.9838</td><td>[0.9643, 1.0000]</td><td>none declared</td><td>-</td><td>36 / 40</td><td>not declared</td></tr>
+<tr><td>Voice Agent</td><td>accuracy(estimand=false-none rate: share of cases with gold allergy known or MISSING where S3 records KNOWN none) *primary*</td><td>0.0000</td><td>[0.0000, 0.0000]</td><td>none declared</td><td>-</td><td>18 / 22</td><td>&lt;= 0 on point: met</td></tr>
+</table>
+<p>Undefined values are shown as null with a reason; they are never reported as 0 or 1. Differences are system minus comparator with a paired patient-level bootstrap CI.</p>
+<h2>Split coverage</h2>
+<p>Every listed patient must have predictions. A missing patient refuses the run unless all metrics of the task are abstention-aware, where it is counted as abstain (imputation unit: 1 decision point per missing patient).</p>
+<div class="banner">System Evaluation on synthetic data - not clinical performance</div>
+<table>
+<tr><th>Task</th><th>Population</th><th>Arm</th><th>n_listed</th><th>n_predicted</th><th>n_missing</th><th>missing_policy</th><th>n_imputed_abstain_decision_points</th></tr>
+<tr><td>voice_cc</td><td>null</td><td>system</td><td>23</td><td>23</td><td>0</td><td>complete</td><td>0</td></tr>
+<tr><td>voice_intake</td><td>null</td><td>system</td><td>36</td><td>36</td><td>0</td><td>complete</td><td>0</td></tr>
+<tr><td>voice_allergy_false_none</td><td>null</td><td>system</td><td>18</td><td>18</td><td>0</td><td>complete</td><td>0</td></tr>
+</table>
+</body>
+</html>

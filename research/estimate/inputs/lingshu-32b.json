@@ -1,0 +1,61 @@
+{
+  "candidate_id": "lingshu-32b",
+  "hf_repo_id": "lingshu-medical-mllm/Lingshu-32B",
+  "display_name": "Lingshu-32B (true size ~33.45B)",
+  "inputs": {
+    "P_total": {
+      "value": 33452718336,
+      "source": "https://huggingface.co/api/models/lingshu-medical-mllm/Lingshu-32B?expand[]=safetensors"
+    },
+    "hidden_size": {
+      "value": 5120,
+      "source": "https://huggingface.co/lingshu-medical-mllm/Lingshu-32B/blob/main/config.json"
+    },
+    "num_layers": {
+      "value": 64,
+      "source": "https://huggingface.co/lingshu-medical-mllm/Lingshu-32B/blob/main/config.json"
+    },
+    "attention_heads": {
+      "value": 40,
+      "source": "https://huggingface.co/lingshu-medical-mllm/Lingshu-32B/blob/main/config.json"
+    },
+    "kv_heads": {
+      "value": 8,
+      "source": "https://huggingface.co/lingshu-medical-mllm/Lingshu-32B/blob/main/config.json"
+    },
+    "head_dim": {
+      "value": 128,
+      "source": "https://huggingface.co/lingshu-medical-mllm/Lingshu-32B/blob/main/config.json",
+      "note": "derived: hidden_size / num_attention_heads = 5120 / 40"
+    },
+    "ffn_intermediate": {
+      "value": 27648,
+      "source": "https://huggingface.co/lingshu-medical-mllm/Lingshu-32B/blob/main/config.json"
+    },
+    "vocab_size": {
+      "value": 152064,
+      "source": "https://huggingface.co/lingshu-medical-mllm/Lingshu-32B/blob/main/config.json"
+    },
+    "layer_types": {
+      "value": {
+        "full": 64
+      },
+      "source": "https://huggingface.co/lingshu-medical-mllm/Lingshu-32B/blob/main/config.json",
+      "note": "use_sliding_window false"
+    },
+    "sliding_window": {
+      "value": null,
+      "source": "https://huggingface.co/lingshu-medical-mllm/Lingshu-32B/blob/main/config.json",
+      "note": "use_sliding_window false"
+    },
+    "attn_output_gate": {
+      "value": false,
+      "source": "https://huggingface.co/lingshu-medical-mllm/Lingshu-32B/blob/main/config.json"
+    },
+    "bf16_checkpoint_bytes": {
+      "value": 66905568048,
+      "source": "https://huggingface.co/api/models/lingshu-medical-mllm/Lingshu-32B/tree/main",
+      "note": "sum of *.safetensors sizes"
+    }
+  }
+}

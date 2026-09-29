@@ -1,0 +1,110 @@
+{
+ "circularity_note": "Rules, fixtures, extractor lexicon and gold share authors; results are circular.",
+ "dataset": {
+  "data_class": "synthetic",
+  "dataset_version": null,
+  "path": "data/synthetic/v1",
+  "seed": 20260926
+ },
+ "label": "System Evaluation on synthetic data — not clinical performance",
+ "pass": true,
+ "providers": "mock only",
+ "splits": {
+  "dev": {
+   "compile_errors": {},
+   "compiled": 80,
+   "gateway_calls": {
+    "mean_per_dp": 4.65,
+    "per_node": {
+     "human_checkpoint": 0,
+     "pharma_agent": 0,
+     "reader_text": 280,
+     "reader_vitals_labs": 0,
+     "reasoning": 92,
+     "red_flag": 0
+    },
+    "total": 372
+   },
+   "graph_shape_histogram": {
+    "reader_text+reader_vitals_labs+red_flag+pharma_agent+reasoning+human_checkpoint": 72,
+    "reader_text+reader_vitals_labs+red_flag+reasoning+human_checkpoint": 8
+   },
+   "invariant_violations": {},
+   "n_dp": 80,
+   "n_patients": 36,
+   "no_cache_rerun": {
+    "checked": 80,
+    "hash_mismatch": []
+   },
+   "node_errors": 0,
+   "node_status": {
+    "abstained": 34,
+    "ok": 358,
+    "pending_confirmation": 80
+   },
+   "red_flag_screening_status": {
+    "partially_evaluated": 80
+   },
+   "regenerate_reasoning_bump": {
+    "bumped_model_version": "proj-mock-0.1+regen",
+    "re_executed_nodes_histogram": {
+     "reasoning+human_checkpoint": 80
+    }
+   },
+   "replay": {
+    "checked": 80,
+    "failed": [],
+    "gateway_calls": 0,
+    "node_executions": 0
+   }
+  },
+  "train": {
+   "compile_errors": {},
+   "compiled": 240,
+   "gateway_calls": {
+    "mean_per_dp": 4.65,
+    "per_node": {
+     "human_checkpoint": 0,
+     "pharma_agent": 0,
+     "reader_text": 840,
+     "reader_vitals_labs": 0,
+     "reasoning": 276,
+     "red_flag": 0
+    },
+    "total": 1116
+   },
+   "graph_shape_histogram": {
+    "reader_text+reader_vitals_labs+red_flag+pharma_agent+reasoning+human_checkpoint": 216,
+    "reader_text+reader_vitals_labs+red_flag+reasoning+human_checkpoint": 24
+   },
+   "invariant_violations": {},
+   "n_dp": 240,
+   "n_patients": 108,
+   "no_cache_rerun": {
+    "checked": 240,
+    "hash_mismatch": []
+   },
+   "node_errors": 0,
+   "node_status": {
+    "abstained": 102,
+    "ok": 1074,
+    "pending_confirmation": 240
+   },
+   "red_flag_screening_status": {
+    "partially_evaluated": 240
+   },
+   "regenerate_reasoning_bump": {
+    "bumped_model_version": "proj-mock-0.1+regen",
+    "re_executed_nodes_histogram": {
+     "reasoning+human_checkpoint": 240
+    }
+   },
+   "replay": {
+    "checked": 240,
+    "failed": [],
+    "gateway_calls": 0,
+    "node_executions": 0
+   }
+  }
+ }
+}

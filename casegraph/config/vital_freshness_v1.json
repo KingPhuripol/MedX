@@ -1,0 +1,17 @@
+{
+  "version": "vital-freshness-v1",
+  "label": "PROPOSED — pending clinical sign-off (D1)",
+  "decision": "D-I2-1, docs/DECISIONS.md 2026-09-27 (research-prototype default on synthetic data only)",
+  "age_definition": "age = T - event_time of the latest reading; a reading with age > window is stale, contributes no fact, and every rule that needs it is not_evaluated with missing input vital.<k>:stale(read_at=<event_time>, age_min=<n>)",
+  "windows": {
+    "hr": {"window_min": 60, "source": "RCP NEWS2 (2017) Chart 4: a medium score or a single parameter scoring 3 requires minimum 1-hourly monitoring, so an older reading cannot represent the current state of a patient near an urgent threshold"},
+    "rr": {"window_min": 60, "source": "RCP NEWS2 (2017) Chart 4 (minimum 1-hourly monitoring at medium score / single parameter 3)"},
+    "sbp": {"window_min": 60, "source": "RCP NEWS2 (2017) Chart 4 (minimum 1-hourly monitoring at medium score / single parameter 3)"},
+    "dbp": {"window_min": 60, "source": "RCP NEWS2 (2017) Chart 4 (minimum 1-hourly monitoring at medium score / single parameter 3)"},
+    "spo2": {"window_min": 60, "source": "RCP NEWS2 (2017) Chart 4 (minimum 1-hourly monitoring at medium score / single parameter 3)"},
+    "temp_c": {"window_min": 60, "source": "RCP NEWS2 (2017) Chart 4 (minimum 1-hourly monitoring at medium score / single parameter 3)"},
+    "avpu": {"window_min": 60, "source": "RCP NEWS2 (2017) Chart 4 (minimum 1-hourly monitoring at medium score / single parameter 3); ACVPU"},
+    "new_confusion": {"window_min": 60, "source": "RCP NEWS2 (2017) Chart 4 (minimum 1-hourly monitoring at medium score / single parameter 3); ACVPU C"},
+    "capillary_glucose_mg_dl": {"window_min": 60, "source": "Same basis as the NEWS2 vitals (RCP NEWS2 2017 Chart 4). Low confidence; flagged for D1"}
+  }
+}

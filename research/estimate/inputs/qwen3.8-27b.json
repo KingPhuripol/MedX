@@ -1,0 +1,66 @@
+{
+  "candidate_id": "qwen3.8-27b",
+  "hf_repo_id": "Qwen/Qwen3.8-27B",
+  "display_name": "Qwen3.8-27B",
+  "inputs": {
+    "P_total": {
+      "value": 27781427952,
+      "source": "https://huggingface.co/api/models/Qwen/Qwen3.8-27B?expand[]=safetensors",
+      "note": "includes vision encoder and MTP module"
+    },
+    "hidden_size": {
+      "value": 5120,
+      "source": "https://huggingface.co/Qwen/Qwen3.8-27B/blob/main/config.json",
+      "note": "text_config.hidden_size"
+    },
+    "num_layers": {
+      "value": 64,
+      "source": "https://huggingface.co/Qwen/Qwen3.8-27B/blob/main/config.json",
+      "note": "text_config.num_hidden_layers"
+    },
+    "attention_heads": {
+      "value": 24,
+      "source": "https://huggingface.co/Qwen/Qwen3.8-27B/blob/main/config.json",
+      "note": "full-attention (Gated Attention) layers"
+    },
+    "kv_heads": {
+      "value": 4,
+      "source": "https://huggingface.co/Qwen/Qwen3.8-27B/blob/main/config.json"
+    },
+    "head_dim": {
+      "value": 256,
+      "source": "https://huggingface.co/Qwen/Qwen3.8-27B/blob/main/config.json"
+    },
+    "ffn_intermediate": {
+      "value": 17408,
+      "source": "https://huggingface.co/Qwen/Qwen3.8-27B/blob/main/config.json"
+    },
+    "vocab_size": {
+      "value": 248320,
+      "source": "https://huggingface.co/Qwen/Qwen3.8-27B/blob/main/config.json"
+    },
+    "layer_types": {
+      "value": {
+        "linear": 48,
+        "full": 16
+      },
+      "source": "https://huggingface.co/Qwen/Qwen3.8-27B/blob/main/config.json",
+      "note": "layer_types: 3 linear_attention then 1 full_attention, x16"
+    },
+    "sliding_window": {
+      "value": null,
+      "source": "https://huggingface.co/Qwen/Qwen3.8-27B/blob/main/config.json",
+      "note": "no sliding-window layers"
+    },
+    "attn_output_gate": {
+      "value": true,
+      "source": "https://huggingface.co/Qwen/Qwen3.8-27B/blob/main/config.json",
+      "note": "q_proj emits query and gate: out = 2 * heads * head_dim"
+    },
+    "bf16_checkpoint_bytes": {
+      "value": 55563006776,
+      "source": "https://huggingface.co/api/models/Qwen/Qwen3.8-27B/tree/main",
+      "note": "sum of *.safetensors sizes"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "label": "System Evaluation on synthetic data — not clinical performance",
+  "split": "test",
+  "rules_version": "care-rules-1.0.0",
+  "dataset_tree_sha256": "19033a7270f850852378834e4f76ffb5e90314ee88d0a303582999f6398c3e4d",
+  "train_prior_codes": [
+    "NI-ECG-12LEAD",
+    "NI-IMG-HEAD-CT",
+    "NI-ASK-DIARRHEA-FEATURES"
+  ],
+  "n_decision_points": 80,
+  "n_status_error": 0,
+  "n_answered_evaluable": 17,
+  "min_answered_evaluable": 30,
+  "underpowered": true,
+  "note": "hit@3 is lenient (any one of the top 3 in the gold set counts); labels are synthetic reference labels, not expert-reviewed (D1)",
+  "retired": {
+    "label": "seen — not a held-out result",
+    "reason": "s6-care-test-0001 was recorded twice (runs seq 2 and 4) and its results were seen while scoping changes; it is not a held-out result. The S6 test result is s6-care-test-0002.",
+    "decision": "DECISIONS.md 2026-09-27",
+    "original_results_sha256": "2be89b944fd65e2497144ad5998da3737ee937375b29efba8d9fb40e1ae79c81"
+  }
+}

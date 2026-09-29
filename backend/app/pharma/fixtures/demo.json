@@ -1,0 +1,229 @@
+{
+ "note": "Hand-authored synthetic demo cases for the pharmacist page. data_class=synthetic.",
+ "cases": [
+  {
+   "fixture_ref": "demo-01",
+   "label": "Demo: allergy, duplicate, dose difference, omission",
+   "snapshot": {
+    "patient_ref": "s5-demo-01",
+    "as_of": "2026-06-10T10:00:00+07:00",
+    "data_class": "synthetic",
+    "sources": [
+     {
+      "source_type": "home_list",
+      "evidence_ref": "s5-demo-01/home_list/1",
+      "available_at_time": "2026-05-10T09:00:00+07:00",
+      "provenance": "synthetic: hand-authored s5 demo case (no real patient data)",
+      "version": "1",
+      "entries": [
+       "Simvastatin 20 mg PO once daily",
+       "Metformin 500 mg PO bid",
+       "Amlodipine 5 mg PO once daily",
+       "Paracetamol 500 mg prn"
+      ]
+     },
+     {
+      "source_type": "patient_reported",
+      "evidence_ref": "s5-demo-01/patient_reported/1",
+      "available_at_time": "2026-06-10T09:00:00+07:00",
+      "provenance": "synthetic: hand-authored s5 demo case (no real patient data)",
+      "version": "1",
+      "entries": [
+       "ซิมวาสแตติน 20 มก. วันละครั้ง",
+       "เมทฟอร์มิน วันละ 2 ครั้ง",
+       "ซาร่า 500 มก. เวลาปวด"
+      ]
+     },
+     {
+      "source_type": "new_order",
+      "evidence_ref": "s5-demo-01/new_order/1",
+      "available_at_time": "2026-06-10T09:50:00+07:00",
+      "provenance": "synthetic: hand-authored s5 demo case (no real patient data)",
+      "version": "1",
+      "entries": [
+       "Simvastatin 40 mg PO once daily",
+       "Amlodipine 5 mg PO daily",
+       "Augmentin 1 g PO bid",
+       "Tylenol 500 mg prn",
+       "Sara 500 mg prn"
+      ]
+     }
+    ],
+    "allergies": [
+     {
+      "text": "Penicillin (rash)",
+      "evidence_ref": "s5-demo-01/allergy/1",
+      "available_at_time": "2025-01-15T09:00:00+07:00",
+      "provenance": "synthetic: hand-authored s5 demo case (no real patient data)",
+      "version": "1"
+     }
+    ]
+   }
+  },
+  {
+   "fixture_ref": "demo-02",
+   "label": "Demo: order list not yet available at decision time",
+   "snapshot": {
+    "patient_ref": "s5-demo-02",
+    "as_of": "2026-06-11T10:00:00+07:00",
+    "data_class": "synthetic",
+    "sources": [
+     {
+      "source_type": "home_list",
+      "evidence_ref": "s5-demo-02/home_list/1",
+      "available_at_time": "2026-05-11T09:00:00+07:00",
+      "provenance": "synthetic: hand-authored s5 demo case (no real patient data)",
+      "version": "1",
+      "entries": [
+       "Losartan 50 mg PO once daily",
+       "Atorvastatin 40 mg PO once daily"
+      ]
+     },
+     {
+      "source_type": "patient_reported",
+      "evidence_ref": "s5-demo-02/patient_reported/1",
+      "available_at_time": "2026-06-11T09:00:00+07:00",
+      "provenance": "synthetic: hand-authored s5 demo case (no real patient data)",
+      "version": "1",
+      "entries": [
+       "ลอซาร์แทน 50 มก. วันละ 1 ครั้ง"
+      ]
+     },
+     {
+      "source_type": "new_order",
+      "evidence_ref": "s5-demo-02/new_order/1",
+      "available_at_time": "2026-06-11T11:30:00+07:00",
+      "provenance": "synthetic: hand-authored s5 demo case (no real patient data)",
+      "version": "1",
+      "entries": [
+       "Losartan 50 mg PO once daily"
+      ]
+     }
+    ],
+    "allergies": []
+   }
+  },
+  {
+   "fixture_ref": "demo-03",
+   "label": "Demo: cross-reactivity, unmapped allergen, unknown name",
+   "snapshot": {
+    "patient_ref": "s5-demo-03",
+    "as_of": "2026-06-12T10:00:00+07:00",
+    "data_class": "synthetic",
+    "sources": [
+     {
+      "source_type": "home_list",
+      "evidence_ref": "s5-demo-03/home_list/1",
+      "available_at_time": "2026-05-12T09:00:00+07:00",
+      "provenance": "synthetic: hand-authored s5 demo case (no real patient data)",
+      "version": "1",
+      "entries": [
+       "Qelvadrine 10 mg once daily",
+       "Omeprazole 20 mg PO once daily"
+      ]
+     },
+     {
+      "source_type": "new_order",
+      "evidence_ref": "s5-demo-03/new_order/1",
+      "available_at_time": "2026-06-12T09:50:00+07:00",
+      "provenance": "synthetic: hand-authored s5 demo case (no real patient data)",
+      "version": "1",
+      "entries": [
+       "Omeprazole 20 mg PO once daily",
+       "Brufen 400 mg PO tid",
+       "Qelvadrine 10 mg once daily"
+      ]
+     }
+    ],
+    "allergies": [
+     {
+      "text": "Aspirin (angioedema)",
+      "evidence_ref": "s5-demo-03/allergy/1",
+      "available_at_time": "2024-03-01T09:00:00+07:00",
+      "provenance": "synthetic: hand-authored s5 demo case (no real patient data)",
+      "version": "1"
+     },
+     {
+      "text": "Seafood (hives)",
+      "evidence_ref": "s5-demo-03/allergy/2",
+      "available_at_time": "2024-03-01T09:00:00+07:00",
+      "provenance": "synthetic: hand-authored s5 demo case (no real patient data)",
+      "version": "1"
+     }
+    ]
+   }
+  },
+  {
+   "fixture_ref": "demo-quantity",
+   "label": "Demo: dose per administration from tablet quantity (EN and TH)",
+   "snapshot": {
+    "patient_ref": "s5-demo-quantity",
+    "as_of": "2026-06-20T10:00:00+07:00",
+    "data_class": "synthetic",
+    "sources": [
+     {
+      "source_type": "home_list",
+      "evidence_ref": "s5-demo-quantity/home_list/1",
+      "available_at_time": "2026-05-20T09:00:00+07:00",
+      "provenance": "synthetic: hand-authored s5 demo case (no real patient data)",
+      "version": "1",
+      "entries": [
+       "Warfarin 3 mg 1 tab od",
+       "เมทฟอร์มิน 500 มก. 1x2",
+       "Amlodipine 5 mg od"
+      ]
+     },
+     {
+      "source_type": "new_order",
+      "evidence_ref": "s5-demo-quantity/new_order/1",
+      "available_at_time": "2026-06-20T09:50:00+07:00",
+      "provenance": "synthetic: hand-authored s5 demo case (no real patient data)",
+      "version": "1",
+      "entries": [
+       "Warfarin 3 mg 2 tabs od",
+       "เมทฟอร์มิน 500 มก. 2x2",
+       "Amlodipine 2.5 mg 2 tabs od"
+      ]
+     }
+    ],
+    "allergies": []
+   }
+  },
+  {
+   "fixture_ref": "demo-unverifiable",
+   "label": "Demo: doses that could not be verified (variable, liquid, two strengths)",
+   "snapshot": {
+    "patient_ref": "s5-demo-unverifiable",
+    "as_of": "2026-06-21T10:00:00+07:00",
+    "data_class": "synthetic",
+    "sources": [
+     {
+      "source_type": "home_list",
+      "evidence_ref": "s5-demo-unverifiable/home_list/1",
+      "available_at_time": "2026-05-21T09:00:00+07:00",
+      "provenance": "synthetic: hand-authored s5 demo case (no real patient data)",
+      "version": "1",
+      "entries": [
+       "Warfarin 3 mg od",
+       "Paracetamol 500 mg prn",
+       "Metformin 500 mg bid"
+      ]
+     },
+     {
+      "source_type": "new_order",
+      "evidence_ref": "s5-demo-unverifiable/new_order/1",
+      "available_at_time": "2026-06-21T09:50:00+07:00",
+      "provenance": "synthetic: hand-authored s5 demo case (no real patient data)",
+      "version": "1",
+      "entries": [
+       "Warfarin 3 mg od except 1.5 mg on Sunday",
+       "Paracetamol syrup 250 mg/5 ml 10 ml prn",
+       "Metformin 500 mg + 250 mg bid"
+      ]
+     }
+    ],
+    "allergies": []
+   }
+  }
+ ]
+}

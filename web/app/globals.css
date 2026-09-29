@@ -1,0 +1,206 @@
+/* Layout and components. Colours come from theme.css tokens only (var(--…)). */
+* { box-sizing: border-box; }
+
+html {
+  background: var(--grey-1);
+  scrollbar-color: var(--grey-3) var(--grey-1);
+}
+body {
+  margin: 0;
+  font-family: var(--type);
+  color: var(--grey-7);
+  background: var(--grey-1);
+  line-height: 1.5;
+}
+
+/* Research disclaimer: distinct warning tokens, always first in <body>. */
+.disclaimer {
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+  border-bottom: 2px solid var(--warn-border);
+  padding: 0.5rem 1.5rem;
+  font-size: 15px;
+}
+.disclaimer p { margin: 0.1rem 0; }
+
+/* Header + wordmark */
+.site-header {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 1rem 1.5rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid var(--grey-2);
+}
+.tagline {
+  padding-left: 1rem;
+  border-left: 1px solid var(--grey-3);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--grey-4);
+}
+.wordmark {
+  display: inline-block;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--grey-7);
+}
+
+/* Purple is an accent only: wordmark X, eyebrow, arrow, primary button, links, focus. */
+.wordmark-x,
+.next-step .arrow { color: var(--purple-1); }
+
+main {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 3rem;
+}
+
+/* Page grammar: eyebrow → h1 → claim → body → next-step */
+.page { max-width: 48rem; }
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--grey-3);
+  border-radius: 999px;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--purple-2);
+}
+.eyebrow .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--purple-1);
+}
+h1 {
+  margin: 0 0 0.5rem;
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--grey-7);
+}
+.claim {
+  margin: 0 0 1.5rem;
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--grey-7);
+}
+.page-body { color: var(--grey-5); font-size: 17px; }
+.meta,
+[aria-live] { color: var(--grey-4); font-size: 15px; }
+em,
+strong { color: var(--grey-7); }
+::selection { background: var(--grey-3); color: var(--grey-7); }
+.next-step {
+  margin: 2.5rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--grey-2);
+  font-size: 17px;
+  color: var(--grey-5);
+}
+.next-step em { color: var(--grey-7); }
+.next-step .arrow {
+  margin-right: 0.5rem;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* Login as the cover */
+.cover {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 3rem;
+  align-items: stretch;
+}
+.cover-panel {
+  position: relative;
+  overflow: hidden;
+  min-height: 26rem;
+  padding: 2rem;
+  border-radius: 8px;
+  background-image: linear-gradient(150deg, var(--grey-7) 0%, var(--grey-6) 35%, var(--purple-3) 75%, var(--purple-2) 100%);
+  color: var(--white);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.cover-motif {
+  position: absolute;
+  right: -3rem;
+  top: -2rem;
+  width: 22rem;
+  height: 22rem;
+  opacity: 0.18;
+}
+.cover-motif path { stroke: var(--purple-1); }
+.cover-title { position: relative; margin: 0; font-size: 30px; font-weight: 700; line-height: 1.1; }
+.cover-sub { position: relative; margin: 0.5rem 0 0; font-size: 17px; color: var(--grey-1); }
+.cover-form {
+  align-self: center;
+  padding: 2rem;
+  border: 1px solid var(--grey-2);
+  border-radius: 8px;
+}
+
+@media (max-width: 900px) {
+  .cover { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
+  .cover-panel { min-height: 8rem; padding: 1.25rem 1.5rem; }
+  .cover-motif { width: 12rem; height: 12rem; top: -3rem; right: -2rem; }
+}
+
+/* Forms */
+.field { display: flex; flex-direction: column; margin-bottom: 1rem; }
+label { font-weight: 700; margin-bottom: 0.25rem; color: var(--grey-7); }
+input {
+  font: inherit;
+  font-size: 17px;
+  padding: 0.5rem 0.75rem;
+  color: var(--grey-7);
+  background: var(--white);
+  border: 1px solid var(--grey-4);
+  border-radius: 4px;
+}
+input:hover { border-color: var(--grey-5); }
+button {
+  font: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  padding: 0.5rem 1.25rem;
+  background: var(--purple-2);
+  color: var(--white);
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+button:hover { background: var(--purple-3); }
+button:disabled { background: var(--grey-4); cursor: default; }
+button.secondary {
+  background: var(--white);
+  color: var(--grey-7);
+  border: 1px solid var(--grey-4);
+}
+button.secondary:hover { background: var(--grey-2); }
+a { color: var(--purple-2); text-decoration: underline; }
+
+/* Visible keyboard focus */
+:focus-visible { outline: 3px solid var(--purple-2); outline-offset: 2px; }
+
+/* Errors and alerts: warning tokens, never purple */
+.error,
+[role="alert"] {
+  color: var(--warn-fg);
+  background: var(--warn-bg);
+  border-left: 4px solid var(--warn-border);
+  padding: 0.5rem 0.75rem;
+  font-weight: 700;
+}

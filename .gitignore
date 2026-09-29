@@ -1,6 +1,7 @@
 .DS_Store
 AGENTS.md
 sources/
+!casegraph/sources/
 .env
 .env.*
 !.env.example
@@ -19,6 +20,7 @@ checkpoints/
 data/raw/
 data/interim/
 data/processed/
+data/synthetic/
 logs/
 wandb/
 mlruns/
@@ -38,3 +40,22 @@ playwright-report/
 .codex_work/
 .vscode/
 tmp/
+
+# s0 app artifacts
+*.db
+*.db-journal
+.next/
+web/next-env.d.ts
+*.tsbuildinfo
+.pytest_cache/
+.venv-stamp
+
+# s9 research run outputs and checkpoints (never committed)
+research/**/outputs/
+research/**/checkpoints/
+# s8r: evaluation ledgers are committed (tamper-evident, hash-chained)
+!eval/ledger/*.jsonl
+
+# e1: unfrozen (exploratory) dev iterations are scratch, never committed
+eval/results/e1/unfrozen/
+*.casegraph-outputs/

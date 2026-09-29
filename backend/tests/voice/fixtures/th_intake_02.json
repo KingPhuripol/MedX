@@ -1,0 +1,191 @@
+{
+  "dialogue_id": "th_intake_02",
+  "synthetic": true,
+  "author": "s3-builder (hand-written synthetic script; no real patient)",
+  "scenario_tags": [
+    "thai_number_words",
+    "allergy_present",
+    "meds_multi_codeswitch",
+    "dev"
+  ],
+  "patient_ref": "SYN-S3-02",
+  "turns": [
+    {
+      "turn_id": "t01",
+      "speaker": "agent",
+      "text": "วันนี้มีอาการอะไรมาคะ",
+      "started_at": "2026-01-06T02:00:00Z",
+      "ended_at": "2026-01-06T02:00:03Z"
+    },
+    {
+      "turn_id": "t02",
+      "speaker": "patient",
+      "text": "ปวดท้องค่ะ ปวดตรงลิ้นปี่",
+      "started_at": "2026-01-06T02:00:05Z",
+      "ended_at": "2026-01-06T02:00:10Z"
+    },
+    {
+      "turn_id": "t03",
+      "speaker": "agent",
+      "text": "มีอาการนี้มานานเท่าไรแล้วคะ",
+      "started_at": "2026-01-06T02:00:12Z",
+      "ended_at": "2026-01-06T02:00:15Z"
+    },
+    {
+      "turn_id": "t04",
+      "speaker": "patient",
+      "text": "สองวันแล้วค่ะ",
+      "started_at": "2026-01-06T02:00:17Z",
+      "ended_at": "2026-01-06T02:00:21Z"
+    },
+    {
+      "turn_id": "t05",
+      "speaker": "agent",
+      "text": "ถ้าให้คะแนนความรุนแรง 0 ถึง 10 ตอนนี้ประมาณเท่าไรคะ",
+      "started_at": "2026-01-06T02:00:23Z",
+      "ended_at": "2026-01-06T02:00:26Z"
+    },
+    {
+      "turn_id": "t06",
+      "speaker": "patient",
+      "text": "ประมาณ 6 ค่ะ",
+      "started_at": "2026-01-06T02:00:28Z",
+      "ended_at": "2026-01-06T02:00:32Z"
+    },
+    {
+      "turn_id": "t07",
+      "speaker": "agent",
+      "text": "เคยแพ้ยาอะไรไหมคะ",
+      "started_at": "2026-01-06T02:00:34Z",
+      "ended_at": "2026-01-06T02:00:37Z"
+    },
+    {
+      "turn_id": "t08",
+      "speaker": "patient",
+      "text": "แพ้เพนิซิลลินค่ะ เคยขึ้นผื่นทั้งตัว",
+      "started_at": "2026-01-06T02:00:39Z",
+      "ended_at": "2026-01-06T02:00:45Z"
+    },
+    {
+      "turn_id": "t09",
+      "speaker": "agent",
+      "text": "ตอนนี้ใช้ยาอะไรอยู่บ้างไหมคะ",
+      "started_at": "2026-01-06T02:00:47Z",
+      "ended_at": "2026-01-06T02:00:50Z"
+    },
+    {
+      "turn_id": "t10",
+      "speaker": "patient",
+      "text": "กินพาราค่ะ แล้วก็ metformin ของเบาหวาน",
+      "started_at": "2026-01-06T02:00:52Z",
+      "ended_at": "2026-01-06T02:00:58Z"
+    },
+    {
+      "turn_id": "t11",
+      "speaker": "agent",
+      "text": "มีโรคประจำตัวหรือเคยเจ็บป่วยอะไรมาก่อนไหมคะ",
+      "started_at": "2026-01-06T02:01:00Z",
+      "ended_at": "2026-01-06T02:01:03Z"
+    },
+    {
+      "turn_id": "t12",
+      "speaker": "patient",
+      "text": "เป็นเบาหวานค่ะ",
+      "started_at": "2026-01-06T02:01:05Z",
+      "ended_at": "2026-01-06T02:01:09Z"
+    }
+  ],
+  "gold_facts": [
+    {
+      "field": "chief_complaint",
+      "state": "KNOWN",
+      "value": "abdominal_pain",
+      "items": null,
+      "span_turn_ids": [
+        "t02"
+      ]
+    },
+    {
+      "field": "onset_duration",
+      "state": "KNOWN",
+      "value": "P2D",
+      "items": null,
+      "span_turn_ids": [
+        "t04"
+      ]
+    },
+    {
+      "field": "severity",
+      "state": "KNOWN",
+      "value": 6,
+      "items": null,
+      "span_turn_ids": [
+        "t06"
+      ]
+    },
+    {
+      "field": "allergy_status",
+      "state": "KNOWN",
+      "value": "present",
+      "items": null,
+      "span_turn_ids": [
+        "t08"
+      ]
+    },
+    {
+      "field": "allergens",
+      "state": "KNOWN",
+      "value": null,
+      "items": [
+        "เพนิซิลลิน"
+      ],
+      "span_turn_ids": [
+        "t08"
+      ]
+    },
+    {
+      "field": "current_medications",
+      "state": "KNOWN",
+      "value": null,
+      "items": [
+        "พารา",
+        "metformin"
+      ],
+      "span_turn_ids": [
+        "t10"
+      ]
+    },
+    {
+      "field": "relevant_history",
+      "state": "KNOWN",
+      "value": null,
+      "items": [
+        "เบาหวาน"
+      ],
+      "span_turn_ids": [
+        "t12"
+      ]
+    }
+  ],
+  "answers_by_field": {
+    "chief_complaint": [
+      "t02"
+    ],
+    "onset_duration": [
+      "t04"
+    ],
+    "severity": [
+      "t06"
+    ],
+    "allergy_status": [
+      "t08"
+    ],
+    "current_medications": [
+      "t10"
+    ],
+    "relevant_history": [
+      "t12"
+    ]
+  },
+  "gold_nurse_attention": false
+}

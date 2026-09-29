@@ -1,0 +1,42 @@
+/* Pharma page styles. Colours come only from web/app/theme.css tokens (var(--…)); no colour literals.
+   Severity is carried by text and border weight in greys, never alarm colours (slices/t1/SPEC.md). */
+.pharma { max-width: 60rem; }
+main:has(.pharma) { max-width: 64rem; }
+.pharma-form { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
+.pharma-form .field { margin-bottom: 0; }
+.pharma select, .pharma textarea {
+  font: inherit;
+  font-size: 17px;
+  padding: 0.4rem 0.6rem;
+  color: var(--grey-7);
+  background: var(--white);
+  border: 1px solid var(--grey-4);
+  border-radius: 4px;
+}
+.pharma select:hover, .pharma textarea:hover { border-color: var(--grey-5); }
+.pharma-status { min-height: 1.5rem; font-weight: 600; }
+.pharma-attribution { font-size: 0.85rem; color: var(--grey-4); }
+.issue-list { padding-left: 1.25rem; }
+.issue-list > li { margin-bottom: 1.25rem; }
+.issue {
+  border: 1px solid var(--grey-3);
+  border-left: 6px solid var(--grey-3);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  background: var(--white);
+  color: var(--grey-7);
+}
+.issue[data-severity="high"] { border-left: 10px solid var(--grey-7); }
+.issue[data-severity="elevated"] { border-left: 8px solid var(--grey-5); }
+.issue h3 { margin: 0 0 0.25rem; font-size: 1.1rem; }
+.issue-meta { margin: 0.25rem 0; font-size: 0.9rem; color: var(--grey-5); }
+.phrasing { margin: 0.5rem 0 0.25rem; }
+.phrasing-label { margin: 0 0 0.5rem; font-size: 0.8rem; font-style: italic; color: var(--grey-4); }
+.sources { border-collapse: collapse; width: 100%; font-size: 0.9rem; margin: 0.5rem 0; background: var(--white); }
+.sources caption { text-align: left; font-weight: 600; padding-bottom: 0.25rem; }
+.sources th, .sources td { border: 1px solid var(--grey-3); padding: 0.3rem 0.4rem; text-align: left; vertical-align: top; }
+.sources th { background: var(--grey-1); }
+.decision { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: flex-end; margin-top: 0.5rem; }
+.decision .field { margin-bottom: 0; flex: 1 1 16rem; }
+.decision-recorded { font-weight: 600; }
+.notice-list li { margin-bottom: 0.25rem; }
