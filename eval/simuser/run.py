@@ -113,18 +113,20 @@ UI_MAP = [
     "", "## Arm B: V2 UI screen to tool mapping (single-case consolidated view, MedX case-page schema; adapter, not a MedX app run)", "",
     "| V2 web UI (file:line) | Tool | What the tool returns |", "|---|---|---|",
     "| web/components/clinical/WorkQueue.tsx:29,53 (queue API) | removed in g2-0002 | arm A has no equivalent and the case id is in the task prompt; g2-0001 exposed get_queue in B only |",
-    "| web/components/clinical/CaseWorkspace.tsx:189-215 (case header: case id, name, sex, age, HN, stage, owner, next task); :34-42 (tabs) | get_case_overview | the header fields + intake status + tab list, plus a `summary` block (OVERVIEW_SUMMARY_FIELDS: latest vitals, change vs previous reading, allergy status, current medications + source count, abnormal labs) built from the snapshot; slots to be aligned to the final u6 Overview |",
-    "| CaseWorkspace.tsx:216-231 (red-flag banner), discrepancy card | not reproduced | authored/system content in the demo; no engine computes it for dataset cases and it would leak gold. The real UI shows a banner, so B measures consolidation only. Chief complaint/onset are only in the transcript, so the model must open intake |",
+    "| web/components/clinical/CaseWorkspace.tsx:189-215 (case header: case id, name, sex, age, HN, stage, owner, next task); :34-42 (tabs) | get_case_overview | the header fields + intake status + tab list (paths at g2-0001 freeze; header unchanged) |",
+    "| CaseWorkspace.tsx @ factory/u6 059552c :366-391 (Overview renders CaseSummary first), :440-605 (CaseSummary) | get_case_overview `summary` | one slot per tile, built from the snapshot: summary_vitals (:450-502: latest value of hr, rr, sbp, dbp, spo2, temp_c, consciousness, on_oxygen; per-vital direction vs previous reading; observed time; missing shown as missing), summary_allergy (:514-535: list / none recorded / unknown), summary_meds (:536-565: one line per medication source with recorded_value and label), summary_labs (:566-603: abnormal labs / none abnormal / none yet, unclassified when no reference range) |",
+    "| :424-429 vitalDirection, :431-437 labFlag | build_overview_summary | vital_direction and lab_flag are line-for-line mirrors of these rules (recorded numbers only, no thresholds, no clinical label) |",
+    "| :237 (red-flag banner), :557-559 (open discrepancy count), :503-513 (summary-complaint: chief complaint, onset), :382 (authored case summary text) | NOT reproduced (disclosed decisions) | banner and discrepancy count are engine outputs (consolidation only; the real UI shows them, so B under-represents it there); chief complaint/onset exist only in the intake transcript, so the model must open intake (under-represents B, conservative); the authored summary text is not computed for dataset cases |",
     "| CaseWorkspace.tsx:251,374-403 (Intake tab), :81-87 (tab data fetched only on open) | get_intake | intake record incl. the conversation turns (assumption: the UI intake tab shows only extracted fields; the adapter exposes the transcript so the same facts are reachable as in A) |",
     "| CaseWorkspace.tsx:284,459-517 (Medications tab: one card per source with recorded_value, captured_at) | get_medications | one source per list with a recorded_value string (drug, dose, frequency, ATC) and captured_at; the discrepancy card (:475-513) is not reproduced |",
     "| CaseWorkspace.tsx:285,518-549 (Timeline tab: title, detail text, actor, time, version) | get_timeline | one event per record; detail text carries vitals, labs, allergy and registration facts (the V2 UI has no separate vitals/labs/allergy screen; assumption: they appear as timeline detail text) |",
     "",
 ]
-# Predeclared slots of the arm-B overview summary (g2-0002). Align to the final u6 V2 Overview; an empty tuple gives the
-# header-only overview of g2-0001. Chief complaint / onset are NOT slots: the snapshot has them only inside the
-# intake conversation (no structured field), so they are not on the overview and the model must open intake.
-OVERVIEW_SUMMARY_FIELDS = ("latest_vitals", "vitals_change_vs_previous", "allergy_status", "current_medications",
-                           "medication_source_count", "abnormal_labs")
+# Predeclared slots of the arm-B overview summary (g2-0002), one per tile of the u6 V2 CaseSummary (data-testid summary-vitals,
+# -allergy, -meds, -labs; CaseWorkspace.tsx on factory/u6 commit 059552c). An empty tuple gives the header-only overview of
+# g2-0001. NOT slots: red-flag banner and open-discrepancy count (engine outputs; consolidation only) and chief complaint /
+# onset (only in the intake transcript, no structured field: under-represents B, conservative).
+OVERVIEW_SUMMARY_FIELDS = ("summary_vitals", "summary_allergy", "summary_meds", "summary_labs")
 SECONDARY_METRICS = ("calls_per_success", "calls_within_success")  # predeclared secondary (g2-0002); primary reading unchanged
 FORBIDDEN_IN_TOOL_OUTPUT = ("medication_issues", "required_inputs_missing", "INJ-", "expected_action", "rule_id")
 
@@ -327,65 +329,82 @@ def format_item(i: dict) -> str:
     return "not recorded"
 
 
-_SUMMARY_VITALS = (("hr", "HR", ""), ("rr", "RR", ""), ("sbp", "SBP", ""), ("spo2", "SpO2", "%"), ("temp_c", "Temp", " C"))
+_VITAL_FIELDS = (("hr", "HR", ""), ("rr", "RR", ""), ("sbp", "SBP", ""), ("dbp", "DBP", ""), ("spo2", "SpO2", "%"), ("temp_c", "Temp", " C"))
 
 
-def vitals_change(prev: dict, last: dict) -> str:
-    """Per-parameter change of the latest reading vs the previous one. No thresholds, no label (the task's trend rule
-    compares FIRST vs LAST with thresholds; this is deliberately the raw last-vs-previous display a UI would show)."""
-    parts = []
-    for k, name, unit in _SUMMARY_VITALS:
-        a, b = prev.get(k), last.get(k)
-        if a is None or b is None:
-            parts.append(f"{name} not comparable (not recorded in one reading)")
-        else:
-            parts.append(f"{name} {a}{unit} -> {b}{unit} ({'up' if b > a else 'down' if b < a else 'same'})")
-    ca, cb = prev.get("consciousness"), last.get("consciousness")
-    parts.append("consciousness not comparable (not recorded in one reading)" if ca is None or cb is None
-                 else f"consciousness {ca} -> {cb} ({'same' if ca == cb else 'changed'})")
-    return "; ".join(parts)
+def vital_direction(now, before) -> str | None:
+    """Mirror of vitalDirection in web/components/clinical/CaseWorkspace.tsx (factory/u6 :424-429): describes the recorded
+    numbers only. None when either value is missing."""
+    if now is None or before is None:
+        return None
+    return "\u2191 increased" if now > before else "\u2193 decreased" if now < before else "\u2192 unchanged"
+
+
+def lab_flag(r: dict) -> str | None:
+    """Mirror of labFlag (u6 :431-437): high / low outside the reference range, 'unclassified' when the value or both bounds are missing."""
+    if r.get("value") is None or (r.get("ref_low") is None and r.get("ref_high") is None):
+        return "unclassified"
+    if r.get("ref_high") is not None and r["value"] > r["ref_high"]:
+        return "high"
+    if r.get("ref_low") is not None and r["value"] < r["ref_low"]:
+        return "low"
+    return None
+
+
+def _obs(i: dict) -> str:
+    return i.get("observed_at") or i["available_at_time"]
 
 
 def build_overview_summary(items: list[dict], fields: tuple = OVERVIEW_SUMMARY_FIELDS) -> dict:
-    """Arm-B overview summary from the (already temporally filtered) snapshot items only. No gold, no engine output,
-    no red-flag banner, no discrepancy flags. Missing values are rendered as missing, never as normal."""
-    vit = [i for i in items if i["data_type"] == "Vitals"]
+    """Arm-B overview summary = the u6 V2 CaseSummary tiles (CaseWorkspace.tsx factory/u6 :440-605) built from the already
+    temporally filtered snapshot items only. Excluded on purpose: red-flag banner, open-discrepancy count (engine outputs),
+    chief complaint/onset (only in the transcript). No gold. Missing values render as missing, never as normal."""
+    vit = sorted((i for i in items if i["data_type"] == "Vitals"), key=_obs)
     alg = [i for i in items if i["data_type"] == "AllergyList"]
     meds = [i for i in items if i["data_type"] == "MedicationList"]
     labs = [i for i in items if i["data_type"] == "LabSeries"]
     out: dict[str, Any] = {}
     for f in fields:
-        if f == "latest_vitals":
-            out[f] = "not recorded" if not vit else f"{format_item(vit[-1])} (at {vit[-1]['available_at_time']})"
-        elif f == "vitals_change_vs_previous":
-            out[f] = "no vitals recorded" if not vit else "no previous reading (single reading)" if len(vit) < 2 else vitals_change(vit[-2], vit[-1])
-        elif f == "allergy_status":
-            if not alg:
-                out[f] = "unknown (no allergy record)"
+        if f == "summary_vitals":
+            if not vit:
+                out[f] = "no vitals recorded"
+                continue
+            last, prev = vit[-1], vit[-2] if len(vit) > 1 else None
+            rows = {}
+            for k, name, unit in _VITAL_FIELDS:
+                val = last.get(k)
+                d = vital_direction(val, prev.get(k)) if prev else None
+                rows[name] = {"value": "not recorded" if val is None else f"{val}{unit}",
+                              "vs_previous": "" if val is None else d or "no comparison value"}
+            rows["consciousness (ACVPU)"] = _v(last.get("consciousness"))
+            rows["supplemental oxygen"] = "not recorded" if last.get("on_oxygen") is None else "on oxygen" if last["on_oxygen"] else "not on oxygen"
+            out[f] = {"recorded_at": _obs(last), "compared_with": _obs(prev) if prev else "no previous reading to compare", "vitals": rows,
+                      "note": "arrows describe the change in recorded values only, not a clinical judgement"}
+        elif f == "summary_allergy":
+            a = alg[-1] if alg else None
+            if a is None or a.get("status") not in ("known", "no_known_allergy"):
+                out[f] = "allergy status unknown - must ask"
+            elif not a["entries"]:
+                out[f] = "no allergy recorded"
             else:
-                a = alg[-1]
-                names = [e["substance"] for e in a["entries"]]
-                out[f] = f"known: {', '.join(names)}" if a.get("status") == "known" and names else \
-                    "none recorded (no known allergy)" if a.get("status") == "no_known_allergy" else "unknown (allergy status not documented)"
-        elif f == "current_medications":
-            names = sorted({_norm(e["generic_name"]) for m in meds for e in m["entries"]})
-            out[f] = names if names else "no medication lists recorded"
-        elif f == "medication_source_count":
-            out[f] = len(meds)
-        elif f == "abnormal_labs":
+                out[f] = [f"{e['substance']} - {e.get('reaction') or 'reaction not recorded'}" for e in a["entries"]]
+        elif f == "summary_meds":
+            out[f] = ([{"recorded_value": format_item(m), "label": m.get("list_source")} for m in meds] if meds else "no medication list recorded")
+        elif f == "summary_labs":
             latest: dict[str, dict] = {}
             for s_ in labs:  # items are ordered by availability, so later rows overwrite earlier ones
                 for r in s_["results"]:
                     latest[r["test"]] = r
-            abn, noref = [], []
+            if not labs:
+                out[f] = "no lab results yet"
+                continue
+            flagged = []
             for name, r in sorted(latest.items()):
-                lo, hi, val = r.get("ref_low"), r.get("ref_high"), r.get("value")
-                if val is None or (lo is None and hi is None):
-                    noref.append(name)
-                elif (lo is not None and val < lo) or (hi is not None and val > hi):
-                    abn.append(f"{name} {val} {r.get('unit', '')} (ref {_v(lo)}-{_v(hi)}, {'low' if lo is not None and val < lo else 'high'})".replace("  ", " "))
-            out[f] = {"outside_reference_range": abn if labs else "no labs recorded",
-                      "reference_range_not_recorded": noref}
+                fl = lab_flag(r)
+                if fl is not None:
+                    ref = f" (ref {_v(r.get('ref_low'))}-{_v(r.get('ref_high'))})" if r.get("ref_low") is not None or r.get("ref_high") is not None else ""
+                    flagged.append(f"{name} {_v(r.get('value'))} {r.get('unit', '')} {'higher than reference' if fl == 'high' else 'lower than reference' if fl == 'low' else 'no reference range to compare'}{ref}".replace("  ", " "))
+            out[f] = flagged if flagged else "no abnormal lab results"
         else:
             raise ValueError(f"unknown overview summary field {f!r}")
     return out
@@ -1041,7 +1060,7 @@ def render_md(res: dict) -> str:
           "- Arm B (single-case consolidated view) is a schema-faithful adapter of the MedX case-page routes populated from the snapshot, not a MedX app run and not the shipped demo router (which serves one hard-coded case). System-computed red-flag/discrepancy hints are excluded, so B measures consolidation only.",
           "- Arm A contains only sources that exist in the snapshot (opd note, labs, medications, vitals); every fact is reachable in both arms. Labs are not required by any answer field.",
           "- Small number of cases and one model: intervals are wide; treat as hypothesis-generating support for the Gate 2 assumption, not a test of it.",
-          "- calls_per_success / calls_within_success are predeclared secondary metrics, not part of the reading. The B overview summary shows current medications and latest-vs-previous vitals, which are close to two answer fields; read B's effort gain together with task success and do not attribute it to consolidation alone. The real V2 UI also has a red-flag banner that is not reproduced.",
+          "- calls_per_success / calls_within_success are predeclared secondary metrics, not part of the reading. The B overview summary (mirroring the u6 Overview tiles) lists the medication sources and shows per-vital direction vs the previous reading, which are close to the current_meds and vitals_trend fields; read B's effort gain together with task success and per-field results and do not attribute it to consolidation alone. Disclosed decisions: the real V2 Overview also shows a red-flag banner and an open-discrepancy count (engine outputs, not reproduced: consolidation only) and chief complaint/onset (only in the transcript, not reproduced: under-represents B, conservative).",
           "- Model-version drift, provider nondeterminism and endpoint quirks (see transcripts) can change results between runs; the request settings are recorded.",
           f"- {res['protocol']['notes'] or 'No endpoint adaptations were needed.'}", ""]
     return "\n".join(L)
@@ -1272,26 +1291,37 @@ def selfcheck() -> None:
         ok(len(vit) == 2 and "HR " in vit[0]["detail"] and "Temp 37.0 C" in vit[0]["detail"], "B timeline carries vitals in full")
         sm = b_out[0]["summary"]
         ok(tuple(sm) == OVERVIEW_SUMMARY_FIELDS, "summary has exactly the predeclared slots")
-        last_vit = [i for i in vis_items if i["data_type"] == "Vitals"][-1]
-        ok(sm["latest_vitals"].startswith(format_item(last_vit)) and sm["medication_source_count"] == 2, "summary latest vitals / source count")
-        ok(sm["current_medications"] == ["metformin"] and sm["allergy_status"] == "known: cephalosporins", "summary meds (no future list) and allergy")
-        ok(sm["abnormal_labs"]["outside_reference_range"] == ["Na 128.0 mmol/L (ref 135.0-145.0, low)"] and sm["abnormal_labs"]["reference_range_not_recorded"] == ["WBC"], "summary abnormal labs; no ref range is not normal")
-        ok(("HR 80 -> " + str(140 if c.ref.red_flags else 84)) in sm["vitals_change_vs_previous"] and "SBP 120 -> 120 (same)" in sm["vitals_change_vs_previous"], "summary vitals change vs previous reading")
-        ok(not any(k in json.dumps(sm) for k in ("worsening", "improving", "stable", "escalat", "RF-", "banner", "discrepan")), "summary carries no trend label, banner or flags")
+        vs = sorted((i for i in vis_items if i["data_type"] == "Vitals"), key=lambda i: i["observed_at"] if "observed_at" in i else i["available_at_time"])
+        sv = sm["summary_vitals"]
+        ok(sv["vitals"]["HR"]["value"] == str(vs[-1]["hr"]) and sv["vitals"]["HR"]["vs_previous"] == vital_direction(vs[-1]["hr"], vs[-2]["hr"]) and "DBP" in sv["vitals"]
+           and sv["vitals"]["consciousness (ACVPU)"] == "A" and sv["vitals"]["supplemental oxygen"] == "not on oxygen", "summary vitals: latest of every vital + direction vs previous (as UI)")
+        ok(sv["vitals"]["SBP"]["vs_previous"] == "\u2192 unchanged" and sv["vitals"]["SpO2"]["value"] == "97%", "summary vitals: unchanged arrow and units")
+        ok(sm["summary_meds"] == [{"recorded_value": format_item(m), "label": m["list_source"]} for m in vis_items if m["data_type"] == "MedicationList"] and len(sm["summary_meds"]) == 2
+           and "futuredrug" not in json.dumps(sm), "summary meds: one line per visible source, no future list")
+        ok(sm["summary_allergy"] == ["cephalosporins - reaction not recorded"], "summary allergy list")
+        ok(sm["summary_labs"] == ["Na 128.0 mmol/L lower than reference (ref 135.0-145.0)", "WBC 9.0 10^3/uL no reference range to compare"], "summary labs: abnormal + unclassified (no ref range is not normal); K normal omitted")
+        ok(not any(k in json.dumps(sm) for k in ("worsening", "improving", "stable", "escalat", "RF-", "banner", "discrepan", "chief")), "summary carries no trend label, banner, discrepancy count or complaint")
     ok(CasePageEnv(cases[0].snapshot, "nurse").systems_opened({"get_timeline", "get_medications"}) == 1 and MultiSystemEnv(cases[0].snapshot, "nurse").systems_opened({"get_labs", "get_vitals"}) == 2, "systems_opened")
     # summary edge cases: missing renders as missing, never normal; empty field list restores the header-only overview
     empty = {"case_id": "E0", "as_of": "2030-01-01T10:00:00+07:00", "items": []}
     es = CasePageEnv(empty, "nurse").call("get_case_overview", {"case_id": "E0"})["summary"]
-    ok(es["latest_vitals"] == "not recorded" and es["vitals_change_vs_previous"] == "no vitals recorded" and es["allergy_status"].startswith("unknown")
-       and es["current_medications"] == "no medication lists recorded" and es["medication_source_count"] == 0 and es["abnormal_labs"]["outside_reference_range"] == "no labs recorded", "empty snapshot renders as missing")
-    v1 = _mk_item("E1", "Vitals", "V1", "2030-01-01T08:00:00+07:00", hr=90, rr=None, sbp=100, spo2=95, temp_c=None, consciousness="A", on_oxygen=None)
-    v2 = _mk_item("E1", "Vitals", "V2", "2030-01-01T09:00:00+07:00", hr=95, rr=20, sbp=100, spo2=93, temp_c=37.0, consciousness="V", on_oxygen=False)
-    ch = build_overview_summary([v1, v2])
-    ok("RR not comparable" in ch["vitals_change_vs_previous"] and "Temp not comparable" in ch["vitals_change_vs_previous"] and "SpO2 95% -> 93% (down)" in ch["vitals_change_vs_previous"]
-       and "consciousness A -> V (changed)" in ch["vitals_change_vs_previous"], "vitals change handles missing values")
-    ok(build_overview_summary([v1])["vitals_change_vs_previous"].startswith("no previous reading") and "RR not recorded" in build_overview_summary([v1])["latest_vitals"], "single reading has no change; missing value stays missing")
+    ok(es == {"summary_vitals": "no vitals recorded", "summary_allergy": "allergy status unknown - must ask", "summary_meds": "no medication list recorded",
+              "summary_labs": "no lab results yet"}, "empty snapshot renders as missing")
+    v1 = _mk_item("E1", "Vitals", "V1", "2030-01-01T08:00:00+07:00", hr=90, rr=None, sbp=100, dbp=60, spo2=95, temp_c=None, consciousness=None, on_oxygen=None)
+    v2 = _mk_item("E1", "Vitals", "V2", "2030-01-01T09:00:00+07:00", hr=95, rr=20, sbp=90, dbp=60, spo2=95, temp_c=37.0, consciousness="V", on_oxygen=True)
+    r2 = build_overview_summary([v1, v2], ("summary_vitals",))["summary_vitals"]["vitals"]
+    ok(r2["HR"]["vs_previous"] == "\u2191 increased" and r2["SBP"]["vs_previous"] == "\u2193 decreased" and r2["DBP"]["vs_previous"] == "\u2192 unchanged"
+       and r2["RR"]["vs_previous"] == "no comparison value" and r2["Temp"]["vs_previous"] == "no comparison value" and r2["supplemental oxygen"] == "on oxygen", "vital direction incl. missing previous value")
+    r1 = build_overview_summary([v1], ("summary_vitals",))["summary_vitals"]
+    ok(r1["compared_with"].startswith("no previous") and r1["vitals"]["RR"] == {"value": "not recorded", "vs_previous": ""} and r1["vitals"]["consciousness (ACVPU)"] == "not recorded"
+       and r1["vitals"]["supplemental oxygen"] == "not recorded" and r1["vitals"]["HR"]["vs_previous"] == "no comparison value", "single reading; missing value stays missing")
+    ok(vital_direction(None, 1) is None and lab_flag({"value": None, "ref_low": 1}) == "unclassified" and lab_flag({"value": 5, "ref_low": 1, "ref_high": 4}) == "high"
+       and lab_flag({"value": 0, "ref_low": 1}) == "low" and lab_flag({"value": 2, "ref_low": 1, "ref_high": 4}) is None and lab_flag({"value": 2}) == "unclassified", "vital_direction/lab_flag mirror the UI rules")
+    al = lambda st, ent: build_overview_summary([_mk_item("E2", "AllergyList", "A", "2030-01-01T08:00:00+07:00", status=st, entries=ent)], ("summary_allergy",))["summary_allergy"]  # noqa: E731
+    ok(al("unknown", []) == "allergy status unknown - must ask" and al("no_known_allergy", []) == "no allergy recorded" and al("known", [{"substance": "x", "reaction": "rash"}]) == ["x - rash"], "allergy unknown / none / list")
+    ok(build_overview_summary([_mk_item("E3", "LabSeries", "L", "2030-01-01T08:00:00+07:00", results=[{"test": "K", "value": 4.0, "unit": "u", "ref_low": 3.0, "ref_high": 5.0}])], ("summary_labs",))["summary_labs"] == "no abnormal lab results", "all-normal labs")
     ok("summary" not in CasePageEnv(cases[0].snapshot, "nurse", summary_fields=()).call("get_case_overview", {"case_id": "S0"}), "empty OVERVIEW_SUMMARY_FIELDS gives the g2-0001 header-only overview")
-    ok(tuple(build_overview_summary(visible_items(cases[0].snapshot), ("allergy_status", "abnormal_labs"))) == ("allergy_status", "abnormal_labs"), "summary slots follow the field list")
+    ok(tuple(build_overview_summary(visible_items(cases[0].snapshot), ("summary_allergy", "summary_labs"))) == ("summary_allergy", "summary_labs"), "summary slots follow the field list")
     try:
         build_overview_summary(visible_items(cases[0].snapshot), ("gold_flags",))
         ok(False, "unknown slot must raise")

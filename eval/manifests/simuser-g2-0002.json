@@ -7,14 +7,14 @@
   "tier": 0,
   "supersedes_protocol_of": "simuser-g2-0001 (frozen, results committed, NOT SUPPORTED on effort; not modified)",
   "question": "If the data needed is gathered on one case page (MedX V2, with an overview summary), can a simulated nurse / OPD physician / pharmacist prepare a case before consult with fewer tool calls and systems opened, and no worse accuracy, than when the same data sits in four separate systems? Both arms receive the same human-readable text for every clinical item.",
-  "approval": "docs/DECISIONS.md 2026-09-29 'Gate 2: AI-simulated users' (synthetic cases only, OpenAI-compatible endpoint, total budget 5 USD; g2-0001 spent 0.61 USD). A g2-0002 run needs the owner to confirm the remaining budget and record it in docs/DECISIONS.md before FROZEN.",
+  "approval": "docs/DECISIONS.md 2026-09-29 'Gate 2: AI-simulated users' (synthetic cases only, OpenAI-compatible endpoint, total budget 5 USD). g2-0001 spent 0.61 USD of the 5 USD; g2-0002 cap 3.00 USD, within the recorded approval (no new DECISIONS.md entry needed).",
   "dataset": {
     "name": "s1r-synthetic",
     "path": "/Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent/data/synthetic/g2-heldout-20260930",
     "data_class": "synthetic",
-    "generator_seed": "TO_FILL",
-    "dataset_manifest_sha256": "TO_FILL",
-    "splits_sha256": "TO_FILL",
+    "generator_seed": 20260930,
+    "dataset_manifest_sha256": "401ade962bfc939db483f7f8cc8db1ede1123c5353205b7d1614144cf2ad1df1",
+    "splits_sha256": "44363099d8d8c7e93a4e0ed729fd52412306c0af874dacb21a56e43efe176c91",
     "development_dataset_for_smoke": "data/synthetic/v1 (dev split, --smoke only)",
     "split": "test",
     "decision_point": "T2",
@@ -32,25 +32,26 @@
   },
   "overview_summary": {
     "constant": "OVERVIEW_SUMMARY_FIELDS in eval/simuser/run.py",
+    "source_of_truth": "web/components/clinical/CaseWorkspace.tsx on factory/u6 commit 059552c: Overview :366-391, CaseSummary :440-605, vitalDirection :424-429, labFlag :431-437 (UI_MAP in results.md has the file:line rows)",
     "slots": [
-      "latest_vitals",
-      "vitals_change_vs_previous",
-      "allergy_status",
-      "current_medications",
-      "medication_source_count",
-      "abnormal_labs"
+      "summary_vitals",
+      "summary_allergy",
+      "summary_meds",
+      "summary_labs"
     ],
     "slot_definitions": {
-      "latest_vitals": "the most recent visible vitals reading as formatter text, with its time; 'not recorded' if none",
-      "vitals_change_vs_previous": "per-parameter latest vs previous reading (HR, RR, SBP, SpO2, Temp: up/down/same; consciousness same/changed); a missing value on either reading renders 'not comparable'; no thresholds and no trend label (the task trend rule compares first vs last with thresholds)",
-      "allergy_status": "known: substances | none recorded (no known allergy) | unknown; no allergy record renders unknown, never 'none'",
-      "current_medications": "sorted distinct generic names across all visible medication lists",
-      "medication_source_count": "number of visible medication lists",
-      "abnormal_labs": "latest value per test outside its reference range, plus a separate list of tests whose reference range is not recorded (never treated as normal)"
+      "summary_vitals": "latest value of each vital (HR, RR, SBP, DBP, SpO2, Temp, consciousness, supplemental oxygen) with the observed time; per-vital direction vs the previous reading (up / down / unchanged arrow, computed exactly like the UI vitalDirection: recorded numbers only, no thresholds, no label); a missing value renders 'not recorded'; a missing previous value renders 'no comparison value'; no previous reading renders 'no previous reading to compare'; no vitals renders 'no vitals recorded'. Consciousness and oxygen have no direction (as in the UI)",
+      "summary_allergy": "list of substance - reaction | 'no allergy recorded' | 'allergy status unknown - must ask' (status unknown or no allergy record); never 'none' when unknown",
+      "summary_meds": "one line per visible medication source: recorded_value (formatter text) and label; 'no medication list recorded' if none",
+      "summary_labs": "latest value per test that is high/low vs its reference range, or 'no reference range to compare' when the value or both bounds are missing (never treated as normal); 'no abnormal lab results' | 'no lab results yet'"
     },
-    "not_slots": "chief complaint / onset: the snapshot holds them only inside the intake conversation (no structured field), so they are not on the overview and the model must open intake. Red-flag banner and discrepancy flags excluded (consolidation only).",
-    "alignment": "slots are provisional until aligned to the final UI of slice u6 (owner to confirm before FROZEN); no gold and no engine output enters the summary",
-    "disclosed_risk": "current_medications and vitals_change_vs_previous are close to two answer fields (current_meds; vitals_trend), so a B advantage on those fields may reflect the summary rather than consolidation; per-field results (field_current_meds, field_vitals_trend) are reported and the summary is a disclosed part of arm B"
+    "decisions_disclosed": [
+      "Red-flag banner (UI :237) and open-discrepancy count (UI :557-559) are NOT reproduced: they are engine outputs and would leak gold; B measures consolidation only. The real UI shows both, so B under-represents the real page there.",
+      "Chief complaint / onset (UI summary-complaint :503-513) are NOT reproduced: the snapshot has them only in the intake transcript (no structured field), so the model must open intake. This under-represents B (conservative for the effort claim).",
+      "The authored case-summary text (UI :382) is not reproduced (not computed for dataset cases).",
+      "Per-vital direction IS included, computed like the UI. It is last-vs-previous and unthresholded, whereas the task's vitals_trend rule is first-vs-last with thresholds, so it is close to but not the answer; summary_meds lists the medication sources, which is close to the current_meds field. A B advantage on field_vitals_trend / field_current_meds may reflect the summary rather than consolidation; per-field results are reported."
+    ],
+    "no_gold_no_engine": "the summary is built only from temporally filtered snapshot items (available_at_time <= T)"
   },
   "changes_from_g2_0001": [
     {
@@ -65,8 +66,8 @@
     },
     {
       "id": 3,
-      "change": "arm B get_case_overview returns a `summary` block with the OVERVIEW_SUMMARY_FIELDS slots (see overview_summary) built from the snapshot",
-      "audit_reason": "g2-0001 overview returned the header only (464 get_case_overview calls wasted), which is not what a consolidated case page would show; the real V2 Overview is gaining a case summary in slice u6"
+      "change": "arm B get_case_overview returns a `summary` block with one slot per tile of the u6 V2 Overview (summary_vitals, summary_allergy, summary_meds, summary_labs; see overview_summary), built from the snapshot; banner, discrepancy count and chief complaint/onset deliberately excluded (disclosed decisions in overview_summary)",
+      "audit_reason": "g2-0001 overview returned the header only (464 get_case_overview calls wasted), which is not what the real case page shows; slice u6 makes the real Overview show a case summary"
     },
     {
       "id": 4,
