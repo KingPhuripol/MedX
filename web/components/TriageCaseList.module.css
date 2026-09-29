@@ -1,0 +1,4 @@
+.filter { display: flex; flex-wrap: wrap; gap: 16px; align-items: end; }
+.filter > :first-child { flex: 1 1 280px; max-width: 480px; }
+.muted { color: var(--muted-foreground); font-size: 14px; }
+.complaint { min-width: 0; overflow-wrap: anywhere; }

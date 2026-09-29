@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 
 import TriageReview from "@/components/TriageReview";
+import { LoadingState } from "@/components/ui/LoadingState";
+import { Notice } from "@/components/ui/Notice";
 import { ERROR_TEXT, postJson, type Assessment, type Department, type ReviewAction, type ReviewBody } from "@/lib/triage";
 
 export default function TriageReviewLoader({ assessmentId }: { assessmentId: string }) {
@@ -45,7 +47,19 @@ export default function TriageReviewLoader({ assessmentId }: { assessmentId: str
     [assessmentId],
   );
 
-  if (error) return <p role="alert">{error}</p>;
-  if (!assessment) return <p aria-live="polite">Loading assessment…</p>;
+  if (error)
+    return (
+      <div className="page-stack">
+        <Notice tone="critical" role="alert" title="โหลดผลประเมินไม่สำเร็จ">
+          <p>{error}</p>
+        </Notice>
+      </div>
+    );
+  if (!assessment)
+    return (
+      <div className="page-stack">
+        <LoadingState label="กำลังโหลดผลประเมิน… (Loading assessment)" rows={3} />
+      </div>
+    );
   return <TriageReview assessment={assessment} departments={departments} onReview={onReview} />;
 }
