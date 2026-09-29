@@ -17,6 +17,7 @@ from ..audit import write_audit
 from ..db import demo_events, demo_runs
 from ..deps import CurrentUser, get_engine, request_id, require_user
 from ..roles import Role
+from . import case_engines
 from .models import ClaimBody, HandoffBody, MedicationReviewBody, TaskReviewBody
 
 router = APIRouter(prefix="/api/demo/v1", tags=["synthetic-demo"])
@@ -73,7 +74,10 @@ CASE = {
          "resulted_at": "2026-09-28T02:28:00+00:00", "available_at_time": "2026-09-28T02:28:00+00:00"},
     ],
     "version": 1,
+    "view_only": False,
 }
+
+VIEW_ONLY_LABEL = "เคสตัวอย่างสำหรับดูข้อมูล — ยังไม่เปิดให้ดำเนินการ"
 
 BASE_TASKS = (
     {"task_id": "task-intake-017", "case_id": CASE_ID, "role": "nurse", "kind": "intake", "label": "ตรวจข้อมูลรับเข้า", "priority": "critical"},
@@ -100,6 +104,42 @@ MEDICATIONS = {
 
 def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="milliseconds")
+
+
+def _fixture(case_id: str) -> dict | None:
+    return case_engines.fixture_cases().get(case_id)
+
+
+def _case_rows() -> list[dict]:
+    """Every served case for the queue, red flags first. Engines run here, at request time (pure, no model)."""
+    rows = [{"case_id": CASE_ID, "display_name": CASE["display_name"], "view_only": False, "safety_level": "critical",
+             "safety_label": CASE["safety"]["label"], "alert_count": 1, "not_evaluated_count": None,
+             "age": CASE["demographics"]["age"], "sex": CASE["demographics"]["sex"],
+             "chief_complaint": CASE["intake"]["chief_complaint"], "data_class": "synthetic"}]
+    for fx in case_engines.fixture_cases().values():
+        flags = case_engines.run_redflags(fx)
+        safety = case_engines.safety_block(flags)
+        rows.append({"case_id": fx["case_id"], "display_name": fx["display_name"], "view_only": True,
+                     "safety_level": safety["level"], "safety_label": safety["label"], "alert_count": len(flags["alerts"]),
+                     "not_evaluated_count": len(flags["not_evaluated"]), "age": fx["demographics"]["age"],
+                     "sex": fx["demographics"]["sex"], "chief_complaint": fx["intake"]["chief_complaint"], "data_class": "synthetic"})
+    return sorted(rows, key=lambda r: (r["safety_level"] != "critical", r["view_only"], r["case_id"]))
+
+
+def _fixture_case(fx: dict, run: dict, run_id: str, request: Request, user: CurrentUser) -> dict:
+    flags = case_engines.run_redflags(fx)
+    pharma = case_engines.run_pharma(fx, get_engine(request))
+    demo = fx["demographics"]
+    return {
+        "case_id": fx["case_id"], "display_name": fx["display_name"], "data_class": "synthetic", "stage": "view_only",
+        "owner": {"role": "nurse", "display": "ยังไม่มีผู้รับผิดชอบ"}, "safety": case_engines.safety_block(flags),
+        "next_action": "ดูข้อมูลอย่างเดียว", "demographics": {"age": demo["age"], "sex": demo["sex"], "hn": demo["hn"]},
+        "summary": fx["summary"], "intake": fx["intake"], "decision_time": fx["decision_time"], "vitals": fx["vitals"],
+        "allergies": fx["allergies"], "labs": fx["labs"], "view_only": True, "view_only_label": VIEW_ONLY_LABEL,
+        "engines": {"red_flag": flags, "pharma": case_engines.pharma_summary(pharma)},
+        "provenance": {k: case_engines.load_fixture()["provenance"][k] for k in ("source_dataset", "split", "decision_point")},
+        "run_id": run_id, "actor": {"id": user.id, "role": user.role.value}, "timestamp": run["created_at"], "version": 1,
+    }
 
 
 def _run(engine, run_id: str):
@@ -159,14 +199,17 @@ def queue(run_id: str, request: Request, user: CurrentUser = Depends(require_use
         if latest and latest["event_type"] == "task.claimed":
             status, owner = "claimed", {"id": latest["actor_id"], "role": latest["actor_role"]}
         items.append(base | {"status": status, "owner": owner, "stage": base["kind"], "safety_state": "critical" if base["role"] == "nurse" else "review", "next_action": base["label"], "data_class": "synthetic", "actor": {"role": "system"}, "timestamp": run["created_at"], "version": latest["version"] if latest else 1})
-    return {"run_id": run_id, "items": items, "data_class": "synthetic", "actor": {"id": user.id, "role": user.role.value}, "timestamp": now_iso(), "version": max([i["version"] for i in items], default=1)}
+    return {"run_id": run_id, "items": items, "cases": _case_rows(), "data_class": "synthetic", "actor": {"id": user.id, "role": user.role.value}, "timestamp": now_iso(), "version": max([i["version"] for i in items], default=1)}
 
 
 @router.get("/runs/{run_id}/cases/{case_id}")
 def case(run_id: str, case_id: str, request: Request, user: CurrentUser = Depends(require_user)) -> dict:
     run = _run(get_engine(request), run_id)
     if case_id != CASE_ID:
-        raise HTTPException(status_code=404, detail="case not found")
+        fx = _fixture(case_id)
+        if fx is None:
+            raise HTTPException(status_code=404, detail="case not found")
+        return _fixture_case(fx, run, run_id, request, user)
     events = _events(get_engine(request), run_id)
     owner = CASE["owner"]
     stage = CASE["stage"]
@@ -181,7 +224,10 @@ def case(run_id: str, case_id: str, request: Request, user: CurrentUser = Depend
 def timeline(run_id: str, case_id: str, request: Request, user: CurrentUser = Depends(require_user)) -> dict:
     _run(get_engine(request), run_id)
     if case_id != CASE_ID:
-        raise HTTPException(status_code=404, detail="case not found")
+        fx = _fixture(case_id)
+        if fx is None:
+            raise HTTPException(status_code=404, detail="case not found")
+        return {"run_id": run_id, "case_id": case_id, "items": fx["timeline"], "data_class": "synthetic", "actor": {"id": user.id, "role": user.role.value}, "timestamp": now_iso(), "version": 1}
     base = [
         {"event_id": "evt-arrival", "kind": "intake", "title": "บันทึกข้อมูลรับเข้า", "detail": "นำเข้าบทสนทนาจำลองภาษาไทย", "actor": {"role": "nurse", "display": "พยาบาลสังเคราะห์"}, "timestamp": "2026-09-28T02:00:00+00:00", "version": 1, "data_class": "synthetic"},
         {"event_id": "evt-redflag", "kind": "safety", "title": "ตรวจพบ red flag", "detail": "หายใจลำบากร่วมกับแน่นหน้าอก", "actor": {"role": "system", "display": "ruleset v1"}, "timestamp": "2026-09-28T02:01:00+00:00", "version": 1, "data_class": "synthetic"},
@@ -235,7 +281,11 @@ def task_review(task_id: str, action: str, body: TaskReviewBody, request: Reques
 def medications(run_id: str, case_id: str, request: Request, user: CurrentUser = Depends(require_user)) -> dict:
     _run(get_engine(request), run_id)
     if case_id != CASE_ID:
-        raise HTTPException(status_code=404, detail="case not found")
+        fx = _fixture(case_id)
+        if fx is None:
+            raise HTTPException(status_code=404, detail="case not found")
+        payload = case_engines.medications_payload(fx, case_engines.run_pharma(fx, get_engine(request)))
+        return payload | {"case_id": case_id, "data_class": "synthetic", "run_id": run_id, "actor": {"id": user.id, "role": user.role.value}, "timestamp": fx["decision_time"], "version": 1, "view_only": True}
     reviewed = [e for e in _events(get_engine(request), run_id) if e["event_type"] == "medication.reviewed"]
     data = json.loads(json.dumps(MEDICATIONS))
     if reviewed:
