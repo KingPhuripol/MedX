@@ -31,6 +31,7 @@ rsync -a \
   "$ROOT/web/" "$OUT/"
 mkdir -p "$OUT/backend" "$OUT/data/synthetic/v1"
 rsync -a --exclude __pycache__ "$ROOT/backend/app" "$OUT/backend/"
+[ -f "$OUT/backend/app/voice_realtime.py" ] || { echo "stage missing voice realtime route" >&2; exit 2; }
 rsync -a --exclude __pycache__ --exclude tests "$ROOT/casegraph" "$OUT/"
 rsync -a "$DATA/manifest.json" "$DATA/DATACARD.md" "$DATA/inputs" "$OUT/data/synthetic/v1/"
 rsync -a "$ROOT/deploy/vercel/" "$OUT/"
