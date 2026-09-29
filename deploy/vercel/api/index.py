@@ -3,6 +3,10 @@
 Always PUBLIC_DEMO: mock provider only (external provider config is refused at startup), synthetic data
 only, one-click role login, HMAC-signed sessions (needs env SESSION_SECRET, >= 32 chars). The SQLite DB
 lives in this instance's /tmp and resets when the instance is recycled.
+
+Voice exception (DECISIONS.md 2026-09-29, slice v1): OPENAI_API_KEY / VOICE_* env vars are read only by
+the /api/voice/realtime session endpoint (short-lived browser client secret, access code, rate limit).
+The Model Gateway stays mock; they never populate external provider settings.
 """
 
 import os

@@ -454,6 +454,7 @@ def add_turn(ctx: VoiceContext, session_id: str, body: AddTurnBody, now: datetim
 
     _audit(ctx, "voice.turn.add", session_id, "success", {
         "session_id": session_id, "turn_id": turn["turn_id"], "speaker": body.speaker,
+        "source": body.source, "asr_model": body.asr_model,
         "request_sha256": gw.request_sha256, "extraction": "ok" if extracted is not None else "error",
         "new_fact_ids": [f.fact_id for f in new_facts], "agent_turn_id": agent_turn_id,
         "held": [{k: h[k] for k in ("field", "state", "value", "span_turn_ids", "reason")} for h in held],

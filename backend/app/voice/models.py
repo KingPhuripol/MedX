@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from typing import Any, Literal
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
 VOICE_VERSION = "s3-0.1.0"
 EXTRACT_TASK = "voice.intake_extract"
@@ -119,3 +119,12 @@ class AddTurnBody(_Strict):
     text: str = Field(min_length=1, max_length=2000)
     started_at: AwareDatetime
     ended_at: AwareDatetime
+    # Slice v1: provenance of the text. asr_model is required if and only if source == "asr".
+    source: Literal["typed", "asr"] = "typed"
+    asr_model: str | None = Field(default=None, max_length=64)
+
+    @model_validator(mode="after")
+    def _asr_provenance(self) -> "AddTurnBody":
+        if (self.source == "asr") != bool(self.asr_model):
+            raise ValueError("asr_model is required if and only if source is 'asr'")
+        return self
