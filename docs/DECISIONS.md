@@ -88,3 +88,17 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
 - **External API:** synthetic cases only may be sent to an OpenAI-compatible endpoint (OpenAI, small mini/nano model, total budget 5 USD) acting as the **simulated user**. MedX itself stays on the mock provider. The key lives only in the owner's local environment, never in the repo.
 - **Claim limit:** results are reported as "Simulated-user evaluation (synthetic)" and never as human usability or user validation.
 - **Approved by:** the project's physician advisor (name withheld under PDPA), relayed by the project owner in chat on 2026-09-29.
+
+## 2026-09-29 — U5 UI/UX layout overhaul shipped (main 35bcada, blue demo redeployed)
+- **What:** Opus lead audit (`slices/u5/AUDIT.md`, `SPEC.md`), then three Sonnet 5.5 workers in parallel: WP-A shell and shared primitives, WP-B nurse pages and case workspace, WP-C physician and pharmacist pages. The lead reviewed each package with one fix round, and the packages were integrated as `factory/u5-int`.
+- **Login fix (b0eff99):** found during the audit. `/login` always showed the public-demo role picker because `PUBLIC_DEMO` was imported from a "use client" module.
+- **Safety review:** CONDITIONAL_PASS (read-only, run as general-purpose/Opus, because the `clinical-safety-reviewer` agent preloads `security-review`, which needs a git remote). The conditions were fixed in `factory/u5-fix`:
+  - Care Confirm after the suggestion.
+  - Triage bar never reads all-clear when screening is incomplete.
+  - Sticky action bar cannot cover red flags on load.
+  - Sign-out DOM order.
+- **Verified:** `make test` on main: pytest 2170 passed / 3 skipped, vitest 97/97. e2e on u5-int: 77 passed, 1 known voice-intake failure; fix-branch specs 60/60. Live https://medx-demo-u4.vercel.app redeployed from 35bcada and smoke-tested.
+- **Open:**
+  - Triage Confirm should also gate on incomplete screening. This is an API contract change and needs an owner decision.
+  - Follow-ups: DataTable card-mode semantics; care red-flag section tone when there are 0 alerts; pharma high-severity chip tone; demo physician ack server-side; legacy CSS cleanup.
+- **Approved by:** project owner (chat, 2026-09-29), lead + workers plan; redeploy within the approved blue-link scope.
