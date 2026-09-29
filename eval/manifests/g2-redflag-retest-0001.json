@@ -1,0 +1,481 @@
+{
+ "$comment": "Slice g2 manifest: held-out red-flag re-test of the Case Graph (System Evaluation on synthetic data - not clinical performance). Full protocol in the sibling .protocol.json. Hash bindings follow as canonical JSON after the prefix 'g2-hashes '. g2-hashes {\"dataset_manifest_sha256\":\"572869b5f94b635fd27fe2d32cb41661b41c7f7f9c620a56bd70efdca83f6573\",\"dataset_tree_sha256_declared\":\"527abd73d44af9da07c9e715a68aebb58360de4024a97bd53ecadc7aef2f8417\",\"g2_code_sha256\":\"2401b690403c7e09442c5be45314cd2ff5f6331608b376a5a868672b4f84631e\",\"i2_adapters_sha256\":\"b59068ee22422de0886e5f55317909d7af0a6f1db83aedb4e0dde35014791139\",\"mapping_sha256\":\"7748c53b041870a56b815d0f815456bd571422adb4b70d32b59610cc19d68787\",\"protocol_sha256\":\"cf990a4ec49120ec9aed6b876fba9c6246d1327611b8a1eb0b1f46e88a5a491f\",\"rule_set\":{\"file\":\"backend/app/triage/rules/redflag_rules_v1.json\",\"sha256\":\"e576db8fe539f1b2f8e970a4032271b28849c5b376c61e986bcd052afe42299a\",\"version\":\"rf-1.2.0\"},\"split_sha256\":\"44363099d8d8c7e93a4e0ed729fd52412306c0af874dacb21a56e43efe176c91\",\"system_sha256\":\"99e973960f941bc9b4b0d250e3b993bb2d179f52c3d450b1b8489235a522fa40\"}",
+ "manifest_version": "1.0",
+ "evaluation_id": "g2-redflag-retest-0001",
+ "slice": "g2",
+ "dataset": {
+  "name": "g2-heldout-20260929",
+  "version": "g2-heldout-20260929+tree:527abd73d44af9da07c9e715a68aebb58360de4024a97bd53ecadc7aef2f8417",
+  "data_class": "synthetic"
+ },
+ "split": "test",
+ "split_version": "44363099d8d8c7e93a4e0ed729fd52412306c0af874dacb21a56e43efe176c91",
+ "split_patient_list": [
+  "SYNH-0001",
+  "SYNH-0002",
+  "SYNH-0003",
+  "SYNH-0004",
+  "SYNH-0005",
+  "SYNH-0006",
+  "SYNH-0007",
+  "SYNH-0008",
+  "SYNH-0009",
+  "SYNH-0010",
+  "SYNH-0011",
+  "SYNH-0012",
+  "SYNH-0013",
+  "SYNH-0014",
+  "SYNH-0015",
+  "SYNH-0016",
+  "SYNH-0017",
+  "SYNH-0018",
+  "SYNH-0019",
+  "SYNH-0020",
+  "SYNH-0021",
+  "SYNH-0022",
+  "SYNH-0023",
+  "SYNH-0024",
+  "SYNH-0025",
+  "SYNH-0026",
+  "SYNH-0027",
+  "SYNH-0028",
+  "SYNH-0029",
+  "SYNH-0030",
+  "SYNH-0031",
+  "SYNH-0032",
+  "SYNH-0033",
+  "SYNH-0034",
+  "SYNH-0035",
+  "SYNH-0036",
+  "SYNH-0037",
+  "SYNH-0038",
+  "SYNH-0039",
+  "SYNH-0040",
+  "SYNH-0041",
+  "SYNH-0042",
+  "SYNH-0043",
+  "SYNH-0044",
+  "SYNH-0045",
+  "SYNH-0046",
+  "SYNH-0047",
+  "SYNH-0048",
+  "SYNH-0049",
+  "SYNH-0050",
+  "SYNH-0051",
+  "SYNH-0052",
+  "SYNH-0053",
+  "SYNH-0054",
+  "SYNH-0055",
+  "SYNH-0056",
+  "SYNH-0057",
+  "SYNH-0058",
+  "SYNH-0059",
+  "SYNH-0060",
+  "SYNH-0061",
+  "SYNH-0062",
+  "SYNH-0063",
+  "SYNH-0064",
+  "SYNH-0065",
+  "SYNH-0066",
+  "SYNH-0067",
+  "SYNH-0068",
+  "SYNH-0069",
+  "SYNH-0070",
+  "SYNH-0071",
+  "SYNH-0072"
+ ],
+ "task_patient_lists": {
+  "rf_case_agg": [
+   "SYNH-0005",
+   "SYNH-0007",
+   "SYNH-0008",
+   "SYNH-0013",
+   "SYNH-0014",
+   "SYNH-0018",
+   "SYNH-0024",
+   "SYNH-0025",
+   "SYNH-0027",
+   "SYNH-0030",
+   "SYNH-0033",
+   "SYNH-0034",
+   "SYNH-0036",
+   "SYNH-0037",
+   "SYNH-0038",
+   "SYNH-0040",
+   "SYNH-0042",
+   "SYNH-0049",
+   "SYNH-0055",
+   "SYNH-0056",
+   "SYNH-0058",
+   "SYNH-0062",
+   "SYNH-0065",
+   "SYNH-0066",
+   "SYNH-0067",
+   "SYNH-0071"
+  ],
+  "rf_case_agg_rulematched": [
+   "SYNH-0005",
+   "SYNH-0007",
+   "SYNH-0008",
+   "SYNH-0013",
+   "SYNH-0014",
+   "SYNH-0018",
+   "SYNH-0024",
+   "SYNH-0025",
+   "SYNH-0027",
+   "SYNH-0030",
+   "SYNH-0033",
+   "SYNH-0034",
+   "SYNH-0036",
+   "SYNH-0037",
+   "SYNH-0038",
+   "SYNH-0040",
+   "SYNH-0042",
+   "SYNH-0049",
+   "SYNH-0055",
+   "SYNH-0056",
+   "SYNH-0058",
+   "SYNH-0062",
+   "SYNH-0065",
+   "SYNH-0066",
+   "SYNH-0067",
+   "SYNH-0071"
+  ],
+  "rf_case_recall": [
+   "SYNH-0005",
+   "SYNH-0007",
+   "SYNH-0008",
+   "SYNH-0013",
+   "SYNH-0014",
+   "SYNH-0018",
+   "SYNH-0024",
+   "SYNH-0025",
+   "SYNH-0027",
+   "SYNH-0030",
+   "SYNH-0033",
+   "SYNH-0034",
+   "SYNH-0036",
+   "SYNH-0037",
+   "SYNH-0038",
+   "SYNH-0040",
+   "SYNH-0042",
+   "SYNH-0049",
+   "SYNH-0055",
+   "SYNH-0056",
+   "SYNH-0058",
+   "SYNH-0062",
+   "SYNH-0065",
+   "SYNH-0066",
+   "SYNH-0067",
+   "SYNH-0071"
+  ],
+  "rf_fpr": [
+   "SYNH-0001",
+   "SYNH-0002",
+   "SYNH-0003",
+   "SYNH-0004",
+   "SYNH-0006",
+   "SYNH-0009",
+   "SYNH-0010",
+   "SYNH-0011",
+   "SYNH-0012",
+   "SYNH-0014",
+   "SYNH-0015",
+   "SYNH-0016",
+   "SYNH-0017",
+   "SYNH-0019",
+   "SYNH-0020",
+   "SYNH-0021",
+   "SYNH-0022",
+   "SYNH-0023",
+   "SYNH-0026",
+   "SYNH-0028",
+   "SYNH-0029",
+   "SYNH-0030",
+   "SYNH-0031",
+   "SYNH-0032",
+   "SYNH-0035",
+   "SYNH-0038",
+   "SYNH-0039",
+   "SYNH-0041",
+   "SYNH-0043",
+   "SYNH-0044",
+   "SYNH-0045",
+   "SYNH-0046",
+   "SYNH-0047",
+   "SYNH-0048",
+   "SYNH-0049",
+   "SYNH-0050",
+   "SYNH-0051",
+   "SYNH-0052",
+   "SYNH-0053",
+   "SYNH-0054",
+   "SYNH-0056",
+   "SYNH-0057",
+   "SYNH-0059",
+   "SYNH-0060",
+   "SYNH-0061",
+   "SYNH-0062",
+   "SYNH-0063",
+   "SYNH-0064",
+   "SYNH-0067",
+   "SYNH-0068",
+   "SYNH-0069",
+   "SYNH-0070",
+   "SYNH-0071",
+   "SYNH-0072"
+  ],
+  "rf_rule_RF-ACUTE-CHEST-PAIN": [
+   "SYNH-0018",
+   "SYNH-0033",
+   "SYNH-0065"
+  ],
+  "rf_rule_RF-ANAPHYLAXIS": [
+   "SYNH-0005",
+   "SYNH-0038",
+   "SYNH-0066"
+  ],
+  "rf_rule_RF-FAST": [
+   "SYNH-0025",
+   "SYNH-0027",
+   "SYNH-0042",
+   "SYNH-0058"
+  ],
+  "rf_rule_RF-NEWS-AGG5": [
+   "SYNH-0007",
+   "SYNH-0013",
+   "SYNH-0024",
+   "SYNH-0030",
+   "SYNH-0037",
+   "SYNH-0049",
+   "SYNH-0067",
+   "SYNH-0071"
+  ],
+  "rf_rule_RF-NEWS-SINGLE3": [
+   "SYNH-0014",
+   "SYNH-0030",
+   "SYNH-0036",
+   "SYNH-0037",
+   "SYNH-0067"
+  ],
+  "rf_rule_RF-QSOFA": [
+   "SYNH-0024",
+   "SYNH-0034",
+   "SYNH-0040",
+   "SYNH-0049",
+   "SYNH-0062"
+  ],
+  "rf_rule_RF-THUNDERCLAP": [
+   "SYNH-0008",
+   "SYNH-0055",
+   "SYNH-0056"
+  ],
+  "rf_rulematched_dp": [
+   "SYNH-0005",
+   "SYNH-0007",
+   "SYNH-0008",
+   "SYNH-0013",
+   "SYNH-0014",
+   "SYNH-0018",
+   "SYNH-0024",
+   "SYNH-0025",
+   "SYNH-0027",
+   "SYNH-0030",
+   "SYNH-0033",
+   "SYNH-0034",
+   "SYNH-0036",
+   "SYNH-0037",
+   "SYNH-0038",
+   "SYNH-0040",
+   "SYNH-0042",
+   "SYNH-0049",
+   "SYNH-0055",
+   "SYNH-0056",
+   "SYNH-0058",
+   "SYNH-0062",
+   "SYNH-0065",
+   "SYNH-0066",
+   "SYNH-0067",
+   "SYNH-0071"
+  ],
+  "rf_surfaced": [
+   "SYNH-0005",
+   "SYNH-0007",
+   "SYNH-0008",
+   "SYNH-0013",
+   "SYNH-0014",
+   "SYNH-0018",
+   "SYNH-0024",
+   "SYNH-0025",
+   "SYNH-0027",
+   "SYNH-0030",
+   "SYNH-0033",
+   "SYNH-0034",
+   "SYNH-0036",
+   "SYNH-0037",
+   "SYNH-0038",
+   "SYNH-0040",
+   "SYNH-0042",
+   "SYNH-0049",
+   "SYNH-0055",
+   "SYNH-0056",
+   "SYNH-0058",
+   "SYNH-0062",
+   "SYNH-0065",
+   "SYNH-0066",
+   "SYNH-0067",
+   "SYNH-0071"
+  ]
+ },
+ "metrics": [
+  {
+   "id": "rf_case_recall",
+   "item": "Department suggestion",
+   "task": "rf_case_recall",
+   "name": "accuracy",
+   "params": {
+    "estimand": "PRIMARY. Mirrors e1 eval/adapters/protocol.py rf_case_recall: gold-positive DPs (>=1 gold red flag) where the Case Graph fired >=1 alert of any rule. Unit: decision point."
+   },
+   "primary": true
+  },
+  {
+   "id": "rf_rulematched_dp",
+   "item": "Department suggestion",
+   "task": "rf_rulematched_dp",
+   "name": "accuracy",
+   "params": {
+    "estimand": "Same population; caught iff an alert of a rule mapped to a gold rule of that DP fired."
+   },
+   "primary": false
+  },
+  {
+   "id": "rf_case_agg",
+   "item": "Department suggestion",
+   "task": "rf_case_agg",
+   "name": "accuracy",
+   "params": {
+    "estimand": "Unit case: cases with a gold-positive DP; caught iff any such DP has any alert."
+   },
+   "primary": false
+  },
+  {
+   "id": "rf_case_agg_rulematched",
+   "item": "Department suggestion",
+   "task": "rf_case_agg_rulematched",
+   "name": "accuracy",
+   "params": {
+    "estimand": "Unit case: caught iff any gold-positive DP has a rule-matched alert."
+   },
+   "primary": false
+  },
+  {
+   "id": "rf_rule_RF-ACUTE-CHEST-PAIN",
+   "item": "Department suggestion",
+   "task": "rf_rule_RF-ACUTE-CHEST-PAIN",
+   "name": "accuracy",
+   "params": {
+    "estimand": "per-rule recall of RF-ACUTE-CHEST-PAIN: Per S1r rule: gold (DP, rule) pairs where a mapped S4 rule fired (e1 mapping v1 + AGG5 overlay)."
+   },
+   "primary": false
+  },
+  {
+   "id": "rf_rule_RF-ANAPHYLAXIS",
+   "item": "Department suggestion",
+   "task": "rf_rule_RF-ANAPHYLAXIS",
+   "name": "accuracy",
+   "params": {
+    "estimand": "per-rule recall of RF-ANAPHYLAXIS: Per S1r rule: gold (DP, rule) pairs where a mapped S4 rule fired (e1 mapping v1 + AGG5 overlay)."
+   },
+   "primary": false
+  },
+  {
+   "id": "rf_rule_RF-FAST",
+   "item": "Department suggestion",
+   "task": "rf_rule_RF-FAST",
+   "name": "accuracy",
+   "params": {
+    "estimand": "per-rule recall of RF-FAST: Per S1r rule: gold (DP, rule) pairs where a mapped S4 rule fired (e1 mapping v1 + AGG5 overlay)."
+   },
+   "primary": false
+  },
+  {
+   "id": "rf_rule_RF-NEWS-AGG5",
+   "item": "Department suggestion",
+   "task": "rf_rule_RF-NEWS-AGG5",
+   "name": "accuracy",
+   "params": {
+    "estimand": "per-rule recall of RF-NEWS-AGG5: Per S1r rule: gold (DP, rule) pairs where a mapped S4 rule fired (e1 mapping v1 + AGG5 overlay)."
+   },
+   "primary": false
+  },
+  {
+   "id": "rf_rule_RF-NEWS-SINGLE3",
+   "item": "Department suggestion",
+   "task": "rf_rule_RF-NEWS-SINGLE3",
+   "name": "accuracy",
+   "params": {
+    "estimand": "per-rule recall of RF-NEWS-SINGLE3: Per S1r rule: gold (DP, rule) pairs where a mapped S4 rule fired (e1 mapping v1 + AGG5 overlay)."
+   },
+   "primary": false
+  },
+  {
+   "id": "rf_rule_RF-QSOFA",
+   "item": "Department suggestion",
+   "task": "rf_rule_RF-QSOFA",
+   "name": "accuracy",
+   "params": {
+    "estimand": "per-rule recall of RF-QSOFA: Per S1r rule: gold (DP, rule) pairs where a mapped S4 rule fired (e1 mapping v1 + AGG5 overlay)."
+   },
+   "primary": false
+  },
+  {
+   "id": "rf_rule_RF-THUNDERCLAP",
+   "item": "Department suggestion",
+   "task": "rf_rule_RF-THUNDERCLAP",
+   "name": "accuracy",
+   "params": {
+    "estimand": "per-rule recall of RF-THUNDERCLAP: Per S1r rule: gold (DP, rule) pairs where a mapped S4 rule fired (e1 mapping v1 + AGG5 overlay)."
+   },
+   "primary": false
+  },
+  {
+   "id": "rf_fpr",
+   "item": "Department suggestion",
+   "task": "rf_fpr",
+   "name": "accuracy",
+   "params": {
+    "estimand": "Gold-negative DPs with >=1 alert of any rule (false-positive rate)."
+   },
+   "primary": false
+  },
+  {
+   "id": "rf_surfaced",
+   "item": "Department suggestion",
+   "task": "rf_surfaced",
+   "name": "accuracy",
+   "params": {
+    "estimand": "Gold-positive DPs where an alert fired or a gold rule was not_evaluated (input gap surfaced). Silent escalation failure = 1 - surfaced: the screen evaluated, raised nothing, said nothing."
+   },
+   "primary": false
+  }
+ ],
+ "comparators": [],
+ "thresholds": [
+  {
+   "metric": "rf_case_recall",
+   "op": ">=",
+   "value": 1.0,
+   "rule": "point"
+  }
+ ],
+ "bootstrap": {
+  "n_boot": 2000,
+  "seed": 20260929,
+  "ci_level": 0.95,
+  "method": "percentile"
+ },
+ "expert_review": {
+  "done": false,
+  "n_reviewers": 0
+ }
+}
