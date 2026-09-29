@@ -204,6 +204,38 @@ describe("CareReview", () => {
     expect(container.textContent ?? "").not.toMatch(CLAIMS);
   });
 
+  it("filters the edit picker: matches show, non-matching unselected rows hide, selected rows stay", async () => {
+    const vocab: Vocabulary = {
+      ...VOCAB,
+      next_information: [
+        ...VOCAB.next_information,
+        { code: "NI-LAB-CULTURE", display: "Blood culture", display_th: "เพาะเชื้อ" },
+      ],
+    };
+    render(<CareReview assessment={ABSTAINED} vocabulary={vocab} onReview={vi.fn()} />);
+    const row = (re: RegExp) => screen.getByLabelText(re).closest("label") as HTMLElement;
+    await userEvent.click(screen.getByLabelText(/Repeat vital signs/)); // selected, does not match the query
+    await userEvent.type(document.getElementById("edit-ni-filter") as HTMLElement, "lactate");
+    expect(row(/Serum lactate/)).toBeVisible();
+    expect(row(/Blood culture/)).not.toBeVisible();
+    expect(row(/Repeat vital signs/)).toBeVisible();
+    // Every checkbox stays in the DOM and the count reflects the selection.
+    expect(screen.getByLabelText(/Blood culture/)).toBeInTheDocument();
+    expect(screen.getByText("เลือก 1/5")).toBeInTheDocument();
+  });
+
+  it("keeps Reject outside any details, and puts acknowledgements between red flags and the suggestion", () => {
+    render(<CareReview assessment={RED} vocabulary={VOCAB} onReview={vi.fn()} />);
+    const reject = screen.getByRole("button", { name: "Reject suggestion" });
+    expect(reject.closest("details")).toBeNull();
+    expect(screen.getByLabelText("Reason for rejecting").closest("details")).toBeNull();
+    const red = screen.getByTestId("redflag-section");
+    const ack = screen.getByTestId("acknowledgements");
+    const sugg = screen.getByTestId("suggestion-section");
+    expect(position(red, ack)).toBe(true);
+    expect(position(ack, sugg)).toBe(true);
+  });
+
   it("shows the confirmed state after review", () => {
     const done: Assessment = {
       ...RED,

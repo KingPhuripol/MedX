@@ -250,6 +250,73 @@ export default function CareReview({
         </div>
       </Section>
 
+      {!reviewed && (
+        <Section title="Physician review" titleId="review-title">
+          <div className={styles.stack}>
+            <fieldset data-testid="acknowledgements" className={styles.ack}>
+              <legend>Acknowledge before reviewing</legend>
+              {a.alerts.map((x) => (
+                <label
+                  key={x.rule_id}
+                  htmlFor={`ack-${x.rule_id}`}
+                  className={styles.checkRow}
+                >
+                  <input
+                    type="checkbox"
+                    id={`ack-${x.rule_id}`}
+                    checked={!!acked[x.rule_id]}
+                    onChange={(e) =>
+                      setAcked({ ...acked, [x.rule_id]: e.target.checked })
+                    }
+                  />
+                  <span>I have seen alert {x.rule_id}</span>
+                </label>
+              ))}
+              {needsScreeningAck && (
+                <label htmlFor="ack-screening" className={styles.checkRow}>
+                  <input
+                    type="checkbox"
+                    id="ack-screening"
+                    checked={screeningAck}
+                    onChange={(e) => setScreeningAck(e.target.checked)}
+                  />
+                  <span>I have seen that {scr.banner?.toLowerCase()}</span>
+                </label>
+              )}
+              {!a.alerts.length && !needsScreeningAck && (
+                <p>Nothing to acknowledge.</p>
+              )}
+            </fieldset>
+            {!allAcked && (
+              <p id="ack-hint" className="muted">
+                Acknowledge every red-flag alert and the screening banner to
+                enable the review buttons.
+              </p>
+            )}
+          </div>
+        </Section>
+      )}
+
+      {!reviewed && suggested && (
+        <ActionBar
+          summary={
+            <span className={styles.ackSummary}>
+              Acknowledged {ackCount}/{ackTotal}
+            </span>
+          }
+        >
+          <form id="confirm-form" onSubmit={(e) => submit(e, "confirm", {})} />
+          <Button
+            type="submit"
+            form="confirm-form"
+            disabled={blocked}
+            aria-describedby={hint}
+          >
+            Confirm suggestion
+          </Button>
+        </ActionBar>
+      )}
+
       <Section
         title={`Suggestion (${a.status})`}
         titleId="suggestion-title"
@@ -373,79 +440,6 @@ export default function CareReview({
         </Section>
       ) : (
         <>
-          <Section title="Physician review" titleId="review-title">
-            <div className={styles.stack}>
-              <fieldset data-testid="acknowledgements" className={styles.ack}>
-                <legend>Acknowledge before reviewing</legend>
-                {a.alerts.map((x) => (
-                  <label
-                    key={x.rule_id}
-                    htmlFor={`ack-${x.rule_id}`}
-                    className={styles.checkRow}
-                  >
-                    <input
-                      type="checkbox"
-                      id={`ack-${x.rule_id}`}
-                      checked={!!acked[x.rule_id]}
-                      onChange={(e) =>
-                        setAcked({ ...acked, [x.rule_id]: e.target.checked })
-                      }
-                    />
-                    <span>I have seen alert {x.rule_id}</span>
-                  </label>
-                ))}
-                {needsScreeningAck && (
-                  <label htmlFor="ack-screening" className={styles.checkRow}>
-                    <input
-                      type="checkbox"
-                      id="ack-screening"
-                      checked={screeningAck}
-                      onChange={(e) => setScreeningAck(e.target.checked)}
-                    />
-                    <span>I have seen that {scr.banner?.toLowerCase()}</span>
-                  </label>
-                )}
-                {!a.alerts.length && !needsScreeningAck && (
-                  <p>Nothing to acknowledge.</p>
-                )}
-              </fieldset>
-              {!allAcked && (
-                <p id="ack-hint" className="muted">
-                  Acknowledge every red-flag alert and the screening banner to
-                  enable the review buttons.
-                </p>
-              )}
-              {error && (
-                <Notice tone="critical" role="alert">
-                  {error}
-                </Notice>
-              )}
-            </div>
-          </Section>
-
-          {suggested && (
-            <ActionBar
-              summary={
-                <span className={styles.ackSummary}>
-                  Acknowledged {ackCount}/{ackTotal}
-                </span>
-              }
-            >
-              <form
-                id="confirm-form"
-                onSubmit={(e) => submit(e, "confirm", {})}
-              />
-              <Button
-                type="submit"
-                form="confirm-form"
-                disabled={blocked}
-                aria-describedby={hint}
-              >
-                Confirm suggestion
-              </Button>
-            </ActionBar>
-          )}
-
           <Section title="Edit or reject" titleId="alt-title">
             <div className={styles.stack}>
               <details className={styles.alt} open={!suggested}>
@@ -533,6 +527,11 @@ export default function CareReview({
               </div>
             </div>
           </Section>
+          {error && (
+            <Notice tone="critical" role="alert">
+              {error}
+            </Notice>
+          )}
         </>
       )}
     </section>
