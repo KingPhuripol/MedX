@@ -150,7 +150,9 @@ export default function TriageReview({ assessment, departments, onReview }: Prop
         )}
       </Section>
 
-      <ScreeningBlock screening={a.screening} />
+      <div className={css.screeningCard}>
+        <ScreeningBlock screening={a.screening} />
+      </div>
 
       <Section
         title={`Department — ${OUTPUT_LABEL.toLowerCase()}`}
@@ -253,7 +255,7 @@ export default function TriageReview({ assessment, departments, onReview }: Prop
                 Save edited department
               </Button>
             </form>
-            <form className={css.actionCard} onSubmit={(e) => submit(e, "reject", { reason: rejectReason })}>
+            <form className={`${css.actionCard} ${css.rejectCard}`} onSubmit={(e) => submit(e, "reject", { reason: rejectReason })}>
               <h3>Reject</h3>
               <Field label="Reason for rejecting" htmlFor="reject-reason">
                 <textarea
