@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import DemoLogin, { PUBLIC_DEMO } from "@/components/DemoLogin";
 import LoginForm from "@/components/LoginForm";
 
 export const metadata: Metadata = { title: "Sign in" };
@@ -16,7 +17,7 @@ export default function LoginPage() {
       </div>
       <section className="cover-form" aria-labelledby="login-title">
         <h1 id="login-title">Sign in</h1>
-        <LoginForm />
+        {PUBLIC_DEMO ? <DemoLogin /> : <LoginForm />}
       </section>
     </div>
   );

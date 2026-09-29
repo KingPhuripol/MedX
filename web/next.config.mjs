@@ -8,7 +8,9 @@ const nextConfig = {
   // Keep the dev overlay button out of keyboard focus order and screenshots.
   devIndicators: false,
   async rewrites() {
-    return [{ source: "/api/:path*", destination: `${API_ORIGIN}/api/:path*` }];
+    // Slice d1: on Vercel, /api/* goes to the FastAPI Python function api/index.py (it sees the original path).
+    const destination = process.env.VERCEL === "1" ? "/api/index" : `${API_ORIGIN}/api/:path*`;
+    return [{ source: "/api/:path*", destination }];
   },
 };
 
