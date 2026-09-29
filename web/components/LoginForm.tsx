@@ -23,12 +23,12 @@ export default function LoginForm() {
       });
       if (resp.ok) {
         const data = await resp.json();
-        router.push(data.user.home);
+        router.push("/app/queue");
         return;
       }
-      setError(resp.status === 401 ? "Invalid username or password." : "Sign-in failed. Please try again.");
+      setError(resp.status === 401 ? "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" : "เข้าสู่ระบบไม่สำเร็จ โปรดลองอีกครั้ง");
     } catch {
-      setError("Sign-in service unavailable. Please try again.");
+      setError("บริการเข้าสู่ระบบไม่พร้อมใช้งาน โปรดลองอีกครั้ง");
     } finally {
       setBusy(false);
     }
@@ -37,7 +37,7 @@ export default function LoginForm() {
   return (
     <form onSubmit={onSubmit} aria-describedby={error ? "login-error" : undefined} noValidate>
       <div className="field">
-        <label htmlFor="username">Username</label>
+        <label htmlFor="username">ชื่อผู้ใช้สังเคราะห์</label>
         <input
           id="username"
           name="username"
@@ -48,7 +48,7 @@ export default function LoginForm() {
         />
       </div>
       <div className="field">
-        <label htmlFor="password">Password</label>
+        <label htmlFor="password">รหัสผ่าน</label>
         <input
           id="password"
           name="password"
@@ -65,7 +65,7 @@ export default function LoginForm() {
         </p>
       )}
       <button type="submit" disabled={busy}>
-        Sign in
+        {busy ? "กำลังเข้าสู่ระบบ…" : "เข้าสู่ระบบเดโม"}
       </button>
     </form>
   );

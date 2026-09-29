@@ -13,7 +13,7 @@ export default defineConfig({
   use: { baseURL: BASE_URL, trace: "retain-on-failure" },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } } }],
   webServer: {
-    command: `make -C .. dev WEB_PORT=${WEB_PORT} API_PORT=${API_PORT}`,
+    command: `DEMO_MODE=1 make -C .. dev WEB_PORT=${WEB_PORT} API_PORT=${API_PORT}`,
     url: `${BASE_URL}/login`,
     reuseExistingServer: true,
     timeout: 120_000,

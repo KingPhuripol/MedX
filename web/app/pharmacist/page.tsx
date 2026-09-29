@@ -1,9 +1,2 @@
-import type { Metadata } from "next";
-
-import RoleHome from "@/components/RoleHome";
-
-export const metadata: Metadata = { title: "Pharmacist home" };
-
-export default function PharmacistHomePage() {
-  return <RoleHome role="pharmacist" />;
-}
+import { redirect } from "next/navigation";
+export default function LegacyPharmacist(){redirect("/app/queue")}

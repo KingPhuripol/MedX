@@ -1,15 +1,2 @@
-import type { Metadata } from "next";
-
-import RoleGuard from "@/components/RoleGuard";
-import TriageReviewLoader from "@/components/TriageReviewLoader";
-
-export const metadata: Metadata = { title: "Triage review" };
-
-export default async function TriageReviewPage({ params }: { params: Promise<{ assessmentId: string }> }) {
-  const { assessmentId } = await params;
-  return (
-    <RoleGuard role="nurse">
-      <TriageReviewLoader assessmentId={assessmentId} />
-    </RoleGuard>
-  );
-}
+import { redirect } from "next/navigation";
+export default async function LegacyTriageReview({params}:{params:Promise<{assessmentId:string}>}){const {assessmentId}=await params;redirect(`/app/cases/SYN-2026-0017/triage?assessment=${encodeURIComponent(assessmentId)}`)}

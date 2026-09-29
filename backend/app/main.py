@@ -10,6 +10,7 @@ from . import auth, voice
 from .care import router as care_router
 from .config import Settings
 from .db import create_schema, make_engine
+from .demo import router as demo_router
 from .gateway import build_provider
 from .gateway import router as gateway_router
 from .triage import router as triage_router
@@ -42,4 +43,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(voice.router)
     app.include_router(triage_router.router)
     app.include_router(care_router.router)
+    app.include_router(demo_router.router)
     return app
