@@ -67,6 +67,7 @@ export type QueueCase = {
   case_id: string;
   display_name: string;
   view_only: boolean;
+  data_class?: string;
   safety_level: "critical" | "none";
   safety_label: string;
   alert_count: number;

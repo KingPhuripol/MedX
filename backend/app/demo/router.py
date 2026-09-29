@@ -128,7 +128,7 @@ def _case_rows() -> list[dict]:
 
 def _fixture_case(fx: dict, run: dict, run_id: str, request: Request, user: CurrentUser) -> dict:
     flags = case_engines.run_redflags(fx)
-    pharma = case_engines.run_pharma(fx, get_engine(request))
+    pharma = case_engines.run_pharma(fx, get_engine(request), user)
     demo = fx["demographics"]
     return {
         "case_id": fx["case_id"], "display_name": fx["display_name"], "data_class": "synthetic", "stage": "view_only",
@@ -284,7 +284,7 @@ def medications(run_id: str, case_id: str, request: Request, user: CurrentUser =
         fx = _fixture(case_id)
         if fx is None:
             raise HTTPException(status_code=404, detail="case not found")
-        payload = case_engines.medications_payload(fx, case_engines.run_pharma(fx, get_engine(request)))
+        payload = case_engines.medications_payload(fx, case_engines.run_pharma(fx, get_engine(request), user))
         return payload | {"case_id": case_id, "data_class": "synthetic", "run_id": run_id, "actor": {"id": user.id, "role": user.role.value}, "timestamp": fx["decision_time"], "version": 1, "view_only": True}
     reviewed = [e for e in _events(get_engine(request), run_id) if e["event_type"] == "medication.reviewed"]
     data = json.loads(json.dumps(MEDICATIONS))

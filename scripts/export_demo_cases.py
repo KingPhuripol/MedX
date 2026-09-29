@@ -148,6 +148,8 @@ def main() -> None:
         cases[snap["case_id"]] = build_case(snap)
     feats = {cid: features(c, engine) for cid, c in cases.items()}
     chosen = select(cases, feats)
+    for n, (c, _) in enumerate(chosen):  # distinct from the workflow case id SYN-2026-0017
+        cases[c]["display_name"] = f"เคสตัวอย่าง {chr(ord('A') + n)}"
     out = {
         "provenance": {
             "data_class": "synthetic", "generator": "scripts/export_demo_cases.py", "script_version": SCRIPT_VERSION,

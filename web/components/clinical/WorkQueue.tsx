@@ -162,13 +162,12 @@ export default function WorkQueue() {
           <StatusChip tone="critical" icon={<AlertOctagon size={16} />}>
             พบสัญญาณเร่งด่วน
           </StatusChip>
+        ) : c.not_evaluated_count ? (
+          <StatusChip tone="warning" icon={<Clock size={16} />}>
+            ยังประเมินไม่ครบ ({c.not_evaluated_count} กฎ)
+          </StatusChip>
         ) : (
-          <>
-            <StatusChip tone="warning" icon={<Clock size={16} />}>
-              ไม่พบสัญญาณจากข้อมูลที่มี
-            </StatusChip>
-            {c.not_evaluated_count ? <div className="muted">{c.not_evaluated_count} กฎยังประเมินไม่ได้</div> : null}
-          </>
+          <StatusChip tone="neutral">ไม่พบสัญญาณจากข้อมูลที่มี</StatusChip>
         ),
     },
     {
@@ -176,9 +175,14 @@ export default function WorkQueue() {
       header: "เคส",
       render: (c) => (
         <>
-          <strong className="ui-nowrap">{c.case_id}</strong>
+          <strong>{c.view_only ? c.display_name : c.case_id}</strong>{" "}
+          {c.view_only ? (
+            <>
+              <small className="muted">{c.case_id}</small> <StatusChip tone="info">ดูข้อมูลอย่างเดียว</StatusChip>
+            </>
+          ) : null}
           <div className="muted">
-            {c.sex} · {c.age} ปี · {c.view_only ? "ตัวอย่างสำหรับดูข้อมูล" : "เดโมครบขั้นตอน"}
+            {c.sex} · {c.age} ปี{c.view_only ? "" : " · เดโมครบขั้นตอน"}
           </div>
           <div>{c.chief_complaint}</div>
         </>

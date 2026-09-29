@@ -235,6 +235,11 @@ test("U7 queue lists all 7 cases red flags first; fixture overviews match the en
   const order = listed.map((c) => c.safety_level === "critical");
   expect(order).toEqual([...order].sort((a, b) => Number(b) - Number(a))); // every critical row first
   for (let i = 0; i < 7; i++) await expect(rows.nth(i)).toContainText(listed[i].case_id);
+  for (const c of listed as unknown as { case_id: string; view_only: boolean; alert_count: number; not_evaluated_count: number }[]) {
+    if (c.view_only) await expect(rows.filter({ hasText: c.case_id })).toContainText("ดูข้อมูลอย่างเดียว");
+    if (c.view_only && !c.alert_count && c.not_evaluated_count)
+      await expect(rows.filter({ hasText: c.case_id })).toContainText(`ยังประเมินไม่ครบ (${c.not_evaluated_count} กฎ)`);
+  }
 
   let sawUnknownAllergy = false,
     sawMissingVital = false,
@@ -264,7 +269,12 @@ test("U7 queue lists all 7 cases red flags first; fixture overviews match the en
     } else {
       await expect(banner).toHaveAttribute("data-level", "none");
       await expect(banner).not.toContainText("ปลอดภัย");
+      if (rf.not_evaluated.length) {
+        await expect(page.getByTestId("not-evaluated-notice")).toContainText(`ยังประเมินไม่ครบ (${rf.not_evaluated.length}`);
+      }
     }
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("เคสตัวอย่าง");
+    await expect(page.getByText("view_only")).toHaveCount(0);
     if (rf.not_evaluated.length) {
       sawNotEvaluated = true;
       await expect(page.getByTestId("engine-not-evaluated")).toContainText(rf.not_evaluated_text);

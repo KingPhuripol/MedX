@@ -130,12 +130,12 @@ def med_snapshot(case: dict) -> MedSnapshot:
     })
 
 
-def run_pharma(case: dict, engine) -> dict:
+def run_pharma(case: dict, engine, user=None) -> dict:
     """Mock provider only, whatever the app's configured provider is; gateway calls are audited on ``engine``."""
     provider = build_provider("mock", Settings())
 
     def invoke(req: GatewayRequest) -> GatewayResponse:
-        return invoke_gateway(engine, provider, req, request_id="demo-fixture", actor_id=None, actor_role="system")
+        return invoke_gateway(engine, provider, req, request_id="demo-fixture", actor_id=getattr(user, "id", None), actor_role=user.role.value if user else "system")
 
     return pharma_pipeline.reconcile(med_snapshot(case), invoke, "rules_only")
 

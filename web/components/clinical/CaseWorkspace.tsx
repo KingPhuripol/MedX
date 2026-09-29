@@ -219,6 +219,7 @@ export default function CaseWorkspace({ caseId, section }: { caseId: string; sec
               Synthetic
             </span>
             <span className="muted">{data.case_id}</span>
+            {data.view_only ? <StatusChip tone="info">ดูข้อมูลอย่างเดียว</StatusChip> : null}
           </div>
           <h1>{data.display_name}</h1>
           <p className="muted">
@@ -266,6 +267,25 @@ export default function CaseWorkspace({ caseId, section }: { caseId: string; sec
           <p>
             <strong>{data.view_only_label}</strong>
           </p>
+        </Notice>
+      ) : null}
+      {viewOnly && !critical && data.engines?.red_flag.not_evaluated.length ? (
+        <Notice
+          tone="warning"
+          icon={<Info size={24} aria-hidden="true" />}
+          title={`ยังประเมินไม่ครบ (${data.engines.red_flag.not_evaluated.length} จาก ${data.engines.red_flag.rules_total} กฎ)`}
+          data-testid="not-evaluated-notice"
+        >
+          <p>
+            <strong>{data.engines.red_flag.not_evaluated_text}</strong> — ไม่ใช่ข้อสรุปว่าไม่มีความเสี่ยง
+          </p>
+          <ul>
+            {data.engines.red_flag.not_evaluated.map((n) => (
+              <li key={n.rule_id}>
+                {n.rule_id} {n.name_th}
+              </li>
+            ))}
+          </ul>
         </Notice>
       ) : null}
       <nav className="case-tabs" aria-label="ส่วนของเคส">
