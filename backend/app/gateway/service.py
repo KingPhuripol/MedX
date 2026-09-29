@@ -3,6 +3,7 @@
 Keeps one definition of: canonical request hash, provider-exception containment, output only on
 ``ok``, and the audit ``details`` fields (hashes/references only, never raw inputs).
 ``invoke_audited`` writes exactly one ``gateway.invoke`` audit row per call (Voice Agent, router);
+``invoke_gateway`` is the same audited path keyed by actor id/role (Pharma Agent, slice s5);
 ``invoke_provider`` + ``audit_details`` serve callers that write their own audit row (Case Graph).
 """
 
@@ -52,6 +53,29 @@ def audit_details(request: GatewayRequest, response: GatewayResponse) -> dict[st
     }
 
 
+def invoke_gateway(
+    engine: Engine,
+    provider: Provider,
+    body: GatewayRequest,
+    *,
+    request_id: str,
+    actor_id: int | None,
+    actor_role: str | None,
+) -> GatewayResponse:
+    response = invoke_provider(provider, body)
+    write_audit(
+        engine,
+        action="gateway.invoke",
+        target=f"task/{body.task}",
+        outcome=response.status,
+        request_id=request_id,
+        actor_id=actor_id,
+        actor_role=actor_role,
+        details=audit_details(body, response),
+    )
+    return response
+
+
 def invoke_audited(
     engine: Engine,
     provider: Provider,
@@ -60,18 +84,14 @@ def invoke_audited(
     *,
     request_id: str = "in-process",
 ) -> GatewayResponse:
-    response = invoke_provider(provider, request)
-    write_audit(
+    return invoke_gateway(
         engine,
-        action="gateway.invoke",
-        target=f"task/{request.task}",
-        outcome=response.status,
+        provider,
+        request,
         request_id=request_id,
         actor_id=actor.id if actor else None,
         actor_role=actor.role.value if actor else None,
-        details=audit_details(request, response),
     )
-    return response
 
 
 # slice s4 callers use service.invoke; same audited path.

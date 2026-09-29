@@ -10,6 +10,7 @@ import casegraph.single_prompt  # noqa: F401  (registers casegraph.single_prompt
 import app.triage.department  # noqa: F401  (registers triage.department.v1)
 import app.voice  # noqa: F401  (registers voice.intake_extract, voice.symptom_extract.v1)
 import app.care.mock_rules  # noqa: F401  (registers care.suggest.v1, slice int2)
+import app.pharma  # noqa: F401  (registers pharma.extract.v2, pharma.phrase.v1, slice s5 via merge into int2)
 from app.config import Settings
 from app.gateway import MOCK_LABEL, GatewayRequest, build_provider, mock_tasks
 from app.gateway.contract import canonical_sha256
@@ -53,7 +54,7 @@ def test_single_mock_registry():
     assert tables == ["backend/app/gateway/mock_tasks.py:_REGISTRY"]
     registered = mock_tasks.registered()
     for task in ("voice.intake_extract", "voice.symptom_extract.v1", "triage.department.v1",
-                 "casegraph.single_prompt.v1", "care.suggest.v1"):
+                 "casegraph.single_prompt.v1", "care.suggest.v1", "pharma.extract.v2", "pharma.phrase.v1"):
         assert task in registered, task
 
 
@@ -86,3 +87,19 @@ def test_mock_label_every_task():
     req = GatewayRequest(task="unregistered.echo", inputs={}, data_class="synthetic")
     res = provider.invoke(req, canonical_sha256(req))
     assert res.output["label"] == MOCK_LABEL and res.model_version == "mock-0.1.0"
+
+
+def test_pharma_outputs_accept_only_the_mock_label():
+    """Pharma output schemas stay extra="forbid": the top-level MOCK label is the only addition accepted."""
+    from pydantic import ValidationError
+
+    from app.pharma.models import ExtractOutput, PhraseOutput
+
+    assert ExtractOutput.model_validate({"entries": [], "label": MOCK_LABEL}).label == MOCK_LABEL
+    assert PhraseOutput.model_validate({"phrasings": [], "label": MOCK_LABEL}).label == MOCK_LABEL
+    assert ExtractOutput.model_validate({"entries": []}).label is None
+    for bad in ({"entries": [], "label": "verified"}, {"entries": [], "extra": 1}):
+        with pytest.raises(ValidationError):
+            ExtractOutput.model_validate(bad)
+    with pytest.raises(ValidationError):
+        PhraseOutput.model_validate({"phrasings": [], "label": "clinical"})

@@ -1,0 +1,27 @@
+{
+ "metadata": {
+  "version": "s5-cross-reactivity-1.0.0",
+  "curated_on": "2026-09-26",
+  "note": "Curated synthetic-prototype table. Pairs are symmetric. Every row is pending pharmacist review and must be signed off before any non-synthetic use."
+ },
+ "pairs": [
+  {
+   "id": "xr-001",
+   "allergen": {"kind": "class", "id": "penicillin"},
+   "drug": {"kind": "class", "id": "cephalosporin"},
+   "symmetric": true,
+   "note": "Possible penicillin-cephalosporin cross-reactivity (side-chain similarity, e.g. aminopenicillins and cephalexin).",
+   "citation": "Khan DA, Banerji A, Blumenthal KG, et al. Drug allergy: A 2022 practice parameter update. J Allergy Clin Immunol. 2022;150(6):1333-1393. doi:10.1016/j.jaci.2022.08.028",
+   "clinical_review_status": "pending_pharmacist"
+  },
+  {
+   "id": "xr-002",
+   "allergen": {"kind": "ingredient", "id": "aspirin"},
+   "drug": {"kind": "class", "id": "nsaid"},
+   "symmetric": true,
+   "note": "Cross-reactive NSAID hypersensitivity (COX-1 inhibition) between aspirin and non-selective NSAIDs.",
+   "citation": "Kowalski ML, Asero R, Bavbek S, et al. Classification and practical approach to the diagnosis and management of hypersensitivity to nonsteroidal anti-inflammatory drugs. Allergy. 2013;68(10):1219-1232. doi:10.1111/all.12260",
+   "clinical_review_status": "pending_pharmacist"
+  }
+ ]
+}

@@ -6,13 +6,14 @@ PY := $(VENV)/bin/python
 API_PORT ?= 8000
 WEB_PORT ?= 3000
 PG_URL = postgresql+psycopg://frontdoor:$${POSTGRES_PASSWORD:-frontdoor_dev_only}@127.0.0.1:55432/frontdoor
+API_ORIGIN ?= http://127.0.0.1:$(API_PORT)
 export PYTHONPATH := $(CURDIR)/backend:$(CURDIR)
 # Ports are overridable (slice s4 uses API_PORT=8104 WEB_PORT=3104); defaults unchanged.
 API_PORT ?= 8000
 WEB_PORT ?= 3000
 export API_PORT WEB_PORT
 
-.PHONY: install test dev e2e test-pg clean data audit eval-voice research-dry-run triage-eval eval-e1-dev eval-e1-test eval-i2-dev eval-i2-test care-eval
+.PHONY: install test dev e2e e2e-pharma pharma-eval test-pg clean data audit eval-voice research-dry-run triage-eval eval-e1-dev eval-e1-test eval-i2-dev eval-i2-test care-eval
 
 SEED ?= 20260926
 OUT ?= data/synthetic/v1
@@ -46,11 +47,20 @@ dev: install
 	$(PY) -m app.seed || exit 1; \
 	$(VENV)/bin/uvicorn --factory app.main:create_app --host 127.0.0.1 --port $(API_PORT) & API_PID=$$!; \
 	trap 'kill $$API_PID 2>/dev/null' EXIT INT TERM; \
-	cd web && API_ORIGIN=http://127.0.0.1:$(API_PORT) npx next dev -H 127.0.0.1 -p $(WEB_PORT)
+	cd web && API_ORIGIN=$(API_ORIGIN) npx next dev -H 127.0.0.1 -p $(WEB_PORT)
 
 ## Browser tests (Playwright) against `make dev` (started automatically if not running).
 e2e: install
 	cd web && npx playwright install chromium && WEB_PORT=$(WEB_PORT) API_PORT=$(API_PORT) npx playwright test
+
+## Pharma Agent (s5): inject + evaluate both modes -> slices/s5/eval/{results.json,injection_log.jsonl}.
+pharma-eval: install
+	$(PY) -m app.pharma.eval.run_eval --out slices/s5/eval
+
+## Pharma page browser tests (slice ports 8105/3105; servers started automatically if not running).
+e2e-pharma: install
+	cd web && npx playwright install chromium && \
+	API_PORT=8105 WEB_PORT=3105 npx playwright test e2e/pharma.spec.ts e2e/pharma-a11y.spec.ts
 
 ## Optional: audit append-only on docker-compose PostgreSQL. Skips if Docker is unavailable.
 test-pg: install

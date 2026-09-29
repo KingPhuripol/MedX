@@ -6,7 +6,7 @@ import json
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import Engine
+from sqlalchemy import Connection, Engine
 
 from .db import audit_events
 
@@ -29,15 +29,34 @@ def write_audit(
     """Insert one audit row. Callers must pass references/hashes only, never raw inputs,
     passwords, or tokens."""
     with engine.begin() as conn:
-        conn.execute(
-            audit_events.insert().values(
-                ts_utc=utc_now_iso(),
-                actor_id=actor_id,
-                actor_role=actor_role,
-                action=action,
-                target=target,
-                outcome=outcome,
-                details_json=json.dumps(details or {}, sort_keys=True),
-                request_id=request_id,
-            )
+        insert_audit(
+            conn, action=action, target=target, outcome=outcome, request_id=request_id,
+            actor_id=actor_id, actor_role=actor_role, details=details,
         )
+
+
+def insert_audit(
+    conn: Connection,
+    *,
+    action: str,
+    target: str,
+    outcome: str,
+    request_id: str,
+    actor_id: int | None = None,
+    actor_role: str | None = None,
+    details: dict[str, Any] | None = None,
+) -> None:
+    """Insert one audit row on the caller's connection, inside the caller's transaction, so a
+    record and its audit row commit (or roll back) together. Same rules as ``write_audit``."""
+    conn.execute(
+        audit_events.insert().values(
+            ts_utc=utc_now_iso(),
+            actor_id=actor_id,
+            actor_role=actor_role,
+            action=action,
+            target=target,
+            outcome=outcome,
+            details_json=json.dumps(details or {}, sort_keys=True),
+            request_id=request_id,
+        )
+    )

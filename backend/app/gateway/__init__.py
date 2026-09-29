@@ -13,7 +13,7 @@ from .adapters.mock import MOCK_LABEL, MockProvider
 from .adapters.openai_compatible import OpenAICompatibleAdapter
 from .contract import CONTRACT_VERSION, DataClass, GatewayRequest, GatewayResponse
 from .provider import Provider, ProviderResult
-from .service import invoke_audited
+from .service import invoke_audited, invoke_gateway
 
 
 def build_provider(name: str, settings: Settings, transport: httpx.BaseTransport | None = None) -> Provider:
@@ -41,5 +41,6 @@ __all__ = [
     "ProviderResult",
     "build_provider",
     "invoke_audited",
+    "invoke_gateway",
     "mock_tasks",
 ]
