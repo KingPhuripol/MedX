@@ -4,6 +4,12 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 
 import RoleGuard from "@/components/RoleGuard";
+import { Button } from "@/components/ui/button";
+import Field from "@/components/ui/Field";
+import PageHeader from "@/components/ui/PageHeader";
+import Section from "@/components/ui/Section";
+import StatusChip from "@/components/ui/StatusChip";
+import { formatThaiTime } from "@/lib/demo";
 import {
   NLM_ATTRIBUTION,
   NOTICE_LABELS,
@@ -42,8 +48,7 @@ function fieldStatusText(issue: Issue): string {
 
 function ScopeSection() {
   return (
-    <section aria-labelledby="scope-title" className="pharma-scope" data-testid="scope">
-      <h2 id="scope-title">Scope of this check</h2>
+    <Section title="Scope of this check" titleId="scope-title" data-testid="scope" className="pharma-scope">
       <p>{SCOPE_COMPARED}</p>
       <p>Not checked:</p>
       <ul>
@@ -52,8 +57,14 @@ function ScopeSection() {
         ))}
       </ul>
       <p>{SCOPE_READING}</p>
-    </section>
+    </Section>
   );
+}
+
+function statusTone(status: string): "info" | "success" | "neutral" {
+  if (status === "open") return "info";
+  if (status === "confirmed") return "success";
+  return "neutral";
 }
 
 function AllergyBasis({ issue }: { issue: Issue }) {
@@ -126,11 +137,16 @@ function IssueCard({
   return (
     <article className="issue" aria-labelledby={titleId} data-severity={issue.severity} data-type={issue.type}>
       <h3 id={titleId}>{title}</h3>
+      <p className="issue-chips">
+        <StatusChip tone="neutral">Priority: {issue.severity}</StatusChip>
+        <StatusChip tone={statusTone(issue.status)}>
+          Status: <span data-testid="issue-status">{issue.status}</span>
+        </StatusChip>
+        {issue.unverifiable && <StatusChip tone="warning">Not verifiable: units not comparable</StatusChip>}
+        {issue.possible_substitution && <StatusChip tone="neutral">Possible same-class substitution</StatusChip>}
+      </p>
       <p className="issue-meta">
-        Priority: {issue.severity} · Status: <strong data-testid="issue-status">{issue.status}</strong> · Rule{" "}
-        {issue.rule_id}
-        {issue.unverifiable ? " · units not comparable" : ""}
-        {issue.possible_substitution ? " · possible same-class substitution" : ""}
+        Rule {issue.rule_id}
         {issue.type === "missing_field" && issue.field ? ` · ${issue.field} ${fieldStatusText(issue)} in the first source listed` : ""}
       </p>
       <AllergyBasis issue={issue} />
@@ -138,6 +154,7 @@ function IssueCard({
       <p className="phrasing-label">
         {PHRASING_LABEL} (phrasing: {issue.phrasing.source}, {issue.phrasing.provider})
       </p>
+      <div className="ui-table-scroll sources-scroll">
       <table className="sources">
         <caption>Conflicting sources for {title}</caption>
         <thead>
@@ -166,11 +183,12 @@ function IssueCard({
           ))}
         </tbody>
       </table>
+      </div>
       {issue.status === "open" ? (
         <div className="decision">
-          <button type="button" onClick={() => onConfirm(issue)} disabled={busy} aria-describedby={titleId}>
+          <Button type="button" onClick={() => onConfirm(issue)} disabled={busy} aria-describedby={titleId}>
             Confirm
-          </button>
+          </Button>
           <div className="field">
             <label htmlFor={reasonId}>Reason for dismissing</label>
             <textarea
@@ -187,9 +205,9 @@ function IssueCard({
               </p>
             )}
           </div>
-          <button type="button" onClick={submitDismiss} disabled={busy} aria-describedby={titleId}>
+          <Button type="button" variant="secondary" onClick={submitDismiss} disabled={busy} aria-describedby={titleId}>
             Dismiss
-          </button>
+          </Button>
         </div>
       ) : (
         <p className="decision-recorded">
@@ -213,6 +231,7 @@ function SourceTable({ record, index }: { record: ExtractionRecord; index: numbe
     );
   }
   return (
+    <div className="ui-table-scroll sources-scroll">
     <table className="sources" data-testid={`source-${index}`}>
       <caption>{caption}</caption>
       <thead>
@@ -241,6 +260,7 @@ function SourceTable({ record, index }: { record: ExtractionRecord; index: numbe
         ))}
       </tbody>
     </table>
+    </div>
   );
 }
 
@@ -353,20 +373,17 @@ function Reconcile() {
   const issues = run ? sortIssues(run.issues) : [];
 
   return (
-    <section aria-labelledby="reconcile-title" className="pharma">
-      <h1 id="reconcile-title">Medication reconciliation</h1>
-      <p>{REVIEW_NOTE}</p>
-      <p className="pharma-attribution" data-testid="nlm-attribution">
-        {NLM_ATTRIBUTION}
-      </p>
+    <section aria-labelledby="reconcile-title" className="pharma page-stack">
+      <PageHeader
+        titleId="reconcile-title"
+        title="Medication reconciliation"
+        subtitle={REVIEW_NOTE}
+        meta={<span data-testid="nlm-attribution">{NLM_ATTRIBUTION}</span>}
+      />
 
-      <ScopeSection />
-
-      <section aria-labelledby="run-title">
-        <h2 id="run-title">Run a check</h2>
+      <Section title="Run a check" titleId="run-title">
         <form className="pharma-form" onSubmit={onRun}>
-          <div className="field">
-            <label htmlFor="fixture">Synthetic patient</label>
+          <Field label="Synthetic patient" htmlFor="fixture">
             <select id="fixture" value={selected} onChange={(e) => setSelected(e.target.value)}>
               {fixtures.map((f) => (
                 <option key={f.fixture_ref} value={f.fixture_ref}>
@@ -374,81 +391,91 @@ function Reconcile() {
                 </option>
               ))}
             </select>
-          </div>
-          <div className="field">
-            <label htmlFor="mode">Phrasing mode</label>
+          </Field>
+          <Field label="Phrasing mode" htmlFor="mode">
             <select id="mode" value={mode} onChange={(e) => setMode(e.target.value)}>
               <option value="rules_plus_model">Rules + model phrasing</option>
               <option value="rules_only">Rules only</option>
             </select>
-          </div>
-          <button type="submit" disabled={busy || !selected}>
+          </Field>
+          <Button type="submit" disabled={busy || !selected}>
             Run check
-          </button>
+          </Button>
         </form>
-      </section>
+      </Section>
 
       <p role="status" aria-live="polite" className="pharma-status">
         {status}
       </p>
 
-      {run && (
-        <>
-          <section aria-labelledby="issues-title">
-            <h2 id="issues-title">Issues for pharmacist review ({issues.length})</h2>
-            <p>
-              Patient {run.patient_ref} · as of {run.as_of} · run {run.status} · {run.formulary_version} ·{" "}
-              {run.rules_version}
-              {run.excluded_future_items ? ` · ${run.excluded_future_items} item(s) after the decision time excluded` : ""}
-            </p>
-            <RunSummary run={run} />
-            {issues.length === 0 ? (
-              <p>
-                No discrepancies were found by the rules among the fields that could be compared. This is not a
-                confirmation that the lists agree; check the notices and the lists below.
+      <div className={run ? "pharma-cols" : "pharma-cols pharma-cols--one"}>
+        {run && (
+          <div className="pharma-main">
+            <Section title={`Issues for pharmacist review (${issues.length})`} titleId="issues-title">
+              <p className="muted">
+                Patient {run.patient_ref} · as of <time dateTime={run.as_of}>{formatThaiTime(run.as_of)}</time> · run{" "}
+                {run.status} · {run.formulary_version} · {run.rules_version}
+                {run.excluded_future_items
+                  ? ` · ${run.excluded_future_items} item(s) after the decision time excluded`
+                  : ""}
               </p>
-            ) : (
-              <ol className="issue-list">
-                {issues.map((issue, n) => (
-                  <li key={issue.issue_id}>
-                    <IssueCard
-                      issue={issue}
-                      index={n + 1}
-                      busy={busy}
-                      onConfirm={(i) => void decide(i, "confirm")}
-                      onDismiss={(i, reason) => void decide(i, "dismiss", reason)}
-                    />
-                  </li>
-                ))}
-              </ol>
-            )}
-          </section>
-          <section aria-labelledby="notices-title">
-            <h2 id="notices-title">Notices ({run.notices.length})</h2>
-            {run.notices.length === 0 ? (
-              <p>No notices.</p>
-            ) : (
-              <ul className="notice-list">
-                {run.notices.map((n) => (
-                  <li key={n.notice_id}>
-                    <strong>{NOTICE_LABELS[n.type] ?? n.type}</strong>: {n.detail}
-                    {n.raw_span ? ` (“${n.raw_span}”)` : ""}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-          <section aria-labelledby="lists-title">
-            <h2 id="lists-title">Medication lists as read ({run.extraction?.length ?? 0})</h2>
-            <p>
-              Every source list with the fields read from each line. A field shown as “{NOT_STATED}”, “not recognised” or
-              “not verifiable” was not compared.
-            </p>
+              <RunSummary run={run} />
+              {issues.length === 0 ? (
+                <p>
+                  No discrepancies were found by the rules among the fields that could be compared. This is not a
+                  confirmation that the lists agree; check the notices and the lists below.
+                </p>
+              ) : (
+                <ol className="issue-list">
+                  {issues.map((issue, n) => (
+                    <li key={issue.issue_id}>
+                      <IssueCard
+                        issue={issue}
+                        index={n + 1}
+                        busy={busy}
+                        onConfirm={(i) => void decide(i, "confirm")}
+                        onDismiss={(i, reason) => void decide(i, "dismiss", reason)}
+                      />
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </Section>
+          </div>
+        )}
+        <div className="pharma-aside">
+          <ScopeSection />
+          {run && (
+            <Section title={`Notices (${run.notices.length})`} titleId="notices-title">
+              {run.notices.length === 0 ? (
+                <p>No notices.</p>
+              ) : (
+                <ul className="notice-list">
+                  {run.notices.map((n) => (
+                    <li key={n.notice_id}>
+                      <strong>{NOTICE_LABELS[n.type] ?? n.type}</strong>: {n.detail}
+                      {n.raw_span ? ` (“${n.raw_span}”)` : ""}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Section>
+          )}
+        </div>
+      </div>
+
+      {run && (
+        <Section title={`Medication lists as read (${run.extraction?.length ?? 0})`} titleId="lists-title">
+          <p>
+            Every source list with the fields read from each line. A field shown as “{NOT_STATED}”, “not recognised” or
+            “not verifiable” was not compared.
+          </p>
+          <div className="pharma-lists">
             {(run.extraction ?? []).map((record, n) => (
               <SourceTable key={record.evidence_ref} record={record} index={n + 1} />
             ))}
-          </section>
-        </>
+          </div>
+        </Section>
       )}
     </section>
   );

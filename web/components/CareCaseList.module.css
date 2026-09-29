@@ -1,0 +1,7 @@
+.stack { display: grid; gap: 16px; }
+.filter { max-width: 360px; }
+@media (max-width: 767px) {
+  /* Card mode: T1 and T2 sit side by side. */
+  td.dp { display: inline-block !important; width: 49% !important; vertical-align: top; }
+  td.dp button { width: 100%; }
+}

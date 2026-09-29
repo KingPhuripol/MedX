@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 
 import CareReview from "@/components/CareReview";
+import LoadingState from "@/components/ui/LoadingState";
+import Notice from "@/components/ui/Notice";
 import { ERROR_TEXT, postJson, type Assessment, type ReviewAction, type ReviewBody, type Vocabulary } from "@/lib/care";
 
 export default function CareReviewLoader({ assessmentId }: { assessmentId: string }) {
@@ -45,7 +47,12 @@ export default function CareReviewLoader({ assessmentId }: { assessmentId: strin
     [assessmentId],
   );
 
-  if (error) return <p role="alert">{error}</p>;
-  if (!assessment) return <p aria-live="polite">Loading assessment…</p>;
+  if (error)
+    return (
+      <Notice tone="critical" role="alert">
+        {error}
+      </Notice>
+    );
+  if (!assessment) return <LoadingState label="Loading assessment…" />;
   return <CareReview assessment={assessment} vocabulary={vocab} onReview={onReview} />;
 }
