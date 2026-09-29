@@ -3,6 +3,10 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Field } from "@/components/ui/Field";
+import { Notice } from "@/components/ui/Notice";
+
 export default function LoginForm() {
   const router = useRouter();
   const [username, setUsername] = useState("");
@@ -22,7 +26,7 @@ export default function LoginForm() {
         body: JSON.stringify({ username, password }),
       });
       if (resp.ok) {
-        const data = await resp.json();
+        await resp.json();
         router.push("/app/queue");
         return;
       }
@@ -35,9 +39,8 @@ export default function LoginForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} aria-describedby={error ? "login-error" : undefined} noValidate>
-      <div className="field">
-        <label htmlFor="username">ชื่อผู้ใช้สังเคราะห์</label>
+    <form className="ui-form" onSubmit={onSubmit} aria-describedby={error ? "login-error" : undefined} noValidate>
+      <Field label="ชื่อผู้ใช้สังเคราะห์" htmlFor="username">
         <input
           id="username"
           name="username"
@@ -46,9 +49,8 @@ export default function LoginForm() {
           onChange={(e) => setUsername(e.target.value)}
           required
         />
-      </div>
-      <div className="field">
-        <label htmlFor="password">รหัสผ่าน</label>
+      </Field>
+      <Field label="รหัสผ่าน" htmlFor="password">
         <input
           id="password"
           name="password"
@@ -58,15 +60,15 @@ export default function LoginForm() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-      </div>
+      </Field>
       {error && (
-        <p id="login-error" role="alert" className="error">
+        <Notice tone="critical" role="alert" id="login-error">
           {error}
-        </p>
+        </Notice>
       )}
-      <button type="submit" disabled={busy}>
+      <Button type="submit" className="ui-block" disabled={busy}>
         {busy ? "กำลังเข้าสู่ระบบ…" : "เข้าสู่ระบบเดโม"}
-      </button>
+      </Button>
     </form>
   );
 }
