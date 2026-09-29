@@ -284,7 +284,6 @@ export function useLiveCall(params: LiveParams) {
       m.blocked = true;
       applyMic();
       setHint((h) => (h === HINT_TH.audioFailed ? null : h));
-      setState("processing");
       if (final) {
         m.afterSpeak = () => void endCall();
         m.timers.end = setTimeout(() => void endCall(), HANDOFF_END_FALLBACK_MS);
@@ -358,8 +357,8 @@ export function useLiveCall(params: LiveParams) {
   // ---------------------------------------------------------------- turns
 
   const postTurn = useCallback(
-    async (draft: TurnDraft) => {
-      if (!m.sessionId) return;
+    async (draft: TurnDraft): Promise<NextAction | null> => {
+      if (!m.sessionId) return null;
       const startedMs = Math.max(draft.startMs, m.lastEnd);
       const endedMs = Math.max(draft.endMs, startedMs);
       const body: Record<string, unknown> = {
@@ -377,7 +376,7 @@ export function useLiveCall(params: LiveParams) {
       if (r.status === 401) goLogin();
       if (!r.data) {
         setHint(HINT_TH.turnFailed);
-        return;
+        return null;
       }
       const resp = r.data;
       m.lastEnd = Math.max(m.lastEnd, Date.parse(resp.turn.ended_at), endedMs);
@@ -391,25 +390,30 @@ export function useLiveCall(params: LiveParams) {
         prev ? { ...prev, session: resp.session, field_statuses: resp.field_statuses, next_action: resp.next_action } : prev,
       );
       await refresh();
-      afterServer(resp.next_action);
+      return resp.next_action;
     },
-    [afterServer, applyMic, goLogin, m, refresh],
+    [applyMic, goLogin, m, refresh],
   );
 
   const enqueueTurn = useCallback(
     (draft: TurnDraft) => {
       m.pending += 1;
       if (m.state === "listening") setState("processing");
-      m.chain = m.chain
-        .then(() => postTurn(draft))
-        .catch(() => setHint(HINT_TH.turnFailed))
-        .finally(() => {
-          m.pending -= 1;
-          if (m.pending === 0 && !m.blocked && !m.ending && m.connected && m.state === "processing") setState("listening");
-        });
+      m.chain = m.chain.then(async () => {
+        let action: NextAction | null = null;
+        try {
+          action = await postTurn(draft);
+        } catch {
+          setHint(HINT_TH.turnFailed);
+        }
+        m.pending -= 1;
+        // Speak only after the last queued turn, so a newer answer is never talked over.
+        if (action) afterServer(action);
+        if (m.pending === 0 && !m.blocked && !m.ending && m.connected && m.state === "processing") setState("listening");
+      });
       return m.chain;
     },
-    [m, postTurn, setState],
+    [afterServer, m, postTurn, setState],
   );
 
   const speakerRef = useRef<Speaker>("patient");
@@ -535,6 +539,12 @@ export function useLiveCall(params: LiveParams) {
         teardown();
         setCodeError(ERROR_TH.codeInvalid);
         setState("idle");
+      } else if (r.status === 503 && reason) {
+        // Voice went unavailable after the config check: same as disabled, the text form stays usable.
+        teardown();
+        setCfg((c) => (c ? { ...c, enabled: false, reason: reason as RealtimeConfig["reason"] } : c));
+        setVendorLabel(null);
+        setState("disabled");
       } else if (r.status === 429) fail(ERROR_TH.rateLimited);
       else fail(ERROR_TH.connect);
       return;
