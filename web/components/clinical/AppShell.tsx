@@ -86,6 +86,13 @@ export default function AppShell({ children }: { children: ReactNode }) {
               {user ? roleLabel[user.role] : ""}
             </span>
           </div>
+          <nav className="nav-links">
+            <NavLink href="/app/queue" label="คิวงาน" icon={<ClipboardList size={18} />} active={pathname === "/app/queue"} />
+            {(user ? roleTools[user.role] : []).map((t) => (
+              <NavLink key={t.href} {...t} active={pathname.startsWith(t.href)} />
+            ))}
+            <NavLink href="/demo" label="รอบเดโม" icon={<FlaskConical size={18} />} active={pathname === "/demo"} />
+          </nav>
           <div className="nav-meta">
             <span className="user-label">บัญชีสังเคราะห์ · {user?.username}</span>
             <span className="run-label">รอบเดโม · {runId ? runId.slice(0, 8) : "ยังไม่เลือก"}</span>
@@ -94,13 +101,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
               ออกจากระบบ
             </Button>
           </div>
-          <nav className="nav-links">
-            <NavLink href="/app/queue" label="คิวงาน" icon={<ClipboardList size={18} />} active={pathname === "/app/queue"} />
-            {(user ? roleTools[user.role] : []).map((t) => (
-              <NavLink key={t.href} {...t} active={pathname.startsWith(t.href)} />
-            ))}
-            <NavLink href="/demo" label="รอบเดโม" icon={<FlaskConical size={18} />} active={pathname === "/demo"} />
-          </nav>
         </div>
       </aside>
       <section className="app-main">{children}</section>

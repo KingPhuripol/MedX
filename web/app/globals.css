@@ -209,7 +209,6 @@ main {
   font-weight: 700;
 }
 .nav-meta {
-  order: 3;
   margin-top: auto;
   display: grid;
   gap: 8px;
