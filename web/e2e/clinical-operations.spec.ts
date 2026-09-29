@@ -171,3 +171,48 @@ test("403 and 404 offer a way back to the queue", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toContainText("404");
   await expect(page.getByRole("link", { name: "กลับไปคิวงาน" })).toBeVisible();
 });
+
+test("U6 overview is the shared case summary on first open, no tab click", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await login(page, "nurse");
+  await startDemoRun(page);
+  await page
+    .getByRole("link", { name: /เปิดเคส/ })
+    .nth(1)
+    .click();
+  await page.getByRole("link", { name: "ภาพรวม" }).click();
+  await expect(page).toHaveURL(/\/overview/);
+  await expect(page.getByTestId("case-summary")).toBeVisible();
+  // 1 banner, 2 chief complaint, 3 vitals + direction, 4 allergy, 5 meds + discrepancy count, 6 labs
+  await expect(page.getByText("พบสัญญาณที่ต้องประเมินเร่งด่วน", { exact: true })).toBeVisible();
+  await expect(page.getByText("แน่นหน้าอกและหายใจลำบาก").first()).toBeVisible();
+  await expect(page.getByTestId("vital-hr")).toContainText("112");
+  await expect(page.getByTestId("vital-hr-dir")).toContainText("↑ เพิ่มขึ้น");
+  await expect(page.getByTestId("vital-spo2-dir")).toContainText("↓ ลดลง");
+  await expect(page.getByTestId("vital-temp_c")).toContainText("ไม่มีบันทึก");
+  await expect(page.getByTestId("summary-allergy")).toContainText("เพนิซิลลิน");
+  await expect(page.getByTestId("med-discrepancy-count")).toContainText("1 รายการ");
+  await expect(page.getByTestId("summary-meds")).toContainText("Aspirin 81 mg");
+  await expect(page.getByTestId("summary-labs")).toContainText("Troponin I");
+  // the red flag stays before the summary in DOM order; items 1-4 sit inside the first 800px screen
+  const bannerFirst = await page.evaluate(() => {
+    const banner = document.querySelector(".safety-banner");
+    const sum = document.querySelector("[data-testid=case-summary]");
+    return !!banner && !!sum && !!(banner.compareDocumentPosition(sum) & Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+  expect(bannerFirst).toBe(true);
+  for (const id of ["summary-vitals", "summary-allergy"]) {
+    const box = await page.getByTestId(id).boundingBox();
+    expect(box!.y + box!.height).toBeLessThanOrEqual(800);
+  }
+  await assertNoOverflow(page);
+  await assertA11y(page);
+  for (const viewport of [
+    { width: 768, height: 1024 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await assertNoOverflow(page);
+    await assertA11y(page);
+  }
+});

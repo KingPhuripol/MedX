@@ -56,6 +56,22 @@ CASE = {
         "suggestion": "ตรวจทานข้อมูลประกอบและบันทึกการตัดสินใจของแพทย์",
         "evidence_ids": ["EVD-TRIAGE-03"],
     },
+    # U6: recorded synthetic facts for the shared case summary. `null` = missing, never 0 / normal.
+    # allergies: [] = no known allergy recorded; None = allergy status unknown (distinct states).
+    "decision_time": "2026-09-28T02:30:00+00:00",
+    "vitals": [
+        {"observed_at": "2026-09-28T02:15:00+00:00", "available_at_time": "2026-09-28T02:16:00+00:00", "evidence_id": "EVD-VITAL-01",
+         "hr": 104, "rr": 24, "sbp": 128, "dbp": 78, "spo2": 94, "temp_c": 36.8, "consciousness": "A", "on_oxygen": False},
+        {"observed_at": "2026-09-28T02:25:00+00:00", "available_at_time": "2026-09-28T02:26:00+00:00", "evidence_id": "EVD-VITAL-02",
+         "hr": 112, "rr": 28, "sbp": 118, "dbp": 72, "spo2": 91, "temp_c": None, "consciousness": "A", "on_oxygen": False},
+    ],
+    "allergies": [{"substance": "เพนิซิลลิน", "reaction": "ผื่นลมพิษ"}],
+    "labs": [
+        {"test": "Troponin I", "value": 0.09, "unit": "ng/mL", "ref_low": 0.0, "ref_high": 0.04,
+         "resulted_at": "2026-09-28T02:28:00+00:00", "available_at_time": "2026-09-28T02:28:00+00:00"},
+        {"test": "Potassium", "value": 4.1, "unit": "mmol/L", "ref_low": 3.5, "ref_high": 5.1,
+         "resulted_at": "2026-09-28T02:28:00+00:00", "available_at_time": "2026-09-28T02:28:00+00:00"},
+    ],
     "version": 1,
 }
 
