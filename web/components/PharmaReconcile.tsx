@@ -152,7 +152,7 @@ function IssueCard({
       data-type={issue.type}
     >
       <h3 id={titleId}>{title}</h3>
-      <p className="issue-chips">
+      <div className="issue-chips">
         <StatusChip tone="neutral">Priority: {issue.severity}</StatusChip>
         <StatusChip tone={statusTone(issue.status)}>
           Status: <span data-testid="issue-status">{issue.status}</span>
@@ -167,13 +167,13 @@ function IssueCard({
             Possible same-class substitution
           </StatusChip>
         )}
-      </p>
-      <p className="issue-meta">
-        Rule {issue.rule_id}
-        {issue.type === "missing_field" && issue.field
-          ? ` · ${issue.field} ${fieldStatusText(issue)} in the first source listed`
-          : ""}
-      </p>
+        <p className="issue-meta">
+          Rule {issue.rule_id}
+          {issue.type === "missing_field" && issue.field
+            ? ` · ${issue.field} ${fieldStatusText(issue)} in the first source listed`
+            : ""}
+        </p>
+      </div>
       <AllergyBasis issue={issue} />
       <p className="phrasing">{issue.phrasing.text}</p>
       <p className="phrasing-label">
@@ -201,7 +201,11 @@ function IssueCard({
                   {src.presence === "absent" ? " (not present)" : ""}
                 </th>
                 <td>{src.evidence_ref}</td>
-                <td>{src.available_at_time}</td>
+                <td className="nowrap">
+                  <time dateTime={src.available_at_time}>
+                    {formatThaiTime(src.available_at_time)}
+                  </time>
+                </td>
                 <td>{src.presence === "absent" ? "—" : src.raw_span}</td>
                 <td>
                   {src.source_type === "allergy_record" ? "—" : formatDose(src)}
@@ -231,7 +235,7 @@ function IssueCard({
             <label htmlFor={reasonId}>Reason for dismissing</label>
             <textarea
               id={reasonId}
-              rows={2}
+              rows={1}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               aria-invalid={reasonError ? true : undefined}

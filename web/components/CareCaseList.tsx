@@ -69,7 +69,7 @@ export default function CareCaseList() {
   const dpColumns = DECISION_POINTS.map((dp) => ({
     key: dp,
     header: dp,
-    className: styles.dp,
+    className: `${styles.dp} ${styles.cell}`,
     render: (c: CaseItem) => {
       const d = c.decision_points.find((x) => x.decision_point === dp);
       if (!d) return <span className="muted">—</span>;
@@ -138,6 +138,7 @@ export default function CareCaseList() {
                 {
                   key: "case",
                   header: "Case",
+                  className: styles.cell,
                   render: (c) => <strong>{c.case_id}</strong>,
                 },
                 ...dpColumns,

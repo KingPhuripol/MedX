@@ -24,13 +24,13 @@
 .pharma-cols { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr); align-items: start; }
 .pharma-main, .pharma-aside { display: grid; gap: 24px; min-width: 0; }
 @media (min-width: 1024px) {
-  .pharma-cols { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+  .pharma-cols { grid-template-columns: minmax(0, 1fr); }
   .pharma-cols--one { grid-template-columns: minmax(0, 1fr); }
 }
 .pharma-aside h2 { font-size: 20px; }
 .pharma-lists { display: grid; gap: 16px; }
 
-.issue-list { margin: 16px 0 0; padding-left: 24px; }
+.issue-list { margin: 16px 0 0; padding-left: 0; list-style: none; }
 .issue-list > li { margin-bottom: 16px; }
 .issue {
   border: 1px solid var(--border);
@@ -43,17 +43,23 @@
 .issue[data-severity="high"] { border-left: 8px solid var(--foreground); }
 .issue[data-severity="elevated"] { border-left: 4px solid var(--muted-foreground); }
 .issue h3 { margin: 0 0 8px; font-size: 16px; }
-.issue-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+.issue-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 8px; }
+.issue-chips .issue-meta { margin: 0; }
 .issue-meta { margin: 4px 0; font-size: 14px; color: var(--muted-foreground); }
 .phrasing { margin: 8px 0 4px; }
 .phrasing-label { margin: 0 0 8px; font-size: 14px; font-style: italic; color: var(--muted-foreground); }
 .sources-scroll { overflow-x: auto; max-width: 100%; margin: 8px 0; }
 .sources { border-collapse: collapse; width: 100%; font-size: 14px; background: var(--card); }
 .sources caption { text-align: left; font-weight: 700; padding-bottom: 4px; }
-.sources th, .sources td { border: 1px solid var(--border); padding: 8px; text-align: left; vertical-align: top; }
+.sources th, .sources td { border: 1px solid var(--border); padding: 4px 8px; text-align: left; vertical-align: top; }
 .sources th { background: var(--muted); }
-.decision { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: flex-end; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+.decision { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: flex-end; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
 .decision .field { margin-bottom: 0; flex: 1 1 240px; }
 .decision-recorded { font-weight: 700; }
 .notice-list { margin: 0; padding-left: 24px; }
 .notice-list li { margin-bottom: 8px; }
+.sources .nowrap { white-space: nowrap; }
+.sources th[scope="col"] { white-space: normal; font-size: 14px; }
+
+/* The issue heading directly above already names the conflict; the caption stays for assistive technology. */
+.issue .sources caption { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
