@@ -102,3 +102,17 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
   - Triage Confirm should also gate on incomplete screening. This is an API contract change and needs an owner decision.
   - Follow-ups: DataTable card-mode semantics; care red-flag section tone when there are 0 alerts; pharma high-severity chip tone; demo physician ack server-side; legacy CSS cleanup.
 - **Approved by:** project owner (chat, 2026-09-29), lead + workers plan; redeploy within the approved blue-link scope.
+
+## 2026-09-29 — Voice agent via OpenAI Realtime (synthetic audio only)
+- **What:** Give the Voice intake (`/nurse/intake`) real Thai speech in and out through OpenAI Realtime. Speaking uses `gpt-realtime-2.1-mini` over WebRTC, and patient speech is transcribed with `gpt-4o-mini-transcribe`. The owner's OpenAI key is used.
+  - The key stays server-side (`OPENAI_API_KEY` in gitignored `.env` and in Vercel env); the browser only gets a short-lived client secret.
+  - Each transcribed patient utterance becomes the same Turn as typed text, so the existing rules-based intake policy decides the next question and extracts the facts. The voice model only speaks that question in Thai and never gives clinical advice.
+- **Scope:** local `make dev`, plus the blue Vercel link (`medx-demo-u4`). This is a scoped exception to the 2026-09-29 public-demo "mock only" rule, and it covers only the voice session endpoint. The Model Gateway stays mock.
+- **Access control on Vercel:**
+  - a separate voice access code;
+  - a maximum session length;
+  - a per-instance rate limit.
+- **Recommended but not done by us:** a monthly budget on the OpenAI project.
+- **Data:** synthetic role-play or scripted voices only. Never real patients (CLAUDE.md data rule 7).
+- **Approved by:** project owner (chat, 2026-09-29): "ยืนยัน สังเคราะห์เท่านั้น", local + Vercel.
+- **Note:** the key was pasted into chat in plain text; the owner should rotate it after the demo.
