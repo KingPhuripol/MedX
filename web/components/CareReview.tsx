@@ -297,26 +297,6 @@ export default function CareReview({
         </Section>
       )}
 
-      {!reviewed && suggested && (
-        <ActionBar
-          summary={
-            <span className={styles.ackSummary}>
-              Acknowledged {ackCount}/{ackTotal}
-            </span>
-          }
-        >
-          <form id="confirm-form" onSubmit={(e) => submit(e, "confirm", {})} />
-          <Button
-            type="submit"
-            form="confirm-form"
-            disabled={blocked}
-            aria-describedby={hint}
-          >
-            Confirm suggestion
-          </Button>
-        </ActionBar>
-      )}
-
       <Section
         title={`Suggestion (${a.status})`}
         titleId="suggestion-title"
@@ -420,6 +400,27 @@ export default function CareReview({
           )}
         </div>
       </Section>
+
+      {!reviewed && suggested && (
+        <ActionBar
+          pinAfter="redflag-title"
+          summary={
+            <span className={styles.ackSummary}>
+              Acknowledged {ackCount}/{ackTotal}
+            </span>
+          }
+        >
+          <form id="confirm-form" onSubmit={(e) => submit(e, "confirm", {})} />
+          <Button
+            type="submit"
+            form="confirm-form"
+            disabled={blocked}
+            aria-describedby={hint}
+          >
+            Confirm suggestion
+          </Button>
+        </ActionBar>
+      )}
 
       {reviewed ? (
         <Section title="Review result" titleId="result-title">
