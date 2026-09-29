@@ -1,86 +1,87 @@
 {
- "protocol_version": "1.0",
- "evaluation_id": "g2-redflag-retest-0001",
- "status": "DRAFT",
- "question": "Does the Case Graph (S4 engine wired in i2, rule set rf-1.2.0 incl. RF-NEWS-AGG5) reach case-level red-flag recall of 1.00 on a fresh held-out synthetic split, where e1 measured 9/22 = 0.41 on the (consumed) v1 test split?",
- "code": {
-  "base_revision": "a2544dde0a64631e6e7a3224c01015a7a13c6a47",
-  "branch": "factory/g2-redflag-eval",
-  "system_sha256": "99e973960f941bc9b4b0d250e3b993bb2d179f52c3d450b1b8489235a522fa40",
-  "note": "system_sha256 (casegraph + triage/voice/gateway code) and g2_code_sha256 are the binding pins; a commit adding only eval_g2 does not change the system"
- },
- "config": {
-  "rule_set": {
-   "version": "rf-1.2.0",
-   "file": "backend/app/triage/rules/redflag_rules_v1.json",
-   "sha256": "e576db8fe539f1b2f8e970a4032271b28849c5b376c61e986bcd052afe42299a"
+  "protocol_version": "1.0",
+  "evaluation_id": "g2-redflag-retest-0001",
+  "status": "FROZEN",
+  "question": "Does the Case Graph (S4 engine wired in i2, rule set rf-1.2.0 incl. RF-NEWS-AGG5) reach case-level red-flag recall of 1.00 on a fresh held-out synthetic split, where e1 measured 9/22 = 0.41 on the (consumed) v1 test split?",
+  "code": {
+    "base_revision": "a2544dde0a64631e6e7a3224c01015a7a13c6a47",
+    "branch": "factory/g2-redflag-eval",
+    "system_sha256": "99e973960f941bc9b4b0d250e3b993bb2d179f52c3d450b1b8489235a522fa40",
+    "note": "system_sha256 (casegraph + triage/voice/gateway code) and g2_code_sha256 are the binding pins; a commit adding only eval_g2 does not change the system"
   },
-  "seed": 20260929,
-  "n_boot": 2000,
-  "arm": "case_graph (mock gateways)",
-  "mapping": "e1_mapping_v1 + eval_i2.score.AGG5_OVERLAY",
-  "tier": 0,
-  "provider": "mock, no network"
- },
- "dataset": {
-  "name": "g2-heldout-20260929",
-  "path": "/Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent/data/synthetic/g2-heldout-20260929",
-  "split": "test",
-  "manifest_json_sha256": "572869b5f94b635fd27fe2d32cb41661b41c7f7f9c620a56bd70efdca83f6573",
-  "expected_manifest_json_sha256": "572869b5f94b635fd27fe2d32cb41661b41c7f7f9c620a56bd70efdca83f6573",
-  "tree_sha256": "527abd73d44af9da07c9e715a68aebb58360de4024a97bd53ecadc7aef2f8417",
-  "data_class": "synthetic",
-  "n_patients": 72,
-  "n_cases": 80
- },
- "primary_metric": "rf_case_recall",
- "metric_definitions": {
-  "rf_case_recall": "PRIMARY. Mirrors e1 eval/adapters/protocol.py rf_case_recall: gold-positive DPs (>=1 gold red flag) where the Case Graph fired >=1 alert of any rule. Unit: decision point.",
-  "rf_rulematched_dp": "Same population; caught iff an alert of a rule mapped to a gold rule of that DP fired.",
-  "rf_rule_<RULE>": "Per S1r rule: gold (DP, rule) pairs where a mapped S4 rule fired (e1 mapping v1 + AGG5 overlay).",
-  "rf_case_agg": "Unit case: cases with a gold-positive DP; caught iff any such DP has any alert.",
-  "rf_case_agg_rulematched": "Unit case: caught iff any gold-positive DP has a rule-matched alert.",
-  "rf_fpr": "Gold-negative DPs with >=1 alert of any rule (false-positive rate).",
-  "rf_surfaced": "Gold-positive DPs where an alert fired or a gold rule was not_evaluated (input gap surfaced). Silent escalation failure = 1 - surfaced: the screen evaluated, raised nothing, said nothing."
- },
- "secondary_metrics": [
-  "rf_rulematched_dp",
-  "rf_rule_<each S1r rule present>",
-  "rf_case_agg",
-  "rf_case_agg_rulematched",
-  "rf_fpr",
-  "rf_surfaced (silent escalation failures)"
- ],
- "statistics": {
-  "interval": "Clopper-Pearson 95% (eval.exact), plus patient-level percentile bootstrap (S8r runner) shown beside it",
-  "denominators": "every gold-positive DP/case is scored; a schema failure, timeout or missing prediction is a miss, never dropped"
- },
- "decision_rule": "PASS iff rf_case_recall = 1.00 exactly (point estimate, x = n) on the held-out test split. Any miss is FAIL. Clopper-Pearson 95% interval reported; a PASS is a point-estimate statement on a small circular synthetic sample, not evidence of clinical safety. Secondaries are descriptive, never gating, and cannot rescue a FAIL.",
- "exclusions": "none predeclared",
- "disclosures": [
-  "The v1 test split (e1) is consumed: its 9/22 = 0.41 result led to the fixes evaluated here. This held-out set (seed 20260929, test split only) is the first fresh split, and it is single-use: if the primary fails and the system is changed, a further re-test needs a new dataset.",
-  "Circularity: rules, extractor lexicon, fixtures and gold share authors; the mock model is deterministic. The result measures rule/extractor coverage of the authors' own scenarios, not clinical performance.",
-  "RF-NEWS-AGG5 (rf-1.2.0) is PROPOSED, pending clinical sign-off. It follows RCP NEWS2 (2017) SpO2 Scale 1, not the S1r gold (NEWS 2012).",
-  "Known rule/gold disagreements kept, not fixed (slices/g2/NOTES.md): new-confusion scores 3 in the rule and 0 in gold; a null on-oxygen is missing in the rule and 0 in gold; gold scores any null parameter 0 while the rule abstains. AGG5 gold DPs can therefore be missed or over-fired for reasons of definition.",
-  "Metric naming: e1 calls rf_case_recall 'case-level' but its unit is the decision point and any alert of any rule counts. That definition is mirrored for comparability with 9/22; it is weaker than rule-matched recall, which is reported beside it.",
-  "Id-name collision: held-out ids are SYNH-*/SYNHE-*, the same names as the archived s6r-heldout dataset (different seed and content). Nothing here reads that dataset.",
-  "The e1 mapping v1 is frozen and pinned to rf-1.1.0; the AGG5 row comes from eval_i2.score.AGG5_OVERLAY.",
-  "Clopper-Pearson assumes independent units; DPs of one patient/case are not independent, so a patient-level bootstrap (n_boot=2000) is reported beside it. Small n: intervals are wide.",
-  "The manifest's task_patient_lists come from gold red-flag membership (labels only, no system output), as in e1 and i2; the held-out system outputs were not produced in phase 1."
- ],
- "task_units": {
-  "rf_case_agg": 26,
-  "rf_case_agg_rulematched": 26,
-  "rf_case_recall": 46,
-  "rf_fpr": 114,
-  "rf_rule_RF-ACUTE-CHEST-PAIN": 6,
-  "rf_rule_RF-ANAPHYLAXIS": 6,
-  "rf_rule_RF-FAST": 8,
-  "rf_rule_RF-NEWS-AGG5": 12,
-  "rf_rule_RF-NEWS-SINGLE3": 7,
-  "rf_rule_RF-QSOFA": 8,
-  "rf_rule_RF-THUNDERCLAP": 6,
-  "rf_rulematched_dp": 46,
-  "rf_surfaced": 46
- }
+  "config": {
+    "rule_set": {
+      "version": "rf-1.2.0",
+      "file": "backend/app/triage/rules/redflag_rules_v1.json",
+      "sha256": "e576db8fe539f1b2f8e970a4032271b28849c5b376c61e986bcd052afe42299a"
+    },
+    "seed": 20260929,
+    "n_boot": 2000,
+    "arm": "case_graph (mock gateways)",
+    "mapping": "e1_mapping_v1 + eval_i2.score.AGG5_OVERLAY",
+    "tier": 0,
+    "provider": "mock, no network"
+  },
+  "dataset": {
+    "name": "g2-heldout-20260929",
+    "path": "/Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent/data/synthetic/g2-heldout-20260929",
+    "split": "test",
+    "manifest_json_sha256": "572869b5f94b635fd27fe2d32cb41661b41c7f7f9c620a56bd70efdca83f6573",
+    "expected_manifest_json_sha256": "572869b5f94b635fd27fe2d32cb41661b41c7f7f9c620a56bd70efdca83f6573",
+    "tree_sha256": "527abd73d44af9da07c9e715a68aebb58360de4024a97bd53ecadc7aef2f8417",
+    "data_class": "synthetic",
+    "n_patients": 72,
+    "n_cases": 80
+  },
+  "primary_metric": "rf_case_recall",
+  "metric_definitions": {
+    "rf_case_recall": "PRIMARY. Mirrors e1 eval/adapters/protocol.py rf_case_recall: gold-positive DPs (>=1 gold red flag) where the Case Graph fired >=1 alert of any rule. Unit: decision point.",
+    "rf_rulematched_dp": "Same population; caught iff an alert of a rule mapped to a gold rule of that DP fired.",
+    "rf_rule_<RULE>": "Per S1r rule: gold (DP, rule) pairs where a mapped S4 rule fired (e1 mapping v1 + AGG5 overlay).",
+    "rf_case_agg": "Unit case: cases with a gold-positive DP; caught iff any such DP has any alert.",
+    "rf_case_agg_rulematched": "Unit case: caught iff any gold-positive DP has a rule-matched alert.",
+    "rf_fpr": "Gold-negative DPs with >=1 alert of any rule (false-positive rate).",
+    "rf_surfaced": "Gold-positive DPs where an alert fired or a gold rule was not_evaluated (input gap surfaced). Silent escalation failure = 1 - surfaced: the screen evaluated, raised nothing, said nothing."
+  },
+  "secondary_metrics": [
+    "rf_rulematched_dp",
+    "rf_rule_<each S1r rule present>",
+    "rf_case_agg",
+    "rf_case_agg_rulematched",
+    "rf_fpr",
+    "rf_surfaced (silent escalation failures)"
+  ],
+  "statistics": {
+    "interval": "Clopper-Pearson 95% (eval.exact), plus patient-level percentile bootstrap (S8r runner) shown beside it",
+    "denominators": "every gold-positive DP/case is scored; a schema failure, timeout or missing prediction is a miss, never dropped"
+  },
+  "decision_rule": "PASS iff rf_case_recall = 1.00 exactly (point estimate, x = n) on the held-out test split. Any miss is FAIL. Clopper-Pearson 95% interval reported; a PASS is a point-estimate statement on a small circular synthetic sample, not evidence of clinical safety. Secondaries are descriptive, never gating, and cannot rescue a FAIL.",
+  "exclusions": "none predeclared",
+  "disclosures": [
+    "The v1 test split (e1) is consumed: its 9/22 = 0.41 result led to the fixes evaluated here. This held-out set (seed 20260929, test split only) is the first fresh split, and it is single-use: if the primary fails and the system is changed, a further re-test needs a new dataset.",
+    "Circularity: rules, extractor lexicon, fixtures and gold share authors; the mock model is deterministic. The result measures rule/extractor coverage of the authors' own scenarios, not clinical performance.",
+    "RF-NEWS-AGG5 (rf-1.2.0) is PROPOSED, pending clinical sign-off. It follows RCP NEWS2 (2017) SpO2 Scale 1, not the S1r gold (NEWS 2012).",
+    "Known rule/gold disagreements kept, not fixed (slices/g2/NOTES.md): new-confusion scores 3 in the rule and 0 in gold; a null on-oxygen is missing in the rule and 0 in gold; gold scores any null parameter 0 while the rule abstains. AGG5 gold DPs can therefore be missed or over-fired for reasons of definition.",
+    "Metric naming: e1 calls rf_case_recall 'case-level' but its unit is the decision point and any alert of any rule counts. That definition is mirrored for comparability with 9/22; it is weaker than rule-matched recall, which is reported beside it.",
+    "Id-name collision: held-out ids are SYNH-*/SYNHE-*, the same names as the archived s6r-heldout dataset (different seed and content). Nothing here reads that dataset.",
+    "The e1 mapping v1 is frozen and pinned to rf-1.1.0; the AGG5 row comes from eval_i2.score.AGG5_OVERLAY.",
+    "Clopper-Pearson assumes independent units; DPs of one patient/case are not independent, so a patient-level bootstrap (n_boot=2000) is reported beside it. Small n: intervals are wide.",
+    "The manifest's task_patient_lists come from gold red-flag membership (labels only, no system output), as in e1 and i2; the held-out system outputs were not produced in phase 1."
+  ],
+  "task_units": {
+    "rf_case_agg": 26,
+    "rf_case_agg_rulematched": 26,
+    "rf_case_recall": 46,
+    "rf_fpr": 114,
+    "rf_rule_RF-ACUTE-CHEST-PAIN": 6,
+    "rf_rule_RF-ANAPHYLAXIS": 6,
+    "rf_rule_RF-FAST": 8,
+    "rf_rule_RF-NEWS-AGG5": 12,
+    "rf_rule_RF-NEWS-SINGLE3": 7,
+    "rf_rule_RF-QSOFA": 8,
+    "rf_rule_RF-THUNDERCLAP": 6,
+    "rf_rulematched_dp": 46,
+    "rf_surfaced": 46
+  },
+  "frozen_by": "orchestrator (Opus 5.5), 2026-09-29, after dev dry-run 24/24 and manifest check"
 }
