@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.0",
   "evaluation_id": "simuser-g2-0002",
-  "status": "DRAFT",
+  "status": "FROZEN",
   "label": "Simulated-user evaluation (synthetic) — not human usability, not clinical performance",
   "slice": "g2-simuser",
   "tier": 0,
@@ -146,8 +146,17 @@
   "notes": "Small n, one simulator model: hypothesis-generating support for the Gate 2 assumption, not human usability and not clinical performance. g2-0002 is a protocol revision after the g2-0001 audit, run on a fresh held-out set; g2-0001 stays the record of the first result.",
   "planned_trials": "40 cases x 3 personas x k=4 x 2 arms = 960",
   "hashes": {
-    "code_revision": "TO_FILL",
-    "run_py_sha256": "TO_FILL",
-    "config_sha256": "TO_FILL"
+    "code_revision": "4c0e0a493c5fca15c47cd999c7004dc00bec5e4a",
+    "run_py_sha256": "4a92c40d0e1a12cbff0054e4394af8900a0bab42d74acd78c2b4bbc224226601",
+    "config_sha256": "ce56b3c481e9a5472fc7bc1a1f21c2c0d568b2847c40300e422675a16f28c703"
+  },
+  "frozen": {
+    "at": "2026-09-29",
+    "by": "orchestrator (Opus 5.5) after checker PASS (harness HEAD 4c0e0a4); owner chose to run with the g2-0001 simulator prompt unchanged after a dev smoke showed B still opening all tabs",
+    "accepted_checker_findings": [
+      "Metadata-only differences between arms (B: HN, source, stage; A: record_id, recorded_at).",
+      "summary_allergy omits ATC class (still in timeline).",
+      "Harness reduces labs to latest value per test; UI lists data.labs."
+    ]
   }
 }
