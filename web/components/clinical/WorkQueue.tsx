@@ -1,14 +1,45 @@
 "use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { AlertTriangle, ArrowRight, BriefcaseMedical, CheckCircle2, CircleUserRound, RefreshCw } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import {
+  AlertOctagon,
+  ArrowRight,
+  BriefcaseMedical,
+  CheckCircle2,
+  Clock,
+  Mic,
+  Pill,
+  RefreshCw,
+  ShieldAlert,
+  Stethoscope,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { api, RUN_KEY, type TaskSummary, type User } from "@/lib/demo";
+import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { LoadingState } from "@/components/ui/LoadingState";
+import { Notice } from "@/components/ui/Notice";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Section } from "@/components/ui/Section";
+import { StatusChip } from "@/components/ui/StatusChip";
+import { api, RUN_KEY, type Role, type TaskSummary, type User } from "@/lib/demo";
 
 const roleTitle = { nurse: "คิวรับเข้าและคัดกรอง", physician: "เคสที่รอตรวจโดยแพทย์", pharmacist: "คิวทบทวนข้อมูลยา" };
+
+// Link cards to the role's own work pages. Names avoid "เปิดเคส" (e2e counts those links) and the English nav names.
+const roleTools: Record<Role, { href: string; title: string; text: string; icon: ReactNode }[]> = {
+  nurse: [
+    { href: "/nurse/triage", title: "คัดกรองเคส", text: "ตรวจข้อเสนอการคัดกรอง โดยเห็น red flag ก่อน", icon: <ShieldAlert size={18} /> },
+    { href: "/nurse/intake", title: "รับข้อมูลด้วยเสียง", text: "สัมภาษณ์เบื้องต้นด้วยข้อความภาษาไทย", icon: <Mic size={18} /> },
+  ],
+  physician: [
+    { href: "/physician/care", title: "ข้อเสนอการดูแล", text: "ตรวจทานข้อเสนอสำหรับแพทย์ ณ เวลาตัดสินใจ", icon: <Stethoscope size={18} /> },
+  ],
+  pharmacist: [
+    { href: "/pharmacist/reconcile", title: "ทบทวนความสอดคล้องของยา", text: "ตรวจรายการยาจากหลายแหล่งข้อมูล", icon: <Pill size={18} /> },
+  ],
+};
+
 export default function WorkQueue() {
-  const router = useRouter();
   const [user, setUser] = useState<User | null>(null),
     [tasks, setTasks] = useState<TaskSummary[]>([]),
     [runId, setRunId] = useState(""),
@@ -18,6 +49,12 @@ export default function WorkQueue() {
     const run = localStorage.getItem(RUN_KEY) || "";
     setRunId(run);
     if (!run) {
+      // No run: still resolve the role so its tool links show.
+      try {
+        setUser((await api<{ user: User }>("/api/me")).user);
+      } catch {
+        /* AppShell redirects to /login when unauthenticated */
+      }
       setLoading(false);
       return;
     }
@@ -51,117 +88,141 @@ export default function WorkQueue() {
     }
   }
   const href = (t: TaskSummary) => `/app/cases/${t.case_id}/${t.kind}?run=${runId}`;
-  return (
-    <div className="page-stack">
-      <header className="page-heading">
-        <div>
-          <h1>{user ? roleTitle[user.role] : "คิวงานตามบทบาท"}</h1>
-          <p>จัดลำดับตามความปลอดภัยและขั้นตอนที่ต้องดำเนินการต่อ</p>
-        </div>
-        <span className="badge">
-          <BriefcaseMedical size={14} />
-          รอบ {runId ? runId.slice(0, 8) : "—"}
-        </span>
-      </header>
-      {!runId && !loading ? (
-        <div className="state-panel">
-          <h2>ยังไม่ได้เริ่มรอบเดโม</h2>
-          <p>เปิด seeded journey เพื่อสร้างคิวงานสังเคราะห์ที่แยกจากรอบอื่น</p>
-          <Link className="ui-button ui-button--primary" href="/demo">
-            ไปที่รอบเดโม <ArrowRight size={18} />
+
+  const columns: DataTableColumn<TaskSummary>[] = [
+    {
+      key: "priority",
+      header: "ความสำคัญ",
+      render: (t) =>
+        t.priority === "critical" ? (
+          <StatusChip tone="critical" icon={<AlertOctagon size={16} />}>
+            เร่งด่วน
+          </StatusChip>
+        ) : (
+          <StatusChip tone="warning" icon={<Clock size={16} />}>
+            ต้องตรวจทาน
+          </StatusChip>
+        ),
+    },
+    {
+      key: "case",
+      header: "เคส",
+      render: (t) => (
+        <>
+          <strong>{t.case_id}</strong>
+          <div className="muted">ข้อมูลสังเคราะห์</div>
+        </>
+      ),
+    },
+    {
+      key: "task",
+      header: "งานที่ต้องทำ",
+      render: (t) => (
+        <>
+          <strong>{t.label}</strong>
+          {t.next_action && t.next_action !== t.label ? <div className="muted">{t.next_action}</div> : null}
+        </>
+      ),
+    },
+    {
+      key: "owner",
+      header: "ผู้รับผิดชอบ",
+      render: (t) => (t.owner ? "รับเคสแล้ว" : <span className="muted">ยังไม่มีผู้รับผิดชอบ</span>),
+    },
+    {
+      key: "actions",
+      header: "การทำงาน",
+      className: "ui-cell-actions",
+      render: (t) => (
+        <div className="ui-table__actions">
+          {!t.owner ? (
+            <Button variant="secondary" onClick={() => claim(t)}>
+              รับเคสนี้
+            </Button>
+          ) : null}
+          <Link className="ui-button ui-button--primary" href={href(t)}>
+            เปิดเคส <ArrowRight size={18} />
           </Link>
         </div>
-      ) : null}
+      ),
+    },
+  ];
+
+  const tools = user ? roleTools[user.role] : [];
+  return (
+    <div className="page-stack">
+      <PageHeader
+        title={user ? roleTitle[user.role] : "คิวงานตามบทบาท"}
+        subtitle="จัดลำดับตามความปลอดภัยและขั้นตอนที่ต้องดำเนินการต่อ"
+        meta={
+          <StatusChip tone="neutral" icon={<BriefcaseMedical size={14} />}>
+            รอบ {runId ? runId.slice(0, 8) : "—"}
+          </StatusChip>
+        }
+      />
       {error ? (
-        <div className="error-panel" role="alert">
-          <strong>โหลดข้อมูลไม่สำเร็จ</strong>
-          <br />
-          {error}
-          <div style={{ marginTop: 8 }}>
+        <Notice
+          tone="critical"
+          role="alert"
+          title="โหลดข้อมูลไม่สำเร็จ"
+          actions={
             <Button variant="secondary" onClick={load}>
               <RefreshCw size={18} />
               ลองโหลดอีกครั้ง
             </Button>
-          </div>
-        </div>
+          }
+        >
+          <p>{error}</p>
+        </Notice>
       ) : null}
-      {loading ? (
-        <>
-          <div className="skeleton" />
-          <div className="skeleton" />
-        </>
+      {loading ? <LoadingState label="กำลังโหลดคิวงาน…" /> : null}
+      {!runId && !loading ? (
+        <EmptyState
+          icon={<BriefcaseMedical size={28} />}
+          title="ยังไม่ได้เริ่มรอบเดโม"
+          description={<p>เปิด seeded journey เพื่อสร้างคิวงานสังเคราะห์ที่แยกจากรอบอื่น</p>}
+          action={
+            <Link className="ui-button ui-button--primary" href="/demo">
+              ไปที่รอบเดโม <ArrowRight size={18} />
+            </Link>
+          }
+        />
       ) : null}
       {!loading && runId && !error ? (
-        <section className="card" aria-labelledby="queue-title">
-          <div className="cluster" style={{ justifyContent: "space-between" }}>
-            <div>
-              <h2 id="queue-title" style={{ marginBottom: 4 }}>
-                งานที่ต้องดำเนินการ
-              </h2>
-              <p className="muted" style={{ margin: 0 }}>
-                แสดงเฉพาะงานของบทบาทที่เข้าสู่ระบบ
-              </p>
-            </div>
-            <span className="badge">{tasks.length} รายการ</span>
+        <Section
+          title="งานที่ต้องดำเนินการ"
+          titleId="queue-title"
+          actions={<StatusChip tone="neutral">{tasks.length} รายการ</StatusChip>}
+        >
+          <DataTable
+            columns={columns}
+            rows={tasks}
+            rowKey={(t) => t.task_id}
+            caption="งานที่ต้องดำเนินการ แสดงเฉพาะงานของบทบาทที่เข้าสู่ระบบ"
+            empty={
+              <EmptyState
+                icon={<CheckCircle2 size={28} className="success" />}
+                title="ยังไม่มีเคสที่ต้องดำเนินการ"
+                description={<p>ตรวจสอบบทบาทที่เข้าสู่ระบบ หรือกลับมาดูคิวอีกครั้งภายหลัง</p>}
+              />
+            }
+          />
+        </Section>
+      ) : null}
+      {!loading && tools.length ? (
+        <Section title="เครื่องมือของบทบาท" titleId="role-tools-title">
+          <div className="ui-tool-grid">
+            {tools.map((t) => (
+              <Link key={t.href} className="ui-tool-card" href={t.href}>
+                <strong>
+                  {t.icon}
+                  {t.title}
+                </strong>
+                <span>{t.text}</span>
+              </Link>
+            ))}
           </div>
-          {tasks.length === 0 ? (
-            <div className="state-panel">
-              <CheckCircle2 size={28} className="success" />
-              <h2>ยังไม่มีเคสที่ต้องดำเนินการ</h2>
-              <p>ตรวจสอบบทบาทที่เข้าสู่ระบบ หรือกลับมาดูคิวอีกครั้งภายหลัง</p>
-            </div>
-          ) : (
-            <table className="queue-table">
-              <thead>
-                <tr>
-                  <th>ความสำคัญ</th>
-                  <th>เคส</th>
-                  <th>ขั้นตอน / งานถัดไป</th>
-                  <th>ผู้รับผิดชอบ</th>
-                  <th>การทำงาน</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tasks.map((t) => (
-                  <tr key={t.task_id}>
-                    <td>
-                      <span className={`priority ${t.priority === "critical" ? "critical" : "warning"}`}>
-                        <AlertTriangle size={16} />
-                        {t.priority === "critical" ? "เร่งด่วน" : "ต้องตรวจทาน"}
-                      </span>
-                    </td>
-                    <td>
-                      <strong>{t.case_id}</strong>
-                      <div className="muted">ข้อมูลสังเคราะห์</div>
-                    </td>
-                    <td>
-                      <strong>{t.label}</strong>
-                      <div className="muted">{t.next_action}</div>
-                    </td>
-                    <td>
-                      <span className="cluster">
-                        <CircleUserRound size={16} />
-                        {t.owner ? "รับเคสแล้ว" : "ยังไม่มีผู้รับผิดชอบ"}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="cluster">
-                        {!t.owner ? (
-                          <Button variant="secondary" onClick={() => claim(t)}>
-                            รับเคสนี้
-                          </Button>
-                        ) : null}
-                        <Link className="ui-button ui-button--primary" href={href(t)}>
-                          เปิดเคส <ArrowRight size={18} />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </section>
+        </Section>
       ) : null}
     </div>
   );

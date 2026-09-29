@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Notice } from "@/components/ui/Notice";
 import { ROLES, ROLE_LABELS, type Role } from "@/lib/copy";
 
 const ROLE_LABELS_TH: Record<Role, string> = { nurse: "พยาบาล", physician: "แพทย์", pharmacist: "เภสัชกร" };
@@ -28,30 +30,34 @@ export default function DemoLogin() {
         router.push(data.user.home);
         return;
       }
-      setError("Sign-in failed. Please try again.");
+      setError("เข้าสู่ระบบไม่สำเร็จ โปรดลองอีกครั้ง · Sign-in failed. Please try again.");
     } catch {
-      setError("Sign-in service unavailable. Please try again.");
+      setError("บริการเข้าสู่ระบบไม่พร้อมใช้งาน โปรดลองอีกครั้ง · Sign-in service unavailable. Please try again.");
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <div role="group" aria-labelledby="demo-roles-label" aria-describedby={error ? "login-error" : undefined}>
-      <p id="demo-roles-label">
-        Public demo, synthetic data only. Choose a role (no password). เลือกบทบาทเพื่อทดลองใช้งาน (ข้อมูลสังเคราะห์)
+    <div
+      className="ui-form"
+      role="group"
+      aria-labelledby="demo-roles-label"
+      aria-describedby={error ? "login-error" : undefined}
+    >
+      <p id="demo-roles-label" className="muted">
+        เลือกบทบาทเพื่อทดลองใช้งาน (ข้อมูลสังเคราะห์ ไม่ต้องใช้รหัสผ่าน) · Public demo, synthetic data only. Choose a
+        role (no password).
       </p>
       {ROLES.map((role) => (
-        <p key={role}>
-          <button type="button" disabled={busy} onClick={() => signIn(role)}>
-            {ROLE_LABELS[role]} · {ROLE_LABELS_TH[role]}
-          </button>
-        </p>
+        <Button key={role} type="button" variant="secondary" className="ui-block" disabled={busy} onClick={() => signIn(role)}>
+          {ROLE_LABELS[role]} · {ROLE_LABELS_TH[role]}
+        </Button>
       ))}
       {error && (
-        <p id="login-error" role="alert" className="error">
+        <Notice tone="critical" role="alert" id="login-error">
           {error}
-        </p>
+        </Notice>
       )}
     </div>
   );
