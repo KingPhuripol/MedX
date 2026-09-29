@@ -108,10 +108,12 @@ export default function TriageReview({ assessment, departments, onReview }: Prop
                   <p className={css.alertName}>
                     <strong>{x.name_en}</strong> <span lang="th">({x.name_th})</span> — {x.rule_id}
                   </p>
-                  <p className={css.flat}>{x.message_en}</p>
-                  <p className={css.flat} lang="th">
-                    {x.message_th}
-                  </p>
+                  <div className={css.msgs}>
+                    <p className={css.flat}>{x.message_en}</p>
+                    <p className={css.flat} lang="th">
+                      {x.message_th}
+                    </p>
+                  </div>
                   <p className={css.evidence}>Evidence: {x.evidence_refs.join(", ")}</p>
                   {!reviewed && (
                     <label className={css.ackRow} htmlFor={`ack-${x.rule_id}`}>

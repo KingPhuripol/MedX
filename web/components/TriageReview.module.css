@@ -25,3 +25,12 @@
 .fieldset legend { font-weight: 700; padding: 0; margin-bottom: 8px; }
 .radioRow { display: flex; align-items: center; gap: 16px; min-height: 44px; padding: 8px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); cursor: pointer; }
 .radioRow input { width: 20px; height: 20px; flex: none; margin: 0; }
+@media (min-width: 768px) {
+  .alertCard { grid-template-columns: minmax(0, 1fr) 320px; column-gap: 24px; align-items: start; }
+  .alertCard > * { grid-column: 1; }
+  .alertCard > .ackRow { grid-column: 2; grid-row: 1 / span 3; align-self: center; margin-top: 0; }
+}
+.msgs { display: grid; gap: 8px; }
+@media (min-width: 1024px) {
+  .msgs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+}
