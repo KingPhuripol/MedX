@@ -41,6 +41,8 @@ def to_facts(view: SnapshotView) -> list[IntakeFact]:
         for p in NUMERIC:
             if getattr(v, p) is not None:
                 facts.append(_fact(v, f"vital.{p}", getattr(v, p)))
+        if v.on_oxygen is not None:
+            facts.append(_fact(v, "vital.on_oxygen", v.on_oxygen))
         c = v.consciousness
         if c == "A":
             facts += [_fact(v, "vital.avpu", "A"), _fact(v, "vital.new_confusion", False)]

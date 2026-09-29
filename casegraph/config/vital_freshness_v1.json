@@ -12,6 +12,7 @@
     "temp_c": {"window_min": 60, "source": "RCP NEWS2 (2017) Chart 4 (minimum 1-hourly monitoring at medium score / single parameter 3)"},
     "avpu": {"window_min": 60, "source": "RCP NEWS2 (2017) Chart 4 (minimum 1-hourly monitoring at medium score / single parameter 3); ACVPU"},
     "new_confusion": {"window_min": 60, "source": "RCP NEWS2 (2017) Chart 4 (minimum 1-hourly monitoring at medium score / single parameter 3); ACVPU C"},
+    "on_oxygen": {"window_min": 60, "source": "RCP NEWS2 (2017) Chart 4 (minimum 1-hourly monitoring at medium score / single parameter 3); supplemental oxygen is a NEWS2 parameter"},
     "capillary_glucose_mg_dl": {"window_min": 60, "source": "Same basis as the NEWS2 vitals (RCP NEWS2 2017 Chart 4). Low confidence; flagged for D1"}
   }
 }

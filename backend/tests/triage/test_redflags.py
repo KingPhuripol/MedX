@@ -105,7 +105,9 @@ BOUNDARIES = {
     ],
     "RF-HYPOGLY": [({"vital.capillary_glucose_mg_dl": 53}, True), ({"vital.capillary_glucose_mg_dl": 54}, False)],
     # NEWS2 aggregate on BASE (score 0): rr 22 = 2, sbp 105 = 1, temp 38.5 = 1 -> 4; hr 100 = +1, hr 120 = +2.
-    "RF-NEWS-AGG5": [(AGG4, False), (AGG4 | {"vital.hr": 100}, True), (AGG4 | {"vital.hr": 120}, True)],
+    "RF-NEWS-AGG5": [(AGG4, False), (AGG4 | {"vital.hr": 100}, True), (AGG4 | {"vital.hr": 120}, True),
+                     (AGG4 | {"vital.on_oxygen": True}, True),  # oxygen scores 2 -> 6
+                     ({"vital.rr": 22, "vital.new_confusion": True}, True)],  # 2 + 3 (new confusion) = 5
 }
 BOUNDARY_CASES = [(rule, ov, exp) for rule, cases in BOUNDARIES.items() for ov, exp in cases]
 
@@ -290,6 +292,9 @@ def test_news_aggregate_missing_vital_is_not_evaluable_not_negative():
     # A present score of 5 fires even with a vital missing (lower bound is enough); 0 with spo2 missing -> false.
     alerts, _ = redflags.evaluate(snap(AGG4 | {"vital.hr": 100, "vital.spo2": DROP}))
     assert "RF-NEWS-AGG5" in {a.rule_id for a in alerts}
+    # oxygen status missing is a missing parameter (up to +2), not room air.
+    _, ne = redflags.evaluate(snap(AGG4 | {"vital.on_oxygen": DROP}))
+    assert {n.rule_id: n.missing_inputs for n in ne}["RF-NEWS-AGG5"] == ["vital.on_oxygen"]
     _, ne = redflags.evaluate(snap({"vital.spo2": DROP}))
     assert "RF-NEWS-AGG5" not in {n.rule_id for n in ne}
 

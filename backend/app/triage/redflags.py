@@ -17,7 +17,7 @@ from .models import Alert, NotEvaluable, Snapshot
 
 RULES_PATH = Path(__file__).with_name("rules") / "redflag_rules_v1.json"
 RULESET_VERSION = "rf-1.2.0"
-RULESET_SHA256 = "676ace845669dea742e88b97b9a14e0e6755c8f8d027eb423ed1c49b5e8daaca"
+RULESET_SHA256 = "e576db8fe539f1b2f8e970a4032271b28849c5b376c61e986bcd052afe42299a"
 
 _OPS = {
     "<=": lambda a, b: a <= b,
@@ -84,23 +84,30 @@ def _band(bands: list[list[Any]], x: float) -> int:
 
 
 def _news_aggregate(spec: dict[str, Any], snap: Snapshot) -> _Result:
-    """Aggregate NEWS2 (SpO2 scale 1). Fires when the present parameters already reach ``min_score``; false only
-    when the missing ones cannot reach it; otherwise unknown. Tied readings score their worst value."""
-    bands = spec["bands"]
-    score, ceiling, evidence, missing = 0, 0, [], []
-    for name in (*NEWS_VITALS, "avpu"):
+    """Aggregate NEWS2 (RCP 2017, SpO2 scale 1). Fires when the present parameters already reach ``min_score``;
+    false only when the missing ones cannot reach it; otherwise unknown (never a missing parameter as 0).
+    Tied readings score their worst value; new confusion scores like V/P/U."""
+    bands, score, ceiling, evidence, missing = spec["bands"], 0, 0, [], []
+    confusion = [f for f in snap.values("vital.new_confusion") if f.value is True]
+    for name in (*NEWS_VITALS, "avpu", "on_oxygen"):
         kind = f"vital.{name}"
-        top = max(s for _, s in bands[name]) if name != "avpu" else max(bands["consciousness"].values())
-        if kind in snap.flagged:
-            missing.append(f"conflict:{kind}")
-            ceiling += top
+        table = bands["consciousness"] if name == "avpu" else bands["on_oxygen"] if name == "on_oxygen" else bands[name]
+        top = max(table.values()) if isinstance(table, dict) else max(s for _, s in table)
+        if name == "avpu" and confusion:  # new confusion is a positive finding: scores 3 whatever AVPU is
+            score += bands["new_confusion"]
+            evidence += [f.fact_id for f in confusion]
             continue
-        facts = snap.values(kind)
+        facts = [] if kind in snap.flagged else snap.values(kind)
         if not facts:
-            missing.append(kind)
+            missing.append(f"conflict:{kind}" if kind in snap.flagged else kind)
             ceiling += top
             continue
-        per = [(_band(bands[name], f.value) if name != "avpu" else bands["consciousness"][f.value], f) for f in facts]
+        if name == "avpu":
+            per = [(table[f.value], f) for f in facts]
+        elif name == "on_oxygen":
+            per = [(table[str(bool(f.value)).lower()], f) for f in facts]
+        else:
+            per = [(_band(table, f.value), f) for f in facts]
         best = max(s for s, _ in per)
         score += best
         evidence += [f.fact_id for s, f in per if s == best and s > 0]

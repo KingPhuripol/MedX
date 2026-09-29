@@ -5,7 +5,7 @@
 
 * every Vitals field becomes one S4 fact with the item's own ``available_at_time``; a ``null`` field is no fact;
 * consciousness ``C`` is ``vital.avpu=A`` plus ``vital.new_confusion=true`` (ACVPU convention; D1 item);
-* ``on_oxygen`` has no S4 fact kind: it is listed in ``unmappable``;
+* ``on_oxygen`` maps to ``vital.on_oxygen`` (rf-1.2.0 aggregate NEWS2); null is no fact;
 * Findings symptom facts ``present``/``absent`` become ``symptom.<name>`` facts; ``unknown`` is no fact;
 * an S3 chief-complaint code with an equal-meaning S4 symptom adds that symptom (e1 section s3_cc_to_s4_symptom).
 
@@ -140,8 +140,9 @@ def _vital_facts(item: Vitals) -> tuple[list[_Pending], list[str]]:
     if confusion is not None:
         out.append(_Pending({"fact_id": _fid(f"{item.item_id}.new_confusion"), "kind": "vital.new_confusion",
                              "value": confusion, **base}, item.item_id, item.event_time))
-    if item.on_oxygen is not None:
-        unmappable.append(f"Vitals.on_oxygen@{item.item_id}")
+    if item.on_oxygen is not None:  # null stays no fact: the NEWS2 oxygen parameter is then missing, never 0
+        out.append(_Pending({"fact_id": _fid(f"{item.item_id}.on_oxygen"), "kind": "vital.on_oxygen",
+                             "value": item.on_oxygen, **base}, item.item_id, item.event_time))
     return out, unmappable
 
 
@@ -250,7 +251,7 @@ def build_case(
 
 def _kinds(cond: dict[str, Any]) -> set[str]:
     if "news_aggregate" in cond:
-        return {f"vital.{v}" for v in (*redflags.NEWS_VITALS, "avpu")}
+        return {f"vital.{v}" for v in (*redflags.NEWS_VITALS, "avpu", "new_confusion", "on_oxygen")}
     if "any" in cond or "all" in cond or "at_least" in cond:
         return set().union(*(_kinds(c) for c in cond.get("any") or cond.get("all") or cond["of"]))
     if "symptom" in cond:

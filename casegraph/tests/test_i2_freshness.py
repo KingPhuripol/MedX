@@ -23,13 +23,14 @@ PID = "SYN-I2-FRESH"
 ONE_S = timedelta(seconds=1)
 # Normal values for every S4 vital (no rf-1.1.0 threshold hit). Keys are Vitals fields.
 NORMAL = {"hr": 80.0, "rr": 16.0, "sbp": 124.0, "dbp": 78.0, "spo2": 98.0, "temp_c": 36.8,
-          "capillary_glucose_mg_dl": 100.0}
+          "capillary_glucose_mg_dl": 100.0, "on_oxygen": False}
 # vital -> (Vitals fields for a reading of it, the rf-1.1.0 rule that cannot be evaluated without it)
 READING = {
     "hr": ({"hr": 80.0}, "RF-HR"), "rr": ({"rr": 16.0}, "RF-RR"), "sbp": ({"sbp": 124.0}, "RF-SBP"),
     "dbp": ({"dbp": 78.0}, None),  # no rf-1.1.0 rule reads dbp: freshness is reported, no rule depends on it
     "spo2": ({"spo2": 98.0}, "RF-SPO2"), "temp_c": ({"temp_c": 36.8}, "RF-TEMP"),
     "capillary_glucose_mg_dl": ({"capillary_glucose_mg_dl": 100.0}, "RF-HYPOGLY"),
+    "on_oxygen": ({"on_oxygen": False}, None),  # feeds only the aggregate rule, which is false (not unknown) at score 0
     "avpu": ({"consciousness": "A"}, "RF-CONSC"), "new_confusion": ({"new_confusion": False}, "RF-CONSC"),
 }
 
