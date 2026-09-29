@@ -251,7 +251,7 @@ export default function CaseWorkspace({ caseId, section }: { caseId: string; sec
       {section === "intake" ? (
         <>
           <Intake data={data} />
-          <section className="card domain-adapter desktop-task">
+          <section className="card domain-panel desktop-task">
             <h2>บันทึก intake ผ่าน domain API เดิม</h2>
             <VoiceIntake />
           </section>

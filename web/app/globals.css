@@ -25,6 +25,10 @@ select {
 }
 a {
   color: var(--primary);
+  text-decoration: underline;
+}
+a.ui-button {
+  text-decoration: none;
 }
 h1,
 h2,
@@ -501,16 +505,16 @@ main {
   background: var(--critical-bg);
   border-radius: 8px;
 }
-.domain-adapter {
+.domain-panel {
   overflow: hidden;
 }
-.domain-adapter section {
+.domain-panel section {
   display: grid;
   gap: 16px;
 }
-.domain-adapter input,
-.domain-adapter select,
-.domain-adapter textarea {
+.domain-panel input,
+.domain-panel select,
+.domain-panel textarea {
   min-height: 44px;
   max-width: 100%;
   padding: 8px 16px;
@@ -518,7 +522,7 @@ main {
   border-radius: 8px;
   background: var(--card);
 }
-.domain-adapter button {
+.domain-panel button {
   min-height: 44px;
   margin: 4px;
   padding: 8px 16px;
@@ -528,35 +532,35 @@ main {
   color: var(--card);
   font-weight: 700;
 }
-.domain-adapter button.secondary {
+.domain-panel button.secondary {
   background: var(--card);
   color: var(--foreground);
   border-color: var(--border);
 }
-.domain-adapter button:disabled {
+.domain-panel button:disabled {
   opacity: 0.55;
 }
-.domain-adapter fieldset {
+.domain-panel fieldset {
   min-width: 0;
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 16px;
 }
-.domain-adapter ul {
+.domain-panel ul {
   padding-left: 24px;
 }
 /* Domain work pages (triage, care, voice intake, pharma) and PageFrame pages (403, 404). */
-.domain-adapter .field {
+.domain-panel .field {
   display: grid;
   gap: 4px;
   margin-bottom: 16px;
 }
-.domain-adapter label {
+.domain-panel label {
   font-size: 14px;
   font-weight: 700;
 }
-.domain-adapter [role="alert"]:not(.disclaimer),
-.domain-adapter .error,
+.domain-panel [role="alert"]:not(.disclaimer),
+.domain-panel .error,
 .page .error {
   padding: 8px 16px;
   color: var(--critical-fg);
@@ -572,7 +576,7 @@ main {
   width: min(720px, calc(100% - 48px));
   margin: 32px auto;
 }
-.domain-adapter .page {
+.domain-panel .page {
   width: auto;
   margin: 0;
 }
@@ -612,20 +616,23 @@ main {
 }
 @media (max-width: 1023px) {
   .clinical-shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .app-nav {
     position: static;
     width: 100%;
+    min-width: 0;
     height: auto;
     padding: 16px 24px;
     flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
     border-right: 0;
     border-bottom: 1px solid var(--border);
   }
   .nav-links {
     display: flex;
+    flex-wrap: wrap;
     margin-left: auto;
   }
   .nav-meta {

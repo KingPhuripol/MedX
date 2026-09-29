@@ -50,7 +50,8 @@ for (const vp of VIEWPORTS) {
       await startDemoRun(page);
       for (const section of ["overview", "intake", "triage", "care", "medications", "timeline", "activity"]) {
         await page.goto(`/app/cases/SYN-2026-0017/${section}`);
-        await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+        // The intake section embeds the voice-intake page, which brings its own h1.
+        await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
         await expectDisclaimer(page);
       }
     });

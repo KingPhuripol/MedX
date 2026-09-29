@@ -7,7 +7,7 @@ export default function NurseLayout({ children }: { children: ReactNode }) {
   return (
     <AppShell>
       <div className="page-stack">
-        <div className="card domain-adapter">{children}</div>
+        <div className="card domain-panel">{children}</div>
       </div>
     </AppShell>
   );

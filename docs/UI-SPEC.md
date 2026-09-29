@@ -103,7 +103,7 @@ Desktop uses a 240px app navigation, flexible work canvas and optional 360px evi
 | `/app/cases/:caseId/timeline` | clinical-operational timeline | all |
 | `/app/cases/:caseId/activity` | append-only review/handoff audit | all |
 
-Legacy `/nurse/*`, `/physician/*` and `/pharmacist` routes redirect to the closest canonical workspace route while retaining safe query identifiers.
+Legacy role homes `/nurse`, `/physician` and `/pharmacist` redirect to `/app/queue`. The domain work pages `/nurse/triage`, `/nurse/triage/:assessmentId`, `/nurse/intake`, `/physician/care`, `/physician/care/:assessmentId` and `/pharmacist/reconcile` stay at their routes inside the `AppShell` (role links in the navigation), each behind its own RoleGuard; they are not redirected into the seeded demo case, whose header shows a different synthetic patient (slice U4, pending owner confirmation).
 
 ## Role journeys
 

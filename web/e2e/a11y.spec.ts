@@ -51,7 +51,8 @@ for (const vp of VIEWPORTS) {
       expect(await seriousViolations(page), "/app/queue with run").toEqual([]);
       for (const section of CASE_SECTIONS) {
         await page.goto(`/app/cases/SYN-2026-0017/${section}`);
-        await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+        // The intake section embeds the voice-intake page, which brings its own h1.
+        await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
         expect(await seriousViolations(page), section).toEqual([]);
       }
     });
