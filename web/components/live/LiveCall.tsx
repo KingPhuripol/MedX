@@ -150,7 +150,8 @@ export default function LiveCall() {
   const reasonLine = live.cfg?.reason ? DISABLED_REASON_TH[live.cfg.reason] : live.cfgFailed ? CONFIG_UNAVAILABLE_TH : null;
 
   let centre: ReactNode;
-  if (state === "idle") centre = <Ctl testId="live-start" label="เริ่มสนทนา" size="lg" tone="start" icon={<Play size={28} />} onClick={() => void live.start()} />;
+  if (state === "idle" || state === "loading")
+    centre = <Ctl testId="live-start" label="เริ่มสนทนา" size="lg" tone="start" disabled={state !== "idle"} icon={<Play size={28} />} onClick={() => void live.start()} />;
   else if (state === "error")
     centre = <Ctl testId="live-retry" label="ลองใหม่" size="lg" tone="start" icon={<RotateCcw size={28} />} onClick={live.retry} />;
   else
@@ -161,13 +162,13 @@ export default function LiveCall() {
         size="lg"
         tone="end"
         icon={<PhoneOff size={28} />}
-        disabled={live.finishing || state === "loading" || (state === "disabled" && !data)}
+        disabled={live.finishing || (state === "disabled" && !data)}
         onClick={() => void live.endCall()}
       />
     );
 
   return (
-    <div className="live-root" data-live-root data-testid="live-root" data-state={state}>
+    <div className="live-root" data-live-root data-testid="live-root" data-state={state} data-sheet={sheetOpen && !desktop ? "open" : "closed"}>
       <audio ref={live.audioRef} autoPlay playsInline />
 
       <header className="live-header">
@@ -178,8 +179,12 @@ export default function LiveCall() {
           ผู้ป่วยสังเคราะห์ · {refShown}
         </p>
         <p className="live-timer" data-testid="live-timer">
-          <span className="sr-only">เวลาที่เหลือ </span>
-          {clock === null ? "--:--" : nearEnd ? `เหลือ ${fmtClock(clock)}` : fmtClock(clock)}
+          {state === "ended" ? null : (
+            <>
+              <span className="sr-only">เวลาที่เหลือ </span>
+              {clock === null ? "--:--" : nearEnd ? `เหลือ ${fmtClock(clock)}` : fmtClock(clock)}
+            </>
+          )}
         </p>
         <button type="button" className="live-close" data-testid="live-close" aria-label="ปิด MedX Live" onClick={live.close}>
           <X size={20} aria-hidden="true" />

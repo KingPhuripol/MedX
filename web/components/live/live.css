@@ -20,7 +20,6 @@ body:has([data-live-root]) .disclaimer {
 }
 
 .live-root {
-  --orb-size: 200px;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -30,22 +29,6 @@ body:has([data-live-root]) .disclaimer {
   color: var(--call-fg);
   background: var(--call-bg);
   overflow-x: clip;
-}
-@media (min-width: 430px) {
-  .live-root {
-    --orb-size: 240px;
-  }
-}
-@media (min-width: 1024px) {
-  .live-root {
-    --orb-size: 280px;
-  }
-}
-/* Short phones: keep Start/End and the sheet peek in the first screen. */
-@media (max-height: 860px) and (max-width: 1023px) {
-  .live-root {
-    --orb-size: 168px;
-  }
 }
 .live-root :focus-visible {
   outline: 3px solid var(--call-focus);
@@ -191,12 +174,12 @@ body:has([data-live-root]) .disclaimer {
   display: grid;
   place-items: center;
   width: 100%;
-  height: calc(var(--orb-size) * 1.32);
+  height: 264px;
 }
 .live-orb {
   position: relative;
-  width: var(--orb-size);
-  height: var(--orb-size);
+  width: 200px;
+  height: 200px;
   border-radius: 50%;
   background: radial-gradient(circle at 34% 30%, var(--orb-core) 0%, var(--orb-mid) 52%, var(--orb-edge) 100%);
   box-shadow: var(--orb-glow);
@@ -548,5 +531,60 @@ body:has([data-live-root]) .disclaimer {
   }
   .live-sheet-chevron {
     transition: transform 0.2s ease;
+  }
+}
+
+/* Orb size ladder (no custom properties: only theme.css defines tokens). Phones shrink it when space is needed. */
+@media (min-width: 430px) {
+.live-root .live-orb-stage {
+  height: 317px;
+}
+.live-root .live-orb {
+  width: 240px;
+  height: 240px;
+}
+}
+@media (min-width: 1024px) {
+.live-root .live-orb-stage {
+  height: 370px;
+}
+.live-root .live-orb {
+  width: 280px;
+  height: 280px;
+}
+}
+@media (max-height: 860px) and (max-width: 1023px) {
+.live-root .live-orb-stage {
+  height: 222px;
+}
+.live-root .live-orb {
+  width: 168px;
+  height: 168px;
+}
+}
+@media (max-width: 1023px) {
+.live-root[data-state="idle"] .live-orb-stage {
+  height: 148px;
+}
+.live-root[data-state="idle"] .live-orb {
+  width: 112px;
+  height: 112px;
+}
+.live-root[data-state="loading"] .live-orb-stage {
+  height: 148px;
+}
+.live-root[data-state="loading"] .live-orb {
+  width: 112px;
+  height: 112px;
+}
+.live-root[data-sheet="open"] .live-orb-stage {
+  height: 137px;
+}
+.live-root[data-sheet="open"] .live-orb {
+  width: 104px;
+  height: 104px;
+}
+  .live-sheet[data-expanded="true"] .live-sheet-body {
+    max-height: 40dvh;
   }
 }
