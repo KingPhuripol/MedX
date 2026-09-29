@@ -33,7 +33,12 @@ type Props = {
 };
 
 function Refs({ refs }: { refs: EvidenceRef[] }) {
-  return <span className={styles.refs}>Evidence: {refs.map(refText).join("; ")}</span>;
+  return (
+    <details className={styles.refsBox}>
+      <summary>ดูหลักฐานและที่มา (Evidence)</summary>
+      <span className={styles.refs}>{refs.map(refText).join("; ")}</span>
+    </details>
+  );
 }
 
 /**
@@ -58,9 +63,13 @@ function CodePicker({
 }) {
   const [query, setQuery] = useState("");
   const [initial] = useState(chosen);
-  const ordered = [...entries.filter((e) => initial.includes(e.code)), ...entries.filter((e) => !initial.includes(e.code))];
+  const ordered = [
+    ...entries.filter((e) => initial.includes(e.code)),
+    ...entries.filter((e) => !initial.includes(e.code)),
+  ];
   const q = query.trim().toLowerCase();
-  const matches = (e: VocabEntry) => !q || `${e.display} ${e.display_th} ${e.code}`.toLowerCase().includes(q);
+  const matches = (e: VocabEntry) =>
+    !q || `${e.display} ${e.display_th} ${e.code}`.toLowerCase().includes(q);
   return (
     <fieldset className={styles.picker}>
       <legend>{legend}</legend>
@@ -95,7 +104,11 @@ function CodePicker({
               id={`${name}-${e.code}`}
               checked={chosen.includes(e.code)}
               onChange={(ev) =>
-                onChange(ev.target.checked ? [...chosen, e.code] : chosen.filter((c) => c !== e.code))
+                onChange(
+                  ev.target.checked
+                    ? [...chosen, e.code]
+                    : chosen.filter((c) => c !== e.code),
+                )
               }
             />
             <span>
@@ -108,21 +121,31 @@ function CodePicker({
   );
 }
 
-export default function CareReview({ assessment, vocabulary, onReview }: Props) {
+export default function CareReview({
+  assessment,
+  vocabulary,
+  onReview,
+}: Props) {
   const a = assessment;
   const scr = a.red_flag_screening;
   const suggested = a.status === "suggested";
   const needsScreeningAck = scr.status !== "evaluated";
   const [acked, setAcked] = useState<Record<string, boolean>>({});
   const [screeningAck, setScreeningAck] = useState(false);
-  const [editNi, setEditNi] = useState<string[]>(a.next_information.map((x) => x.code));
-  const [editCp, setEditCp] = useState<string[]>(a.pathway_options.map((x) => x.code));
+  const [editNi, setEditNi] = useState<string[]>(
+    a.next_information.map((x) => x.code),
+  );
+  const [editCp, setEditCp] = useState<string[]>(
+    a.pathway_options.map((x) => x.code),
+  );
   const [editReason, setEditReason] = useState("");
   const [rejectReason, setRejectReason] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const allAcked = a.alerts.every((x) => acked[x.rule_id]) && (!needsScreeningAck || screeningAck);
+  const allAcked =
+    a.alerts.every((x) => acked[x.rule_id]) &&
+    (!needsScreeningAck || screeningAck);
   const ackIds = a.alerts.map((x) => x.rule_id).filter((id) => acked[id]);
   const ackTotal = a.alerts.length + (needsScreeningAck ? 1 : 0);
   const ackCount = ackIds.length + (needsScreeningAck && screeningAck ? 1 : 0);
@@ -130,7 +153,11 @@ export default function CareReview({ assessment, vocabulary, onReview }: Props) 
   const blocked = !allAcked || busy;
   const hint = allAcked ? undefined : "ack-hint";
 
-  async function submit(event: FormEvent<HTMLFormElement>, action: ReviewAction, body: Partial<ReviewBody>) {
+  async function submit(
+    event: FormEvent<HTMLFormElement>,
+    action: ReviewAction,
+    body: Partial<ReviewBody>,
+  ) {
     event.preventDefault();
     setBusy(true);
     setError(null);
@@ -146,7 +173,10 @@ export default function CareReview({ assessment, vocabulary, onReview }: Props) 
   const final = a.review?.final_codes;
 
   return (
-    <section aria-labelledby="care-title" className={`page-stack ${styles.page}`}>
+    <section
+      aria-labelledby="care-title"
+      className={`page-stack ${styles.page}`}
+    >
       <PageHeader
         titleId="care-title"
         title={
@@ -182,30 +212,38 @@ export default function CareReview({ assessment, vocabulary, onReview }: Props) 
               <p className={styles.escalate}>
                 <AlertOctagon size={20} aria-hidden="true" />
                 <span>
-                  <strong>Escalate to a clinician now.</strong> These alerts come from fixed rules, are computed before
-                  any suggestion and cannot be changed by the model.
+                  <strong>Escalate to a clinician now.</strong> These alerts
+                  come from fixed rules, are computed before any suggestion and
+                  cannot be changed by the model.
                 </span>
               </p>
               <ul className={styles.alertList}>
                 {a.alerts.map((x) => (
                   <li key={x.rule_id} className={styles.alertCard}>
                     <p className={styles.alertName}>
-                      <StatusChip tone="critical" icon={<AlertOctagon size={16} aria-hidden="true" />}>
+                      <StatusChip
+                        tone="critical"
+                        icon={<AlertOctagon size={16} aria-hidden="true" />}
+                      >
                         Red flag · พบสัญญาณอันตราย
                       </StatusChip>{" "}
-                      <strong>{x.name_en}</strong> <span lang="th">({x.name_th})</span> — {x.rule_id}
+                      <strong>{x.name_en}</strong>{" "}
+                      <span lang="th">({x.name_th})</span> — {x.rule_id}
                     </p>
                     <p>{x.message_en}</p>
                     <p lang="th">{x.message_th}</p>
-                    <p className={styles.refs}>Evidence: {x.evidence_refs.join(", ")}</p>
+                    <p className={styles.refs}>
+                      Evidence: {x.evidence_refs.join(", ")}
+                    </p>
                   </li>
                 ))}
               </ul>
             </div>
           ) : (
             <Notice tone="info" data-testid="no-alert">
-              No alert raised by the rules that ran. This is not an all-rules result: see the screening block below
-              for what was and was not checked.
+              No alert raised by the rules that ran. This is not an all-rules
+              result: see the screening block below for what was and was not
+              checked.
             </Notice>
           )}
           <ScreeningBlock screening={scr} staleText={CARE_STALE_TEXT} />
@@ -237,47 +275,71 @@ export default function CareReview({ assessment, vocabulary, onReview }: Props) 
                     <ol data-testid="next-information" className={styles.items}>
                       {a.next_information.map((x) => (
                         <li key={x.code}>
-                          {x.display} <span lang="th">({x.display_th})</span> — {x.code}. Sources:{" "}
-                          {x.source_refs.join(", ")}. <Refs refs={x.evidence_refs} />
+                          {x.display} <span lang="th">({x.display_th})</span> —{" "}
+                          {x.code}. Sources: {x.source_refs.join(", ")}.{" "}
+                          <Refs refs={x.evidence_refs} />
                         </li>
                       ))}
                     </ol>
                   ) : (
-                    <p>No next-information item matched the rules for this snapshot.</p>
+                    <p>
+                      No next-information item matched the rules for this
+                      snapshot.
+                    </p>
                   )}
                   <h3>Care-pathway options to consider</h3>
                   {a.pathway_options.length ? (
                     <ul data-testid="pathway-options" className={styles.items}>
                       {a.pathway_options.map((x) => (
                         <li key={x.code}>
-                          {x.display} <span lang="th">({x.display_th})</span> — {x.code}. Sources:{" "}
-                          {x.source_refs.join(", ")}. <Refs refs={x.evidence_refs} />
+                          {x.display} <span lang="th">({x.display_th})</span> —{" "}
+                          {x.code}. Sources: {x.source_refs.join(", ")}.{" "}
+                          <Refs refs={x.evidence_refs} />
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <p>No care-pathway option matched the rules for this snapshot.</p>
+                    <p>
+                      No care-pathway option matched the rules for this
+                      snapshot.
+                    </p>
                   )}
                 </div>
               </div>
               <p>
-                <StatusChip tone="neutral">Uncertainty: {a.uncertainty}</StatusChip>
+                <StatusChip tone="neutral">
+                  Uncertainty: {a.uncertainty}
+                </StatusChip>
               </p>
             </>
           ) : a.status === "abstained" ? (
-            <Notice tone="warning" icon={<AlertTriangle size={20} />} data-testid="abstained">
-              <strong>No suggestion: required information is missing.</strong> The system abstained. Collect the items
-              below and assess again.
+            <Notice
+              tone="warning"
+              icon={<AlertTriangle size={20} />}
+              data-testid="abstained"
+            >
+              <strong>No suggestion: required information is missing.</strong>{" "}
+              The system abstained. Collect the items below and assess again.
             </Notice>
           ) : (
-            <Notice tone="warning" icon={<AlertTriangle size={20} />} data-testid="status-error">
-              <strong>No suggestion is shown because the provider output failed validation ({a.reason}).</strong> The
-              red-flag alerts and screening above are unaffected.
+            <Notice
+              tone="warning"
+              icon={<AlertTriangle size={20} />}
+              data-testid="status-error"
+            >
+              <strong>
+                No suggestion is shown because the provider output failed
+                validation ({a.reason}).
+              </strong>{" "}
+              The red-flag alerts and screening above are unaffected.
             </Notice>
           )}
           {a.missing_information.length ? (
             <Notice tone="warning" title="Missing information">
-              <p>Not recorded or stated as unknown — never read as negative or normal.</p>
+              <p>
+                Not recorded or stated as unknown — never read as negative or
+                normal.
+              </p>
               <ul data-testid="missing-information" className={styles.missing}>
                 {a.missing_information.map((m) => (
                   <li key={m}>{m}</li>
@@ -304,7 +366,9 @@ export default function CareReview({ assessment, vocabulary, onReview }: Props) 
               : `${a.review_status === "confirmed" ? "Confirmed" : "Edited"}: next information ${
                   final?.next_information.join(", ") || "none"
                 }; pathway options ${final?.pathway_options.join(", ") || "none"}`}
-            {a.review ? ` — by ${a.review.reviewer_role} #${a.review.reviewer_id} at ${a.review.ts_utc}` : ""}
+            {a.review
+              ? ` — by ${a.review.reviewer_role} #${a.review.reviewer_id} at ${a.review.ts_utc}`
+              : ""}
           </Notice>
         </Section>
       ) : (
@@ -314,12 +378,18 @@ export default function CareReview({ assessment, vocabulary, onReview }: Props) 
               <fieldset data-testid="acknowledgements" className={styles.ack}>
                 <legend>Acknowledge before reviewing</legend>
                 {a.alerts.map((x) => (
-                  <label key={x.rule_id} htmlFor={`ack-${x.rule_id}`} className={styles.checkRow}>
+                  <label
+                    key={x.rule_id}
+                    htmlFor={`ack-${x.rule_id}`}
+                    className={styles.checkRow}
+                  >
                     <input
                       type="checkbox"
                       id={`ack-${x.rule_id}`}
                       checked={!!acked[x.rule_id]}
-                      onChange={(e) => setAcked({ ...acked, [x.rule_id]: e.target.checked })}
+                      onChange={(e) =>
+                        setAcked({ ...acked, [x.rule_id]: e.target.checked })
+                      }
                     />
                     <span>I have seen alert {x.rule_id}</span>
                   </label>
@@ -335,11 +405,14 @@ export default function CareReview({ assessment, vocabulary, onReview }: Props) 
                     <span>I have seen that {scr.banner?.toLowerCase()}</span>
                   </label>
                 )}
-                {!a.alerts.length && !needsScreeningAck && <p>Nothing to acknowledge.</p>}
+                {!a.alerts.length && !needsScreeningAck && (
+                  <p>Nothing to acknowledge.</p>
+                )}
               </fieldset>
               {!allAcked && (
                 <p id="ack-hint" className="muted">
-                  Acknowledge every red-flag alert and the screening banner to enable the review buttons.
+                  Acknowledge every red-flag alert and the screening banner to
+                  enable the review buttons.
                 </p>
               )}
               {error && (
@@ -358,71 +431,105 @@ export default function CareReview({ assessment, vocabulary, onReview }: Props) 
                 </span>
               }
             >
-              <form id="confirm-form" onSubmit={(e) => submit(e, "confirm", {})} />
-              <Button type="submit" form="confirm-form" disabled={blocked} aria-describedby={hint}>
+              <form
+                id="confirm-form"
+                onSubmit={(e) => submit(e, "confirm", {})}
+              />
+              <Button
+                type="submit"
+                form="confirm-form"
+                disabled={blocked}
+                aria-describedby={hint}
+              >
                 Confirm suggestion
               </Button>
             </ActionBar>
           )}
 
           <Section title="Edit or reject" titleId="alt-title">
-            <div className={styles.stack}>
-              <form
-                className={styles.stack}
-                onSubmit={(e) => submit(e, "edit", { next_information: editNi, pathway_options: editCp, reason: editReason })}
-              >
-                <div className={styles.pickers}>
-                  <CodePicker
-                    legend="Edit: information to collect next (at most 5)"
-                    name="edit-ni"
-                    entries={vocabulary.next_information}
-                    chosen={editNi}
-                    max={5}
-                    onChange={setEditNi}
-                  />
-                  <CodePicker
-                    legend="Edit: care-pathway options (at most 3)"
-                    name="edit-cp"
-                    entries={vocabulary.pathway_options}
-                    chosen={editCp}
-                    max={3}
-                    onChange={setEditCp}
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor="edit-reason">Reason for the edit</label>
-                  <textarea
-                    id="edit-reason"
-                    rows={2}
-                    value={editReason}
-                    onChange={(e) => setEditReason(e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <Button type="submit" variant="secondary" disabled={blocked} aria-describedby={hint}>
-                    Save edited suggestion
-                  </Button>
-                </div>
-              </form>
-              <form className={styles.stack} onSubmit={(e) => submit(e, "reject", { reason: rejectReason })}>
-                <div className={styles.field}>
-                  <label htmlFor="reject-reason">Reason for rejecting</label>
-                  <textarea
-                    id="reject-reason"
-                    rows={2}
-                    value={rejectReason}
-                    onChange={(e) => setRejectReason(e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <Button type="submit" variant="danger" disabled={blocked} aria-describedby={hint}>
-                    Reject suggestion
-                  </Button>
-                </div>
-              </form>
-            </div>
+            <details className={styles.alt} open={!suggested}>
+              <summary>
+                Edit the suggestion or reject it (reason required)
+              </summary>
+              <div className={styles.stack}>
+                <form
+                  className={styles.stack}
+                  onSubmit={(e) =>
+                    submit(e, "edit", {
+                      next_information: editNi,
+                      pathway_options: editCp,
+                      reason: editReason,
+                    })
+                  }
+                >
+                  <div className={styles.pickers}>
+                    <CodePicker
+                      legend="Edit: information to collect next (at most 5)"
+                      name="edit-ni"
+                      entries={vocabulary.next_information}
+                      chosen={editNi}
+                      max={5}
+                      onChange={setEditNi}
+                    />
+                    <CodePicker
+                      legend="Edit: care-pathway options (at most 3)"
+                      name="edit-cp"
+                      entries={vocabulary.pathway_options}
+                      chosen={editCp}
+                      max={3}
+                      onChange={setEditCp}
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label htmlFor="edit-reason">Reason for the edit</label>
+                    <textarea
+                      id="edit-reason"
+                      rows={2}
+                      value={editReason}
+                      onChange={(e) => setEditReason(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Button
+                      type="submit"
+                      variant="secondary"
+                      disabled={blocked}
+                      aria-describedby={hint}
+                    >
+                      Save edited suggestion
+                    </Button>
+                  </div>
+                </form>
+                <form
+                  className={styles.stack}
+                  onSubmit={(e) =>
+                    submit(e, "reject", { reason: rejectReason })
+                  }
+                >
+                  <div className={styles.field}>
+                    <label htmlFor="reject-reason">Reason for rejecting</label>
+                    <textarea
+                      id="reject-reason"
+                      rows={2}
+                      value={rejectReason}
+                      onChange={(e) => setRejectReason(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Button
+                      type="submit"
+                      variant="danger"
+                      disabled={blocked}
+                      aria-describedby={hint}
+                    >
+                      Reject suggestion
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            </details>
           </Section>
         </>
       )}

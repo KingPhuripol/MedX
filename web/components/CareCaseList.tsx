@@ -29,11 +29,15 @@ export default function CareCaseList() {
     fetch("/api/care/cases", { credentials: "same-origin" })
       .then(async (resp) => {
         if (!active) return;
-        if (resp.status === 503) throw new Error("The synthetic dataset is missing. Run make data.");
+        if (resp.status === 503)
+          throw new Error("The synthetic dataset is missing. Run make data.");
         if (!resp.ok) throw new Error("Could not load the case list.");
         setCases((await resp.json()).cases);
       })
-      .catch((e: Error) => active && setError(e.message || "Could not load the case list."));
+      .catch(
+        (e: Error) =>
+          active && setError(e.message || "Could not load the case list."),
+      );
     return () => {
       active = false;
     };
@@ -42,9 +46,10 @@ export default function CareCaseList() {
   async function assess(caseId: string, dp: string) {
     setBusy(`${caseId}:${dp}`);
     setError(null);
-    const resp = await postJson(`/api/care/cases/${encodeURIComponent(caseId)}/assess`, { decision_point: dp }).catch(
-      () => null,
-    );
+    const resp = await postJson(
+      `/api/care/cases/${encodeURIComponent(caseId)}/assess`,
+      { decision_point: dp },
+    ).catch(() => null);
     if (resp && resp.ok) {
       const data = await resp.json();
       router.push(`/physician/care/${data.assessment_id}`);
@@ -56,7 +61,9 @@ export default function CareCaseList() {
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return (cases ?? []).filter((c) => !q || c.case_id.toLowerCase().includes(q));
+    return (cases ?? []).filter(
+      (c) => !q || c.case_id.toLowerCase().includes(q),
+    );
   }, [cases, query]);
 
   const dpColumns = DECISION_POINTS.map((dp) => ({
@@ -75,7 +82,9 @@ export default function CareCaseList() {
           disabled={busy !== null}
           aria-label={`Assess ${c.case_id} at ${dp}`}
         >
-          {busy === key ? "กำลังประเมิน…" : `${dp} · ${formatThaiTime(d.as_of)}`}
+          {busy === key
+            ? "กำลังประเมิน…"
+            : `${dp} · ${formatThaiTime(d.as_of)}`}
         </Button>
       );
     },
@@ -88,9 +97,11 @@ export default function CareCaseList() {
         title="Care suggestion cases"
         subtitle={
           <>
-            <strong>{OUTPUT_LABEL}.</strong> Synthetic development-split cases only. Each assessment shows red-flag
-            alerts and screening status first, then a case summary, information to collect next and care-pathway
-            options to consider. Nothing affects care until a physician confirms it.
+            <strong>{OUTPUT_LABEL}.</strong> Synthetic development-split cases
+            only. Each assessment shows red-flag alerts and screening status
+            first, then a case summary, information to collect next and
+            care-pathway options to consider. Nothing affects care until a
+            physician confirms it.
           </>
         }
         meta={cases ? <span>{cases.length} cases</span> : undefined}
@@ -105,7 +116,10 @@ export default function CareCaseList() {
         <Section title="Cases" titleId="cases-title">
           <div className={styles.stack}>
             <div className={styles.filter}>
-              <Field label="Filter by case id · ค้นหารหัสเคส" htmlFor="case-filter">
+              <Field
+                label="Filter by case id · ค้นหารหัสเคส"
+                htmlFor="case-filter"
+              >
                 <input
                   id="case-filter"
                   type="search"
@@ -121,7 +135,11 @@ export default function CareCaseList() {
               rowKey={(c) => c.case_id}
               empty="No case matches this filter."
               columns={[
-                { key: "case", header: "Case", render: (c) => <strong>{c.case_id}</strong> },
+                {
+                  key: "case",
+                  header: "Case",
+                  render: (c) => <strong>{c.case_id}</strong>,
+                },
                 ...dpColumns,
               ]}
             />
