@@ -38,7 +38,7 @@
   "k_trials": 4,
   "model_env": "SIMUSER_MODEL (default gpt-6-luna)",
   "endpoint_env": "SIMUSER_BASE_URL (default https://api.openai.com/v1); key in SIMUSER_API_KEY, never recorded",
-  "temperature": 0.0,
+  "temperature": null,
   "max_turns": 12,
   "max_tokens_per_response": 2500,
   "tool_mode": "json (gpt-6-luna rejects native tools)",
@@ -46,7 +46,8 @@
   "simulator_sees_gold": false,
   "workers": 8,
   "max_tokens_note": "400 gave empty output (hidden reasoning); 2500 gives valid answers",
-  "closed_vocabularies": "missing_info codes (chief_complaint, duration, allergy_status, vitals.temp_c), vitals_trend labels, red-flag ids with clinical phrases: identical prompt text in both arms, lists only, never per-case gold"
+  "closed_vocabularies": "missing_info codes (chief_complaint, duration, allergy_status, vitals.temp_c), vitals_trend labels, red-flag ids with clinical phrases: identical prompt text in both arms, lists only, never per-case gold",
+  "request_params": "max_completion_tokens sent, temperature omitted by default (--legacy-max-tokens / --temperature opt in); a 400 naming an unsupported parameter is fixed and the same call retried; params sent recorded in results.json"
  },
  "budget": {
   "usd_limit": 3.0,
@@ -55,7 +56,7 @@
   "price_cached_in_per_1m": 0.01,
   "stop_rule": "worst-case cost reserved before every call (exact under concurrency); stop cleanly, write partial results, analyse complete A/B pairs only"
  },
- "task_success_rule": "all six fields correct: vitals_trend (derived by stated rule), current_meds (set of generic names on any list at T), medication_issues (set of (issue_type, drug set) equal to gold), red_flags (set of gold rule_ids), escalate (== gold expected_action escalate), missing_info (set of gold care.required_inputs_missing)",
+ "task_success_rule": "all five core fields correct: vitals_trend (derived by stated rule), current_meds (set of generic names on any list at T), medication_issues (set of (issue_type, drug set) equal to gold), red_flags (set of gold rule_ids), escalate (== gold expected_action escalate). missing_info is exploratory only (field_missing_info): gold reflects the structured record (e.g. voice extraction failed) while the simulator reads the transcript, so it is construct-invalid for task success.",
  "critical_miss_rule": "gold red flag not reported or escalate != true when gold escalates; or gold medication issue whose drugs appear in no reported issue. No answer counts as a miss.",
  "denominators": "every started trial stays in the denominator (invalid answer, turn cap, provider error = failed). Only budget-stopped incomplete pairs are excluded and counted.",
  "metrics": [

@@ -24,13 +24,13 @@ Arm B ("single-case consolidated view (MedX case-page schema)") is a schema-fait
 demo router (backend/app/demo/router.py) serves ONE hard-coded case, so it cannot serve dataset cases. The
 selfcheck probes the real app in-process (TestClient, mock provider) to assert the routes exist.
 
-Task success (predeclared): all six answer fields correct -
+Task success (predeclared): all five core answer fields correct -
   vitals_trend     == trend derived from the snapshot vitals by the rule stated in the prompt
   current_meds     == set of generic names on any MedicationList at T
   medication_issues== set of (issue_type, drug set) equal to gold medication_issues (no misses, no extras)
   red_flags        == set of gold rule_ids
   escalate         == (gold expected_action == "escalate")
-  missing_info     == set of gold care.required_inputs_missing
+  (missing_info is exploratory: reported separately, NOT in task success or critical misses - see PROTOCOL_CHANGES)
 A missing/invalid answer, turn cap, provider error or schema failure is a failed trial that stays in the
 denominator. Critical miss: a gold red flag not reported (or escalate=false when gold escalates), or a gold
 medication issue whose drugs appear in no reported issue.
@@ -89,6 +89,7 @@ MISSING_VOCAB = {
     "vitals.temp_c": "temperature not recorded in the vitals",
 }
 ANSWER_KEYS = ("vitals_trend", "current_meds", "medication_issues", "red_flags", "escalate", "missing_info")
+CORE_KEYS = ANSWER_KEYS[:5]  # task success; missing_info is exploratory (see PROTOCOL_CHANGES)
 TRENDS = ("worsening", "improving", "stable", "single_reading")
 ARMS = ("A", "B")
 ARM_NAMES = {"A": "multi-system", "B": "single-case consolidated view (MedX case-page schema)"}
@@ -98,6 +99,14 @@ PERSONAS = {
     "pharmacist": "clinical pharmacist doing the pre-consult medication review",
 }
 BOOT_SEED = 20260929
+PROTOCOL_CHANGES = [
+    "", "## Protocol changes before freeze (dev only)", "",
+    "- missing_info removed from task success and critical misses; reported as an exploratory field (field_missing_info). Reason: gold `required_inputs_missing` reflects the structured record "
+    "(e.g. chief_complaint MISSING because voice extraction failed) while the simulator reads the transcript where the complaint is stated, so the label is construct-invalid for a transcript reader. Task success = the other five fields.",
+    "- Tool mode json and max_tokens 2500 (gpt-6-luna rejects native tools; hidden reasoning needs headroom). Client sends max_completion_tokens and omits temperature by default; a 400 naming an unsupported parameter is fixed and the same call retried inside the trial (params actually sent are in results.json protocol.params_sent).",
+    "- Closed vocabularies for missing_info codes, vitals_trend labels and red-flag ids/phrases, identical in both arms.",
+    "",
+]
 UI_MAP = [
     "", "## Arm B: V2 UI screen to tool mapping (single-case consolidated view, MedX case-page schema; adapter, not a MedX app run)", "",
     "| V2 web UI (file:line) | Tool | What the tool returns |", "|---|---|---|",
@@ -510,18 +519,22 @@ class Completion:
 class HttpLLM:
     """OpenAI-compatible chat-completions client (httpx). The key only goes into the Authorization header."""
 
-    def __init__(self, base_url: str, api_key: str, model: str, timeout_s: float = 90.0, transport: httpx.BaseTransport | None = None):
+    def __init__(self, base_url: str, api_key: str, model: str, timeout_s: float = 90.0, transport: httpx.BaseTransport | None = None,
+                 legacy_max_tokens: bool = False):
         self.url = base_url.rstrip("/") + "/chat/completions"
         self._key, self.model, self.timeout_s, self.transport = api_key, model, timeout_s, transport
-        self.token_param = "max_tokens"
-        self.send_temperature = True
+        self.token_param = "max_tokens" if legacy_max_tokens else "max_completion_tokens"
+        self.send_temperature = True  # only sent when a temperature is passed (default: omitted)
         self.notes: list[str] = []
+        self.params_sent: set[tuple] = set()
 
-    def complete(self, messages: list[dict], tools: list[dict], mode: str, max_tokens: int, temperature: float) -> Completion:
-        for _attempt in range(6):
-            payload: dict[str, Any] = {"model": self.model, "messages": messages, self.token_param: max_tokens}
-            if self.send_temperature:
+    def complete(self, messages: list[dict], tools: list[dict], mode: str, max_tokens: int, temperature: float | None) -> Completion:
+        for _attempt in range(10):
+            sent_param = self.token_param  # decide on what THIS request carried (other threads may have switched already)
+            payload: dict[str, Any] = {"model": self.model, "messages": messages, sent_param: max_tokens}
+            if self.send_temperature and temperature is not None:
                 payload["temperature"] = temperature
+            self.params_sent.add((sent_param, "temperature" in payload))
             if mode == "native":
                 payload["tools"], payload["tool_choice"] = tools, "auto"
             try:
@@ -540,13 +553,20 @@ class HttpLLM:
                     raise ToolsUnsupported(
                         f"endpoint/model {self.model!r} rejected the `tools` parameter (HTTP {r.status_code}). "
                         "Re-run with --tool-mode json (simulator requests tools via JSON lines).")
-                if self.token_param == "max_tokens" and "max_tokens" in low:
-                    self.token_param = "max_completion_tokens"
-                    self.notes.append("max_tokens rejected; using max_completion_tokens")
+                if sent_param == "max_tokens" and "max_tokens" in low:
+                    if self.token_param == "max_tokens":
+                        self.token_param = "max_completion_tokens"
+                        self.notes.append("max_tokens rejected; using max_completion_tokens")
+                    continue  # retry the same call with the fixed request
+                if sent_param == "max_completion_tokens" and "max_completion_tokens" in low:
+                    if self.token_param == "max_completion_tokens":
+                        self.token_param = "max_tokens"
+                        self.notes.append("max_completion_tokens rejected; using max_tokens")
                     continue
-                if self.send_temperature and "temperature" in low:
-                    self.send_temperature = False
-                    self.notes.append("temperature rejected; endpoint default used")
+                if "temperature" in payload and "temperature" in low:
+                    if self.send_temperature:
+                        self.send_temperature = False
+                        self.notes.append("temperature rejected; omitted")
                     continue
             if r.status_code in (429, 500, 502, 503, 504):
                 time.sleep(min(2 ** _attempt, 20))
@@ -658,7 +678,7 @@ class TrialCfg:
     tool_mode: str = "native"
     max_turns: int = 12
     max_tokens: int = 400
-    temperature: float = 0.0
+    temperature: float | None = 0.0
 
 
 def run_trial(llm, env: Env, persona: str, case: Case, cfg: TrialCfg, budget: Budget) -> dict:
@@ -752,7 +772,7 @@ def _set(x: Any) -> frozenset | None:
 def score_trial(ref: Reference, ans: dict | None) -> dict:
     """Field-level correctness, task success and critical misses. ans=None (no valid answer) fails everything."""
     ans = ans if isinstance(ans, dict) else {}
-    valid = all(k in ans for k in ANSWER_KEYS)
+    valid = all(k in ans for k in CORE_KEYS)
     f = {}
     f["vitals_trend"] = ans.get("vitals_trend") == ref.vitals_trend
     f["current_meds"] = _set(ans.get("current_meds")) == ref.current_meds
@@ -778,7 +798,7 @@ def score_trial(ref: Reference, ans: dict | None) -> dict:
     rf_miss = has_rf and not (rf is not None and {_norm(x) for x in ref.red_flags} <= rf and ans.get("escalate") is True)
     med_miss = has_med and any(not (d & issue_drugs) for _, d in ref.medication_issues)
     return {
-        "fields": f, "task_success": all(f.values()), "answer_valid": valid,
+        "fields": f, "task_success": all(f[k] for k in CORE_KEYS), "answer_valid": valid,
         "has_red_flag": has_rf, "has_med_issue": has_med,
         "critical_miss_redflag": bool(rf_miss), "critical_miss_med": bool(med_miss),
         "critical_miss_any": bool(rf_miss or med_miss),
@@ -919,6 +939,7 @@ def render_md(res: dict) -> str:
         def cell(x):
             return f"{x['num']:.0f}/{x['den']:.0f} = {_f(x['point'])} [{_f(x['ci_low'])}, {_f(x['ci_high'])}]" if x["den"] and float(x["den"]).is_integer() and float(x["num"]).is_integer() and x["den"] > 0 and name not in _CONT else f"mean {_f(x['point'])} [{_f(x['ci_low'])}, {_f(x['ci_high'])}]"
         d = b["A_minus_B"]
+        name = name + " (exploratory, not in task success)" if name == "field_missing_info" else name
         L.append(f"| {name} | {cell(b['A'])} | {cell(b['B'])} | {_f(d['point'])} [{_f(d['ci_low'])}, {_f(d['ci_high'])}] |")
     v = res["summary"].get("verdict")
     if v:
@@ -928,6 +949,7 @@ def render_md(res: dict) -> str:
               "Criteria (all required): (a) lower 95% bound of task_success B-A >= -0.10; (b) lower 95% bound of tool_calls A-B > 0; (c) critical-miss rate B <= A (point estimate). "
               f"Observed: (a) {_f(v['a_lower_bound_B_minus_A'])}, (b) {_f(v['b_tool_calls_A_minus_B_ci_low'])}, (c) A/B {v['c_critical_miss_A_B']}. pass^k per arm is in the table (pass_hat_k).",
               "This reading is about simulated users only."]
+    L += PROTOCOL_CHANGES
     L += UI_MAP
     L += ["", "## Limitations", "",
           "- Simulated users are one LLM role-playing personas; behaviour is not human behaviour. No usability, satisfaction, learning or clinical-outcome claim is supported.",
@@ -994,7 +1016,9 @@ def execute(args, llm, cases: list[Case], out: Path, dataset: Path) -> dict:
         "protocol": {"model": getattr(llm, "model", ""), "tool_mode": cfg.tool_mode, "temperature": cfg.temperature,
                      "max_turns": cfg.max_turns, "max_tokens": cfg.max_tokens, "workers": getattr(args, "workers", 1), "k": args.k, "personas": personas, "seed": args.seed,
                      "price_usd_per_1m": {"in": args.price_in, "out": args.price_out, "cached_in": args.price_cached},
-                     "notes": "; ".join(getattr(llm, "notes", []))},
+                     "notes": "; ".join(getattr(llm, "notes", [])),
+                     "params_sent": sorted({"token_param": a, "temperature_sent": b} for a, b in getattr(llm, "params_sent", set())) if False else
+                     [{"token_param": a, "temperature_sent": b} for a, b in sorted(getattr(llm, "params_sent", set()))]},
         "dataset": {"path": str(dataset), "split": cases[0].split if cases else args.split, "decision_point": args.decision_point,
                     "manifest_sha256": file_sha(dataset / "manifest.json"), "splits_sha256": file_sha(dataset / "splits.json")},
         "cases": [{"case_id": c.case_id, "strata_red_flag_med_missing": list(c.strata)} for c in cases],
@@ -1075,7 +1099,7 @@ def _policy(answers: dict, sloppy_repeat: bool = False, bad: set | None = None, 
 
 
 def _args(**kw):
-    ns = argparse.Namespace(personas="nurse,physician", k=1, tool_mode="native", max_turns=12, max_tokens=400, temperature=0.0, workers=1,
+    ns = argparse.Namespace(legacy_max_tokens=False, personas="nurse,physician", k=1, tool_mode="native", max_turns=12, max_tokens=400, temperature=0.0, workers=1,
                             budget_usd=3.0, price_in=0.10, price_out=0.50, price_cached=0.01, manifest=None, evaluation_id="selfcheck",
                             seed=1, split="dev", decision_point="T2", n_boot=200)
     ns.__dict__.update(kw)
@@ -1164,6 +1188,9 @@ def selfcheck() -> None:
     ok(sc["critical_miss_med"] and not sc["fields"]["medication_issues"], "missed med issue is a critical miss")
     sc = score_trial(ref, dict(perfect, medication_issues=[{"issue_type": "omission", "drugs": ["metformin"]}]))
     ok(not sc["fields"]["medication_issues"] and not sc["critical_miss_med"], "wrong type: field wrong, not a full miss")
+    sc = score_trial(ref, dict(perfect, missing_info=["duration"]))
+    ok(sc["task_success"] and not sc["fields"]["missing_info"], "missing_info is exploratory: wrong value does not fail the task")
+    ok(score_trial(ref, {k: v for k, v in perfect.items() if k != "missing_info"})["answer_valid"], "missing_info key not required")
     sc = score_trial(ref, None)
     ok(not sc["task_success"] and not sc["answer_valid"] and sc["critical_miss_redflag"] and sc["critical_miss_med"], "no answer fails and counts as critical miss")
     ok(not score_trial(ref, dict(perfect, escalate="true"))["fields"]["escalate"], "escalate must be a bool")
@@ -1236,6 +1263,8 @@ def selfcheck() -> None:
             return httpx.Response(400, json={"error": {"message": "Unrecognized request argument supplied: tools"}})
         if "max_tokens" in body and body["model"] == "new-style":
             return httpx.Response(400, json={"error": {"message": "Unsupported parameter: 'max_tokens'. Use 'max_completion_tokens'."}})
+        if "max_completion_tokens" in body and body["model"] == "old-style":
+            return httpx.Response(400, json={"error": {"message": "Unsupported parameter: 'max_completion_tokens'"}})
         if "temperature" in body and body["model"] == "new-style":
             return httpx.Response(400, json={"error": {"message": "Unsupported value: 'temperature' does not support 0.0"}})
         msg = {"role": "assistant", "content": "{}"}
@@ -1245,9 +1274,9 @@ def selfcheck() -> None:
                                          "usage": {"prompt_tokens": 100, "completion_tokens": 10, "prompt_tokens_details": {"cached_tokens": 40}}})
 
     tr = httpx.MockTransport(handler)
-    c1 = HttpLLM("https://example.invalid/v1", "FAKE-KEY-123", "m1", transport=tr).complete([{"role": "user", "content": "x"}], MultiSystemEnv.tools, "native", 400, 0.0)
+    c1 = HttpLLM("https://example.invalid/v1", "FAKE-KEY-123", "m1", transport=tr).complete([{"role": "user", "content": "x"}], MultiSystemEnv.tools, "native", 400, None)
     ok(c1.tool_calls[0]["name"] == "get_vitals" and c1.usage["cached_tokens"] == 40 and c1.model == "m1-2030", "native tool call + usage parsed")
-    ok(seen[-1]["auth"] == "Bearer FAKE-KEY-123" and seen[-1]["body"]["max_tokens"] == 400 and "tools" in seen[-1]["body"], "request shape")
+    ok(seen[-1]["auth"] == "Bearer FAKE-KEY-123" and seen[-1]["body"]["max_completion_tokens"] == 400 and "max_tokens" not in seen[-1]["body"] and "temperature" not in seen[-1]["body"] and "tools" in seen[-1]["body"], "request shape: max_completion_tokens, no temperature")
     c2 = HttpLLM("https://example.invalid/v1", "FAKE-KEY-123", "m1", transport=tr).complete([{"role": "user", "content": "x"}], MultiSystemEnv.tools, "json", 400, 0.0)
     ok("tools" not in seen[-1]["body"] and c2.content == "{}", "json mode sends no tools")
     try:
@@ -1257,7 +1286,17 @@ def selfcheck() -> None:
         ok("--tool-mode json" in str(e) and "FAKE-KEY-123" not in str(e), "tools rejection fails fast with clear message, no key")
     h = HttpLLM("https://example.invalid/v1", "FAKE-KEY-123", "new-style", transport=tr)
     h.complete([{"role": "user", "content": "x"}], [], "json", 400, 0.0)
-    ok(h.token_param == "max_completion_tokens" and not h.send_temperature and len(h.notes) == 2, "adaptive max-token/temperature params recorded")
+    ok(h.token_param == "max_completion_tokens" and not h.send_temperature and len(h.notes) == 1 and ("max_completion_tokens", False) in h.params_sent, "temperature rejection fixed and retried, params recorded")
+    hl = HttpLLM("https://example.invalid/v1", "FAKE-KEY-123", "new-style", transport=tr, legacy_max_tokens=True)
+    hl.complete([{"role": "user", "content": "x"}], [], "json", 400, None)
+    ok(hl.token_param == "max_completion_tokens" and ("max_tokens", False) in hl.params_sent, "max_tokens rejection fixed and retried in the same call")
+    ho = HttpLLM("https://example.invalid/v1", "FAKE-KEY-123", "old-style", transport=tr)
+    ho.complete([{"role": "user", "content": "x"}], [], "json", 400, None)
+    ok(ho.token_param == "max_tokens", "endpoint rejecting max_completion_tokens falls back to max_tokens")
+    hr = HttpLLM("https://example.invalid/v1", "FAKE-KEY-123", "new-style", transport=tr, legacy_max_tokens=True)
+    with ThreadPoolExecutor(8) as ex:
+        outs = list(ex.map(lambda _: hr.complete([{"role": "user", "content": "x"}], [], "json", 400, None).content, range(16)))
+    ok(outs == ["{}"] * 16, "param rejection under concurrency never fails a call")
     # json-mode trial over the real HTTP client path with a text-tool reply
     def json_handler(req: httpx.Request) -> httpx.Response:
         body = json.loads(req.content)
@@ -1354,7 +1393,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--evaluation-id", default=None)
     ap.add_argument("--tool-mode", default="json", choices=("native", "json"), help="gpt-6-luna rejects native tools")
     ap.add_argument("--workers", type=int, default=8)
-    ap.add_argument("--temperature", type=float, default=0.0)
+    ap.add_argument("--temperature", type=float, default=None, help="omitted by default (gpt-6-luna accepts only its default)")
+    ap.add_argument("--legacy-max-tokens", action="store_true", help="send max_tokens instead of max_completion_tokens")
     ap.add_argument("--max-turns", type=int, default=12)
     ap.add_argument("--max-tokens", type=int, default=2500, help="hidden reasoning needs headroom (400 gave empty output)")
     ap.add_argument("--price-in", type=float, default=0.10, help="USD per 1M input tokens")
@@ -1383,7 +1423,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.smoke:
         args.k = 1
     out = Path(args.out or f"eval/results/simuser/{'smoke' if args.smoke else 'run'}-{utc_now().replace(':', '')}")
-    llm = HttpLLM(base, key, model)
+    llm = HttpLLM(base, key, model, legacy_max_tokens=args.legacy_max_tokens)
     try:
         res = execute(args, llm, cases, out if out.is_absolute() else REPO_ROOT / out, dataset)
     except ToolsUnsupported as e:
