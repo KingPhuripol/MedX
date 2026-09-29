@@ -109,7 +109,7 @@ export default function WorkQueue() {
       header: "เคส",
       render: (t) => (
         <>
-          <strong>{t.case_id}</strong>
+          <strong className="ui-nowrap">{t.case_id}</strong>
           <div className="muted">ข้อมูลสังเคราะห์</div>
         </>
       ),
@@ -133,6 +133,7 @@ export default function WorkQueue() {
       key: "actions",
       header: "การทำงาน",
       className: "ui-cell-actions",
+      hideLabel: true,
       render: (t) => (
         <div className="ui-table__actions">
           {!t.owner ? (

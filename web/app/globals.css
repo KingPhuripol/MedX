@@ -506,8 +506,13 @@ main {
   border-radius: 12px;
   box-shadow: var(--shadow-panel);
 }
-.cover-form h1 {
-  margin-top: 0;
+.cover-form {
+  display: grid;
+  gap: 16px;
+}
+.cover-form h1,
+.cover-form p {
+  margin: 0;
 }
 /* legacy — remove after U5 merge */
 .field {
@@ -707,9 +712,10 @@ main {
 }
 @media (max-width: 767px) {
   .disclaimer {
-    padding: 8px 16px;
+    padding: 4px 16px;
     flex-direction: column;
     gap: 0;
+    line-height: 1.4;
   }
   .app-nav-inner {
     padding: 8px 16px 0;
@@ -773,6 +779,17 @@ main {
     grid-template-columns: 1fr;
   }
   /* Compact brand band (<= 140px) so the sign-in form is above the fold at 390x844. */
+  .cover {
+    min-height: 0;
+    align-content: start;
+  }
+  .cover-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 16px;
+  }
   .cover-panel {
     min-height: 0;
     max-height: 140px;
@@ -876,6 +893,7 @@ main {
   color: var(--warning-fg);
 }
 .ui-chip {
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -1119,6 +1137,12 @@ main {
 }
 .ui-flush {
   margin: 0;
+}
+.ui-table td.ui-cell-actions[data-label]::before {
+  display: none;
+}
+.ui-nowrap {
+  white-space: nowrap;
 }
 .ui-form {
   display: grid;

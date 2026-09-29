@@ -1,14 +1,18 @@
 import type { ReactNode } from "react";
 
-export type DataTableColumn<T> = {
+export type Column<T> = {
   key: string;
   header: ReactNode;
   render: (row: T) => ReactNode;
+  /** Applied to both the th and the td. */
   className?: string;
+  /** Omit the per-cell data-label (compact mobile cards, e.g. action columns). */
+  hideLabel?: boolean;
 };
+export type DataTableColumn<T> = Column<T>;
 
 export type DataTableProps<T> = {
-  columns: DataTableColumn<T>[];
+  columns: Column<T>[];
   rows: T[];
   rowKey: (row: T) => string;
   caption?: ReactNode;
@@ -35,7 +39,7 @@ export function DataTable<T>({ columns, rows, rowKey, caption, testId, empty }: 
         {rows.map((row) => (
           <tr key={rowKey(row)}>
             {columns.map((c) => (
-              <td key={c.key} className={c.className} data-label={typeof c.header === "string" ? c.header : undefined}>
+              <td key={c.key} className={c.className} data-label={!c.hideLabel && typeof c.header === "string" ? c.header : undefined}>
                 {c.render(row)}
               </td>
             ))}
