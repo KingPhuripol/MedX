@@ -58,6 +58,7 @@ const stageLabel: Record<string, string> = {
   care_review: "ทบทวนโดยแพทย์",
   medication_review: "ทบทวนข้อมูลยา",
   complete: "เสร็จสิ้น",
+  view_only: "ดูข้อมูลอย่างเดียว",
 };
 
 export default function CaseWorkspace({ caseId, section }: { caseId: string; section: string }) {
@@ -202,9 +203,12 @@ export default function CaseWorkspace({ caseId, section }: { caseId: string; sec
   if (!data) return null;
   const ownTab = user ? OWN_TAB[user.role] : undefined;
   // B3a: the acknowledgement only renders where a review it gates is present.
-  const gatesAck = (section === "triage" && user?.role === "nurse") || (section === "care" && user?.role === "physician");
+  const viewOnly = data.view_only === true;
+  const critical = data.safety.level === "critical";
+  const gatesAck =
+    !viewOnly && ((section === "triage" && user?.role === "nurse") || (section === "care" && user?.role === "physician"));
   const pendingMedReview =
-    section === "medications" && user?.role === "pharmacist" && meds?.discrepancies[0]?.status === "pending";
+    !viewOnly && section === "medications" && user?.role === "pharmacist" && meds?.discrepancies[0]?.status === "pending";
   return (
     <div className="page-stack">
       <header className="card case-header" aria-label="ข้อมูลประจำเคส">
@@ -234,12 +238,18 @@ export default function CaseWorkspace({ caseId, section }: { caseId: string; sec
           <strong>{data.next_action}</strong>
         </div>
       </header>
-      <section className="safety-banner" role="alert">
-        <AlertOctagon size={28} className="critical" />
+      <section
+        className={critical ? "safety-banner" : css.calmBanner}
+        role={critical ? "alert" : undefined}
+        aria-label={critical ? undefined : "ผลตรวจสัญญาณเตือน"}
+        data-testid="safety-banner"
+        data-level={data.safety.level}
+      >
+        {critical ? <AlertOctagon size={28} className="critical" /> : <Info size={28} aria-hidden="true" />}
         <div className={css.bannerBody}>
-          <h2 className="critical">{data.safety.label}</h2>
+          <h2 className={critical ? "critical" : css.flush}>{data.safety.label}</h2>
           <p>{data.safety.detail}</p>
-          {gatesAck ? (
+          {viewOnly ? null : gatesAck ? (
             <label className={css.ackRow}>
               <input type="checkbox" checked={acknowledged} onChange={(e) => setAcknowledged(e.target.checked)} />
               <span>รับทราบ red flag และจะให้บุคลากรประเมินโดยตรง</span>
@@ -251,6 +261,13 @@ export default function CaseWorkspace({ caseId, section }: { caseId: string; sec
           )}
         </div>
       </section>
+      {viewOnly ? (
+        <Notice tone="info" icon={<Info size={24} aria-hidden="true" />} data-testid="view-only-notice">
+          <p>
+            <strong>{data.view_only_label}</strong>
+          </p>
+        </Notice>
+      ) : null}
       <nav className="case-tabs" aria-label="ส่วนของเคส">
         {tabs.map(([slug, label]) => (
           <Link
@@ -260,7 +277,7 @@ export default function CaseWorkspace({ caseId, section }: { caseId: string; sec
             href={`/app/cases/${caseId}/${slug}?run=${runId}`}
           >
             {label}
-            {slug === ownTab ? <StatusChip tone="info">งานของคุณ</StatusChip> : null}
+            {slug === ownTab && !viewOnly ? <StatusChip tone="info">งานของคุณ</StatusChip> : null}
           </Link>
         ))}
       </nav>
@@ -269,18 +286,26 @@ export default function CaseWorkspace({ caseId, section }: { caseId: string; sec
           <p>{error} — โหลดข้อมูลล่าสุดก่อนลองอีกครั้ง</p>
         </Notice>
       ) : null}
-      {section === "overview" ? <Overview data={data} ownTab={ownTab} runId={runId} meds={meds} /> : null}
+      {section === "overview" ? <Overview data={data} ownTab={viewOnly ? undefined : ownTab} runId={runId} meds={meds} /> : null}
       {section === "intake" ? (
         <>
           <Intake data={data} />
-          <Section className="desktop-task" title="บันทึก intake ผ่าน domain API เดิม" titleId="intake-domain-title">
-            <VoiceIntake embedded />
-          </Section>
+          {viewOnly ? null : (
+            <Section className="desktop-task" title="บันทึก intake ผ่าน domain API เดิม" titleId="intake-domain-title">
+              <VoiceIntake embedded />
+            </Section>
+          )}
         </>
       ) : null}
       {/* Real triage/care assessments live at /nurse/triage/[id] and /physician/care/[id], never under this
           seeded demo case header (a different synthetic patient). */}
-      {section === "triage" ? (
+      {viewOnly && (section === "triage" || section === "care") ? (
+        <EmptyState
+          title="ส่วนนี้ยังไม่เปิดให้ดำเนินการสำหรับเคสตัวอย่าง"
+          description="เคสตัวอย่างแสดงข้อมูลที่บันทึกไว้และผลจากกฎที่ตรวจได้เท่านั้น ไม่มีข้อเสนอแนะหรือการยืนยัน"
+        />
+      ) : null}
+      {!viewOnly && section === "triage" && data.triage ? (
         <ReviewSurface
           icon={<ShieldAlert size={24} />}
           title="ทบทวนข้อเสนอการคัดกรอง"
@@ -291,7 +316,7 @@ export default function CaseWorkspace({ caseId, section }: { caseId: string; sec
           setNote={setNote}
         />
       ) : null}
-      {section === "care" ? (
+      {!viewOnly && section === "care" && data.care ? (
         <ReviewSurface
           icon={<Stethoscope size={24} />}
           title="ทบทวน Care suggestion"
@@ -302,7 +327,7 @@ export default function CaseWorkspace({ caseId, section }: { caseId: string; sec
           setNote={setNote}
         />
       ) : null}
-      {section === "medications" ? <MedicationSurface data={meds} note={note} setNote={setNote} /> : null}
+      {section === "medications" ? <MedicationSurface data={meds} note={note} setNote={setNote} viewOnly={viewOnly} /> : null}
       {section === "timeline" || section === "activity" ? (
         <Timeline items={timeline} audit={section === "activity"} />
       ) : null}
@@ -383,9 +408,13 @@ function Overview({
         <p className={css.summary}>{data.summary}</p>
         <dl className="detail-list">
           <dt>สถานะ intake</dt>
-          <dd className={`success ${css.inlineIcon}`}>
-            <CheckCircle2 size={16} aria-hidden="true" /> ตรวจทานแล้ว
-          </dd>
+          {data.view_only ? (
+            <dd>บันทึกไว้ ยังไม่ได้ตรวจทาน</dd>
+          ) : (
+            <dd className={`success ${css.inlineIcon}`}>
+              <CheckCircle2 size={16} aria-hidden="true" /> ตรวจทานแล้ว
+            </dd>
+          )}
         </dl>
         {ownTab ? (
           <div>
@@ -397,16 +426,66 @@ function Overview({
       </section>
       <aside className="card stack">
         <h2>ภาพรวมความปลอดภัย</h2>
-        <div className="cluster critical">
-          <ShieldAlert size={20} />
-          <strong>ต้องประเมินเร่งด่วน</strong>
-        </div>
-        <p>Red flag แสดงก่อนข้อเสนออื่นทุกครั้ง และไม่มีการดำเนินการอัตโนมัติ</p>
+        {data.engines ? (
+          <EngineSummary engines={data.engines} />
+        ) : (
+          <>
+            <div className="cluster critical">
+              <ShieldAlert size={20} />
+              <strong>ต้องประเมินเร่งด่วน</strong>
+            </div>
+            <p>Red flag แสดงก่อนข้อเสนออื่นทุกครั้ง และไม่มีการดำเนินการอัตโนมัติ</p>
+          </>
+        )}
         <Link className={css.inlineIcon} href={`/app/cases/${data.case_id}/timeline?run=${data.run_id}`}>
           ดู timeline ทั้งหมด <ArrowRight size={16} aria-hidden="true" />
         </Link>
       </aside>
     </div>
+    </div>
+  );
+}
+
+/** U7: what the deterministic engines returned for this case, with versions. A rule not run is never a negative. */
+export function EngineSummary({ engines }: { engines: NonNullable<CaseOverview["engines"]> }) {
+  const rf = engines.red_flag,
+    ph = engines.pharma;
+  return (
+    <div className="stack" data-testid="engine-summary">
+      <p className={css.tight}>
+        <strong>Red flag:</strong>{" "}
+        <span data-testid="engine-alert-count">
+          {rf.alerts.length === 0 ? "ไม่มีการแจ้งเตือนจากข้อมูลที่มีอยู่" : `แจ้งเตือน ${rf.alerts.length} ข้อ`}
+        </span>
+      </p>
+      {rf.alerts.length ? (
+        <ul className={css.plainList} data-testid="engine-alerts">
+          {rf.alerts.map((a) => (
+            <li key={a.rule_id}>
+              <strong>{a.rule_id}</strong> {a.name_th} — {a.message_th}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {rf.not_evaluated.length ? (
+        <div data-testid="engine-not-evaluated">
+          <p className={css.tight}>
+            <strong>{rf.not_evaluated_text}</strong> ({rf.not_evaluated.length} จาก {rf.rules_total} กฎ)
+          </p>
+          <ul className={css.plainList}>
+            {rf.not_evaluated.map((n) => (
+              <li key={n.rule_id}>
+                {n.rule_id} {n.name_th} <span className="muted">— {n.reason_th}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      <p className={`muted ${css.tight}`} data-testid="engine-versions">
+        ชุดกฎ red flag {rf.ruleset_version} · กระทบยอดยา {ph.pipeline_version} (กฎ {ph.rules_version}, formulary{" "}
+        {ph.formulary_version}) · พบความคลาดเคลื่อน {ph.issue_count} รายการ
+      </p>
+      <p className={`muted ${css.tight}`}>ผลจากกฎที่กำหนดไว้ล่วงหน้า ไม่ใช้โมเดล ไม่ใช่ข้อสรุปว่าไม่มีความเสี่ยง</p>
     </div>
   );
 }
@@ -441,6 +520,9 @@ export function CaseSummary({ data, meds, runId }: { data: CaseOverview; meds: M
   const vitals = [...(data.vitals ?? [])].sort((a, b) => a.observed_at.localeCompare(b.observed_at));
   const latest: VitalReading | undefined = vitals[vitals.length - 1];
   const previous: VitalReading | undefined = vitals.length > 1 ? vitals[vitals.length - 2] : undefined;
+  const previousMissing = previous
+    ? VITAL_FIELDS.filter(([key]) => previous[key] == null).map(([, label]) => label)
+    : [];
   const allergies = data.allergies ?? null;
   const labs = data.labs ?? [];
   const flagged = labs.map((lab) => [lab, labFlag(lab)] as const).filter(([, f]) => f !== null);
@@ -492,6 +574,11 @@ export function CaseSummary({ data, meds, runId }: { data: CaseOverview; meds: M
                 </strong>
               </li>
             </ul>
+            {previousMissing.length ? (
+              <p className={css.missing} data-testid="vitals-prev-missing">
+                ค่าก่อนหน้าที่ไม่มีบันทึก: {previousMissing.join(", ")}
+              </p>
+            ) : null}
             <p className={`muted ${css.tight}`}>ลูกศรแสดงการเปลี่ยนของค่าที่บันทึกเท่านั้น ไม่ใช่การประเมินทางคลินิก</p>
           </>
         ) : (
@@ -691,10 +778,12 @@ function MedicationSurface({
   data,
   note,
   setNote,
+  viewOnly,
 }: {
   data: MedicationData | null;
   note: string;
   setNote: (v: string) => void;
+  viewOnly: boolean;
 }) {
   if (!data)
     return (
@@ -703,7 +792,6 @@ function MedicationSurface({
         description="ตรวจรายการที่ทำเครื่องหมายไว้ก่อนดำเนินการต่อ"
       />
     );
-  const d = data.discrepancies[0];
   return (
     <div className="content-grid">
       <section className="card stack">
@@ -711,6 +799,7 @@ function MedicationSurface({
           <Pill size={24} />
           <h2 className={css.flush}>Medication reconciliation</h2>
         </div>
+        {data.sources.length === 0 ? <p className={css.missing}>ยังไม่มีรายการยาที่บันทึก</p> : null}
         {data.sources.map((s) => (
           <article key={s.source_id} className={css.source}>
             <strong>{s.label}</strong>
@@ -720,30 +809,44 @@ function MedicationSurface({
             </span>
           </article>
         ))}
-        <div className="form-field">
-          <label htmlFor="med-note">เหตุผลหรือค่าที่แก้ไข</label>
-          <textarea
-            id="med-note"
-            rows={3}
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="จำเป็นเมื่อแก้ไขหรือปฏิเสธ"
-          />
-        </div>
+        {viewOnly ? null : (
+          <div className="form-field">
+            <label htmlFor="med-note">เหตุผลหรือค่าที่แก้ไข</label>
+            <textarea
+              id="med-note"
+              rows={3}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="จำเป็นเมื่อแก้ไขหรือปฏิเสธ"
+            />
+          </div>
+        )}
       </section>
       <aside className="card stack">
-        <div className="cluster warning">
-          <AlertOctagon size={20} />
-          <h2 className={css.flush}>{d.label}</h2>
-        </div>
-        <p>{d.detail}</p>
-        <div className="cluster">
-          <StatusChip tone={d.status === "pending" ? "warning" : "success"}>
-            {d.status === "pending" ? "รอตรวจทาน" : "ตรวจทานแล้ว"}
-          </StatusChip>
-          <StatusChip tone="neutral">version {d.version}</StatusChip>
-        </div>
-        <p className="muted">Provenance: {d.provenance.join(" · ")}</p>
+        {data.discrepancies.length === 0 ? (
+          <p data-testid="med-no-issue">กฎที่ตรวจได้ไม่พบความคลาดเคลื่อนจากแหล่งข้อมูลที่มี ไม่ใช่ข้อสรุปว่ารายการยาถูกต้อง</p>
+        ) : null}
+        {data.discrepancies.map((d) => (
+          <div key={d.review_id} className="stack" data-testid="med-discrepancy">
+            <div className="cluster warning">
+              <AlertOctagon size={20} />
+              <h2 className={css.flush}>{d.label}</h2>
+            </div>
+            <p>{d.detail}</p>
+            <div className="cluster">
+              <StatusChip tone={d.status === "pending" ? "warning" : "success"}>
+                {d.status === "pending" ? "รอตรวจทาน" : "ตรวจทานแล้ว"}
+              </StatusChip>
+              <StatusChip tone="neutral">version {d.version}</StatusChip>
+            </div>
+            <p className="muted">Provenance: {d.provenance.join(" · ")}</p>
+          </div>
+        ))}
+        {data.engine ? (
+          <p className="muted" data-testid="med-engine">
+            กระทบยอดยา {data.engine.pipeline_version} · กฎ {data.engine.rules_version} · formulary {data.engine.formulary_version}
+          </p>
+        ) : null}
       </aside>
     </div>
   );

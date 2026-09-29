@@ -21,7 +21,7 @@ import { Notice } from "@/components/ui/Notice";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Section } from "@/components/ui/Section";
 import { StatusChip } from "@/components/ui/StatusChip";
-import { api, RUN_KEY, type Role, type TaskSummary, type User } from "@/lib/demo";
+import { api, RUN_KEY, type QueueCase, type Role, type TaskSummary, type User } from "@/lib/demo";
 
 const roleTitle = { nurse: "คิวรับเข้าและคัดกรอง", physician: "เคสที่รอตรวจโดยแพทย์", pharmacist: "คิวทบทวนข้อมูลยา" };
 
@@ -42,6 +42,7 @@ const roleTools: Record<Role, { href: string; title: string; text: string; icon:
 export default function WorkQueue() {
   const [user, setUser] = useState<User | null>(null),
     [tasks, setTasks] = useState<TaskSummary[]>([]),
+    [cases, setCases] = useState<QueueCase[]>([]),
     [runId, setRunId] = useState(""),
     [loading, setLoading] = useState(true),
     [error, setError] = useState("");
@@ -63,10 +64,11 @@ export default function WorkQueue() {
     try {
       const [me, q] = await Promise.all([
         api<{ user: User }>("/api/me"),
-        api<{ items: TaskSummary[] }>(`/api/demo/v1/runs/${run}/queue`),
+        api<{ items: TaskSummary[]; cases?: QueueCase[] }>(`/api/demo/v1/runs/${run}/queue`),
       ]);
       setUser(me.user);
       setTasks(q.items);
+      setCases(q.cases ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "โหลดข้อมูลไม่สำเร็จ");
     } finally {
@@ -151,6 +153,52 @@ export default function WorkQueue() {
     },
   ];
 
+  const caseColumns: DataTableColumn<QueueCase>[] = [
+    {
+      key: "safety",
+      header: "สัญญาณเตือน",
+      render: (c) =>
+        c.safety_level === "critical" ? (
+          <StatusChip tone="critical" icon={<AlertOctagon size={16} />}>
+            พบสัญญาณเร่งด่วน
+          </StatusChip>
+        ) : (
+          <>
+            <StatusChip tone="warning" icon={<Clock size={16} />}>
+              ไม่พบสัญญาณจากข้อมูลที่มี
+            </StatusChip>
+            {c.not_evaluated_count ? <div className="muted">{c.not_evaluated_count} กฎยังประเมินไม่ได้</div> : null}
+          </>
+        ),
+    },
+    {
+      key: "case",
+      header: "เคส",
+      render: (c) => (
+        <>
+          <strong className="ui-nowrap">{c.case_id}</strong>
+          <div className="muted">
+            {c.sex} · {c.age} ปี · {c.view_only ? "ตัวอย่างสำหรับดูข้อมูล" : "เดโมครบขั้นตอน"}
+          </div>
+          <div>{c.chief_complaint}</div>
+        </>
+      ),
+    },
+    {
+      key: "open",
+      header: "ดูข้อมูล",
+      hideLabel: true,
+      className: "ui-cell-actions",
+      render: (c) => (
+        <div className="ui-table__actions">
+          <Link className="ui-button ui-button--secondary" href={`/app/cases/${c.case_id}/overview?run=${runId}`}>
+            ดูข้อมูลเคส <span className="sr-only">{c.case_id}</span> <ArrowRight size={18} aria-hidden="true" />
+          </Link>
+        </div>
+      ),
+    },
+  ];
+
   const tools = user ? roleTools[user.role] : [];
   return (
     <div className="page-stack">
@@ -209,6 +257,22 @@ export default function WorkQueue() {
                 description={<p>ตรวจสอบบทบาทที่เข้าสู่ระบบ หรือกลับมาดูคิวอีกครั้งภายหลัง</p>}
               />
             }
+          />
+        </Section>
+      ) : null}
+      {!loading && runId && !error && cases.length ? (
+        <Section
+          title="เคสทั้งหมดในรอบนี้"
+          titleId="queue-cases-title"
+          actions={<StatusChip tone="neutral">{cases.length} เคส</StatusChip>}
+        >
+          <p className="muted">เรียงเคสที่พบสัญญาณเตือนก่อน · เคสตัวอย่างสำหรับดูข้อมูลอย่างเดียว ยังไม่เปิดให้ดำเนินการ</p>
+          <DataTable
+            testId="queue-cases"
+            columns={caseColumns}
+            rows={cases}
+            rowKey={(c) => c.case_id}
+            caption="เคสสังเคราะห์ทั้งหมดในรอบนี้ เรียงเคสที่พบสัญญาณเตือนก่อน"
           />
         </Section>
       ) : null}

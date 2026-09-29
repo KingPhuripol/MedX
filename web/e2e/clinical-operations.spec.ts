@@ -216,3 +216,81 @@ test("U6 overview is the shared case summary on first open, no tab click", async
     await assertA11y(page);
   }
 });
+
+test("U7 queue lists all 7 cases red flags first; fixture overviews match the engine output and stay view-only", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await login(page, "nurse");
+  await startDemoRun(page);
+  const rows = page.getByTestId("queue-cases").locator("tbody tr");
+  await expect(rows).toHaveCount(7);
+  await expect(rows.first()).toContainText("SYN-2026-0017");
+  const run = await page.evaluate(() => localStorage.getItem("medx.demo.run"));
+  const listed = (await (await page.request.get(`/api/demo/v1/runs/${run}/queue`)).json()).cases as {
+    case_id: string;
+    view_only: boolean;
+    safety_level: string;
+  }[];
+  const order = listed.map((c) => c.safety_level === "critical");
+  expect(order).toEqual([...order].sort((a, b) => Number(b) - Number(a))); // every critical row first
+  for (let i = 0; i < 7; i++) await expect(rows.nth(i)).toContainText(listed[i].case_id);
+
+  let sawUnknownAllergy = false,
+    sawMissingVital = false,
+    sawNotEvaluated = false,
+    sawAlert = false;
+  for (const c of listed.filter((x) => x.view_only)) {
+    const api = await (await page.request.get(`/api/demo/v1/runs/${run}/cases/${c.case_id}`)).json();
+    const meds = await (await page.request.get(`/api/demo/v1/runs/${run}/cases/${c.case_id}/medications`)).json();
+    await page.goto(`/app/cases/${c.case_id}/overview?run=${run}`);
+    await expect(page.getByTestId("case-summary")).toBeVisible();
+    for (const id of ["summary-vitals", "summary-complaint", "summary-allergy", "summary-meds", "summary-labs"])
+      await expect(page.getByTestId(id)).toBeVisible();
+    await expect(page.getByTestId("view-only-notice")).toContainText("เคสตัวอย่างสำหรับดูข้อมูล — ยังไม่เปิดให้ดำเนินการ");
+    await expect(page.getByRole("button", { name: /ยืนยันข้อเสนอแนะ|ส่งต่อ/ })).toHaveCount(0);
+    await expect(page.getByRole("checkbox")).toHaveCount(0);
+    const rf = api.engines.red_flag;
+    await expect(page.getByTestId("engine-versions")).toContainText(rf.ruleset_version);
+    await expect(page.getByTestId("engine-versions")).toContainText(api.engines.pharma.pipeline_version);
+    await expect(page.getByTestId("med-discrepancy-count")).toContainText(`${meds.discrepancies.length} รายการ`);
+    expect(meds.discrepancies.length).toBe(api.engines.pharma.issue_count);
+    const banner = page.getByTestId("safety-banner");
+    if (rf.alerts.length) {
+      sawAlert = true;
+      await expect(banner).toHaveAttribute("data-level", "critical");
+      await expect(banner).toContainText("พบสัญญาณที่ต้องประเมินเร่งด่วน");
+      await expect(page.getByTestId("engine-alerts").locator("li")).toHaveCount(rf.alerts.length);
+    } else {
+      await expect(banner).toHaveAttribute("data-level", "none");
+      await expect(banner).not.toContainText("ปลอดภัย");
+    }
+    if (rf.not_evaluated.length) {
+      sawNotEvaluated = true;
+      await expect(page.getByTestId("engine-not-evaluated")).toContainText(rf.not_evaluated_text);
+    }
+    if (api.allergies === null) {
+      sawUnknownAllergy = true;
+      await expect(page.getByTestId("allergy-unknown")).toBeVisible();
+    }
+    if (api.vitals.some((v: Record<string, unknown>) => v.temp_c === null)) {
+      sawMissingVital = true;
+      await expect(page.getByTestId("vitals-prev-missing")).toBeVisible();
+    }
+    // the safety banner precedes the summary in DOM order
+    const first = await page.evaluate(() => {
+      const b = document.querySelector("[data-testid=safety-banner]");
+      const s = document.querySelector("[data-testid=case-summary]");
+      return !!b && !!s && !!(b.compareDocumentPosition(s) & Node.DOCUMENT_POSITION_FOLLOWING);
+    });
+    expect(first).toBe(true);
+    await assertNoOverflow(page);
+    await assertA11y(page);
+    await page.goto(`/app/cases/${c.case_id}/medications?run=${run}`);
+    await expect(page.getByTestId("med-discrepancy")).toHaveCount(meds.discrepancies.length);
+    await expect(page.getByRole("button", { name: /ยืนยันข้อเสนอแนะ/ })).toHaveCount(0);
+  }
+  expect([sawAlert, sawNotEvaluated, sawUnknownAllergy, sawMissingVital]).toEqual([true, true, true, true]);
+  await page.goto(`/app/cases/SYNE-0007/overview?run=${run}`); // a dev-split id is not served
+  await expect(page.locator(".ui-notice[role=alert]")).toContainText("case not found");
+});

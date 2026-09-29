@@ -31,3 +31,5 @@
   .vitals { grid-column: 1; grid-row: auto; }
   .vitalList { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+.calmBanner { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; padding: 16px 24px; border-radius: 12px; border: 1px solid var(--warning-border); background: var(--warning-bg); align-items: start; }
+.calmBanner h2, .calmBanner p { margin: 0; }

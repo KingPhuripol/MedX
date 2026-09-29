@@ -44,6 +44,38 @@ export type LabResult = {
   resulted_at: string;
   available_at_time?: string;
 };
+export type RedFlagEngine = {
+  engine: string;
+  ruleset_version: string;
+  rules_total: number;
+  alerts: { rule_id: string; name_th: string; message_th: string; evidence_refs: string[] }[];
+  /** Rules that could not be checked. Never a negative result. */
+  not_evaluated: { rule_id: string; name_th: string; missing_inputs: string[]; reason_th: string }[];
+  not_evaluated_text: string;
+};
+export type PharmaEngine = {
+  engine: string;
+  pipeline_version: string;
+  rules_version: string;
+  formulary_version: string;
+  issue_count: number;
+  notice_count: number;
+  unchecked_comparisons: number;
+};
+/** A case row in the queue (all served cases, red flags first). */
+export type QueueCase = {
+  case_id: string;
+  display_name: string;
+  view_only: boolean;
+  safety_level: "critical" | "none";
+  safety_label: string;
+  alert_count: number;
+  /** null when the case has no engine run (the seeded workflow case). */
+  not_evaluated_count: number | null;
+  age: number;
+  sex: string;
+  chief_complaint: string;
+};
 export type CaseOverview = {
   run_id: string;
   case_id: string;
@@ -51,13 +83,17 @@ export type CaseOverview = {
   data_class: "synthetic";
   stage: string;
   owner: { role: Role; display: string };
-  safety: { level: string; label: string; detail: string; acknowledged: boolean };
+  safety: { level: "critical" | "none" | string; label: string; detail: string; acknowledged: boolean };
   next_action: string;
   demographics: { age: number; sex: string; hn: string };
   summary: string;
   intake: Record<string, string>;
-  triage: { suggestion: string; department: string; confidence: string; evidence_ids: string[] };
-  care: { status: string; suggestion: string; evidence_ids: string[] };
+  triage?: { suggestion: string; department: string; confidence: string; evidence_ids: string[] };
+  care?: { status: string; suggestion: string; evidence_ids: string[] };
+  /** U7: fixture cases are read-only; workflow actions exist only for the seeded case. */
+  view_only?: boolean;
+  view_only_label?: string;
+  engines?: { red_flag: RedFlagEngine; pharma: PharmaEngine };
   decision_time?: string;
   vitals?: VitalReading[];
   /** [] = no known allergy recorded; null/undefined = allergy status unknown. */
@@ -76,6 +112,8 @@ export type TimelineItem = {
   version: number;
 };
 export type MedicationData = {
+  view_only?: boolean;
+  engine?: PharmaEngine;
   sources: { source_id: string; label: string; recorded_value: string; captured_at: string }[];
   discrepancies: {
     review_id: string;
@@ -88,7 +126,8 @@ export type MedicationData = {
   }[];
 };
 export const RUN_KEY = "medx.demo.run";
-export const CASE_ID = "SYN-2026-0017";
+/** The one case with a full workflow (claim, review, handoff). Every other served case is view-only. */
+export const WORKFLOW_CASE_ID = "SYN-2026-0017";
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     credentials: "same-origin",
