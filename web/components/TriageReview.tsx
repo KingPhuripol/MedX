@@ -278,10 +278,13 @@ export default function TriageReview({ assessment, departments, onReview }: Prop
 
       {!reviewed && suggested && (
         <ActionBar
+          pinAfter="alerts-title"
           summary={
             a.alerts.length
               ? `รับทราบ red flag แล้ว ${ackIds.length}/${a.alerts.length}`
-              : "ไม่มีรายการที่ต้องรับทราบ"
+              : a.screening?.status !== "evaluated"
+                ? "การคัดกรอง red flag ไม่ครบหรือไม่ได้ทำ — ต้องประเมินผู้ป่วยโดยตรง"
+                : "ไม่มีรายการที่ต้องรับทราบ"
           }
         >
           <Button type="submit" form="confirm-form" disabled={blocked} aria-describedby={describedBy}>
