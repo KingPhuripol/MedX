@@ -31,7 +31,7 @@ describe("research-prototype disclaimer", () => {
     expect(html).toContain(DISCLAIMER_EN);
     expect(html).toContain(DISCLAIMER_TH);
     expect(html.indexOf("research-disclaimer")).toBeLessThan(html.indexOf("page-body"));
-    expect(html).toContain('<html lang="en">');
+    expect(html).toContain('<html lang="th">');
   });
 
   it("renders the MedX wordmark after the disclaimer and before page content", () => {

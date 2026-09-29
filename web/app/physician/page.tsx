@@ -1,16 +1,6 @@
-import type { Metadata } from "next";
-import Link from "next/link";
+import { redirect } from "next/navigation";
 
-import RoleHome from "@/components/RoleHome";
-
-export const metadata: Metadata = { title: "Physician home" };
-
-export default function PhysicianHomePage() {
-  return (
-    <RoleHome role="physician">
-      <p>
-        <Link href="/physician/care">Open care suggestion cases</Link>
-      </p>
-    </RoleHome>
-  );
+// Role homes land on the shared work queue (docs/UI-SPEC.md); role tools sit in the AppShell navigation.
+export default function LegacyPhysicianHome() {
+  redirect("/app/queue");
 }

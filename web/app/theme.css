@@ -1,50 +1,55 @@
-/* MedX theme tokens (R&D deck visual system). The ONLY file in web/ that defines colours.
-   Research prototype — not for clinical use. No alarm/urgency colours here (see slices/t1/SPEC.md). */
+/* MedX hospital-blue theme tokens (docs/UI-SPEC.md; owner decision 2026-09-29).
+   The ONLY file in web/ that defines colours. Research prototype — not for clinical use. */
 
-@font-face {
-  font-family: "SCBXBeta2";
-  src: url("/fonts/SCBXBeta2-Light.otf") format("opentype");
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
 @font-face {
   font-family: "SCBXBeta2";
   src: url("/fonts/SCBXBeta2-Regular.otf") format("opentype");
   font-weight: 400;
-  font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "SCBXBeta2";
   src: url("/fonts/SCBXBeta2-Bold.otf") format("opentype");
   font-weight: 700;
-  font-style: normal;
   font-display: swap;
 }
 
 :root {
   color-scheme: light;
 
-  /* Brand */
-  --grey-1: #E6E8E8;
-  --grey-2: #D6DADB;
-  --grey-3: #AEB3B4;
-  --grey-4: #606769;
-  --grey-5: #363F42;
-  --grey-6: #212628;
-  --grey-7: #15191A;
-  --purple-1: #8F47BF;
-  --purple-2: #6C2993;
-  --purple-3: #3C1D5D;
+  /* Surfaces and ink */
+  --background: #F5F8FB;
+  --foreground: #12212F;
+  --card: #FFFFFF;
+  --nav: #E7F0F7;
+  --border: #C9D6E2;
+  --muted: #EFF4F8;
+  --muted-foreground: #526577;
 
-  /* Surface: input fields and cards */
-  --white: #FFFFFF;
+  /* Accent: primary CTA, active navigation, links and focus ring only */
+  --primary: #0B5CAD;
+  --primary-hover: #084A8C;
+  --primary-soft: #B9DEFF;
+  --primary-deep: #073D73;
+  --primary-bright: #2378C9;
 
-  /* Warning: research disclaimer and role="alert" messages only */
-  --warn-bg: #FFF4CE;
-  --warn-border: #8A6D00;
-  --warn-fg: var(--grey-7);
+  /* Status: red flags / destructive, warning (disclaimer, partial), success */
+  --critical: #B42318;
+  --critical-fg: #7A271A;
+  --critical-border: #FDA29B;
+  --critical-bg: #FEF3F2;
+  --warning: #B54708;
+  --warning-fg: #6D3700;
+  --warning-border: #F7C77A;
+  --warning-bg: #FFFAEB;
+  --success: #067647;
+  --success-bg: #ECFDF3;
+
+  /* Elevation */
+  --shadow-panel: 0 8px 24px rgba(18, 33, 47, 0.07);
+  --shadow-card: 0 8px 24px rgba(18, 33, 47, 0.05);
+  --shadow-floating: 0 8px 24px rgba(18, 33, 47, 0.12);
+  --card-glass: rgba(255, 255, 255, 0.97);
 
   --type: "SCBXBeta2", system-ui, sans-serif;
 }
