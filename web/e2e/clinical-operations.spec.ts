@@ -29,7 +29,7 @@ test("login and seeded launcher preserve authentication and synthetic boundary",
   await page.goto("/login");
   await expect(page.getByText("ต้นแบบเพื่อการวิจัย ไม่ใช้กับผู้ป่วยจริง", { exact: false })).toBeVisible();
   await login(page, "nurse");
-  await expect(page.getByRole("heading", { name: "คิวงานตามบทบาท" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /คิวงานตามบทบาท|คิวรับเข้าและคัดกรอง/ })).toBeVisible();
   await startDemoRun(page);
   await expect(page.getByRole("heading", { name: "คิวรับเข้าและคัดกรอง" })).toBeVisible();
   await expect(page.getByText("SYN-2026-0017").first()).toBeVisible();

@@ -106,6 +106,7 @@ export default function WorkQueue() {
     },
     {
       key: "case",
+      hideLabel: true,
       header: "เคส",
       render: (t) => (
         <>
@@ -116,6 +117,7 @@ export default function WorkQueue() {
     },
     {
       key: "task",
+      hideLabel: true,
       header: "งานที่ต้องทำ",
       render: (t) => (
         <>
