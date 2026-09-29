@@ -1,0 +1,549 @@
+"use client";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import {
+  AlertOctagon,
+  ArrowRight,
+  BookOpen,
+  CheckCircle2,
+  Clock3,
+  FileAudio,
+  FlaskConical,
+  History,
+  Info,
+  Pill,
+  RefreshCw,
+  Send,
+  ShieldAlert,
+  Stethoscope,
+  UserRound,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import VoiceIntake from "@/components/voice/VoiceIntake";
+import {
+  api,
+  formatThaiTime,
+  RUN_KEY,
+  type CaseOverview,
+  type MedicationData,
+  type TimelineItem,
+  type User,
+} from "@/lib/demo";
+
+const tabs = [
+  ["overview", "ภาพรวม"],
+  ["intake", "ข้อมูลรับเข้า"],
+  ["triage", "คัดกรอง"],
+  ["care", "Care review"],
+  ["medications", "ข้อมูลยา"],
+  ["timeline", "Timeline"],
+  ["activity", "กิจกรรม"],
+] as const;
+const stageLabel: Record<string, string> = {
+  intake: "รับข้อมูล",
+  triage_review: "ทบทวนการคัดกรอง",
+  care_review: "ทบทวนโดยแพทย์",
+  medication_review: "ทบทวนข้อมูลยา",
+  complete: "เสร็จสิ้น",
+};
+
+export default function CaseWorkspace({ caseId, section }: { caseId: string; section: string }) {
+  const router = useRouter(),
+    params = useSearchParams();
+  const [runId, setRunId] = useState(""),
+    [data, setData] = useState<CaseOverview | null>(null),
+    [user, setUser] = useState<User | null>(null),
+    [timeline, setTimeline] = useState<TimelineItem[]>([]),
+    [meds, setMeds] = useState<MedicationData | null>(null),
+    [loading, setLoading] = useState(true),
+    [error, setError] = useState(""),
+    [busy, setBusy] = useState(false),
+    [note, setNote] = useState(""),
+    [acknowledged, setAcknowledged] = useState(false),
+    [reviewed, setReviewed] = useState(false);
+  async function load() {
+    const run = params.get("run") || localStorage.getItem(RUN_KEY) || "";
+    setRunId(run);
+    if (!run) {
+      router.replace("/app/queue");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const [me, c] = await Promise.all([
+        api<{ user: User }>("/api/me"),
+        api<CaseOverview>(`/api/demo/v1/runs/${run}/cases/${caseId}`),
+      ]);
+      setUser(me.user);
+      setData(c);
+      if (section === "timeline" || section === "activity") {
+        const t = await api<{ items: TimelineItem[] }>(`/api/demo/v1/runs/${run}/cases/${caseId}/timeline`);
+        setTimeline(t.items);
+      }
+      if (section === "medications") {
+        setMeds(await api<MedicationData>(`/api/demo/v1/runs/${run}/cases/${caseId}/medications`));
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "โหลดข้อมูลไม่สำเร็จ");
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => {
+    load();
+  }, [caseId, section]);
+  async function handoff() {
+    if (!data || !user) return;
+    const to = user.role === "nurse" ? "physician" : "pharmacist";
+    const task = user.role === "nurse" ? "task-triage-017" : "task-care-017";
+    setBusy(true);
+    try {
+      await api(`/api/demo/v1/tasks/${task}/handoffs`, {
+        method: "POST",
+        body: JSON.stringify({
+          run_id: runId,
+          to_role: to,
+          note,
+          version: data.version,
+          acknowledged_alerts: acknowledged ? ["red-flag-017"] : [],
+        }),
+      });
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "ส่งต่อไม่สำเร็จ");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function taskReview(action: "confirm" | "edit" | "reject") {
+    if (!data || !user) return;
+    const task = user.role === "nurse" ? "task-triage-017" : "task-care-017";
+    setBusy(true);
+    setError("");
+    try {
+      await api(`/api/demo/v1/tasks/${task}/reviews/${action}`, {
+        method: "POST",
+        body: JSON.stringify({
+          run_id: runId,
+          version: data.version,
+          reason: note,
+          acknowledged_alerts: acknowledged ? ["red-flag-017"] : [],
+        }),
+      });
+      setReviewed(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "บันทึกการตรวจทานไม่สำเร็จ");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function medicationReview(action: "confirm" | "edit" | "reject") {
+    const review = meds?.discrepancies[0];
+    if (!review) return;
+    setBusy(true);
+    try {
+      await api(`/api/demo/v1/medication-reviews/${review.review_id}/${action}`, {
+        method: "POST",
+        body: JSON.stringify({
+          run_id: runId,
+          version: review.version,
+          reason: action === "confirm" ? "" : note,
+          final_value: action === "edit" ? note : null,
+        }),
+      });
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "บันทึกการตรวจทานไม่สำเร็จ");
+    } finally {
+      setBusy(false);
+    }
+  }
+  if (loading)
+    return (
+      <div className="page-stack" aria-live="polite">
+        <div className="skeleton" />
+        <div className="skeleton" />
+        <div className="skeleton" />
+        <p>กำลังโหลดข้อมูลเคส…</p>
+      </div>
+    );
+  if (error && !data)
+    return (
+      <div className="error-panel" role="alert">
+        <strong>โหลดข้อมูลไม่สำเร็จ</strong>
+        <br />
+        {error}
+        <div style={{ marginTop: 8 }}>
+          <Button variant="secondary" onClick={load}>
+            <RefreshCw size={18} />
+            ลองโหลดอีกครั้ง
+          </Button>
+        </div>
+      </div>
+    );
+  if (!data) return null;
+  return (
+    <div className="page-stack">
+      <header className="card case-header" aria-label="ข้อมูลประจำเคส">
+        <div>
+          <div className="cluster">
+            <span className="badge">
+              <FlaskConical size={14} />
+              Synthetic
+            </span>
+            <span className="muted">{data.case_id}</span>
+          </div>
+          <h1>{data.display_name}</h1>
+          <p className="muted">
+            {data.demographics.sex} · {data.demographics.age} ปี · {data.demographics.hn}
+          </p>
+        </div>
+        <div className="case-fact">
+          <span>ขั้นตอน</span>
+          <strong>{stageLabel[data.stage] || data.stage}</strong>
+        </div>
+        <div className="case-fact">
+          <span>ผู้รับผิดชอบ</span>
+          <strong>{data.owner.display}</strong>
+        </div>
+        <div className="case-fact">
+          <span>งานถัดไป</span>
+          <strong>{data.next_action}</strong>
+        </div>
+      </header>
+      <section className="safety-banner" role="alert">
+        <AlertOctagon size={28} className="critical" />
+        <div>
+          <h2 className="critical">{data.safety.label}</h2>
+          <p>{data.safety.detail}</p>
+          <label className="cluster" style={{ marginTop: 8, fontWeight: 700 }}>
+            <input
+              type="checkbox"
+              checked={acknowledged}
+              onChange={(e) => setAcknowledged(e.target.checked)}
+              style={{ width: 20, height: 20 }}
+            />{" "}
+            รับทราบ red flag และจะให้บุคลากรประเมินโดยตรง
+          </label>
+        </div>
+      </section>
+      <nav className="case-tabs" aria-label="ส่วนของเคส">
+        {tabs.map(([slug, label]) => (
+          <Link
+            key={slug}
+            className={`case-tab ${section === slug ? "active" : ""}`}
+            href={`/app/cases/${caseId}/${slug}?run=${runId}`}
+          >
+            {label}
+          </Link>
+        ))}
+      </nav>
+      {error ? (
+        <div className="error-panel" role="alert">
+          <strong>บันทึกข้อมูลไม่สำเร็จ</strong>
+          <br />
+          {error} — โหลดข้อมูลล่าสุดก่อนลองอีกครั้ง
+        </div>
+      ) : null}
+      {section === "overview" ? <Overview data={data} /> : null}
+      {section === "intake" ? (
+        <>
+          <Intake data={data} />
+          <section className="card domain-panel desktop-task">
+            <h2>บันทึก intake ผ่าน domain API เดิม</h2>
+            <VoiceIntake />
+          </section>
+        </>
+      ) : null}
+      {/* Real triage/care assessments live at /nurse/triage/[id] and /physician/care/[id], never under this
+          seeded demo case header (a different synthetic patient). */}
+      {section === "triage" ? (
+        <ReviewSurface
+          icon={<ShieldAlert size={24} />}
+          title="ทบทวนข้อเสนอการคัดกรอง"
+          suggestion={data.triage.suggestion}
+          meta={`หน่วยงานที่เสนอ: ${data.triage.department}`}
+          evidence={data.triage.evidence_ids}
+          note={note}
+          setNote={setNote}
+        />
+      ) : null}
+      {section === "care" ? (
+        <ReviewSurface
+          icon={<Stethoscope size={24} />}
+          title="ทบทวน Care suggestion"
+          suggestion={data.care.suggestion}
+          meta="ไม่ใช่การวินิจฉัยหรือคำแนะนำการรักษา"
+          evidence={data.care.evidence_ids}
+          note={note}
+          setNote={setNote}
+        />
+      ) : null}
+      {section === "medications" ? <MedicationSurface data={meds} note={note} setNote={setNote} /> : null}
+      {section === "timeline" || section === "activity" ? (
+        <Timeline items={timeline} audit={section === "activity"} />
+      ) : null}
+      {(section === "triage" && user?.role === "nurse") || (section === "care" && user?.role === "physician") ? (
+        <div className="review-bar">
+          <div>
+            <strong>{reviewed ? "ตรวจทานโดยบุคลากรแล้ว" : "ต้องให้บุคลากรยืนยัน"}</strong>
+            <div className="muted">บันทึกตัวตน เวลา และเวอร์ชันแบบ append-only</div>
+          </div>
+          <div className="cluster">
+            {!reviewed ? (
+              <>
+                <Button
+                  variant="secondary"
+                  disabled={busy || !acknowledged || !note}
+                  onClick={() => taskReview("edit")}
+                >
+                  แก้ไขก่อนยืนยัน
+                </Button>
+                <Button variant="danger" disabled={busy || !acknowledged || !note} onClick={() => taskReview("reject")}>
+                  ปฏิเสธข้อเสนอแนะ
+                </Button>
+                <Button disabled={busy || !acknowledged} onClick={() => taskReview("confirm")}>
+                  ยืนยันข้อเสนอแนะ <CheckCircle2 size={18} />
+                </Button>
+              </>
+            ) : (
+              <Button disabled={busy || !acknowledged} onClick={handoff}>
+                {user.role === "nurse" ? "ส่งต่อให้แพทย์" : "ส่งต่อให้เภสัชกร"}
+                <Send size={18} />
+              </Button>
+            )}
+          </div>
+        </div>
+      ) : null}
+      {section === "medications" && user?.role === "pharmacist" && meds?.discrepancies[0]?.status === "pending" ? (
+        <div className="review-bar">
+          <div>
+            <strong>Medication review</strong>
+            <div className="muted">ตรวจแหล่งข้อมูลและ provenance ก่อนบันทึก</div>
+          </div>
+          <div className="cluster">
+            <Button variant="secondary" disabled={busy || !note} onClick={() => medicationReview("edit")}>
+              แก้ไขก่อนยืนยัน
+            </Button>
+            <Button variant="danger" disabled={busy || !note} onClick={() => medicationReview("reject")}>
+              ปฏิเสธข้อเสนอแนะ
+            </Button>
+            <Button disabled={busy} onClick={() => medicationReview("confirm")}>
+              ยืนยันข้อเสนอแนะ <CheckCircle2 size={18} />
+            </Button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function Overview({ data }: { data: CaseOverview }) {
+  return (
+    <div className="content-grid">
+      <section className="card stack">
+        <h2>สรุปเคส</h2>
+        <p style={{ fontSize: 20 }}>{data.summary}</p>
+        <dl className="detail-list">
+          <dt>อาการสำคัญ</dt>
+          <dd>{data.intake.chief_complaint}</dd>
+          <dt>เริ่มมีอาการ</dt>
+          <dd>{data.intake.onset}</dd>
+          <dt>สถานะ intake</dt>
+          <dd className="success">
+            <CheckCircle2 size={16} style={{ display: "inline" }} /> ตรวจทานแล้ว
+          </dd>
+        </dl>
+      </section>
+      <aside className="card stack">
+        <h2>ภาพรวมความปลอดภัย</h2>
+        <div className="cluster critical">
+          <ShieldAlert size={20} />
+          <strong>ต้องประเมินเร่งด่วน</strong>
+        </div>
+        <p>Red flag แสดงก่อนข้อเสนออื่นทุกครั้ง และไม่มีการดำเนินการอัตโนมัติ</p>
+        <Link href={`/app/cases/${data.case_id}/timeline?run=${data.run_id}`}>
+          ดู timeline ทั้งหมด <ArrowRight size={16} style={{ display: "inline" }} />
+        </Link>
+      </aside>
+    </div>
+  );
+}
+function Intake({ data }: { data: CaseOverview }) {
+  return (
+    <div className="content-grid">
+      <section className="card stack">
+        <div className="cluster">
+          <FileAudio size={24} />
+          <h2 style={{ margin: 0 }}>ข้อมูลรับเข้า</h2>
+        </div>
+        <dl className="detail-list">
+          <dt>อาการสำคัญ</dt>
+          <dd>{data.intake.chief_complaint}</dd>
+          <dt>เวลาเริ่ม</dt>
+          <dd>{data.intake.onset}</dd>
+          <dt>แหล่งข้อมูล</dt>
+          <dd>{data.intake.source}</dd>
+        </dl>
+        <div className="state-panel">
+          <Info size={24} />
+          <h2>การแก้ transcript ใช้หน้าจอขนาดใหญ่</h2>
+          <p>ทำงานนี้ต่อบนแท็บเล็ตหรือเดสก์ท็อป สถานะรอบเดโมและเคสจะยังคงอยู่</p>
+        </div>
+      </section>
+      <aside className="card">
+        <h2>หลักฐานและที่มา</h2>
+        <p>บทสนทนาจำลองภาษาไทย</p>
+        <p className="muted">data_class: synthetic · status: {data.intake.status}</p>
+      </aside>
+    </div>
+  );
+}
+function ReviewSurface({
+  icon,
+  title,
+  suggestion,
+  meta,
+  evidence,
+  note,
+  setNote,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  suggestion: string;
+  meta: string;
+  evidence: string[];
+  note: string;
+  setNote: (v: string) => void;
+}) {
+  return (
+    <div className="content-grid">
+      <section className="card stack">
+        <div className="cluster">
+          {icon}
+          <h2 style={{ margin: 0 }}>{title}</h2>
+        </div>
+        <div style={{ padding: 24, background: "var(--muted)", borderRadius: 12 }}>
+          <p className="muted">ข้อเสนอจากระบบ — ต้องให้บุคลากรยืนยัน</p>
+          <p style={{ fontSize: 20, fontWeight: 700 }}>{suggestion}</p>
+          <p>{meta}</p>
+        </div>
+        <div className="form-field">
+          <label htmlFor="review-note">บันทึกประกอบการตรวจทาน</label>
+          <textarea
+            id="review-note"
+            rows={3}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="ระบุเหตุผลเมื่อแก้ไข ปฏิเสธ หรือส่งต่อพร้อมข้อสังเกต"
+          />
+        </div>
+      </section>
+      <aside className="card stack">
+        <div className="cluster">
+          <BookOpen size={20} />
+          <h2 style={{ margin: 0 }}>หลักฐานและที่มา</h2>
+        </div>
+        {evidence.map((id) => (
+          <div key={id} className="badge">
+            {id}
+          </div>
+        ))}
+        <p className="muted">แสดง evidence ID และ metadata เพื่อการตรวจสอบ ไม่ใช่เหตุผลทางคลินิกที่ระบบสร้างใหม่</p>
+      </aside>
+    </div>
+  );
+}
+function MedicationSurface({
+  data,
+  note,
+  setNote,
+}: {
+  data: MedicationData | null;
+  note: string;
+  setNote: (v: string) => void;
+}) {
+  if (!data)
+    return (
+      <div className="state-panel">
+        <h2>ข้อมูลบางส่วนยังไม่พร้อม</h2>
+        <p>ตรวจรายการที่ทำเครื่องหมายไว้ก่อนดำเนินการต่อ</p>
+      </div>
+    );
+  const d = data.discrepancies[0];
+  return (
+    <div className="content-grid">
+      <section className="card stack">
+        <div className="cluster">
+          <Pill size={24} />
+          <h2 style={{ margin: 0 }}>Medication reconciliation</h2>
+        </div>
+        {data.sources.map((s) => (
+          <article key={s.source_id} style={{ padding: 16, border: "1px solid var(--border)", borderRadius: 8 }}>
+            <strong>{s.label}</strong>
+            <p>{s.recorded_value}</p>
+            <span className="muted">
+              {s.source_id} · {formatThaiTime(s.captured_at)}
+            </span>
+          </article>
+        ))}
+        <div className="form-field">
+          <label htmlFor="med-note">เหตุผลหรือค่าที่แก้ไข</label>
+          <textarea
+            id="med-note"
+            rows={3}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="จำเป็นเมื่อแก้ไขหรือปฏิเสธ"
+          />
+        </div>
+      </section>
+      <aside className="card stack">
+        <div className="cluster warning">
+          <AlertOctagon size={20} />
+          <h2 style={{ margin: 0 }}>{d.label}</h2>
+        </div>
+        <p>{d.detail}</p>
+        <div className="cluster">
+          <span className="badge">{d.status === "pending" ? "รอตรวจทาน" : "ตรวจทานแล้ว"}</span>
+          <span className="badge">version {d.version}</span>
+        </div>
+        <p className="muted">Provenance: {d.provenance.join(" · ")}</p>
+      </aside>
+    </div>
+  );
+}
+function Timeline({ items, audit }: { items: TimelineItem[]; audit: boolean }) {
+  return (
+    <section className="card">
+      <div className="cluster">
+        <History size={24} />
+        <h2 style={{ margin: 0 }}>{audit ? "ประวัติกิจกรรมแบบ append-only" : "Timeline ของเคส"}</h2>
+      </div>
+      {items.length === 0 ? (
+        <div className="state-panel">
+          <h2>ยังไม่มีรายการใน timeline</h2>
+          <p>กิจกรรมจะปรากฏหลังมีการรับเคส ตรวจทาน หรือส่งต่อ</p>
+        </div>
+      ) : (
+        <ol className="timeline" style={{ marginTop: 24 }}>
+          {items.map((i) => (
+            <li key={i.event_id}>
+              <span className="timeline-dot" />
+              <div>
+                <strong>{i.title}</strong>
+                <p style={{ margin: "4px 0" }}>{i.detail}</p>
+                <span className="muted">
+                  <Clock3 size={14} style={{ display: "inline" }} /> {formatThaiTime(i.timestamp)} ·{" "}
+                  {i.actor.display || i.actor.role} · v{i.version}
+                </span>
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
+    </section>
+  );
+}

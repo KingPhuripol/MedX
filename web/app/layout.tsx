@@ -16,12 +16,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="th">
       <body>
         <Disclaimer />
         <header className="site-header">
           <Wordmark />
-          <span className="tagline">AI Clinical Front Door · research prototype</span>
         </header>
         <main>{children}</main>
       </body>

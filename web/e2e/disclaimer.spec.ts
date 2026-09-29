@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { login } from "./helpers";
+import { login, ROLE_PAGES, startDemoRun } from "./helpers";
 
 const EN =
   "Research prototype — not for clinical use. Outputs are suggestions for review and require confirmation by a clinician.";
@@ -31,11 +31,27 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByRole("heading", { level: 1 })).toContainText("404");
     });
 
-    test("role homes", async ({ page }) => {
+    test("work queue, demo launcher and every role work page", async ({ page }) => {
       for (const role of ["nurse", "physician", "pharmacist"] as const) {
         await page.context().clearCookies();
         await login(page, role);
-        await expect(page.getByRole("heading", { level: 1 })).toContainText(new RegExp(role, "i"));
+        await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+        await expectDisclaimer(page);
+        for (const path of [...ROLE_PAGES[role], "/demo"]) {
+          await page.goto(path);
+          await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+          await expectDisclaimer(page);
+        }
+      }
+    });
+
+    test("seeded case workspace sections", async ({ page }) => {
+      await login(page, "nurse");
+      await startDemoRun(page);
+      for (const section of ["overview", "intake", "triage", "care", "medications", "timeline", "activity"]) {
+        await page.goto(`/app/cases/SYN-2026-0017/${section}`);
+        // The intake section embeds the voice-intake page, which brings its own h1.
+        await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
         await expectDisclaimer(page);
       }
     });

@@ -111,7 +111,43 @@ care_reviews = Table(
     Column("reason_sha256", String(64), nullable=True),
 )
 
-APPEND_ONLY_TRIAGE_TABLES = ("triage_assessments", "triage_reviews", "care_assessments", "care_reviews")
+# Presentation-safe synthetic demo runs. Runs and events are immutable; current task
+# state is derived by folding events, so a presenter never needs reset/delete.
+demo_runs = Table(
+    "demo_runs",
+    metadata,
+    Column("run_id", String(36), primary_key=True),
+    Column("journey_id", String(64), nullable=False),
+    Column("created_at", String(40), nullable=False),
+    Column("created_by", Integer, nullable=False),
+    Column("created_by_role", String(16), nullable=False),
+    Column("version", Integer, nullable=False),
+)
+
+demo_events = Table(
+    "demo_events",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("event_id", String(36), nullable=False, unique=True),
+    Column("run_id", String(36), ForeignKey("demo_runs.run_id"), nullable=False, index=True),
+    Column("case_id", String(64), nullable=False),
+    Column("task_id", String(64), nullable=True),
+    Column("event_type", String(32), nullable=False),
+    Column("actor_id", Integer, nullable=False),
+    Column("actor_role", String(16), nullable=False),
+    Column("ts_utc", String(40), nullable=False),
+    Column("version", Integer, nullable=False),
+    Column("payload_json", Text, nullable=False),
+)
+
+APPEND_ONLY_TRIAGE_TABLES = (
+    "triage_assessments",
+    "triage_reviews",
+    "care_assessments",
+    "care_reviews",
+    "demo_runs",
+    "demo_events",
+)
 
 _SQLITE_TRIGGERS = (
     """CREATE TRIGGER IF NOT EXISTS audit_events_no_update BEFORE UPDATE ON audit_events

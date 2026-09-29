@@ -1,22 +1,30 @@
 import type { Metadata } from "next";
 
+import DemoLogin, { PUBLIC_DEMO } from "@/components/DemoLogin";
 import LoginForm from "@/components/LoginForm";
+import Wordmark from "@/components/Wordmark";
 
-export const metadata: Metadata = { title: "Sign in" };
+export const metadata: Metadata = { title: "เข้าสู่ระบบ" };
 
 export default function LoginPage() {
   return (
     <div className="cover">
-      <div className="cover-panel" data-testid="cover-panel" aria-hidden="true">
-        <svg className="cover-motif" data-testid="cover-motif" viewBox="0 0 100 100" focusable="false">
-          <path d="M18 18 L82 82 M82 18 L18 82" fill="none" strokeWidth="16" strokeLinecap="round" />
-        </svg>
-        <p className="cover-title">AI Clinical Front Door</p>
-        <p className="cover-sub">Research prototype. Suggestions for clinician review.</p>
+      <div className="cover-panel" data-testid="cover-panel">
+        <p className="cover-title">
+          <Wordmark /> Clinical Operations
+        </p>
+        <div>
+          <p className="cover-sub">พื้นที่ทำงานเดียวสำหรับรับข้อมูล คัดกรอง ตรวจทาน และส่งต่อเคสสังเคราะห์</p>
+          <p>ออกแบบให้ red flags มาก่อนข้อเสนอ และทุกการตัดสินใจต้องยืนยันโดยบุคลากร</p>
+        </div>
       </div>
       <section className="cover-form" aria-labelledby="login-title">
-        <h1 id="login-title">Sign in</h1>
-        <LoginForm />
+        <span className="badge">Synthetic accounts only</span>
+        <h1 id="login-title">เข้าสู่ระบบเดโม</h1>
+        <p className="muted">
+          {PUBLIC_DEMO ? "เลือกบทบาทเพื่อเข้าสู่คิวงานที่เกี่ยวข้อง" : "ใช้บัญชีตามบทบาท ระบบจะนำไปยังคิวงานที่เกี่ยวข้อง"}
+        </p>
+        {PUBLIC_DEMO ? <DemoLogin /> : <LoginForm />}
       </section>
     </div>
   );
