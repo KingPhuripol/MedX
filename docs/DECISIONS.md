@@ -125,3 +125,8 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
 - **Scope and limits:** same as the 2026-09-29 public demo entry. Synthetic data only, mock provider only, research-prototype disclaimer on every page, no password with `PUBLIC_DEMO=1`.
 - **Also approved:** a step-by-step journey slide, a short screen-recording demo, a PDF export of the Gate 2 deck, and extending V2 so it opens several synthetic cases (a separate slice, deployed only after its checker and reviewer pass).
 - **Approved by:** project owner (chat, 2026-09-29).
+
+## 2026-09-29 — Redeploy medx-demo-u4 from main including V1 MedX Live voice
+- **What:** deploy main HEAD (u6 Overview summary plus the V1 MedX Live voice merge, `/live`) to `medx-demo-u4`, rather than u6 alone. The existing production env vars for voice stay as the voice session set them.
+- **Why:** the owner chose "deploy main ทั้งหมด (u6 + voice)" when told that main now contains the voice agent. The voice agent's own approval is entry 61ab4c9 (synthetic audio only, local + blue link).
+- **Approved by:** project owner (chat, 2026-09-29).
