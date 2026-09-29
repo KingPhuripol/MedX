@@ -130,3 +130,15 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
 - **What:** deploy main HEAD (u6 Overview summary plus the V1 MedX Live voice merge, `/live`) to `medx-demo-u4`, rather than u6 alone. The existing production env vars for voice stay as the voice session set them.
 - **Why:** the owner chose "deploy main ทั้งหมด (u6 + voice)" when told that main now contains the voice agent. The voice agent's own approval is entry 61ab4c9 (synthetic audio only, local + blue link).
 - **Approved by:** project owner (chat, 2026-09-29).
+
+## 2026-09-29 — V1 MedX Live shipped (main 61460fc, blue link redeployed)
+- **What:** `/live`, a mobile ChatGPT-Voice-style screen, plus `POST /api/voice/realtime/session` and `GET /api/voice/realtime/config`, per `slices/v1/SPEC.md`. Models: `gpt-realtime-2.1-mini`, with `gpt-4o-mini-transcribe` for transcription. The rules-based policy picks every question and extraction stays server-side.
+- **Vercel `medx-demo-u4` env added:** `VOICE_ENABLED`, `NEXT_PUBLIC_VOICE_ENABLED`, `OPENAI_API_KEY` (piped from `.env`, never printed), `VOICE_ACCESS_CODE` (given to the owner in chat). The Model Gateway stays mock.
+- **Verified:**
+  - Tests: OpenAI mocked in all automated tests. v1-voice e2e: 86 passed, 1 known voice-intake failure.
+  - Live endpoint checks:
+    - `/api/voice/realtime/config` reports enabled with the right models;
+    - a wrong access code gets 403;
+    - a correct code gets 200 and a real client secret from OpenAI, so the session config was accepted upstream (SPEC risk R3 cleared).
+  - **Not yet verified:** the full audio round trip (phone mic → WebRTC → transcription → turn → spoken question). The owner tests this on a phone with synthetic role-play.
+- **Pytest note:** 5 data_factory out-path-guard failures appear only in the `/private/tmp` integration worktree, and `repo_root` flakes in the main checkout while another session writes `web/.next`. V1 does not touch data_factory.
