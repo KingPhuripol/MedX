@@ -24,6 +24,8 @@ export interface Fact {
   field: string;
   state: "KNOWN" | "UNKNOWN" | "REFUSED";
   value: string | number | string[] | null;
+  /** The value as said (Thai); present on facts returned by the voice API. */
+  value_text?: string;
   span_turn_ids: string[];
   available_at_time: string;
 }
@@ -54,6 +56,8 @@ export interface FinishResult {
   handoff_reason: string;
   missing_fields: string[];
   evidence: unknown[];
+  facts?: Fact[];
+  field_statuses?: FieldStatus[];
 }
 
 export const SPEAKER_LABELS: Record<Turn["speaker"], string> = {
@@ -71,6 +75,26 @@ export const FIELD_LABELS: Record<string, string> = {
   allergens: "Allergens (as said)",
   current_medications: "Current medications (as said)",
   relevant_history: "Relevant history (as said)",
+};
+
+/** Thai field labels for the MedX Live fact sheet (slice v1). */
+export const FIELD_LABELS_TH: Record<string, string> = {
+  chief_complaint: "อาการสำคัญ",
+  onset_duration: "ระยะเวลาที่เป็น",
+  severity: "ความรุนแรง (0–10)",
+  allergy_status: "ประวัติแพ้ยา",
+  allergens: "ยาที่แพ้",
+  current_medications: "ยาที่ใช้อยู่",
+  relevant_history: "โรคประจำตัว/ประวัติเดิม",
+};
+
+/** Thai handoff reasons for the MedX Live summary (slice v1). */
+export const REASON_LABELS_TH: Record<string, string> = {
+  complete: "ตอบครบทุกหัวข้อ",
+  attempts_exhausted: "บางหัวข้อยังไม่ได้คำตอบหลังถาม 2 ครั้ง",
+  nurse_attention_phrase: "พบคำพูดที่ต้องให้พยาบาลประเมินทันที",
+  extraction_unavailable: "ระบบสกัดข้อมูลไม่พร้อม",
+  finished_by_nurse: "พยาบาลจบการสนทนา",
 };
 
 export const REASON_LABELS: Record<string, string> = {
