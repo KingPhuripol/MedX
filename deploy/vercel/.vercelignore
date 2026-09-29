@@ -1,0 +1,12 @@
+# Slice d1: only the staged runtime goes to Vercel. Never upload secrets, local databases or evidence.
+.env
+.env.*
+.vercel/output
+node_modules
+.next
+**/__pycache__
+*.db
+*.db-journal
+*.sqlite3
+*.sqlite3-*
+data/synthetic/v1/gold

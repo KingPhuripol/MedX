@@ -37,6 +37,8 @@ def _user_payload(user: CurrentUser) -> dict[str, str | int]:
 
 @router.post("/auth/login")
 def login(body: LoginBody, request: Request, response: Response) -> dict:
+    if get_settings(request).public_demo:  # d1: the public demo only issues signed one-click role sessions
+        raise HTTPException(status_code=404, detail="password login is disabled in the public demo")
     engine = get_engine(request)
     row = None
     if body.username:

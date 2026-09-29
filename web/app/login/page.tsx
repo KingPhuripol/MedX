@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import DemoLogin, { PUBLIC_DEMO } from "@/components/DemoLogin";
 import LoginForm from "@/components/LoginForm";
 import Wordmark from "@/components/Wordmark";
 
@@ -20,8 +21,10 @@ export default function LoginPage() {
       <section className="cover-form" aria-labelledby="login-title">
         <span className="badge">Synthetic accounts only</span>
         <h1 id="login-title">เข้าสู่ระบบเดโม</h1>
-        <p className="muted">ใช้บัญชีตามบทบาท ระบบจะนำไปยังคิวงานที่เกี่ยวข้อง</p>
-        <LoginForm />
+        <p className="muted">
+          {PUBLIC_DEMO ? "เลือกบทบาทเพื่อเข้าสู่คิวงานที่เกี่ยวข้อง" : "ใช้บัญชีตามบทบาท ระบบจะนำไปยังคิวงานที่เกี่ยวข้อง"}
+        </p>
+        {PUBLIC_DEMO ? <DemoLogin /> : <LoginForm />}
       </section>
     </div>
   );

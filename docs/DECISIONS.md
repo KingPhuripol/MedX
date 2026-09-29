@@ -67,3 +67,10 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
 - **What:** The "MedX Clinical Operations" UI (hospital-blue tokens, `--primary:#0B5CAD`, SCBXBeta2, AppShell, `/app/queue`, `/demo`, per `docs/UI-SPEC.md`; branch `ui/medx-clinical-ops`) becomes the main web design, replacing the T1 grey/purple palette. The CLAUDE.md theme rule is updated to match. Token discipline is unchanged: only `web/app/theme.css` tokens, no ad-hoc colours, MedX wordmark, never the SCBX logo.
 - **Kept:** the safety e2e coverage that branch deleted (disclaimer, role gating, red-flag-first care, triage, a11y/axe, theme) is adapted to the new UI, not dropped.
 - **Approved by:** project owner (chat, 2026-09-29): "อยากที่จะเอาสีฟ้าเป็นอันหลัก เพราะสีม่วงมันแย่เกินไป".
+
+## 2026-09-29 — Public Vercel demo: two links (grey/purple T1 and hospital blue U4)
+- **What:** Deploy two public Vercel projects under account `kingphuripol` for the advisor: (1) the grey/purple T1 UI (main at 9f0eb0d) and (2) the hospital-blue U4 UI (after U4 passes its tests). Each is the Next.js web plus the FastAPI backend as a Vercel Python function.
+- **Scope and limits:** mock provider only (external providers refused by config); synthetic data only; SQLite in `/tmp`, so state resets when an instance is recycled; research-prototype disclaimer on every page.
+- **Login:** no password. With `PUBLIC_DEMO=1` (Vercel only), the login page offers one-click nurse, physician and pharmacist buttons; RBAC still applies per role. Local and dev builds keep password login.
+- **Approved by:** project owner (chat, 2026-09-29), including uploading code to Vercel and "no password" for the demo accounts.
+- **Take-down:** `vercel remove <project>` by the owner, or on request.
