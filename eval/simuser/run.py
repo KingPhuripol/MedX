@@ -13,11 +13,13 @@ Tool mapping (the synthetic snapshot has these data types only; nothing is inven
          get_labs           LabSeries
          get_medications    MedicationList (home_list / patient_reported / new_order)
          get_vitals         Vitals
-  env B  get_queue / get_case_overview / get_intake / get_medications / get_timeline: one screen per tool,
+  env B  get_case_overview / get_intake / get_medications / get_timeline: one screen per tool,
          mirroring what the V2 web UI renders (see UI_MAP; web/components/clinical/CaseWorkspace.tsx). The same
-         facts are reachable as in A. System-authored content of the demo (red-flag banner, discrepancy card)
-         is NOT reproduced (no engine computes it for dataset cases; it would leak gold), so B differs from
-         A only in consolidation.
+         facts are reachable as in A, rendered by ONE formatter (format_item) in both arms. get_case_overview
+         carries a `summary` block (OVERVIEW_SUMMARY_FIELDS) built from the snapshot. System-authored content of
+         the demo (red-flag banner, discrepancy card) is NOT reproduced (no engine computes it for dataset
+         cases; it would leak gold), so B differs from A only in consolidation (grouping + overview summary).
+         g2-0001 had a get_queue tool in B only and a header-only overview; both removed for g2-0002.
 Both envs filter available_at_time > T (T = snapshot as_of).
 
 Arm B ("single-case consolidated view (MedX case-page schema)") is a schema-faithful adapter of the MedX case-page routes, populated from the snapshot: the shipped
@@ -110,14 +112,20 @@ PROTOCOL_CHANGES = [
 UI_MAP = [
     "", "## Arm B: V2 UI screen to tool mapping (single-case consolidated view, MedX case-page schema; adapter, not a MedX app run)", "",
     "| V2 web UI (file:line) | Tool | What the tool returns |", "|---|---|---|",
-    "| web/components/clinical/WorkQueue.tsx:29,53 (queue API, row link to case) | get_queue | role tasks (task_id, case_id, kind, label, status) |",
-    "| web/components/clinical/CaseWorkspace.tsx:189-215 (case header: case id, name, sex, age, HN, stage, owner, next task); :34-42 (tabs) | get_case_overview | the header fields + intake status + tab list; nothing else is on the first-open overview |",
-    "| CaseWorkspace.tsx:216-231 (red-flag banner), :343-373 (Overview: summary, chief complaint, onset) | not reproduced | authored/system content in the demo; no engine computes it for dataset cases and it would leak gold. Chief complaint/onset are only in the transcript, so the model must open intake |",
+    "| web/components/clinical/WorkQueue.tsx:29,53 (queue API) | removed in g2-0002 | arm A has no equivalent and the case id is in the task prompt; g2-0001 exposed get_queue in B only |",
+    "| web/components/clinical/CaseWorkspace.tsx:189-215 (case header: case id, name, sex, age, HN, stage, owner, next task); :34-42 (tabs) | get_case_overview | the header fields + intake status + tab list, plus a `summary` block (OVERVIEW_SUMMARY_FIELDS: latest vitals, change vs previous reading, allergy status, current medications + source count, abnormal labs) built from the snapshot; slots to be aligned to the final u6 Overview |",
+    "| CaseWorkspace.tsx:216-231 (red-flag banner), discrepancy card | not reproduced | authored/system content in the demo; no engine computes it for dataset cases and it would leak gold. The real UI shows a banner, so B measures consolidation only. Chief complaint/onset are only in the transcript, so the model must open intake |",
     "| CaseWorkspace.tsx:251,374-403 (Intake tab), :81-87 (tab data fetched only on open) | get_intake | intake record incl. the conversation turns (assumption: the UI intake tab shows only extracted fields; the adapter exposes the transcript so the same facts are reachable as in A) |",
     "| CaseWorkspace.tsx:284,459-517 (Medications tab: one card per source with recorded_value, captured_at) | get_medications | one source per list with a recorded_value string (drug, dose, frequency, ATC) and captured_at; the discrepancy card (:475-513) is not reproduced |",
     "| CaseWorkspace.tsx:285,518-549 (Timeline tab: title, detail text, actor, time, version) | get_timeline | one event per record; detail text carries vitals, labs, allergy and registration facts (the V2 UI has no separate vitals/labs/allergy screen; assumption: they appear as timeline detail text) |",
     "",
 ]
+# Predeclared slots of the arm-B overview summary (g2-0002). Align to the final u6 V2 Overview; an empty tuple gives the
+# header-only overview of g2-0001. Chief complaint / onset are NOT slots: the snapshot has them only inside the
+# intake conversation (no structured field), so they are not on the overview and the model must open intake.
+OVERVIEW_SUMMARY_FIELDS = ("latest_vitals", "vitals_change_vs_previous", "allergy_status", "current_medications",
+                           "medication_source_count", "abnormal_labs")
+SECONDARY_METRICS = ("calls_per_success", "calls_within_success")  # predeclared secondary (g2-0002); primary reading unchanged
 FORBIDDEN_IN_TOOL_OUTPUT = ("medication_issues", "required_inputs_missing", "INJ-", "expected_action", "rule_id")
 
 
@@ -288,6 +296,101 @@ def _tool(name: str, description: str, needs_case: bool = True) -> dict:
                                              "parameters": {"type": "object", "properties": props, "required": ["case_id"] if needs_case else []}}}
 
 
+def _v(x, unit=""):
+    return "not recorded" if x is None else f"{x}{unit}"
+
+
+def fmt_med_entry(e: dict) -> str:
+    return (f"{e['generic_name']} {e['dose_value']} {e['dose_unit']} {e['frequency']} "
+            f"(ATC {e['atc_code']}{', ' + e['route'] if e.get('route') else ''})")
+
+
+def format_item(i: dict) -> str:
+    """THE one formatter: human-readable text for a snapshot item. Both arms render every item through this function
+    (only the grouping differs: per system in A, per case page in B). Missing values render as 'not recorded'."""
+    t, v = i["data_type"], _v
+    if t == "Vitals":
+        return (f"HR {v(i.get('hr'))}, RR {v(i.get('rr'))}, SBP {v(i.get('sbp'))}, DBP {v(i.get('dbp'))}, SpO2 {v(i.get('spo2'), '%')}, "
+                f"Temp {v(i.get('temp_c'), ' C')}, consciousness {v(i.get('consciousness'))}, on oxygen {v(i.get('on_oxygen'))}")
+    if t == "LabSeries":
+        return "; ".join(f"{r['test']} {r['value']} {r.get('unit', '')} (ref {r.get('ref_low', '?')}-{r.get('ref_high', '?')})".replace("  ", " ")
+                         for r in i["results"])
+    if t == "AllergyList":
+        ent = "; ".join(f"{e['substance']} (ATC class {e.get('atc_class')}): {e.get('reaction', 'n/a')}" for e in i["entries"])
+        return f"allergy status {i.get('status')}" + (f" - {ent}" if ent else "")
+    if t == "Demographics":
+        return f"{v(i.get('sex'))}, {v(i.get('age_years'))} years"
+    if t == "MedicationList":
+        return "; ".join(fmt_med_entry(e) for e in i["entries"]) or "no medications recorded"
+    if t == "IntakeTranscript":
+        return " | ".join(f"{u.get('speaker')}: {u.get('text')}" for u in i["turns"])
+    return "not recorded"
+
+
+_SUMMARY_VITALS = (("hr", "HR", ""), ("rr", "RR", ""), ("sbp", "SBP", ""), ("spo2", "SpO2", "%"), ("temp_c", "Temp", " C"))
+
+
+def vitals_change(prev: dict, last: dict) -> str:
+    """Per-parameter change of the latest reading vs the previous one. No thresholds, no label (the task's trend rule
+    compares FIRST vs LAST with thresholds; this is deliberately the raw last-vs-previous display a UI would show)."""
+    parts = []
+    for k, name, unit in _SUMMARY_VITALS:
+        a, b = prev.get(k), last.get(k)
+        if a is None or b is None:
+            parts.append(f"{name} not comparable (not recorded in one reading)")
+        else:
+            parts.append(f"{name} {a}{unit} -> {b}{unit} ({'up' if b > a else 'down' if b < a else 'same'})")
+    ca, cb = prev.get("consciousness"), last.get("consciousness")
+    parts.append("consciousness not comparable (not recorded in one reading)" if ca is None or cb is None
+                 else f"consciousness {ca} -> {cb} ({'same' if ca == cb else 'changed'})")
+    return "; ".join(parts)
+
+
+def build_overview_summary(items: list[dict], fields: tuple = OVERVIEW_SUMMARY_FIELDS) -> dict:
+    """Arm-B overview summary from the (already temporally filtered) snapshot items only. No gold, no engine output,
+    no red-flag banner, no discrepancy flags. Missing values are rendered as missing, never as normal."""
+    vit = [i for i in items if i["data_type"] == "Vitals"]
+    alg = [i for i in items if i["data_type"] == "AllergyList"]
+    meds = [i for i in items if i["data_type"] == "MedicationList"]
+    labs = [i for i in items if i["data_type"] == "LabSeries"]
+    out: dict[str, Any] = {}
+    for f in fields:
+        if f == "latest_vitals":
+            out[f] = "not recorded" if not vit else f"{format_item(vit[-1])} (at {vit[-1]['available_at_time']})"
+        elif f == "vitals_change_vs_previous":
+            out[f] = "no vitals recorded" if not vit else "no previous reading (single reading)" if len(vit) < 2 else vitals_change(vit[-2], vit[-1])
+        elif f == "allergy_status":
+            if not alg:
+                out[f] = "unknown (no allergy record)"
+            else:
+                a = alg[-1]
+                names = [e["substance"] for e in a["entries"]]
+                out[f] = f"known: {', '.join(names)}" if a.get("status") == "known" and names else \
+                    "none recorded (no known allergy)" if a.get("status") == "no_known_allergy" else "unknown (allergy status not documented)"
+        elif f == "current_medications":
+            names = sorted({_norm(e["generic_name"]) for m in meds for e in m["entries"]})
+            out[f] = names if names else "no medication lists recorded"
+        elif f == "medication_source_count":
+            out[f] = len(meds)
+        elif f == "abnormal_labs":
+            latest: dict[str, dict] = {}
+            for s_ in labs:  # items are ordered by availability, so later rows overwrite earlier ones
+                for r in s_["results"]:
+                    latest[r["test"]] = r
+            abn, noref = [], []
+            for name, r in sorted(latest.items()):
+                lo, hi, val = r.get("ref_low"), r.get("ref_high"), r.get("value")
+                if val is None or (lo is None and hi is None):
+                    noref.append(name)
+                elif (lo is not None and val < lo) or (hi is not None and val > hi):
+                    abn.append(f"{name} {val} {r.get('unit', '')} (ref {_v(lo)}-{_v(hi)}, {'low' if lo is not None and val < lo else 'high'})".replace("  ", " "))
+            out[f] = {"outside_reference_range": abn if labs else "no labs recorded",
+                      "reference_range_not_recorded": noref}
+        else:
+            raise ValueError(f"unknown overview summary field {f!r}")
+    return out
+
+
 class Env:
     name = ""
     tools: list[dict] = []
@@ -302,7 +405,7 @@ class Env:
         fn = getattr(self, f"_t_{name}", None) if name in self.tool_names else None
         if fn is None:
             return {"error": "unknown_tool", "available": sorted(self.tool_names)}
-        if name != "get_queue" and args.get("case_id") != self.case_id:
+        if args.get("case_id") != self.case_id:
             return {"error": "case_not_found"}
         return fn()
 
@@ -312,9 +415,6 @@ class Env:
 
     def systems_opened(self, called: set[str]) -> int:
         raise NotImplementedError
-
-    def _of(self, *types: str) -> list[dict]:
-        return [_clean(i) for i in self.items if i["data_type"] in types]
 
 
 class MultiSystemEnv(Env):
@@ -326,23 +426,30 @@ class MultiSystemEnv(Env):
         _tool("get_vitals", "Triage/vitals system: vital-sign readings."),
     ]
 
-    def _pack(self, system: str, records: list[dict]) -> dict:
-        out = {"system": system, "case_id": self.case_id, "as_of": self.snapshot["as_of"], "records": records}
-        if not records:
+    def _pack(self, system: str, *types: str) -> dict:
+        recs = []
+        for i in self.items:
+            if i["data_type"] in types:
+                r = {"record_id": i["item_id"], "type": i["data_type"], "recorded_at": i["available_at_time"], "text": format_item(i)}
+                if i["data_type"] == "MedicationList":
+                    r["label"] = i.get("list_source")
+                recs.append(r)
+        out = {"system": system, "case_id": self.case_id, "as_of": self.snapshot["as_of"], "records": recs}
+        if not recs:
             out["note"] = "no records"
         return out
 
     def _t_get_opd_note(self):
-        return self._pack("opd", self._of("Demographics", "AllergyList", "IntakeTranscript"))
+        return self._pack("opd", "Demographics", "AllergyList", "IntakeTranscript")
 
     def _t_get_labs(self):
-        return self._pack("lab", self._of("LabSeries"))
+        return self._pack("lab", "LabSeries")
 
     def _t_get_medications(self):
-        return self._pack("medication", self._of("MedicationList"))
+        return self._pack("medication", "MedicationList")
 
     def _t_get_vitals(self):
-        return self._pack("vitals", self._of("Vitals"))
+        return self._pack("vitals", "Vitals")
 
     def systems_opened(self, called: set[str]) -> int:
         return len(called)
@@ -350,20 +457,19 @@ class MultiSystemEnv(Env):
 
 class CasePageEnv(Env):
     """Single-case consolidated view (MedX case-page schema). Shapes follow backend/app/demo/router.py and what
-    web/components/clinical/CaseWorkspace.tsx renders per tab; see UI_MAP."""
+    web/components/clinical/CaseWorkspace.tsx renders per tab; see UI_MAP. No queue tool (arm A has none)."""
 
     name = "B"
     tools = [
-        _tool("get_queue", "MedX work queue for your role: tasks waiting for you.", needs_case=False),
-        _tool("get_case_overview", "Case page first screen: case header (id, patient, sex, age, HN, stage, owner, next task) and the case tabs."),
+        _tool("get_case_overview", "Case page first screen: case header (id, patient, sex, age, HN, stage, owner, next task), the case tabs and, when present, a summary of the case."),
         _tool("get_intake", "Case page Intake tab: the intake record and conversation."),
         _tool("get_medications", "Case page Medications tab: one card per medication source."),
         _tool("get_timeline", "Case page Timeline tab: chronological events with their detail text (vitals, labs, allergy, registration)."),
     ]
 
-    def __init__(self, snapshot: dict, role: str, queue_case_ids: list[str] | None = None):
+    def __init__(self, snapshot: dict, role: str, summary_fields: tuple = OVERVIEW_SUMMARY_FIELDS):
         super().__init__(snapshot, role)
-        self.queue_case_ids = queue_case_ids or [self.case_id]
+        self.summary_fields = tuple(summary_fields)
 
     def _meta(self) -> dict:
         return {"data_class": "synthetic", "as_of": self.snapshot["as_of"], "actor": {"role": self.role}}
@@ -371,68 +477,43 @@ class CasePageEnv(Env):
     def _first(self, dt: str) -> dict | None:
         return next((i for i in self.items if i["data_type"] == dt), None)
 
-    def _t_get_queue(self):
-        ids = sorted(set(self.queue_case_ids) | {self.case_id})
-        items = [{"task_id": f"task-prep-{c}", "case_id": c, "role": self.role, "kind": "case_prep",
-                  "label": "Prepare case for consult", "status": "ready"} for c in ids]
-        return {"items": items} | self._meta()
-
     def _t_get_case_overview(self):
         demo = self._first("Demographics") or {}
         intake = self._first("IntakeTranscript")
-        return {"case_id": self.case_id, "display_name": f"Synthetic patient {self.case_id}",
-                "demographics": {"sex": demo.get("sex", "not recorded"), "age": demo.get("age_years", "not recorded"), "hn": self.snapshot.get("encounter_ref")},
-                "stage": "care_review", "owner": {"role": self.role, "display": f"team {self.role}"},
-                "next_action": "Prepare case for consult",
-                "intake": {"status": "recorded" if intake else "not recorded"},
-                "tabs": ["overview", "intake", "medications", "timeline"]} | self._meta()
+        out = {"case_id": self.case_id, "display_name": f"Synthetic patient {self.case_id}",
+               "demographics": {"sex": demo.get("sex", "not recorded"), "age": demo.get("age_years", "not recorded"), "hn": self.snapshot.get("encounter_ref")},
+               "stage": "care_review", "owner": {"role": self.role, "display": f"team {self.role}"},
+               "next_action": "Prepare case for consult",
+               "intake": {"status": "recorded" if intake else "not recorded"},
+               "tabs": ["overview", "intake", "medications", "timeline"]}
+        if self.summary_fields:
+            out["summary"] = build_overview_summary(self.items, self.summary_fields)
+        return out | self._meta()
 
     def _t_get_intake(self):
         tx = self._first("IntakeTranscript")
         if tx is None:
             return {"case_id": self.case_id, "intake": None, "note": "no intake recorded"} | self._meta()
         return {"case_id": self.case_id, "intake": {"source": tx["source"], "status": "recorded", "recorded_at": tx["available_at_time"],
-                                                    "turns": tx["turns"]}} | self._meta()
-
-    @staticmethod
-    def _v(x, unit=""):
-        return "not recorded" if x is None else f"{x}{unit}"
-
-    def _detail(self, i: dict) -> str:
-        t, v = i["data_type"], self._v
-        if t == "Vitals":
-            return (f"HR {v(i.get('hr'))}, RR {v(i.get('rr'))}, SBP {v(i.get('sbp'))}, DBP {v(i.get('dbp'))}, SpO2 {v(i.get('spo2'), '%')}, "
-                    f"Temp {v(i.get('temp_c'), ' C')}, consciousness {v(i.get('consciousness'))}, on oxygen {v(i.get('on_oxygen'))}")
-        if t == "LabSeries":
-            return "; ".join(f"{r['test']} {r['value']} {r.get('unit', '')} (ref {r.get('ref_low', '?')}-{r.get('ref_high', '?')})".replace("  ", " ")
-                             for r in i["results"])
-        if t == "AllergyList":
-            ent = "; ".join(f"{e['substance']} (ATC class {e.get('atc_class')}): {e.get('reaction', 'n/a')}" for e in i["entries"])
-            return f"allergy status {i.get('status')}" + (f" - {ent}" if ent else "")
-        if t == "Demographics":
-            return f"{v(i.get('sex'))}, {v(i.get('age_years'))} years"
-        if t == "MedicationList":
-            return "see Medications tab"
-        return "see Intake tab"
+                                                    "conversation": format_item(tx)}} | self._meta()
 
     def _t_get_timeline(self):
         kinds = {"Vitals": "vitals", "LabSeries": "lab", "MedicationList": "medication_list", "AllergyList": "allergy",
                  "Demographics": "registration", "IntakeTranscript": "intake"}
         events = []
         for i in self.items:
-            title = i["data_type"] + (f" ({i.get('list_source')})" if i["data_type"] == "MedicationList" else "")
-            events.append({"event_id": i["item_id"], "kind": kinds.get(i["data_type"], i["data_type"]), "title": title,
-                           "detail": self._detail(i), "actor": {"role": "system", "display": i["source"]},
+            t = i["data_type"]
+            title = t + (f" ({i.get('list_source')})" if t == "MedicationList" else "")
+            detail = "see Medications tab" if t == "MedicationList" else "see Intake tab" if t == "IntakeTranscript" else format_item(i)
+            events.append({"event_id": i["item_id"], "kind": kinds.get(t, t), "title": title,
+                           "detail": detail, "actor": {"role": "system", "display": i["source"]},
                            "timestamp": i["available_at_time"], "version": 1})
         return {"case_id": self.case_id, "items": events} | self._meta()
 
     def _t_get_medications(self):
-        def rec(e):
-            return (f"{e['generic_name']} {e['dose_value']} {e['dose_unit']} {e['frequency']} "
-                    f"(ATC {e['atc_code']}{', ' + e['route'] if e.get('route') else ''})")
         srcs = [{"source_id": i["item_id"], "label": i.get("list_source"), "system": i["source"],
-                 "recorded_value": "; ".join(rec(e) for e in i["entries"]) or "no medications recorded",
-                 "captured_at": i["available_at_time"]} for i in self.items if i["data_type"] == "MedicationList"]
+                 "recorded_value": format_item(i), "captured_at": i["available_at_time"]}
+                for i in self.items if i["data_type"] == "MedicationList"]
         return {"case_id": self.case_id, "sources": srcs} | self._meta()
 
     def systems_opened(self, called: set[str]) -> int:
@@ -596,7 +677,7 @@ class ScriptedLLM:
         self.policy, self.trials, self.model = policy, {}, "scripted-fake"
 
     def complete(self, messages, tools, mode, max_tokens, temperature) -> Completion:
-        env = "B" if any(t["function"]["name"] == "get_queue" for t in tools) else "A"
+        env = "B" if any(t["function"]["name"] == "get_case_overview" for t in tools) else "A"
         case_id = re.search(r"case (\S+) for consult", messages[1]["content"]).group(1)
         turn = sum(1 for m in messages if m["role"] == "assistant")
         if turn == 0:
@@ -808,14 +889,13 @@ def score_trial(ref: Reference, ans: dict | None) -> dict:
 # ---------------------------------------------------------------- run + aggregate
 
 
-def make_env(arm: str, case: Case, persona: str, queue_ids: list[str]) -> Env:
-    return MultiSystemEnv(case.snapshot, persona) if arm == "A" else CasePageEnv(case.snapshot, persona, queue_ids)
+def make_env(arm: str, case: Case, persona: str) -> Env:
+    return MultiSystemEnv(case.snapshot, persona) if arm == "A" else CasePageEnv(case.snapshot, persona)
 
 
 def run_benchmark(llm, cases: list[Case], personas: list[str], k: int, cfg: TrialCfg, budget: Budget, out: Path | None = None,
                   workers: int = 1) -> list[dict]:
     """Jobs = (case, persona, trial), each running arm A then arm B. Case-major submission, thread pool, exact budget."""
-    queue_ids = [c.case_id for c in cases]
     tdir = None
     if out is not None:
         tdir = out / "transcripts"
@@ -828,7 +908,7 @@ def run_benchmark(llm, cases: list[Case], personas: list[str], k: int, cfg: Tria
         for arm in ARMS:
             if budget.stopped:
                 break
-            rec = run_trial(llm, make_env(arm, case, persona, queue_ids), persona, case, cfg, budget)
+            rec = run_trial(llm, make_env(arm, case, persona), persona, case, cfg, budget)
             rec["trial"] = n
             if tdir is not None:
                 with (tdir / f"{arm}__{persona}__{case.case_id}__k{n}.jsonl").open("w", encoding="utf-8") as fh:
@@ -899,6 +979,10 @@ def summarize(trials: list[dict], k: int, n_boot: int = 2000) -> dict:
     add("critical_miss_any", [t["score"]["critical_miss_any"] for t in A], [t["score"]["critical_miss_any"] for t in B], anyd(A), anyd(B))
     for name in ("tool_calls", "systems_opened", "distinct_tools", "repeated_opens", "turns", "tokens", "input_tokens", "wall_s", "cost_usd"):
         add(name, [t[name] for t in A], [t[name] for t in B])
+    # secondary (predeclared g2-0002): calls per successful trial = all calls / successes; within successful trials = calls of successes / successes
+    ok_ = lambda ts: [float(t["score"]["task_success"]) for t in ts]  # noqa: E731
+    add("calls_per_success", [t["tool_calls"] for t in A], [t["tool_calls"] for t in B], ok_(A), ok_(B))
+    add("calls_within_success", [t["tool_calls"] * t["score"]["task_success"] for t in A], [t["tool_calls"] * t["score"]["task_success"] for t in B], ok_(A), ok_(B))
     # pass^k: (case, persona) succeeds only if all k trials succeed (tau-bench). Rows are (case, persona).
     def passk(arm):
         g: dict[tuple, list] = {}
@@ -924,7 +1008,7 @@ def render_md(res: dict) -> str:
          f"Evaluation `{res['evaluation_id']}` - generated {res['created_utc']}. Manifest: `{res['manifest']['id']}` "
          f"(status {res['manifest']['status']}).", "",
          "## Setup", "",
-         f"- Arms: A = {ARM_NAMES['A']} (4 tools, one per snapshot source); B = {ARM_NAMES['B']} (5 tools, one screen each; an adapter, not a MedX app run). Same model, temperature, prompts, task.",
+         f"- Arms: A = {ARM_NAMES['A']} (4 tools, one per snapshot source); B = {ARM_NAMES['B']} (4 tools, one screen each, overview summary slots {', '.join(OVERVIEW_SUMMARY_FIELDS)}; an adapter, not a MedX app run). One formatter renders every item in both arms. Same model, temperature, prompts, task.",
          f"- Model ids reported by the endpoint: {', '.join(res['model_ids']) or 'none'}; requested `{res['protocol']['model']}`; tool mode `{res['protocol']['tool_mode']}`; temperature {res['protocol']['temperature']}.",
          f"- Dataset `{res['dataset']['path']}` split `{res['dataset']['split']}` decision point {res['dataset']['decision_point']}; "
          f"{len(res['cases'])} cases (every gold-red-flag case, then seeded random fill; seed {res['protocol']['seed']}), personas {', '.join(res['protocol']['personas'])}, k={res['protocol']['k']}.",
@@ -939,7 +1023,7 @@ def render_md(res: dict) -> str:
         def cell(x):
             return f"{x['num']:.0f}/{x['den']:.0f} = {_f(x['point'])} [{_f(x['ci_low'])}, {_f(x['ci_high'])}]" if x["den"] and float(x["den"]).is_integer() and float(x["num"]).is_integer() and x["den"] > 0 and name not in _CONT else f"mean {_f(x['point'])} [{_f(x['ci_low'])}, {_f(x['ci_high'])}]"
         d = b["A_minus_B"]
-        name = name + " (exploratory, not in task success)" if name == "field_missing_info" else name
+        name = name + " (exploratory, not in task success)" if name == "field_missing_info" else name + " (secondary)" if name in SECONDARY_METRICS else name
         L.append(f"| {name} | {cell(b['A'])} | {cell(b['B'])} | {_f(d['point'])} [{_f(d['ci_low'])}, {_f(d['ci_high'])}] |")
     v = res["summary"].get("verdict")
     if v:
@@ -957,12 +1041,13 @@ def render_md(res: dict) -> str:
           "- Arm B (single-case consolidated view) is a schema-faithful adapter of the MedX case-page routes populated from the snapshot, not a MedX app run and not the shipped demo router (which serves one hard-coded case). System-computed red-flag/discrepancy hints are excluded, so B measures consolidation only.",
           "- Arm A contains only sources that exist in the snapshot (opd note, labs, medications, vitals); every fact is reachable in both arms. Labs are not required by any answer field.",
           "- Small number of cases and one model: intervals are wide; treat as hypothesis-generating support for the Gate 2 assumption, not a test of it.",
+          "- calls_per_success / calls_within_success are predeclared secondary metrics, not part of the reading. The B overview summary shows current medications and latest-vs-previous vitals, which are close to two answer fields; read B's effort gain together with task success and do not attribute it to consolidation alone. The real V2 UI also has a red-flag banner that is not reproduced.",
           "- Model-version drift, provider nondeterminism and endpoint quirks (see transcripts) can change results between runs; the request settings are recorded.",
           f"- {res['protocol']['notes'] or 'No endpoint adaptations were needed.'}", ""]
     return "\n".join(L)
 
 
-_CONT = {"tool_calls", "systems_opened", "distinct_tools", "repeated_opens", "turns", "tokens", "input_tokens", "wall_s", "cost_usd"}
+_CONT = {"calls_per_success", "calls_within_success", "tool_calls", "systems_opened", "distinct_tools", "repeated_opens", "turns", "tokens", "input_tokens", "wall_s", "cost_usd"}
 
 
 def load_env_file(path: Path | None = None) -> None:
@@ -1063,7 +1148,8 @@ def _fixture(root: Path) -> None:
                 {"generic_name": "metformin", "atc_code": "A10BA02", "dose_value": 500, "dose_unit": "mg", "frequency": "BID"}]),
             _mk_item(cid, "MedicationList", "NO", later, list_source="new_order", entries=[
                 {"generic_name": "metformin", "atc_code": "A10BA02", "dose_value": 1000 if s["med"] else 500, "dose_unit": "mg", "frequency": "BID"}]),
-            _mk_item(cid, "LabSeries", "LAB", later, results=[{"test": "WBC", "value": 9.0, "unit": "10^3/uL"}]),
+            _mk_item(cid, "LabSeries", "LAB", later, results=[{"test": "WBC", "value": 9.0, "unit": "10^3/uL"}, {"test": "Na", "value": 128.0, "unit": "mmol/L", "ref_low": 135.0, "ref_high": 145.0},
+                                                          {"test": "K", "value": 4.0, "unit": "mmol/L", "ref_low": 3.5, "ref_high": 5.1}]),
         ]
         if cid == "S3":
             items.append(_mk_item(cid, "MedicationList", "FUT", future, list_source="new_order", entries=[
@@ -1085,11 +1171,11 @@ def _policy(answers: dict, sloppy_repeat: bool = False, bad: set | None = None, 
 
     def policy(env, case_id, trial_no, turn):
         steps = {"A": ["get_opd_note", "get_vitals", "get_medications", "get_labs"],
-                 "B": ["get_queue", "get_case_overview", "get_intake", "get_timeline", "get_medications"]}[env]
+                 "B": ["get_case_overview", "get_intake", "get_timeline", "get_medications"]}[env]
         if sloppy_repeat and env == "A":
             steps = steps + ["get_vitals", "get_labs"]
         if turn < len(steps):
-            return {"type": "tools", "calls": [(steps[turn], {} if steps[turn] == "get_queue" else {"case_id": case_id})]}
+            return {"type": "tools", "calls": [(steps[turn], {"case_id": case_id})]}
         ans = copy.deepcopy(answers[case_id])
         if (case_id in bad and env == "A") or (fail_at_k and fail_at_k.get((env, case_id)) == trial_no):
             ans["red_flags"], ans["medication_issues"], ans["escalate"] = [], [], False
@@ -1150,31 +1236,67 @@ def selfcheck() -> None:
 
     # env A routing + temporal filter + no gold
     for c in cases:
-        A, B = MultiSystemEnv(c.snapshot, "nurse"), CasePageEnv(c.snapshot, "nurse", ["S0", "S1"])
+        A, B = MultiSystemEnv(c.snapshot, "nurse"), CasePageEnv(c.snapshot, "nurse")
         o = {t: A.call(t, {"case_id": c.case_id}) for t in A.tool_names}
-        types = lambda r: {i["data_type"] for i in r["records"]}  # noqa: E731
+        types = lambda r: {i["type"] for i in r["records"]}  # noqa: E731
         ok(types(o["get_vitals"]) == {"Vitals"} and types(o["get_labs"]) == {"LabSeries"} and types(o["get_medications"]) == {"MedicationList"}, "A tool routing")
         ok(types(o["get_opd_note"]) == {"Demographics", "AllergyList", "IntakeTranscript"}, "A opd routing")
         ok(set(o) == {"get_opd_note", "get_labs", "get_medications", "get_vitals"}, "A tool set = existing snapshot sources")
+        ok(B.tool_names == {"get_case_overview", "get_intake", "get_medications", "get_timeline"}, "B tool set has no queue tool")
         ok(A.call("get_vitals", {"case_id": "OTHER"}) == {"error": "case_not_found"} and A.call("nope", {})["error"] == "unknown_tool", "A error paths")
-        a_ids = {i["item_id"] for r in o.values() for i in r["records"]}
+        ok(B.call("get_queue", {"case_id": c.case_id})["error"] == "unknown_tool", "B rejects get_queue")
+        a_ids = {i["record_id"] for r in o.values() for i in r["records"]}
         b_out = [B.call("get_case_overview", {"case_id": c.case_id}), B.call("get_timeline", {"case_id": c.case_id}),
-                 B.call("get_medications", {"case_id": c.case_id}), B.call("get_queue", {}), B.call("get_intake", {"case_id": c.case_id})]
+                 B.call("get_medications", {"case_id": c.case_id}), B.call("get_intake", {"case_id": c.case_id})]
         b_ids = {e["event_id"] for e in b_out[1]["items"]} | {s["source_id"] for s in b_out[2]["sources"]}
         vis_items = visible_items(c.snapshot)
-        ok(b_out[4]["intake"]["turns"] == next(i for i in vis_items if i["data_type"] == "IntakeTranscript")["turns"], "B intake carries the transcript")
+        tx = next(i for i in vis_items if i["data_type"] == "IntakeTranscript")
+        ok(b_out[3]["intake"]["conversation"] == format_item(tx) and "ปวดท้อง 3 วัน" in b_out[3]["intake"]["conversation"], "B intake carries the transcript as text")
         ok(all(str(m["dose_value"]) in json.dumps(b_out[2]) and m["atc_code"] in json.dumps(b_out[2]) for i in vis_items if i["data_type"] == "MedicationList" for m in i["entries"]), "B medication cards carry dose and ATC")
         ok("ATC class J01D" in json.dumps(b_out[1], ensure_ascii=False) and "50 years" in json.dumps(b_out[1]) and c.snapshot["case_id"] in json.dumps(b_out[0]), "B carries allergy class and demographics")
-        ok(set(b_out[0]) >= {"display_name", "demographics", "stage", "owner", "next_action", "tabs"} and "safety" not in b_out[0] and "red_flags" not in json.dumps(b_out[0]), "B overview = UI header only, no system flags")
-        vis = {i["item_id"] for i in visible_items(c.snapshot)}
+        ok(set(b_out[0]) >= {"display_name", "demographics", "stage", "owner", "next_action", "tabs", "summary"} and "safety" not in b_out[0] and "red_flags" not in json.dumps(b_out[0]), "B overview = UI header + summary, no system flags")
+        vis = {i["item_id"] for i in vis_items}
         ok(a_ids == vis and b_ids == vis, "same information reachable in A and B (= visible items)")
-        ok(not any(i["item_id"].endswith("FUT") for i in [x for r in o.values() for x in r["records"]]) and not any("FUT" in json.dumps(b) for b in b_out), "temporal filter (available_at_time > T) in A and B")
+        # parity: one formatter, identical text per item in both arms; the same clinical facts, only grouping differs
+        want = {i["item_id"]: format_item(i) for i in vis_items}
+        a_txt = {r["record_id"]: r["text"] for x in o.values() for r in x["records"]}
+        b_txt = {e["event_id"]: e["detail"] for e in b_out[1]["items"] if e["kind"] not in ("medication_list", "intake")}
+        b_txt |= {s["source_id"]: s["recorded_value"] for s in b_out[2]["sources"]} | {tx["item_id"]: b_out[3]["intake"]["conversation"]}
+        ok(a_txt == want and b_txt == want, "parity: identical formatter output per item in A and B")
+        ok(not any(t.lstrip().startswith(("{", "[")) for t in a_txt.values()), "A returns human-readable text, not raw JSON records")
+        ok(not any(k in json.dumps(o, ensure_ascii=False) for k in ("derived_from", "observed_at", "event_time", "patient_ref", "language", "provenance")), "A drops metadata B does not carry (format confound)")
+        ok(not any(i["record_id"].endswith("FUT") for r in o.values() for i in r["records"]) and not any("FUT" in json.dumps(b) or "futuredrug" in json.dumps(b) for b in b_out), "temporal filter (available_at_time > T) in A and B")
         blob = json.dumps([o, b_out], ensure_ascii=False)
         ok(not any(t in blob for t in FORBIDDEN_IN_TOOL_OUTPUT), "no gold keys in tool output")
         vit = [e for e in b_out[1]["items"] if e["kind"] == "vitals"]
         ok(len(vit) == 2 and "HR " in vit[0]["detail"] and "Temp 37.0 C" in vit[0]["detail"], "B timeline carries vitals in full")
-        ok({i["case_id"] for i in b_out[3]["items"]} == {c.case_id, "S0", "S1"}, "B queue lists role tasks")
+        sm = b_out[0]["summary"]
+        ok(tuple(sm) == OVERVIEW_SUMMARY_FIELDS, "summary has exactly the predeclared slots")
+        last_vit = [i for i in vis_items if i["data_type"] == "Vitals"][-1]
+        ok(sm["latest_vitals"].startswith(format_item(last_vit)) and sm["medication_source_count"] == 2, "summary latest vitals / source count")
+        ok(sm["current_medications"] == ["metformin"] and sm["allergy_status"] == "known: cephalosporins", "summary meds (no future list) and allergy")
+        ok(sm["abnormal_labs"]["outside_reference_range"] == ["Na 128.0 mmol/L (ref 135.0-145.0, low)"] and sm["abnormal_labs"]["reference_range_not_recorded"] == ["WBC"], "summary abnormal labs; no ref range is not normal")
+        ok(("HR 80 -> " + str(140 if c.ref.red_flags else 84)) in sm["vitals_change_vs_previous"] and "SBP 120 -> 120 (same)" in sm["vitals_change_vs_previous"], "summary vitals change vs previous reading")
+        ok(not any(k in json.dumps(sm) for k in ("worsening", "improving", "stable", "escalat", "RF-", "banner", "discrepan")), "summary carries no trend label, banner or flags")
     ok(CasePageEnv(cases[0].snapshot, "nurse").systems_opened({"get_timeline", "get_medications"}) == 1 and MultiSystemEnv(cases[0].snapshot, "nurse").systems_opened({"get_labs", "get_vitals"}) == 2, "systems_opened")
+    # summary edge cases: missing renders as missing, never normal; empty field list restores the header-only overview
+    empty = {"case_id": "E0", "as_of": "2030-01-01T10:00:00+07:00", "items": []}
+    es = CasePageEnv(empty, "nurse").call("get_case_overview", {"case_id": "E0"})["summary"]
+    ok(es["latest_vitals"] == "not recorded" and es["vitals_change_vs_previous"] == "no vitals recorded" and es["allergy_status"].startswith("unknown")
+       and es["current_medications"] == "no medication lists recorded" and es["medication_source_count"] == 0 and es["abnormal_labs"]["outside_reference_range"] == "no labs recorded", "empty snapshot renders as missing")
+    v1 = _mk_item("E1", "Vitals", "V1", "2030-01-01T08:00:00+07:00", hr=90, rr=None, sbp=100, spo2=95, temp_c=None, consciousness="A", on_oxygen=None)
+    v2 = _mk_item("E1", "Vitals", "V2", "2030-01-01T09:00:00+07:00", hr=95, rr=20, sbp=100, spo2=93, temp_c=37.0, consciousness="V", on_oxygen=False)
+    ch = build_overview_summary([v1, v2])
+    ok("RR not comparable" in ch["vitals_change_vs_previous"] and "Temp not comparable" in ch["vitals_change_vs_previous"] and "SpO2 95% -> 93% (down)" in ch["vitals_change_vs_previous"]
+       and "consciousness A -> V (changed)" in ch["vitals_change_vs_previous"], "vitals change handles missing values")
+    ok(build_overview_summary([v1])["vitals_change_vs_previous"].startswith("no previous reading") and "RR not recorded" in build_overview_summary([v1])["latest_vitals"], "single reading has no change; missing value stays missing")
+    ok("summary" not in CasePageEnv(cases[0].snapshot, "nurse", summary_fields=()).call("get_case_overview", {"case_id": "S0"}), "empty OVERVIEW_SUMMARY_FIELDS gives the g2-0001 header-only overview")
+    ok(tuple(build_overview_summary(visible_items(cases[0].snapshot), ("allergy_status", "abnormal_labs"))) == ("allergy_status", "abnormal_labs"), "summary slots follow the field list")
+    try:
+        build_overview_summary(visible_items(cases[0].snapshot), ("gold_flags",))
+        ok(False, "unknown slot must raise")
+    except ValueError:
+        ok(True, "unknown summary slot raises")
 
     # scoring
     ref = s0
@@ -1210,7 +1332,7 @@ def selfcheck() -> None:
         a_s0 = next(t for t in tr if t["env"] == "A" and t["case_id"] == "S0" and t["persona"] == "nurse")
         b_s0 = next(t for t in tr if t["env"] == "B" and t["case_id"] == "S0" and t["persona"] == "nurse")
         ok(a_s0["tool_calls"] == 6 and a_s0["repeated_opens"] == 2 and a_s0["systems_opened"] == 4 and a_s0["distinct_tools"] == 4, f"{mode}: A effort counts")
-        ok(b_s0["tool_calls"] == 5 and b_s0["systems_opened"] == 1 and b_s0["repeated_opens"] == 0, f"{mode}: B effort counts")
+        ok(b_s0["tool_calls"] == 4 and b_s0["systems_opened"] == 1 and b_s0["repeated_opens"] == 0, f"{mode}: B effort counts")
         ok(a_s0["score"]["critical_miss_any"] and b_s0["score"]["task_success"], f"{mode}: A bad / B perfect scored")
         m = res["summary"]["metrics"]
         ok(res["summary"]["n_pairs"] == 8 and res["summary"]["excluded_trials"] == 0, f"{mode}: all pairs analysed")
@@ -1220,7 +1342,7 @@ def selfcheck() -> None:
         blob = (out / "results.json").read_text(encoding="utf-8") + "".join(p.read_text(encoding="utf-8") for p in (out / "transcripts").glob("*.jsonl"))
         ok("FAKE-KEY-123" not in blob, f"{mode}: key never written")
     # json mode: the tool section describes only that env's tools
-    ok("get_queue" in json_mode_tool_section(CasePageEnv.tools) and "get_queue" not in json_mode_tool_section(MultiSystemEnv.tools), "json-mode tool section per env")
+    ok("get_case_overview" in json_mode_tool_section(CasePageEnv.tools) and "get_case_overview" not in json_mode_tool_section(MultiSystemEnv.tools) and "get_queue" not in json_mode_tool_section(CasePageEnv.tools), "json-mode tool section per env")
 
     # pass^k: k=3, one failing trial of S1 in env B -> pass^3 drops for that row only
     llm = ScriptedLLM(_policy(answers, fail_at_k={("B", "S1"): 1}))
@@ -1332,11 +1454,10 @@ def selfcheck() -> None:
             ok(r.status_code == 200, "live app login")
             run_id = cl.post("/api/demo/v1/journeys/medx-front-door-v1/runs").json()["run_id"]
             base = f"/api/demo/v1/runs/{run_id}"
-            q, ov = cl.get(f"{base}/queue"), cl.get(f"{base}/cases/SYN-2026-0017")
+            ov = cl.get(f"{base}/cases/SYN-2026-0017")
             tl, md = cl.get(f"{base}/cases/SYN-2026-0017/timeline"), cl.get(f"{base}/cases/SYN-2026-0017/medications")
-            ok(all(x.status_code == 200 for x in (q, ov, tl, md)), "live app serves queue/case/timeline/medications")
+            ok(all(x.status_code == 200 for x in (ov, tl, md)), "live app serves case/timeline/medications")
             b = CasePageEnv(cases[0].snapshot, "nurse")
-            ok({"items", "data_class"} <= set(q.json()) and {"items", "data_class"} <= set(b._t_get_queue()), "queue shape matches live route")
             ok({"items", "data_class"} <= set(tl.json()) and {"items", "data_class"} <= set(b._t_get_timeline()), "timeline shape matches live route")
             ok({"sources", "data_class"} <= set(md.json()) and {"sources", "data_class"} <= set(b._t_get_medications()), "medications shape matches live route")
             ok({"data_class", "demographics"} <= set(ov.json()) and {"data_class", "demographics"} <= set(b._t_get_case_overview()), "case shape matches live route")
@@ -1354,11 +1475,11 @@ def selfcheck() -> None:
         for arm in ARMS:
             tot = []
             for c in pick:
-                env = make_env(arm, c, "nurse", [x.case_id for x in pick])
+                env = make_env(arm, c, "nurse")
                 sysp = build_system_prompt("nurse") + task_prompt(c)
                 ctx = len(sysp.encode()) / 3
                 inp = 0.0
-                steps = ["get_opd_note", "get_vitals", "get_medications", "get_labs"] if arm == "A" else ["get_queue", "get_case_overview", "get_intake", "get_timeline", "get_medications"]
+                steps = ["get_opd_note", "get_vitals", "get_medications", "get_labs"] if arm == "A" else ["get_case_overview", "get_intake", "get_timeline", "get_medications"]
                 for s in steps:
                     inp += ctx + 40  # each call resends the context so far
                     ctx += len(json.dumps(env.call(s, {"case_id": c.case_id}), ensure_ascii=False).encode()) / 3 + 40
@@ -1367,7 +1488,7 @@ def selfcheck() -> None:
                 blob = json.dumps([env.call(s, {"case_id": c.case_id}) for s in steps], ensure_ascii=False)
                 ok(not any(t in blob for t in FORBIDDEN_IN_TOOL_OUTPUT), "real cases: no gold keys in tool output")
             est[arm] = (int(np.mean([t[0] for t in tot])), int(np.mean([t[1] for t in tot])))
-        print(f"token estimate per trial (bytes/3, 5-6 calls): A in~{est['A'][0]} out~{est['A'][1]}; B in~{est['B'][0]} out~{est['B'][1]}")
+        print(f"token estimate per trial (bytes/3, 4-6 calls): A in~{est['A'][0]} out~{est['A'][1]}; B in~{est['B'][0]} out~{est['B'][1]}")
         print(f"system prompt ~{int(len(build_system_prompt('nurse').encode()) / 3)} tokens")
     else:
         print("SKIP real dev-case smoke: dataset not generated (make data)")

@@ -1,0 +1,152 @@
+{
+  "manifest_version": "1.0",
+  "evaluation_id": "simuser-g2-0002",
+  "status": "DRAFT",
+  "label": "Simulated-user evaluation (synthetic) — not human usability, not clinical performance",
+  "slice": "g2-simuser",
+  "tier": 0,
+  "supersedes_protocol_of": "simuser-g2-0001 (frozen, results committed, NOT SUPPORTED on effort; not modified)",
+  "question": "If the data needed is gathered on one case page (MedX V2, with an overview summary), can a simulated nurse / OPD physician / pharmacist prepare a case before consult with fewer tool calls and systems opened, and no worse accuracy, than when the same data sits in four separate systems? Both arms receive the same human-readable text for every clinical item.",
+  "approval": "docs/DECISIONS.md 2026-09-29 'Gate 2: AI-simulated users' (synthetic cases only, OpenAI-compatible endpoint, total budget 5 USD; g2-0001 spent 0.61 USD). A g2-0002 run needs the owner to confirm the remaining budget and record it in docs/DECISIONS.md before FROZEN.",
+  "dataset": {
+    "name": "s1r-synthetic",
+    "path": "/Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent/data/synthetic/g2-heldout-20260930",
+    "data_class": "synthetic",
+    "generator_seed": "TO_FILL",
+    "dataset_manifest_sha256": "TO_FILL",
+    "splits_sha256": "TO_FILL",
+    "development_dataset_for_smoke": "data/synthetic/v1 (dev split, --smoke only)",
+    "split": "test",
+    "decision_point": "T2",
+    "test_split_access": "final run only: a FRESH held-out dataset (g2-heldout-20260930), not the g2-0001 held-out set, so nothing tuned after seeing g2-0001 transcripts is scored on cases already seen; run.py opens test only if this manifest is FROZEN and dataset_manifest_sha256 matches. Not opened during this build."
+  },
+  "case_selection": {
+    "n_cases": 40,
+    "rule": "every case with a gold red flag at the decision point first (seeded sha256 order), then seeded random fill from the remaining cases, up to n_cases",
+    "seed": 20260929,
+    "unit_of_analysis": "case (synthetic patient); persona and trial are repeats inside the case cluster"
+  },
+  "arms": {
+    "A": "multi-system: get_opd_note, get_labs, get_medications, get_vitals (only sources that exist in the snapshot; every fact reachable in both arms); each record is {record_id, type, recorded_at, text (+label for medication lists)} where text comes from the shared formatter format_item",
+    "B": "single-case consolidated view (MedX case-page schema): get_case_overview (header + summary block), get_intake, get_medications, get_timeline; one tool per V2 UI screen (web/components/clinical/CaseWorkspace.tsx), adapter over the snapshot, not a MedX app run; every item text comes from the same shared formatter format_item; system-authored red-flag banner and discrepancy card NOT reproduced (the real UI shows a banner, so B measures consolidation only); UI to tool mapping in results.md"
+  },
+  "overview_summary": {
+    "constant": "OVERVIEW_SUMMARY_FIELDS in eval/simuser/run.py",
+    "slots": [
+      "latest_vitals",
+      "vitals_change_vs_previous",
+      "allergy_status",
+      "current_medications",
+      "medication_source_count",
+      "abnormal_labs"
+    ],
+    "slot_definitions": {
+      "latest_vitals": "the most recent visible vitals reading as formatter text, with its time; 'not recorded' if none",
+      "vitals_change_vs_previous": "per-parameter latest vs previous reading (HR, RR, SBP, SpO2, Temp: up/down/same; consciousness same/changed); a missing value on either reading renders 'not comparable'; no thresholds and no trend label (the task trend rule compares first vs last with thresholds)",
+      "allergy_status": "known: substances | none recorded (no known allergy) | unknown; no allergy record renders unknown, never 'none'",
+      "current_medications": "sorted distinct generic names across all visible medication lists",
+      "medication_source_count": "number of visible medication lists",
+      "abnormal_labs": "latest value per test outside its reference range, plus a separate list of tests whose reference range is not recorded (never treated as normal)"
+    },
+    "not_slots": "chief complaint / onset: the snapshot holds them only inside the intake conversation (no structured field), so they are not on the overview and the model must open intake. Red-flag banner and discrepancy flags excluded (consolidation only).",
+    "alignment": "slots are provisional until aligned to the final UI of slice u6 (owner to confirm before FROZEN); no gold and no engine output enters the summary",
+    "disclosed_risk": "current_medications and vitals_change_vs_previous are close to two answer fields (current_meds; vitals_trend), so a B advantage on those fields may reflect the summary rather than consolidation; per-field results (field_current_meds, field_vitals_trend) are reported and the summary is a disclosed part of arm B"
+  },
+  "changes_from_g2_0001": [
+    {
+      "id": 1,
+      "change": "get_queue removed from arm B (B now has 4 tools: get_case_overview, get_intake, get_medications, get_timeline)",
+      "audit_reason": "B had a queue tool A lacks; g2-0001 B made 320 get_queue calls that carry no clinical data (case id is in the task prompt), inflating B effort against an unequal toolset"
+    },
+    {
+      "id": 2,
+      "change": "one formatter (format_item) for both arms: A's per-system tools return the same human-readable text lines as B for the same item types instead of raw JSON records; only the grouping differs (per system vs per case page); A no longer carries metadata fields (derived_from, observed_at, event_time, patient_ref, language) that B never carried",
+      "audit_reason": "format confound: A returned raw JSON while B returned text, so effort and accuracy differences could be reading-format effects"
+    },
+    {
+      "id": 3,
+      "change": "arm B get_case_overview returns a `summary` block with the OVERVIEW_SUMMARY_FIELDS slots (see overview_summary) built from the snapshot",
+      "audit_reason": "g2-0001 overview returned the header only (464 get_case_overview calls wasted), which is not what a consolidated case page would show; the real V2 Overview is gaining a case summary in slice u6"
+    },
+    {
+      "id": 4,
+      "change": "predeclared secondary metrics: calls_per_success (all tool calls / successful trials) and calls_within_success (tool calls of successful trials / successful trials)",
+      "audit_reason": "raw calls per trial rewards fast failure; effort should also be read per successful preparation. Secondary only; not part of the (a)(b)(c) reading"
+    }
+  ],
+  "unchanged_from_g2_0001": "thresholds (a)(b)(c), primary comparison, statistics, k, personas, n_cases, case-selection rule and seed, model, request parameters, turn/token limits, budget rules, task-success and critical-miss rules, denominators, prompts and answer schema",
+  "simulator": {
+    "personas": [
+      "nurse",
+      "physician",
+      "pharmacist"
+    ],
+    "k_trials": 4,
+    "model_env": "SIMUSER_MODEL (default gpt-6-luna)",
+    "endpoint_env": "SIMUSER_BASE_URL (default https://api.openai.com/v1); key in SIMUSER_API_KEY, never recorded",
+    "temperature": "omitted (model default 1; gpt-6-luna rejects other values)",
+    "max_turns": 12,
+    "max_tokens_per_response": 2500,
+    "tool_mode": "json (gpt-6-luna rejects native tools)",
+    "same_model_prompts_temperature_both_arms": true,
+    "simulator_sees_gold": false,
+    "workers": 8,
+    "max_tokens_note": "400 gave empty output (hidden reasoning); 2500 gives valid answers",
+    "closed_vocabularies": "missing_info codes (chief_complaint, duration, allergy_status, vitals.temp_c), vitals_trend labels, red-flag ids with clinical phrases: identical prompt text in both arms, lists only, never per-case gold",
+    "request_params": "max_completion_tokens sent, temperature omitted by default (--legacy-max-tokens / --temperature opt in); a 400 naming an unsupported parameter is fixed and the same call retried; params sent recorded in results.json"
+  },
+  "budget": {
+    "usd_limit": 3.0,
+    "price_in_per_1m": 0.1,
+    "price_out_per_1m": 0.5,
+    "price_cached_in_per_1m": 0.01,
+    "stop_rule": "worst-case cost reserved before every call (exact under concurrency); stop cleanly, write partial results, analyse complete A/B pairs only"
+  },
+  "task_success_rule": "all five core fields correct: vitals_trend (derived by stated rule), current_meds (set of generic names on any list at T), medication_issues (set of (issue_type, drug set) equal to gold), red_flags (set of gold rule_ids), escalate (== gold expected_action escalate). missing_info is exploratory only (field_missing_info).",
+  "critical_miss_rule": "gold red flag not reported or escalate != true when gold escalates; or gold medication issue whose drugs appear in no reported issue. No answer counts as a miss.",
+  "denominators": "every started trial stays in the denominator (invalid answer, turn cap, provider error = failed). Only budget-stopped incomplete pairs are excluded and counted.",
+  "metrics": [
+    "task_success",
+    "pass_hat_k",
+    "field_* (6)",
+    "critical_miss_redflag",
+    "critical_miss_med",
+    "critical_miss_any",
+    "tool_calls",
+    "systems_opened",
+    "distinct_tools",
+    "repeated_opens",
+    "turns",
+    "tokens",
+    "wall_s",
+    "cost_usd",
+    "answer_valid",
+    "no_answer",
+    "input_tokens",
+    "calls_per_success (secondary)",
+    "calls_within_success (secondary)"
+  ],
+  "primary_comparison": "paired A-B difference in tool_calls per trial (effort), with task_success non-inferiority and critical-miss check; input_tokens per trial reported as reading burden",
+  "statistics": {
+    "ci": "percentile 95%, patient(case)-level cluster bootstrap, 2000 resamples, paired draws A vs B",
+    "seed": 20260929,
+    "code": "eval/bootstrap.py"
+  },
+  "reading_thresholds": {
+    "supported_iff_all": [
+      "(a) lower 95% bound of task_success (B - A) >= -0.10",
+      "(b) lower 95% bound of paired tool_calls difference (A - B) > 0",
+      "(c) critical_miss_any rate B <= A (point estimate)"
+    ],
+    "otherwise": "not supported; report failed criteria; pass^k reported per arm"
+  },
+  "multiplicity": "one primary comparison (effort); all other metrics, including the two secondary call metrics, exploratory",
+  "output": "eval/results/simuser/<evaluation_id>/{results.json,results.md,transcripts/}",
+  "notes": "Small n, one simulator model: hypothesis-generating support for the Gate 2 assumption, not human usability and not clinical performance. g2-0002 is a protocol revision after the g2-0001 audit, run on a fresh held-out set; g2-0001 stays the record of the first result.",
+  "planned_trials": "40 cases x 3 personas x k=4 x 2 arms = 960",
+  "hashes": {
+    "code_revision": "TO_FILL",
+    "run_py_sha256": "TO_FILL",
+    "config_sha256": "TO_FILL"
+  }
+}
