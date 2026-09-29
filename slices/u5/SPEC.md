@@ -20,8 +20,10 @@ acceptance passes.
    ≥44px. B and C styles go in co-located `*.module.css`. The exception is `pharma.css`, which keeps its **global**
    class names because e2e selects `ol.issue-list`, `.issue`, `.sources`.
 4. **Safety invariants (never regress):** research disclaimer first on every page. Red flags and screening render
-   before any suggestion (DOM order and visual order). Confirm stays disabled until every red flag (and
-   incomplete/not-performed screening) is acknowledged. Abstention shows no Confirm and lists missing information.
+   before any suggestion (DOM order and visual order). Confirm stays disabled until every red flag is
+   acknowledged; on **care review** also the incomplete/not-performed screening banner (existing behaviour). Triage
+   review has no screening acknowledgement in its API or UI today — U5 must not add one (review note 2026-09-29;
+   question logged for clinical-safety-reviewer). Abstention shows no Confirm and lists missing information.
    Missing is never shown as negative. RBAC 403 (`data-testid="forbidden"`, h1 contains "403"). Human confirmation
    happens before anything is recorded as care-facing. Never claim diagnosis or treatment: keep "suggestion for review" labels.
 5. **One h1 per page.** Do not add `role="status"` elements: several tests use `getByRole("status")` in strict mode.
