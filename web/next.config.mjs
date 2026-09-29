@@ -8,8 +8,9 @@ const nextConfig = {
   // Keep the dev overlay button out of keyboard focus order and screenshots.
   devIndicators: false,
   async rewrites() {
-    // Slice d1: on Vercel, /api/* goes to the FastAPI Python function api/index.py (it sees the original path).
-    const destination = process.env.VERCEL === "1" ? "/api/index" : `${API_ORIGIN}/api/:path*`;
+    // Slice d1: on Vercel, /api/* goes to the FastAPI Python function api/index.py, which sees the original
+    // path (Vercel Next.js + FastAPI template pattern). Locally it stays the 127.0.0.1 backend.
+    const destination = process.env.VERCEL === "1" ? "/api/" : `${API_ORIGIN}/api/:path*`;
     return [{ source: "/api/:path*", destination }];
   },
 };
