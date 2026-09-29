@@ -1,0 +1,15 @@
+.bannerBody { display: grid; gap: 8px; min-width: 0; }
+.ackRow { display: flex; align-items: center; gap: 16px; min-height: 44px; padding: 8px 16px; border: 1px solid var(--critical-border); border-radius: 8px; background: var(--card); font-weight: 700; cursor: pointer; }
+.ackRow input { width: 20px; height: 20px; flex: none; margin: 0; }
+.tab { gap: 8px; }
+.summary { font-size: 20px; margin: 0; }
+.inlineIcon { display: inline-flex; align-items: center; gap: 4px; }
+.flush { margin: 0; }
+.suggestion { padding: 24px; background: var(--muted); border-radius: 12px; display: grid; gap: 8px; }
+.suggestion p { margin: 0; }
+.suggestionText { font-size: 20px; font-weight: 700; }
+.evidenceList { margin: 0; padding-left: 24px; color: var(--muted-foreground); font-size: 14px; display: grid; gap: 4px; }
+.source { padding: 16px; border: 1px solid var(--border); border-radius: 8px; display: grid; gap: 4px; }
+.source p { margin: 0; }
+.timeline { margin-top: 24px; }
+.tight { margin: 4px 0; }

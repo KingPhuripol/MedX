@@ -1,0 +1,38 @@
+.page, .embedded { min-width: 0; display: grid; gap: 24px; }
+.embedded { width: 100%; }
+.embeddedHead h2 { margin: 0 0 8px; }
+.embeddedHead p { margin: 0; }
+.muted { color: var(--muted-foreground); font-size: 14px; }
+.flush { margin: 0; }
+.startForm { display: grid; gap: 16px; max-width: 480px; }
+.startForm > button { justify-self: start; }
+.columns { display: grid; gap: 24px; min-width: 0; }
+.col { display: grid; gap: 24px; min-width: 0; align-content: start; }
+@media (min-width: 1024px) {
+  .columns { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); align-items: start; }
+}
+.question { margin: 0; font-size: 20px; font-weight: 700; }
+.turnForm { display: grid; gap: 16px; align-items: end; }
+@media (min-width: 768px) {
+  .turnForm { grid-template-columns: 160px minmax(0, 1fr) auto; }
+}
+.transcript { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.turn, .turnAgent { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; padding: 8px 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); }
+.turnAgent { background: var(--nav); }
+.turn:target, .turnAgent:target { outline: 3px solid var(--primary); }
+.tableWrap { overflow-x: auto; }
+.facts { width: 100%; border-collapse: collapse; }
+.facts th { text-align: left; }
+.facts thead th { font-size: 14px; color: var(--muted-foreground); padding: 8px; border-bottom: 1px solid var(--border); }
+.facts tbody th, .facts td { padding: 8px; border-bottom: 1px solid var(--border); vertical-align: top; font-weight: 400; }
+.facts tbody th { font-weight: 700; }
+.source { display: inline-block; margin-right: 8px; }
+.missing { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.none { margin: 0; }
+@media (max-width: 767px) {
+  .facts thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .facts, .facts tbody, .facts tr, .facts th, .facts td { display: block; width: 100%; }
+  .facts tr { border: 1px solid var(--border); border-radius: 12px; padding: 8px 16px; margin-bottom: 8px; background: var(--card); }
+  .facts tbody th, .facts td { border: 0; padding: 4px 0; }
+  .facts td::before { content: attr(data-label); display: block; font-size: 14px; color: var(--muted-foreground); font-weight: 700; }
+}

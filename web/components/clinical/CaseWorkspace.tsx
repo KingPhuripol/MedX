@@ -19,7 +19,13 @@ import {
   Stethoscope,
   UserRound,
 } from "lucide-react";
+import { ActionBar } from "@/components/ui/ActionBar";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { LoadingState } from "@/components/ui/LoadingState";
+import { Notice } from "@/components/ui/Notice";
+import { Section } from "@/components/ui/Section";
+import { StatusChip } from "@/components/ui/StatusChip";
 import VoiceIntake from "@/components/voice/VoiceIntake";
 import {
   api,
@@ -31,6 +37,8 @@ import {
   type User,
 } from "@/lib/demo";
 
+import css from "./CaseWorkspace.module.css";
+
 const tabs = [
   ["overview", "ภาพรวม"],
   ["intake", "ข้อมูลรับเข้า"],
@@ -40,6 +48,8 @@ const tabs = [
   ["timeline", "Timeline"],
   ["activity", "กิจกรรม"],
 ] as const;
+/** The tab each role works in (B3b). Only nurse/triage and physician/care carry a gating review. */
+const OWN_TAB: Record<string, string> = { nurse: "triage", physician: "care", pharmacist: "medications" };
 const stageLabel: Record<string, string> = {
   intake: "รับข้อมูล",
   triage_review: "ทบทวนการคัดกรอง",
@@ -162,28 +172,34 @@ export default function CaseWorkspace({ caseId, section }: { caseId: string; sec
   }
   if (loading)
     return (
-      <div className="page-stack" aria-live="polite">
-        <div className="skeleton" />
-        <div className="skeleton" />
-        <div className="skeleton" />
-        <p>กำลังโหลดข้อมูลเคส…</p>
+      <div className="page-stack">
+        <LoadingState label="กำลังโหลดข้อมูลเคส…" rows={3} />
       </div>
     );
   if (error && !data)
     return (
-      <div className="error-panel" role="alert">
-        <strong>โหลดข้อมูลไม่สำเร็จ</strong>
-        <br />
-        {error}
-        <div style={{ marginTop: 8 }}>
-          <Button variant="secondary" onClick={load}>
-            <RefreshCw size={18} />
-            ลองโหลดอีกครั้ง
-          </Button>
-        </div>
-      </div>
+      <Notice
+        tone="critical"
+        role="alert"
+        title="โหลดข้อมูลไม่สำเร็จ"
+        actions={
+          <div>
+            <Button variant="secondary" onClick={load}>
+              <RefreshCw size={18} />
+              ลองโหลดอีกครั้ง
+            </Button>
+          </div>
+        }
+      >
+        <p>{error}</p>
+      </Notice>
     );
   if (!data) return null;
+  const ownTab = user ? OWN_TAB[user.role] : undefined;
+  // B3a: the acknowledgement only renders where a review it gates is present.
+  const gatesAck = (section === "triage" && user?.role === "nurse") || (section === "care" && user?.role === "physician");
+  const pendingMedReview =
+    section === "medications" && user?.role === "pharmacist" && meds?.discrepancies[0]?.status === "pending";
   return (
     <div className="page-stack">
       <header className="card case-header" aria-label="ข้อมูลประจำเคส">
@@ -215,46 +231,46 @@ export default function CaseWorkspace({ caseId, section }: { caseId: string; sec
       </header>
       <section className="safety-banner" role="alert">
         <AlertOctagon size={28} className="critical" />
-        <div>
+        <div className={css.bannerBody}>
           <h2 className="critical">{data.safety.label}</h2>
           <p>{data.safety.detail}</p>
-          <label className="cluster" style={{ marginTop: 8, fontWeight: 700 }}>
-            <input
-              type="checkbox"
-              checked={acknowledged}
-              onChange={(e) => setAcknowledged(e.target.checked)}
-              style={{ width: 20, height: 20 }}
-            />{" "}
-            รับทราบ red flag และจะให้บุคลากรประเมินโดยตรง
-          </label>
+          {gatesAck ? (
+            <label className={css.ackRow}>
+              <input type="checkbox" checked={acknowledged} onChange={(e) => setAcknowledged(e.target.checked)} />
+              <span>รับทราบ red flag และจะให้บุคลากรประเมินโดยตรง</span>
+            </label>
+          ) : (
+            <div>
+              <StatusChip tone="critical">ต้องให้บุคลากรประเมินโดยตรง</StatusChip>
+            </div>
+          )}
         </div>
       </section>
       <nav className="case-tabs" aria-label="ส่วนของเคส">
         {tabs.map(([slug, label]) => (
           <Link
             key={slug}
-            className={`case-tab ${section === slug ? "active" : ""}`}
+            className={`case-tab ${section === slug ? "active" : ""} ${css.tab}`}
+            aria-current={section === slug ? "page" : undefined}
             href={`/app/cases/${caseId}/${slug}?run=${runId}`}
           >
             {label}
+            {slug === ownTab ? <StatusChip tone="info">งานของคุณ</StatusChip> : null}
           </Link>
         ))}
       </nav>
       {error ? (
-        <div className="error-panel" role="alert">
-          <strong>บันทึกข้อมูลไม่สำเร็จ</strong>
-          <br />
-          {error} — โหลดข้อมูลล่าสุดก่อนลองอีกครั้ง
-        </div>
+        <Notice tone="critical" role="alert" title="บันทึกข้อมูลไม่สำเร็จ">
+          <p>{error} — โหลดข้อมูลล่าสุดก่อนลองอีกครั้ง</p>
+        </Notice>
       ) : null}
-      {section === "overview" ? <Overview data={data} /> : null}
+      {section === "overview" ? <Overview data={data} ownTab={ownTab} runId={runId} /> : null}
       {section === "intake" ? (
         <>
           <Intake data={data} />
-          <section className="card domain-panel desktop-task">
-            <h2>บันทึก intake ผ่าน domain API เดิม</h2>
-            <VoiceIntake />
-          </section>
+          <Section className="desktop-task" title="บันทึก intake ผ่าน domain API เดิม" titleId="intake-domain-title">
+            <VoiceIntake embedded />
+          </Section>
         </>
       ) : null}
       {/* Real triage/care assessments live at /nurse/triage/[id] and /physician/care/[id], never under this
@@ -285,77 +301,86 @@ export default function CaseWorkspace({ caseId, section }: { caseId: string; sec
       {section === "timeline" || section === "activity" ? (
         <Timeline items={timeline} audit={section === "activity"} />
       ) : null}
-      {(section === "triage" && user?.role === "nurse") || (section === "care" && user?.role === "physician") ? (
-        <div className="review-bar">
-          <div>
-            <strong>{reviewed ? "ตรวจทานโดยบุคลากรแล้ว" : "ต้องให้บุคลากรยืนยัน"}</strong>
-            <div className="muted">บันทึกตัวตน เวลา และเวอร์ชันแบบ append-only</div>
-          </div>
-          <div className="cluster">
-            {!reviewed ? (
-              <>
-                <Button
-                  variant="secondary"
-                  disabled={busy || !acknowledged || !note}
-                  onClick={() => taskReview("edit")}
-                >
-                  แก้ไขก่อนยืนยัน
-                </Button>
-                <Button variant="danger" disabled={busy || !acknowledged || !note} onClick={() => taskReview("reject")}>
-                  ปฏิเสธข้อเสนอแนะ
-                </Button>
-                <Button disabled={busy || !acknowledged} onClick={() => taskReview("confirm")}>
-                  ยืนยันข้อเสนอแนะ <CheckCircle2 size={18} />
-                </Button>
-              </>
-            ) : (
-              <Button disabled={busy || !acknowledged} onClick={handoff}>
-                {user.role === "nurse" ? "ส่งต่อให้แพทย์" : "ส่งต่อให้เภสัชกร"}
-                <Send size={18} />
+      {gatesAck ? (
+        <ActionBar
+          summary={
+            <>
+              <strong>{reviewed ? "ตรวจทานโดยบุคลากรแล้ว" : "ต้องให้บุคลากรยืนยัน"}</strong>
+              <div className="muted">
+                {reviewed || acknowledged
+                  ? "บันทึกตัวตน เวลา และเวอร์ชันแบบ append-only"
+                  : "รับทราบ red flag ก่อนจึงจะยืนยันได้"}
+              </div>
+            </>
+          }
+        >
+          {!reviewed ? (
+            <>
+              <Button variant="secondary" disabled={busy || !acknowledged || !note} onClick={() => taskReview("edit")}>
+                แก้ไขก่อนยืนยัน
               </Button>
-            )}
-          </div>
-        </div>
+              <Button variant="danger" disabled={busy || !acknowledged || !note} onClick={() => taskReview("reject")}>
+                ปฏิเสธข้อเสนอแนะ
+              </Button>
+              <Button disabled={busy || !acknowledged} onClick={() => taskReview("confirm")}>
+                ยืนยันข้อเสนอแนะ <CheckCircle2 size={18} />
+              </Button>
+            </>
+          ) : (
+            <Button disabled={busy || !acknowledged} onClick={handoff}>
+              {user?.role === "nurse" ? "ส่งต่อให้แพทย์" : "ส่งต่อให้เภสัชกร"}
+              <Send size={18} />
+            </Button>
+          )}
+        </ActionBar>
       ) : null}
-      {section === "medications" && user?.role === "pharmacist" && meds?.discrepancies[0]?.status === "pending" ? (
-        <div className="review-bar">
-          <div>
-            <strong>Medication review</strong>
-            <div className="muted">ตรวจแหล่งข้อมูลและ provenance ก่อนบันทึก</div>
-          </div>
-          <div className="cluster">
-            <Button variant="secondary" disabled={busy || !note} onClick={() => medicationReview("edit")}>
-              แก้ไขก่อนยืนยัน
-            </Button>
-            <Button variant="danger" disabled={busy || !note} onClick={() => medicationReview("reject")}>
-              ปฏิเสธข้อเสนอแนะ
-            </Button>
-            <Button disabled={busy} onClick={() => medicationReview("confirm")}>
-              ยืนยันข้อเสนอแนะ <CheckCircle2 size={18} />
-            </Button>
-          </div>
-        </div>
+      {pendingMedReview ? (
+        <ActionBar
+          summary={
+            <>
+              <strong>Medication review</strong>
+              <div className="muted">ตรวจแหล่งข้อมูลและ provenance ก่อนบันทึก</div>
+            </>
+          }
+        >
+          <Button variant="secondary" disabled={busy || !note} onClick={() => medicationReview("edit")}>
+            แก้ไขก่อนยืนยัน
+          </Button>
+          <Button variant="danger" disabled={busy || !note} onClick={() => medicationReview("reject")}>
+            ปฏิเสธข้อเสนอแนะ
+          </Button>
+          <Button disabled={busy} onClick={() => medicationReview("confirm")}>
+            ยืนยันข้อเสนอแนะ <CheckCircle2 size={18} />
+          </Button>
+        </ActionBar>
       ) : null}
     </div>
   );
 }
 
-function Overview({ data }: { data: CaseOverview }) {
+function Overview({ data, ownTab, runId }: { data: CaseOverview; ownTab?: string; runId: string }) {
   return (
     <div className="content-grid">
       <section className="card stack">
         <h2>สรุปเคส</h2>
-        <p style={{ fontSize: 20 }}>{data.summary}</p>
+        <p className={css.summary}>{data.summary}</p>
         <dl className="detail-list">
           <dt>อาการสำคัญ</dt>
           <dd>{data.intake.chief_complaint}</dd>
           <dt>เริ่มมีอาการ</dt>
           <dd>{data.intake.onset}</dd>
           <dt>สถานะ intake</dt>
-          <dd className="success">
-            <CheckCircle2 size={16} style={{ display: "inline" }} /> ตรวจทานแล้ว
+          <dd className={`success ${css.inlineIcon}`}>
+            <CheckCircle2 size={16} aria-hidden="true" /> ตรวจทานแล้ว
           </dd>
         </dl>
+        {ownTab ? (
+          <div>
+            <Link className="ui-button ui-button--primary" href={`/app/cases/${data.case_id}/${ownTab}?run=${runId}`}>
+              ไปที่งานของคุณ <ArrowRight size={18} aria-hidden="true" />
+            </Link>
+          </div>
+        ) : null}
       </section>
       <aside className="card stack">
         <h2>ภาพรวมความปลอดภัย</h2>
@@ -364,8 +389,8 @@ function Overview({ data }: { data: CaseOverview }) {
           <strong>ต้องประเมินเร่งด่วน</strong>
         </div>
         <p>Red flag แสดงก่อนข้อเสนออื่นทุกครั้ง และไม่มีการดำเนินการอัตโนมัติ</p>
-        <Link href={`/app/cases/${data.case_id}/timeline?run=${data.run_id}`}>
-          ดู timeline ทั้งหมด <ArrowRight size={16} style={{ display: "inline" }} />
+        <Link className={css.inlineIcon} href={`/app/cases/${data.case_id}/timeline?run=${data.run_id}`}>
+          ดู timeline ทั้งหมด <ArrowRight size={16} aria-hidden="true" />
         </Link>
       </aside>
     </div>
@@ -377,7 +402,7 @@ function Intake({ data }: { data: CaseOverview }) {
       <section className="card stack">
         <div className="cluster">
           <FileAudio size={24} />
-          <h2 style={{ margin: 0 }}>ข้อมูลรับเข้า</h2>
+          <h2 className={css.flush}>ข้อมูลรับเข้า</h2>
         </div>
         <dl className="detail-list">
           <dt>อาการสำคัญ</dt>
@@ -387,11 +412,9 @@ function Intake({ data }: { data: CaseOverview }) {
           <dt>แหล่งข้อมูล</dt>
           <dd>{data.intake.source}</dd>
         </dl>
-        <div className="state-panel">
-          <Info size={24} />
-          <h2>การแก้ transcript ใช้หน้าจอขนาดใหญ่</h2>
+        <Notice tone="info" icon={<Info size={24} aria-hidden="true" />} title="การแก้ transcript ใช้หน้าจอขนาดใหญ่">
           <p>ทำงานนี้ต่อบนแท็บเล็ตหรือเดสก์ท็อป สถานะรอบเดโมและเคสจะยังคงอยู่</p>
-        </div>
+        </Notice>
       </section>
       <aside className="card">
         <h2>หลักฐานและที่มา</h2>
@@ -423,11 +446,11 @@ function ReviewSurface({
       <section className="card stack">
         <div className="cluster">
           {icon}
-          <h2 style={{ margin: 0 }}>{title}</h2>
+          <h2 className={css.flush}>{title}</h2>
         </div>
-        <div style={{ padding: 24, background: "var(--muted)", borderRadius: 12 }}>
+        <div className={css.suggestion}>
           <p className="muted">ข้อเสนอจากระบบ — ต้องให้บุคลากรยืนยัน</p>
-          <p style={{ fontSize: 20, fontWeight: 700 }}>{suggestion}</p>
+          <p className={css.suggestionText}>{suggestion}</p>
           <p>{meta}</p>
         </div>
         <div className="form-field">
@@ -444,13 +467,13 @@ function ReviewSurface({
       <aside className="card stack">
         <div className="cluster">
           <BookOpen size={20} />
-          <h2 style={{ margin: 0 }}>หลักฐานและที่มา</h2>
+          <h2 className={css.flush}>หลักฐานและที่มา</h2>
         </div>
-        {evidence.map((id) => (
-          <div key={id} className="badge">
-            {id}
-          </div>
-        ))}
+        <ul className={css.evidenceList}>
+          {evidence.map((id) => (
+            <li key={id}>{id}</li>
+          ))}
+        </ul>
         <p className="muted">แสดง evidence ID และ metadata เพื่อการตรวจสอบ ไม่ใช่เหตุผลทางคลินิกที่ระบบสร้างใหม่</p>
       </aside>
     </div>
@@ -467,10 +490,10 @@ function MedicationSurface({
 }) {
   if (!data)
     return (
-      <div className="state-panel">
-        <h2>ข้อมูลบางส่วนยังไม่พร้อม</h2>
-        <p>ตรวจรายการที่ทำเครื่องหมายไว้ก่อนดำเนินการต่อ</p>
-      </div>
+      <EmptyState
+        title="ข้อมูลบางส่วนยังไม่พร้อม"
+        description="ตรวจรายการที่ทำเครื่องหมายไว้ก่อนดำเนินการต่อ"
+      />
     );
   const d = data.discrepancies[0];
   return (
@@ -478,10 +501,10 @@ function MedicationSurface({
       <section className="card stack">
         <div className="cluster">
           <Pill size={24} />
-          <h2 style={{ margin: 0 }}>Medication reconciliation</h2>
+          <h2 className={css.flush}>Medication reconciliation</h2>
         </div>
         {data.sources.map((s) => (
-          <article key={s.source_id} style={{ padding: 16, border: "1px solid var(--border)", borderRadius: 8 }}>
+          <article key={s.source_id} className={css.source}>
             <strong>{s.label}</strong>
             <p>{s.recorded_value}</p>
             <span className="muted">
@@ -503,12 +526,14 @@ function MedicationSurface({
       <aside className="card stack">
         <div className="cluster warning">
           <AlertOctagon size={20} />
-          <h2 style={{ margin: 0 }}>{d.label}</h2>
+          <h2 className={css.flush}>{d.label}</h2>
         </div>
         <p>{d.detail}</p>
         <div className="cluster">
-          <span className="badge">{d.status === "pending" ? "รอตรวจทาน" : "ตรวจทานแล้ว"}</span>
-          <span className="badge">version {d.version}</span>
+          <StatusChip tone={d.status === "pending" ? "warning" : "success"}>
+            {d.status === "pending" ? "รอตรวจทาน" : "ตรวจทานแล้ว"}
+          </StatusChip>
+          <StatusChip tone="neutral">version {d.version}</StatusChip>
         </div>
         <p className="muted">Provenance: {d.provenance.join(" · ")}</p>
       </aside>
@@ -520,24 +545,24 @@ function Timeline({ items, audit }: { items: TimelineItem[]; audit: boolean }) {
     <section className="card">
       <div className="cluster">
         <History size={24} />
-        <h2 style={{ margin: 0 }}>{audit ? "ประวัติกิจกรรมแบบ append-only" : "Timeline ของเคส"}</h2>
+        <h2 className={css.flush}>{audit ? "ประวัติกิจกรรมแบบ append-only" : "Timeline ของเคส"}</h2>
       </div>
       {items.length === 0 ? (
-        <div className="state-panel">
-          <h2>ยังไม่มีรายการใน timeline</h2>
-          <p>กิจกรรมจะปรากฏหลังมีการรับเคส ตรวจทาน หรือส่งต่อ</p>
-        </div>
+        <EmptyState
+          title="ยังไม่มีรายการใน timeline"
+          description="กิจกรรมจะปรากฏหลังมีการรับเคส ตรวจทาน หรือส่งต่อ"
+        />
       ) : (
-        <ol className="timeline" style={{ marginTop: 24 }}>
+        <ol className={`timeline ${css.timeline}`}>
           {items.map((i) => (
             <li key={i.event_id}>
               <span className="timeline-dot" />
               <div>
                 <strong>{i.title}</strong>
-                <p style={{ margin: "4px 0" }}>{i.detail}</p>
-                <span className="muted">
-                  <Clock3 size={14} style={{ display: "inline" }} /> {formatThaiTime(i.timestamp)} ·{" "}
-                  {i.actor.display || i.actor.role} · v{i.version}
+                <p className={css.tight}>{i.detail}</p>
+                <span className={`muted ${css.inlineIcon}`}>
+                  <Clock3 size={14} aria-hidden="true" /> {formatThaiTime(i.timestamp)} · {i.actor.display || i.actor.role}{" "}
+                  · v{i.version}
                 </span>
               </div>
             </li>
