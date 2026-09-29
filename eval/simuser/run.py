@@ -13,14 +13,13 @@ Tool mapping (the synthetic snapshot has these data types only; nothing is inven
          get_labs           LabSeries
          get_medications    MedicationList (home_list / patient_reported / new_order)
          get_vitals         Vitals
-         get_nursing_notes  no such source in the snapshot -> always "no records" (a decoy system)
   env B  get_queue / get_case_overview / get_timeline / get_medications on one case page. The same items
          are reachable (overview: demographics, allergy, intake transcript; timeline: vitals + labs in full,
          other events as headers; medications: all lists side by side). No system-computed red-flag or
          discrepancy hints are shown, so B differs from A only in consolidation.
 Both envs filter available_at_time > T (T = snapshot as_of).
 
-Env B is a schema-faithful adapter of the MedX V2 case-page routes, populated from the snapshot: the shipped
+Arm B ("single-case consolidated view (MedX case-page schema)") is a schema-faithful adapter of the MedX case-page routes, populated from the snapshot: the shipped
 demo router (backend/app/demo/router.py) serves ONE hard-coded case, so it cannot serve dataset cases. The
 selfcheck probes the real app in-process (TestClient, mock provider) to assert the routes exist.
 
@@ -71,11 +70,12 @@ TEMPLATES = REPO_ROOT / "data_factory" / "templates"
 DEFAULT_DATASET = "data/synthetic/v1"
 DEFAULT_MODEL = "gpt-6-luna"
 DEFAULT_BASE_URL = "https://api.openai.com/v1"
-ALLOWED_SPLITS = ("train", "dev")  # the test split is never opened
+ALLOWED_SPLITS = ("train", "dev", "test")  # test only via check_test_access (FROZEN manifest + dataset sha match)
+ENV_FILE = Path("/Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent/.env")
 ANSWER_KEYS = ("vitals_trend", "current_meds", "medication_issues", "red_flags", "escalate", "missing_info")
 TRENDS = ("worsening", "improving", "stable", "single_reading")
 ARMS = ("A", "B")
-ARM_NAMES = {"A": "multi-system", "B": "MedX V2 case page"}
+ARM_NAMES = {"A": "multi-system", "B": "single-case consolidated view (MedX case-page schema)"}
 PERSONAS = {
     "nurse": "triage/OPD nurse preparing the case for the physician",
     "physician": "OPD physician about to see this patient",
@@ -203,9 +203,19 @@ def require_synthetic(dataset: Path) -> None:
         raise SystemExit("refusing: dataset manifest does not declare data_class 'synthetic'")
 
 
-def load_cases(dataset: Path, split: str, dp: str) -> list[Case]:
-    if split not in ALLOWED_SPLITS:
-        raise SystemExit(f"refusing split {split!r}: only {ALLOWED_SPLITS} may be opened by this harness")
+def check_test_access(manifest_path: str | None, dataset: Path) -> bool:
+    """True only for a manifest with status FROZEN whose dataset_manifest_sha256 equals sha256(dataset/manifest.json)."""
+    if not manifest_path or not Path(manifest_path).is_file():
+        return False
+    m = _load(Path(manifest_path))
+    dm = dataset / "manifest.json"
+    sha = hashlib.sha256(dm.read_bytes()).hexdigest() if dm.is_file() else None
+    return m.get("status") == "FROZEN" and sha is not None and (m.get("dataset") or {}).get("dataset_manifest_sha256") == sha
+
+
+def load_cases(dataset: Path, split: str, dp: str, allow_test: bool = False) -> list[Case]:
+    if split not in ("train", "dev") and not (split == "test" and allow_test):
+        raise SystemExit(f"refusing split {split!r}: test needs --manifest with status FROZEN and a matching dataset sha256")
     require_synthetic(dataset)
     out = []
     for snap_path in sorted((dataset / "inputs" / split).glob(f"*/snapshot_{dp}.json")):
@@ -285,7 +295,6 @@ class MultiSystemEnv(Env):
         _tool("get_labs", "Laboratory information system: lab results."),
         _tool("get_medications", "Medication system: medication lists (home list, patient-reported list, current orders)."),
         _tool("get_vitals", "Triage/vitals system: vital-sign readings."),
-        _tool("get_nursing_notes", "Nursing documentation system: nursing notes."),
     ]
 
     def _pack(self, system: str, records: list[dict]) -> dict:
@@ -305,9 +314,6 @@ class MultiSystemEnv(Env):
 
     def _t_get_vitals(self):
         return self._pack("vitals", self._of("Vitals"))
-
-    def _t_get_nursing_notes(self):
-        return self._pack("nursing", [])  # the snapshot has no nursing-note source
 
     def systems_opened(self, called: set[str]) -> int:
         return len(called)
@@ -803,7 +809,7 @@ def summarize(trials: list[dict], k: int, n_boot: int = 2000) -> dict:
     m[f"pass_hat_{k}"] = _metric_block([c for c, _ in keys], [pa[x] for x in keys], [1] * len(keys),
                                        [pb[x] for x in keys], [1] * len(keys), n_boot)
     n_cases = len(set(ids))
-    return {"n_pairs": len(A), "n_cases": n_cases, "n_case_persona_rows": len(keys), "k": k, "excluded_trials": excluded,
+    return {"verdict": verdict(m), "n_pairs": len(A), "n_cases": n_cases, "n_case_persona_rows": len(keys), "k": k, "excluded_trials": excluded,
             "n_boot": n_boot, "bootstrap_seed": BOOT_SEED, "metrics": m}
 
 
@@ -816,7 +822,7 @@ def render_md(res: dict) -> str:
          f"Evaluation `{res['evaluation_id']}` - generated {res['created_utc']}. Manifest: `{res['manifest']['id']}` "
          f"(status {res['manifest']['status']}).", "",
          "## Setup", "",
-         f"- Arms: A = {ARM_NAMES['A']} (5 tools, one per system); B = {ARM_NAMES['B']} (4 tools, one page). Same model, temperature, prompts, task.",
+         f"- Arms: A = {ARM_NAMES['A']} (4 tools, one per snapshot source); B = {ARM_NAMES['B']} (4 tools, one page; an adapter, not a MedX app run). Same model, temperature, prompts, task.",
          f"- Model ids reported by the endpoint: {', '.join(res['model_ids']) or 'none'}; requested `{res['protocol']['model']}`; tool mode `{res['protocol']['tool_mode']}`; temperature {res['protocol']['temperature']}.",
          f"- Dataset `{res['dataset']['path']}` split `{res['dataset']['split']}` decision point {res['dataset']['decision_point']}; "
          f"{len(res['cases'])} cases (stratified, seed {res['protocol']['seed']}), personas {', '.join(res['protocol']['personas'])}, k={res['protocol']['k']}.",
@@ -832,11 +838,19 @@ def render_md(res: dict) -> str:
             return f"{x['num']:.0f}/{x['den']:.0f} = {_f(x['point'])} [{_f(x['ci_low'])}, {_f(x['ci_high'])}]" if x["den"] and float(x["den"]).is_integer() and float(x["num"]).is_integer() and x["den"] > 0 and name not in _CONT else f"mean {_f(x['point'])} [{_f(x['ci_low'])}, {_f(x['ci_high'])}]"
         d = b["A_minus_B"]
         L.append(f"| {name} | {cell(b['A'])} | {cell(b['B'])} | {_f(d['point'])} [{_f(d['ci_low'])}, {_f(d['ci_high'])}] |")
+    v = res["summary"].get("verdict")
+    if v:
+        L += ["", "## Predeclared reading", "",
+              f"Assumption support: **{'SUPPORTED' if v['supported'] else 'NOT SUPPORTED'}**"
+              + ("" if v["supported"] else f" - failed: {', '.join(v['failed_criteria'])}"),
+              "Criteria (all required): (a) lower 95% bound of task_success B-A >= -0.10; (b) lower 95% bound of tool_calls A-B > 0; (c) critical-miss rate B <= A (point estimate). "
+              f"Observed: (a) {_f(v['a_lower_bound_B_minus_A'])}, (b) {_f(v['b_tool_calls_A_minus_B_ci_low'])}, (c) A/B {v['c_critical_miss_A_B']}. pass^k per arm is in the table (pass_hat_k).",
+              "This reading is about simulated users only."]
     L += ["", "## Limitations", "",
           "- Simulated users are one LLM role-playing personas; behaviour is not human behaviour. No usability, satisfaction, learning or clinical-outcome claim is supported.",
           "- Gold is synthetic reference labels from predeclared rules (not expert-reviewed, not clinical ground truth); vitals_trend and current_meds references are derived by the stated rules.",
-          "- Env B is a schema-faithful adapter of the MedX V2 case page populated from the snapshot, not the shipped demo router (which serves one hard-coded case). System-computed red-flag/discrepancy hints are excluded, so B measures consolidation only.",
-          "- get_nursing_notes has no source in the synthetic snapshot and always returns no records (a decoy); labs are not required by any field.",
+          "- Arm B (single-case consolidated view) is a schema-faithful adapter of the MedX case-page routes populated from the snapshot, not a MedX app run and not the shipped demo router (which serves one hard-coded case). System-computed red-flag/discrepancy hints are excluded, so B measures consolidation only.",
+          "- Arm A contains only sources that exist in the snapshot (opd note, labs, medications, vitals); every fact is reachable in both arms. Labs are not required by any answer field.",
           "- Small number of cases and one model: intervals are wide; treat as hypothesis-generating support for the Gate 2 assumption, not a test of it.",
           "- Model-version drift, provider nondeterminism and endpoint quirks (see transcripts) can change results between runs; the request settings are recorded.",
           f"- {res['protocol']['notes'] or 'No endpoint adaptations were needed.'}", ""]
@@ -844,6 +858,35 @@ def render_md(res: dict) -> str:
 
 
 _CONT = {"tool_calls", "systems_opened", "distinct_tools", "repeated_opens", "turns", "tokens", "wall_s", "cost_usd"}
+
+
+def load_env_file(path: Path | None = None) -> None:
+    """Fill missing SIMUSER_* from a .env (KEY=VALUE, stdlib parsing). Values are never printed."""
+    for p in [path] if path else [ENV_FILE, REPO_ROOT / ".env"]:
+        if p.is_file():
+            for line in p.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, v = line.split("=", 1)
+                k = k.strip().removeprefix("export ").strip()
+                v = v.strip().strip("'\"")
+                if k.startswith("SIMUSER_") and k not in os.environ:
+                    os.environ[k] = v
+            return
+
+
+def verdict(m: dict) -> dict:
+    """Predeclared reading (manifest simuser-g2-0001): supported iff (a) and (b) and (c)."""
+    ts_hi = m["task_success"]["A_minus_B"]["ci_high"]
+    tc_lo = m["tool_calls"]["A_minus_B"]["ci_low"]
+    cm = m["critical_miss_any"]
+    a_ok = ts_hi is not None and -ts_hi >= -0.10  # lower 95% bound of B-A task_success >= -0.10
+    b_ok = tc_lo is not None and tc_lo > 0
+    c_ok = cm["B"]["point"] is not None and cm["A"]["point"] is not None and cm["B"]["point"] <= cm["A"]["point"]
+    failed = [n for n, v in (("a_task_success_noninferior", a_ok), ("b_fewer_tool_calls", b_ok), ("c_critical_miss_B_le_A", c_ok)) if not v]
+    return {"supported": not failed, "failed_criteria": failed, "a_lower_bound_B_minus_A": None if ts_hi is None else -ts_hi,
+            "b_tool_calls_A_minus_B_ci_low": tc_lo, "c_critical_miss_A_B": [cm["A"]["point"], cm["B"]["point"]]}
 
 
 def file_sha(p: Path) -> str | None:
@@ -934,7 +977,7 @@ def _policy(answers: dict, sloppy_repeat: bool = False, bad: set | None = None, 
     bad = bad or set()
 
     def policy(env, case_id, trial_no, turn):
-        steps = {"A": ["get_opd_note", "get_vitals", "get_medications", "get_labs", "get_nursing_notes"],
+        steps = {"A": ["get_opd_note", "get_vitals", "get_medications", "get_labs"],
                  "B": ["get_queue", "get_case_overview", "get_timeline", "get_medications"]}[env]
         if sloppy_repeat and env == "A":
             steps = steps + ["get_vitals"]
@@ -975,6 +1018,19 @@ def selfcheck() -> None:
         ok(False, "test split must be refused")
     except SystemExit:
         ok(True, "test split refused")
+    dsha = hashlib.sha256((ds / "manifest.json").read_bytes()).hexdigest()
+    for status, sha, want in (("FROZEN", dsha, True), ("DRAFT_NOT_FROZEN", dsha, False), ("FROZEN", "0" * 64, False)):
+        mp = tmp / f"m-{status}-{want}.json"
+        mp.write_text(json.dumps({"status": status, "dataset": {"dataset_manifest_sha256": sha}}))
+        ok(check_test_access(str(mp), ds) is want, f"test access gate {status} sha_match={sha == dsha}")
+    ok(not check_test_access(None, ds) and not check_test_access(str(tmp / "missing.json"), ds), "test access needs a manifest")
+    (tmp / "e.env").write_text("SIMUSER_MODEL='envfile-model'\nOTHER=1\n# c\nexport SIMUSER_BASE_URL=http://x/v1\n")
+    os.environ["SIMUSER_BASE_URL"] = "keep"
+    os.environ.pop("SIMUSER_MODEL", None)
+    load_env_file(tmp / "e.env")
+    ok(os.environ["SIMUSER_MODEL"] == "envfile-model" and os.environ["SIMUSER_BASE_URL"] == "keep" and "OTHER" not in os.environ, ".env fills only missing SIMUSER_* vars")
+    os.environ.pop("SIMUSER_MODEL", None)
+    os.environ.pop("SIMUSER_BASE_URL", None)
     ok(select_cases(cases, 4, 1) == select_cases(cases, 4, 1) and len({c.case_id for c in select_cases(cases, 3, 1)}) == 3, "stratified selection deterministic")
     ok({c.strata for c in select_cases(cases, 4, 7)} == {c.strata for c in cases}, "selection covers strata")
 
@@ -991,7 +1047,7 @@ def selfcheck() -> None:
         types = lambda r: {i["data_type"] for i in r["records"]}  # noqa: E731
         ok(types(o["get_vitals"]) == {"Vitals"} and types(o["get_labs"]) == {"LabSeries"} and types(o["get_medications"]) == {"MedicationList"}, "A tool routing")
         ok(types(o["get_opd_note"]) == {"Demographics", "AllergyList", "IntakeTranscript"}, "A opd routing")
-        ok(o["get_nursing_notes"]["records"] == [] and o["get_nursing_notes"]["note"] == "no records", "A nursing notes empty, not gold")
+        ok(set(o) == {"get_opd_note", "get_labs", "get_medications", "get_vitals"}, "A tool set = existing snapshot sources")
         ok(A.call("get_vitals", {"case_id": "OTHER"}) == {"error": "case_not_found"} and A.call("nope", {})["error"] == "unknown_tool", "A error paths")
         a_ids = {i["item_id"] for r in o.values() for i in r["records"]}
         b_out = [B.call("get_case_overview", {"case_id": c.case_id}), B.call("get_timeline", {"case_id": c.case_id}),
@@ -1038,7 +1094,7 @@ def selfcheck() -> None:
         tr = res["trials"]
         a_s0 = next(t for t in tr if t["env"] == "A" and t["case_id"] == "S0" and t["persona"] == "nurse")
         b_s0 = next(t for t in tr if t["env"] == "B" and t["case_id"] == "S0" and t["persona"] == "nurse")
-        ok(a_s0["tool_calls"] == 6 and a_s0["repeated_opens"] == 1 and a_s0["systems_opened"] == 5 and a_s0["distinct_tools"] == 5, f"{mode}: A effort counts")
+        ok(a_s0["tool_calls"] == 5 and a_s0["repeated_opens"] == 1 and a_s0["systems_opened"] == 4 and a_s0["distinct_tools"] == 4, f"{mode}: A effort counts")
         ok(b_s0["tool_calls"] == 4 and b_s0["systems_opened"] == 1 and b_s0["repeated_opens"] == 0, f"{mode}: B effort counts")
         ok(a_s0["score"]["critical_miss_any"] and b_s0["score"]["task_success"], f"{mode}: A bad / B perfect scored")
         m = res["summary"]["metrics"]
@@ -1166,7 +1222,7 @@ def selfcheck() -> None:
                 sysp = build_system_prompt("nurse") + task_prompt(c)
                 ctx = len(sysp.encode()) / 3
                 inp = 0.0
-                steps = ["get_opd_note", "get_vitals", "get_medications", "get_labs", "get_nursing_notes"] if arm == "A" else ["get_queue", "get_case_overview", "get_timeline", "get_medications"]
+                steps = ["get_opd_note", "get_vitals", "get_medications", "get_labs"] if arm == "A" else ["get_queue", "get_case_overview", "get_timeline", "get_medications"]
                 for s in steps:
                     inp += ctx + 40  # each call resends the context so far
                     ctx += len(json.dumps(env.call(s, {"case_id": c.case_id}), ensure_ascii=False).encode()) / 3 + 40
@@ -1212,6 +1268,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.selfcheck:
         selfcheck()
         return 0
+    load_env_file()
     key = os.environ.get("SIMUSER_API_KEY", "")
     base = os.environ.get("SIMUSER_BASE_URL", DEFAULT_BASE_URL)
     model = os.environ.get("SIMUSER_MODEL", DEFAULT_MODEL)
@@ -1220,9 +1277,13 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     dataset = Path(args.dataset)
     dataset = dataset if dataset.is_absolute() else REPO_ROOT / dataset
-    cases = select_cases(load_cases(dataset, args.split, args.decision_point), 1 if args.smoke else args.cases, args.seed)
     if args.smoke:
-        args.k, args.personas = 1, args.personas.split(",")[0]
+        args.split = "dev"  # smoke always runs on dev
+    allow_test = args.split == "test" and check_test_access(args.manifest, dataset)
+    cases = select_cases(load_cases(dataset, args.split, args.decision_point, allow_test), 1 if args.smoke else args.cases, args.seed)
+    full_cases, full_k, full_personas = args.cases, args.k, len(args.personas.split(","))
+    if args.smoke:
+        args.k = 1
     out = Path(args.out or f"eval/results/simuser/{'smoke' if args.smoke else 'run'}-{utc_now().replace(':', '')}")
     llm = HttpLLM(base, key, model)
     try:
@@ -1232,6 +1293,11 @@ def main(argv: list[str] | None = None) -> int:
         return 3
     s = res["summary"]
     print(f"{LABEL}\npairs={s.get('n_pairs', 0)} spent=${res['budget']['spent_usd']:.4f} stopped={res['budget']['stopped']} out={out}")
+    if args.smoke and res["trials"]:
+        n = len(res["trials"])
+        proj = res["budget"]["spent_usd"] / n * (full_cases * full_personas * full_k * 2)
+        print(f"smoke: {n} trials, {sum(t['tokens'] for t in res['trials'])} tokens, ${res['budget']['spent_usd']:.4f}; projected full config "
+              f"({full_cases} cases x {full_personas} personas x k={full_k} x 2 arms): ${proj:.2f}")
     return 0
 
 

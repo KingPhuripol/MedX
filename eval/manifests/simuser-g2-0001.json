@@ -9,14 +9,15 @@
  "approval": "docs/DECISIONS.md 2026-09-29 'Gate 2: AI-simulated users' (synthetic cases only, OpenAI-compatible endpoint, total budget 5 USD)",
  "dataset": {
   "name": "s1r-synthetic",
-  "path": "data/synthetic/v1",
+  "path": "/Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent/data/synthetic/g2-heldout-20260929",
   "data_class": "synthetic",
-  "generator_seed": 20260926,
-  "dataset_manifest_sha256": "ae0ec724fa7bfc54b9f9ed98a414fcd19e9444424a3fc01896c790ce96e93a09",
-  "splits_sha256": "fb9454a2bc7433b663c6d921ebd68d3a1897bdbffb02dc3849e9d37976c828e9",
-  "split": "dev",
+  "generator_seed": 20260929,
+  "dataset_manifest_sha256": "572869b5f94b635fd27fe2d32cb41661b41c7f7f9c620a56bd70efdca83f6573",
+  "splits_sha256": null,
+  "development_dataset_for_smoke": "data/synthetic/v1 (dev split, --smoke only)",
+  "split": "test",
   "decision_point": "T2",
-  "test_split_access": "never; run.py refuses any split other than train/dev"
+  "test_split_access": "final run only: fresh held-out dataset (test split, SYNH-/SYNHE- ids) under artifacts/g2-heldout-*/; run.py opens test only if this manifest is FROZEN and dataset_manifest_sha256 matches"
  },
  "case_selection": {
   "n_cases": 12,
@@ -25,8 +26,8 @@
   "unit_of_analysis": "case (synthetic patient); persona and trial are repeats inside the case cluster"
  },
  "arms": {
-  "A": "multi-system: get_opd_note, get_labs, get_medications, get_vitals, get_nursing_notes (nursing notes: no source in snapshot, always 'no records')",
-  "B": "MedX V2 case page: get_queue, get_case_overview, get_timeline, get_medications (schema-faithful adapter over the snapshot; no system-computed red-flag or discrepancy hints)"
+  "A": "multi-system: get_opd_note, get_labs, get_medications, get_vitals (only sources that exist in the snapshot; every fact reachable in both arms)",
+  "B": "single-case consolidated view (MedX case-page schema): get_queue, get_case_overview, get_timeline, get_medications; schema-faithful adapter over the snapshot, not a MedX app run; no system-computed red-flag or discrepancy hints"
  },
  "simulator": {
   "personas": ["nurse", "physician", "pharmacist"],
@@ -45,12 +46,11 @@
  "critical_miss_rule": "gold red flag not reported or escalate != true when gold escalates; or gold medication issue whose drugs appear in no reported issue. No answer counts as a miss.",
  "denominators": "every started trial stays in the denominator (invalid answer, turn cap, provider error = failed). Only budget-stopped incomplete pairs are excluded and counted.",
  "metrics": ["task_success", "pass_hat_k", "field_* (6)", "critical_miss_redflag", "critical_miss_med", "critical_miss_any", "tool_calls", "systems_opened", "distinct_tools", "repeated_opens", "turns", "tokens", "wall_s", "cost_usd", "answer_valid", "no_answer"],
- "primary_comparison": "paired A-B difference in systems_opened and tool_calls (effort), with task_success A-B as the non-inferiority check",
+ "primary_comparison": "paired A-B difference in tool_calls (effort), with task_success non-inferiority and critical-miss check",
  "statistics": {"ci": "percentile 95%, patient(case)-level cluster bootstrap, 2000 resamples, paired draws A vs B", "seed": 20260929, "code": "eval/bootstrap.py"},
- "proposed_reading_thresholds_TO_CONFIRM": {
-  "effort_supported_if": "A-B 95% CI for systems_opened and tool_calls excludes 0 in favour of B",
-  "accuracy_not_worse_if": "lower 95% bound of (B - A) task_success > -0.10 (proposed margin, small n: descriptive only)",
-  "safety_override": "any critical miss that occurs in B but not in A is listed by case and blocks the 'no worse' reading"
+ "reading_thresholds": {
+  "supported_iff_all": ["(a) lower 95% bound of task_success (B - A) >= -0.10", "(b) lower 95% bound of paired tool_calls difference (A - B) > 0", "(c) critical_miss_any rate B <= A (point estimate)"],
+  "otherwise": "not supported; report failed criteria; pass^k reported per arm"
  },
  "multiplicity": "one primary comparison (effort); all other metrics exploratory",
  "hashes_TO_FREEZE": {"code_revision": null, "run_py_sha256": null, "config_sha256": null},
