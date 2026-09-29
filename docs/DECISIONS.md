@@ -116,3 +116,6 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
 - **Data:** synthetic role-play or scripted voices only. Never real patients (CLAUDE.md data rule 7).
 - **Approved by:** project owner (chat, 2026-09-29): "ยืนยัน สังเคราะห์เท่านั้น", local + Vercel.
 - **Note:** the key was pasted into chat in plain text; the owner should rotate it after the demo.
+- **2026-09-29 addendum (V1 spec, `slices/v1/SPEC.md`):**
+  - **D-V1-1:** V1 uses direct browser WebRTC to OpenAI Realtime for speech in and out only. It does not use LiveKit with function-calling extraction as PROPOSAL §3.1 describes for Realtime mode. The policy picks every question, and extraction stays on the existing rules path. Recorded by the orchestrator under the owner's 2026-09-29 approval.
+  - **D-V1-2 (default pending owner):** handoff from `/live` navigates to `/nurse/triage`, or to the case triage tab when the page was opened with a case. No new voice→triage API is added in V1.
