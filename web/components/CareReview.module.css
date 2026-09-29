@@ -42,3 +42,4 @@
 .refsBox { display: inline-block; vertical-align: baseline; margin-left: 8px; }
 .alt > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 700; }
 .alt[open] > summary { margin-bottom: 16px; }
+.rejectBox { padding-top: 8px; }

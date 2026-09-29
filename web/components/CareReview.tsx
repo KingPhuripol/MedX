@@ -447,60 +447,62 @@ export default function CareReview({
           )}
 
           <Section title="Edit or reject" titleId="alt-title">
-            <details className={styles.alt} open={!suggested}>
-              <summary>
-                Edit the suggestion or reject it (reason required)
-              </summary>
-              <div className={styles.stack}>
-                <form
-                  className={styles.stack}
-                  onSubmit={(e) =>
-                    submit(e, "edit", {
-                      next_information: editNi,
-                      pathway_options: editCp,
-                      reason: editReason,
-                    })
-                  }
-                >
-                  <div className={styles.pickers}>
-                    <CodePicker
-                      legend="Edit: information to collect next (at most 5)"
-                      name="edit-ni"
-                      entries={vocabulary.next_information}
-                      chosen={editNi}
-                      max={5}
-                      onChange={setEditNi}
-                    />
-                    <CodePicker
-                      legend="Edit: care-pathway options (at most 3)"
-                      name="edit-cp"
-                      entries={vocabulary.pathway_options}
-                      chosen={editCp}
-                      max={3}
-                      onChange={setEditCp}
-                    />
-                  </div>
-                  <div className={styles.field}>
-                    <label htmlFor="edit-reason">Reason for the edit</label>
-                    <textarea
-                      id="edit-reason"
-                      rows={2}
-                      value={editReason}
-                      onChange={(e) => setEditReason(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Button
-                      type="submit"
-                      variant="secondary"
-                      disabled={blocked}
-                      aria-describedby={hint}
-                    >
-                      Save edited suggestion
-                    </Button>
-                  </div>
-                </form>
+            <div className={styles.stack}>
+              <details className={styles.alt} open={!suggested}>
+                <summary>Edit the suggestion (reason required)</summary>
+                <div className={styles.stack}>
+                  <form
+                    className={styles.stack}
+                    onSubmit={(e) =>
+                      submit(e, "edit", {
+                        next_information: editNi,
+                        pathway_options: editCp,
+                        reason: editReason,
+                      })
+                    }
+                  >
+                    <div className={styles.pickers}>
+                      <CodePicker
+                        legend="Edit: information to collect next (at most 5)"
+                        name="edit-ni"
+                        entries={vocabulary.next_information}
+                        chosen={editNi}
+                        max={5}
+                        onChange={setEditNi}
+                      />
+                      <CodePicker
+                        legend="Edit: care-pathway options (at most 3)"
+                        name="edit-cp"
+                        entries={vocabulary.pathway_options}
+                        chosen={editCp}
+                        max={3}
+                        onChange={setEditCp}
+                      />
+                    </div>
+                    <div className={styles.field}>
+                      <label htmlFor="edit-reason">Reason for the edit</label>
+                      <textarea
+                        id="edit-reason"
+                        rows={2}
+                        value={editReason}
+                        onChange={(e) => setEditReason(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Button
+                        type="submit"
+                        variant="secondary"
+                        disabled={blocked}
+                        aria-describedby={hint}
+                      >
+                        Save edited suggestion
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+              </details>
+              <div className={styles.rejectBox}>
                 <form
                   className={styles.stack}
                   onSubmit={(e) =>
@@ -529,7 +531,7 @@ export default function CareReview({
                   </div>
                 </form>
               </div>
-            </details>
+            </div>
           </Section>
         </>
       )}
