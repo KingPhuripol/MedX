@@ -346,7 +346,8 @@ def test_eval_isolation():
     # (eval/adapters/tests/test_e1_isolation.py). Every other eval/ file keeps the s8 rule unchanged, and none of
     # them may import eval.adapters or data_factory.generate.
     adapters = EVAL_DIR / "adapters"
-    files = sorted(p for p in EVAL_DIR.rglob("*.py") if adapters not in p.parents)
+    simuser = EVAL_DIR / "simuser"  # Gate 2 simulated-user harness: own allowlist in eval/tests/test_simuser_selfcheck.py
+    files = sorted(p for p in EVAL_DIR.rglob("*.py") if adapters not in p.parents and simuser not in p.parents)
     assert len(files) >= 8
     violations = []
     for p in files:
