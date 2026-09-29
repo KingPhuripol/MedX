@@ -87,7 +87,7 @@ h2 {
   border-bottom: 1px solid var(--border);
 }
 /* The AppShell and the login cover carry their own wordmark. */
-body:has(.clinical-shell, .app-main, .cover) .site-header {
+body:has(.clinical-shell, .app-main, .cover, [data-live-root]) .site-header {
   display: none;
 }
 main {

@@ -6,6 +6,7 @@ import {
   ArrowRight,
   BriefcaseMedical,
   CheckCircle2,
+  AudioLines,
   Clock,
   Mic,
   Pill,
@@ -22,6 +23,15 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Section } from "@/components/ui/Section";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { api, RUN_KEY, type Role, type TaskSummary, type User } from "@/lib/demo";
+
+// MedX Live entry (slice v1): shown only when the build enables voice; the /live route itself always works.
+const voiceEnabled = () => process.env.NEXT_PUBLIC_VOICE_ENABLED === "1";
+const liveTool = {
+  href: "/live",
+  title: "เปิด MedX Live",
+  text: "สัมภาษณ์ด้วยเสียงภาษาไทยแบบเรียลไทม์ (บทสังเคราะห์เท่านั้น)",
+  icon: <AudioLines size={18} />,
+};
 
 const roleTitle = { nurse: "คิวรับเข้าและคัดกรอง", physician: "เคสที่รอตรวจโดยแพทย์", pharmacist: "คิวทบทวนข้อมูลยา" };
 
@@ -146,12 +156,21 @@ export default function WorkQueue() {
           <Link className="ui-button ui-button--primary" href={href(t)}>
             เปิดเคส <ArrowRight size={18} />
           </Link>
+          {voiceEnabled() && user?.role === "nurse" && t.kind === "intake" ? (
+            <Link
+              className="ui-button ui-button--secondary"
+              data-testid="live-entry-task"
+              href={`/live?case=${encodeURIComponent(t.case_id)}&run=${encodeURIComponent(runId)}`}
+            >
+              <AudioLines size={18} /> เปิด MedX Live
+            </Link>
+          ) : null}
         </div>
       ),
     },
   ];
 
-  const tools = user ? roleTools[user.role] : [];
+  const tools = user ? [...roleTools[user.role], ...(user.role === "nurse" && voiceEnabled() ? [liveTool] : [])] : [];
   return (
     <div className="page-stack">
       <PageHeader

@@ -51,5 +51,18 @@
   --shadow-floating: 0 8px 24px rgba(18, 33, 47, 0.12);
   --card-glass: rgba(255, 255, 255, 0.97);
 
+  /* MedX Live call surface (slice v1) */
+  --call-bg: #061A2E;
+  --call-fg: #F5F8FB;
+  --call-muted: #A9BED3;
+  --call-control: #16324F;
+  --call-control-border: #6F8BA8;
+  --call-end: #D92D20;
+  --call-focus: #B9DEFF;
+  --orb-core: #B9DEFF;
+  --orb-mid: #2378C9;
+  --orb-edge: #0B5CAD;
+  --orb-glow: 0 0 64px 16px rgba(35, 120, 201, 0.45);
+
   --type: "SCBXBeta2", system-ui, sans-serif;
 }

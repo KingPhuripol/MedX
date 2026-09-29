@@ -28,6 +28,7 @@ const PAGES: PageSpec[] = [
   { name: "case-medications", path: "/app/cases/SYN-2026-0017/medications", role: "pharmacist", run: true },
   { name: "nurse-triage", path: "/nurse/triage", role: "nurse" },
   { name: "nurse-intake", path: "/nurse/intake", role: "nurse" },
+  { name: "live", path: "/live", role: "nurse" },
   { name: "physician-care", path: "/physician/care", role: "physician" },
   { name: "pharmacist-reconcile", path: "/pharmacist/reconcile", role: "pharmacist" },
 ];
