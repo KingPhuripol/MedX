@@ -82,3 +82,9 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
 - **Incident:** the first T1 attempt auto-created a project named `t1` without env vars (the `--scope` flag failed). It was removed within minutes.
 - **main** now carries U4 + D1 (hospital blue is the main design). The U4 route change (role homes go to `/app/queue`; real triage/care/voice pages stay at their routes inside the shell, with no demo-case embedding) is pending owner confirmation.
 - **Take-down:** `vercel project rm medx-demo-t1` / `vercel project rm medx-demo-u4`.
+
+## 2026-09-29 — Gate 2: AI-simulated users instead of real clinicians
+- **What:** For Gate 2, AI-simulated users and simulated scenarios (τ-bench style: an LLM plays nurse / OPD physician / pharmacist and uses tools) stand in for usability testing with real doctors and nurses, who could not be recruited in time.
+- **External API:** synthetic cases only may be sent to an OpenAI-compatible endpoint (OpenAI, small mini/nano model, total budget 5 USD) acting as the **simulated user**. MedX itself stays on the mock provider. The key lives only in the owner's local environment, never in the repo.
+- **Claim limit:** results are reported as "Simulated-user evaluation (synthetic)" and never as human usability or user validation.
+- **Approved by:** the project's physician advisor (name withheld under PDPA), relayed by the project owner in chat on 2026-09-29.
