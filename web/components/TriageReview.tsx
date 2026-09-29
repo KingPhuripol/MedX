@@ -150,9 +150,7 @@ export default function TriageReview({ assessment, departments, onReview }: Prop
         )}
       </Section>
 
-      <div className={css.screeningCard}>
-        <ScreeningBlock screening={a.screening} />
-      </div>
+      <ScreeningBlock screening={a.screening} />
 
       <Section
         title={`Department — ${OUTPUT_LABEL.toLowerCase()}`}

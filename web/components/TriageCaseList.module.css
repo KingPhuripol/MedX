@@ -3,7 +3,7 @@
 .muted { color: var(--muted-foreground); font-size: 14px; }
 .complaint { min-width: 0; overflow-wrap: anywhere; }
 @media (max-width: 767px) {
-  .list tbody tr { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "ref time" "complaint complaint" "action action"; gap: 4px 16px; align-items: center; }
+  .list tbody tr { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "ref time" "complaint action"; gap: 0 16px; padding: 4px 16px; margin-bottom: 4px; align-items: center; }
   .list tbody td { width: auto; padding: 0; }
   .list tbody td::before { display: none; }
   .cRef { grid-area: ref; }
