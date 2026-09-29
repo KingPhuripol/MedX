@@ -1,0 +1,3 @@
+{"event": "start", "env": "B", "persona": "pharmacist", "case_id": "SYNHE-0069", "tool_mode": "json"}
+{"event": "assistant", "turn": 1, "content": "", "tool_calls": [], "usage": {"prompt_tokens": 2074, "completion_tokens": 2500, "cached_tokens": 2071}}
+{"event": "end", "status": "invalid_answer", "score": {"fields": {"vitals_trend": false, "current_meds": false, "medication_issues": false, "red_flags": false, "escalate": false, "missing_info": false}, "task_success": false, "answer_valid": false, "has_red_flag": true, "has_med_issue": true, "critical_miss_redflag": true, "critical_miss_med": true, "critical_miss_any": true}}
