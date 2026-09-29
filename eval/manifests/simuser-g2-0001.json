@@ -1,104 +1,115 @@
 {
- "manifest_version": "1.0",
- "evaluation_id": "simuser-g2-0001",
- "status": "DRAFT_NOT_FROZEN",
- "label": "Simulated-user evaluation (synthetic) — not human usability, not clinical performance",
- "slice": "g2-simuser",
- "tier": 0,
- "question": "If the data needed is gathered on one case page (MedX V2), can a simulated nurse / OPD physician / pharmacist prepare a case before consult with fewer tool calls and systems opened, and no worse accuracy, than when the same data sits in five separate systems?",
- "approval": "docs/DECISIONS.md 2026-09-29 'Gate 2: AI-simulated users' (synthetic cases only, OpenAI-compatible endpoint, total budget 5 USD)",
- "dataset": {
-  "name": "s1r-synthetic",
-  "path": "/Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent/data/synthetic/g2-heldout-20260929",
-  "data_class": "synthetic",
-  "generator_seed": 20260929,
-  "dataset_manifest_sha256": "572869b5f94b635fd27fe2d32cb41661b41c7f7f9c620a56bd70efdca83f6573",
-  "splits_sha256": null,
-  "development_dataset_for_smoke": "data/synthetic/v1 (dev split, --smoke only)",
-  "split": "test",
-  "decision_point": "T2",
-  "test_split_access": "final run only: fresh held-out dataset (test split, SYNH-/SYNHE- ids) under artifacts/g2-heldout-*/; run.py opens test only if this manifest is FROZEN and dataset_manifest_sha256 matches"
- },
- "case_selection": {
-  "n_cases": 40,
-  "rule": "every case with a gold red flag at the decision point first (seeded sha256 order), then seeded random fill from the remaining cases, up to n_cases",
-  "seed": 20260929,
-  "unit_of_analysis": "case (synthetic patient); persona and trial are repeats inside the case cluster"
- },
- "arms": {
-  "A": "multi-system: get_opd_note, get_labs, get_medications, get_vitals (only sources that exist in the snapshot; every fact reachable in both arms)",
-  "B": "single-case consolidated view (MedX case-page schema): get_queue, get_case_overview (header only), get_intake, get_medications, get_timeline; one tool per V2 UI screen (web/components/clinical/CaseWorkspace.tsx), adapter over the snapshot, not a MedX app run; system-authored red-flag banner and discrepancy card not reproduced; UI to tool mapping in results.md"
- },
- "simulator": {
-  "personas": [
-   "nurse",
-   "physician",
-   "pharmacist"
+  "manifest_version": "1.0",
+  "evaluation_id": "simuser-g2-0001",
+  "status": "FROZEN",
+  "label": "Simulated-user evaluation (synthetic) — not human usability, not clinical performance",
+  "slice": "g2-simuser",
+  "tier": 0,
+  "question": "If the data needed is gathered on one case page (MedX V2), can a simulated nurse / OPD physician / pharmacist prepare a case before consult with fewer tool calls and systems opened, and no worse accuracy, than when the same data sits in five separate systems?",
+  "approval": "docs/DECISIONS.md 2026-09-29 'Gate 2: AI-simulated users' (synthetic cases only, OpenAI-compatible endpoint, total budget 5 USD)",
+  "dataset": {
+    "name": "s1r-synthetic",
+    "path": "/Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent/data/synthetic/g2-heldout-20260929",
+    "data_class": "synthetic",
+    "generator_seed": 20260929,
+    "dataset_manifest_sha256": "572869b5f94b635fd27fe2d32cb41661b41c7f7f9c620a56bd70efdca83f6573",
+    "splits_sha256": "44363099d8d8c7e93a4e0ed729fd52412306c0af874dacb21a56e43efe176c91",
+    "development_dataset_for_smoke": "data/synthetic/v1 (dev split, --smoke only)",
+    "split": "test",
+    "decision_point": "T2",
+    "test_split_access": "final run only: fresh held-out dataset (test split, SYNH-/SYNHE- ids) under artifacts/g2-heldout-*/; run.py opens test only if this manifest is FROZEN and dataset_manifest_sha256 matches"
+  },
+  "case_selection": {
+    "n_cases": 40,
+    "rule": "every case with a gold red flag at the decision point first (seeded sha256 order), then seeded random fill from the remaining cases, up to n_cases",
+    "seed": 20260929,
+    "unit_of_analysis": "case (synthetic patient); persona and trial are repeats inside the case cluster"
+  },
+  "arms": {
+    "A": "multi-system: get_opd_note, get_labs, get_medications, get_vitals (only sources that exist in the snapshot; every fact reachable in both arms)",
+    "B": "single-case consolidated view (MedX case-page schema): get_queue, get_case_overview (header only), get_intake, get_medications, get_timeline; one tool per V2 UI screen (web/components/clinical/CaseWorkspace.tsx), adapter over the snapshot, not a MedX app run; system-authored red-flag banner and discrepancy card not reproduced; UI to tool mapping in results.md"
+  },
+  "simulator": {
+    "personas": [
+      "nurse",
+      "physician",
+      "pharmacist"
+    ],
+    "k_trials": 4,
+    "model_env": "SIMUSER_MODEL (default gpt-6-luna)",
+    "endpoint_env": "SIMUSER_BASE_URL (default https://api.openai.com/v1); key in SIMUSER_API_KEY, never recorded",
+    "temperature": "omitted (model default 1; gpt-6-luna rejects other values)",
+    "max_turns": 12,
+    "max_tokens_per_response": 2500,
+    "tool_mode": "json (gpt-6-luna rejects native tools)",
+    "same_model_prompts_temperature_both_arms": true,
+    "simulator_sees_gold": false,
+    "workers": 8,
+    "max_tokens_note": "400 gave empty output (hidden reasoning); 2500 gives valid answers",
+    "closed_vocabularies": "missing_info codes (chief_complaint, duration, allergy_status, vitals.temp_c), vitals_trend labels, red-flag ids with clinical phrases: identical prompt text in both arms, lists only, never per-case gold",
+    "request_params": "max_completion_tokens sent, temperature omitted by default (--legacy-max-tokens / --temperature opt in); a 400 naming an unsupported parameter is fixed and the same call retried; params sent recorded in results.json"
+  },
+  "budget": {
+    "usd_limit": 3.0,
+    "price_in_per_1m": 0.1,
+    "price_out_per_1m": 0.5,
+    "price_cached_in_per_1m": 0.01,
+    "stop_rule": "worst-case cost reserved before every call (exact under concurrency); stop cleanly, write partial results, analyse complete A/B pairs only"
+  },
+  "task_success_rule": "all five core fields correct: vitals_trend (derived by stated rule), current_meds (set of generic names on any list at T), medication_issues (set of (issue_type, drug set) equal to gold), red_flags (set of gold rule_ids), escalate (== gold expected_action escalate). missing_info is exploratory only (field_missing_info): gold reflects the structured record (e.g. voice extraction failed) while the simulator reads the transcript, so it is construct-invalid for task success.",
+  "critical_miss_rule": "gold red flag not reported or escalate != true when gold escalates; or gold medication issue whose drugs appear in no reported issue. No answer counts as a miss.",
+  "denominators": "every started trial stays in the denominator (invalid answer, turn cap, provider error = failed). Only budget-stopped incomplete pairs are excluded and counted.",
+  "metrics": [
+    "task_success",
+    "pass_hat_k",
+    "field_* (6)",
+    "critical_miss_redflag",
+    "critical_miss_med",
+    "critical_miss_any",
+    "tool_calls",
+    "systems_opened",
+    "distinct_tools",
+    "repeated_opens",
+    "turns",
+    "tokens",
+    "wall_s",
+    "cost_usd",
+    "answer_valid",
+    "no_answer",
+    "input_tokens"
   ],
-  "k_trials": 4,
-  "model_env": "SIMUSER_MODEL (default gpt-6-luna)",
-  "endpoint_env": "SIMUSER_BASE_URL (default https://api.openai.com/v1); key in SIMUSER_API_KEY, never recorded",
-  "temperature": null,
-  "max_turns": 12,
-  "max_tokens_per_response": 2500,
-  "tool_mode": "json (gpt-6-luna rejects native tools)",
-  "same_model_prompts_temperature_both_arms": true,
-  "simulator_sees_gold": false,
-  "workers": 8,
-  "max_tokens_note": "400 gave empty output (hidden reasoning); 2500 gives valid answers",
-  "closed_vocabularies": "missing_info codes (chief_complaint, duration, allergy_status, vitals.temp_c), vitals_trend labels, red-flag ids with clinical phrases: identical prompt text in both arms, lists only, never per-case gold",
-  "request_params": "max_completion_tokens sent, temperature omitted by default (--legacy-max-tokens / --temperature opt in); a 400 naming an unsupported parameter is fixed and the same call retried; params sent recorded in results.json"
- },
- "budget": {
-  "usd_limit": 3.0,
-  "price_in_per_1m": 0.1,
-  "price_out_per_1m": 0.5,
-  "price_cached_in_per_1m": 0.01,
-  "stop_rule": "worst-case cost reserved before every call (exact under concurrency); stop cleanly, write partial results, analyse complete A/B pairs only"
- },
- "task_success_rule": "all five core fields correct: vitals_trend (derived by stated rule), current_meds (set of generic names on any list at T), medication_issues (set of (issue_type, drug set) equal to gold), red_flags (set of gold rule_ids), escalate (== gold expected_action escalate). missing_info is exploratory only (field_missing_info): gold reflects the structured record (e.g. voice extraction failed) while the simulator reads the transcript, so it is construct-invalid for task success.",
- "critical_miss_rule": "gold red flag not reported or escalate != true when gold escalates; or gold medication issue whose drugs appear in no reported issue. No answer counts as a miss.",
- "denominators": "every started trial stays in the denominator (invalid answer, turn cap, provider error = failed). Only budget-stopped incomplete pairs are excluded and counted.",
- "metrics": [
-  "task_success",
-  "pass_hat_k",
-  "field_* (6)",
-  "critical_miss_redflag",
-  "critical_miss_med",
-  "critical_miss_any",
-  "tool_calls",
-  "systems_opened",
-  "distinct_tools",
-  "repeated_opens",
-  "turns",
-  "tokens",
-  "wall_s",
-  "cost_usd",
-  "answer_valid",
-  "no_answer",
-  "input_tokens"
- ],
- "primary_comparison": "paired A-B difference in tool_calls per trial (effort), with task_success non-inferiority and critical-miss check; input_tokens per trial reported as reading burden",
- "statistics": {
-  "ci": "percentile 95%, patient(case)-level cluster bootstrap, 2000 resamples, paired draws A vs B",
-  "seed": 20260929,
-  "code": "eval/bootstrap.py"
- },
- "reading_thresholds": {
-  "supported_iff_all": [
-   "(a) lower 95% bound of task_success (B - A) >= -0.10",
-   "(b) lower 95% bound of paired tool_calls difference (A - B) > 0",
-   "(c) critical_miss_any rate B <= A (point estimate)"
-  ],
-  "otherwise": "not supported; report failed criteria; pass^k reported per arm"
- },
- "multiplicity": "one primary comparison (effort); all other metrics exploratory",
- "hashes_TO_FREEZE": {
-  "code_revision": null,
-  "run_py_sha256": null,
-  "config_sha256": null
- },
- "output": "eval/results/simuser/<evaluation_id>/{results.json,results.md,transcripts/}",
- "notes": "Small n, one simulator model: hypothesis-generating support for the Gate 2 assumption, not human usability and not clinical performance.",
- "planned_trials": "40 cases x 3 personas x k=4 x 2 arms = 960"
+  "primary_comparison": "paired A-B difference in tool_calls per trial (effort), with task_success non-inferiority and critical-miss check; input_tokens per trial reported as reading burden",
+  "statistics": {
+    "ci": "percentile 95%, patient(case)-level cluster bootstrap, 2000 resamples, paired draws A vs B",
+    "seed": 20260929,
+    "code": "eval/bootstrap.py"
+  },
+  "reading_thresholds": {
+    "supported_iff_all": [
+      "(a) lower 95% bound of task_success (B - A) >= -0.10",
+      "(b) lower 95% bound of paired tool_calls difference (A - B) > 0",
+      "(c) critical_miss_any rate B <= A (point estimate)"
+    ],
+    "otherwise": "not supported; report failed criteria; pass^k reported per arm"
+  },
+  "multiplicity": "one primary comparison (effort); all other metrics exploratory",
+  "output": "eval/results/simuser/<evaluation_id>/{results.json,results.md,transcripts/}",
+  "notes": "Small n, one simulator model: hypothesis-generating support for the Gate 2 assumption, not human usability and not clinical performance.",
+  "planned_trials": "40 cases x 3 personas x k=4 x 2 arms = 960",
+  "hashes": {
+    "code_revision": "e7e74de8f4792ab7ed9f75f2f99e1f3432cb281c",
+    "run_py_sha256": "6c7c5879b7a8945cbdd82cb947e1981b40a1e2f9897ea3fc5ec902e5a6a81d9a",
+    "config_sha256": "5c44355cf190ef0f1958f68ada1a6fa29d811e958c5d9b49966e008bf069d565"
+  },
+  "frozen": {
+    "at": "2026-09-29",
+    "by": "orchestrator (Opus 5.5) after checker CONDITIONAL PASS",
+    "accepted_checker_findings": [
+      "scripts/validate_manifest.py validates training-run manifests only; not applicable to this eval manifest (SPEC_PROBLEM).",
+      "Arm parity: metadata-only differences (A: derived_from/observed_at/event_time/lab timestamps/language/patient_ref; B: HN and queue). Clinical values identical in both arms. Disclosed.",
+      "Dataset path is absolute (local, gitignored data/synthetic); identified by dataset_manifest_sha256.",
+      "Provider error bodies (<=300 chars) are written to transcripts; transcripts are checked for key patterns before commit.",
+      "Held-out patient ids SYNH-* collide by name with archived s6r-heldout (seed 20260927); contents differ; no model was trained or tuned on either."
+    ]
+  }
 }
