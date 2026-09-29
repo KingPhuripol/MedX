@@ -2,3 +2,12 @@
 .filter > :first-child { flex: 1 1 280px; max-width: 480px; }
 .muted { color: var(--muted-foreground); font-size: 14px; }
 .complaint { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 767px) {
+  .list tbody tr { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "ref time" "complaint complaint" "action action"; gap: 4px 16px; align-items: center; }
+  .list tbody td { width: auto; padding: 0; }
+  .list tbody td::before { display: none; }
+  .cRef { grid-area: ref; }
+  .cTime { grid-area: time; justify-self: end; color: var(--muted-foreground); font-size: 14px; }
+  .cComplaint { grid-area: complaint; }
+  .cAction { grid-area: action; justify-self: end; }
+}

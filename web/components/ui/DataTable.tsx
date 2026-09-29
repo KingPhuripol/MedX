@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import s from "./primitives.module.css";
 
-export type Column<T> = { key: string; header: ReactNode; render: (row: T) => ReactNode; className?: string };
+export type Column<T> = { key: string; header: ReactNode; render: (row: T) => ReactNode; className?: string; hideLabel?: boolean };
 
 export function DataTable<T>({
   columns,
@@ -37,7 +37,7 @@ export function DataTable<T>({
           {rows.map((r) => (
             <tr key={rowKey(r)}>
               {columns.map((c) => (
-                <td key={c.key} className={c.className} data-label={typeof c.header === "string" ? c.header : c.key}>
+                <td key={c.key} className={c.className} data-label={c.hideLabel ? undefined : typeof c.header === "string" ? c.header : c.key}>
                   {c.render(r)}
                 </td>
               ))}

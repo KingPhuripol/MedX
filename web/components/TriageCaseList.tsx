@@ -60,22 +60,27 @@ export default function TriageCaseList() {
   }, [cases, query]);
 
   const columns: Column<CaseItem>[] = [
-    { key: "ref", header: "Case", render: (c) => <strong>{c.case_ref}</strong> },
+    { key: "ref", header: "Case", className: css.cRef, hideLabel: true, render: (c) => <strong>{c.case_ref}</strong> },
     {
       key: "complaint",
       header: "Chief complaint",
-      className: css.complaint,
+      className: `${css.complaint} ${css.cComplaint}`,
+      hideLabel: true,
       render: (c) =>
         c.chief_complaint ? <span lang="th">{c.chief_complaint}</span> : <span className={css.muted}>chief complaint not recorded</span>,
     },
     {
       key: "asof",
       header: "Evidence as of",
+      className: css.cTime,
+      hideLabel: true,
       render: (c) => <time dateTime={c.suggested_as_of}>{formatThaiTime(c.suggested_as_of)}</time>,
     },
     {
       key: "action",
       header: "Action",
+      className: css.cAction,
+      hideLabel: true,
       render: (c) => (
         <Button
           type="button"
@@ -121,14 +126,16 @@ export default function TriageCaseList() {
                 {rows.length}/{cases.length}
               </StatusChip>
             </div>
-            <DataTable
-              testId="case-list"
-              caption="Triage cases"
-              columns={columns}
-              rows={rows}
-              rowKey={(c) => c.case_ref}
-              empty={<p className={css.muted}>ไม่พบเคสที่ตรงกับคำค้น</p>}
-            />
+            <div className={css.list}>
+              <DataTable
+                testId="case-list"
+                caption="Triage cases"
+                columns={columns}
+                rows={rows}
+                rowKey={(c) => c.case_ref}
+                empty={<p className={css.muted}>ไม่พบเคสที่ตรงกับคำค้น</p>}
+              />
+            </div>
           </>
         )}
       </Section>
