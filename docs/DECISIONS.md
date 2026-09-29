@@ -142,3 +142,14 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
     - a correct code gets 200 and a real client secret from OpenAI, so the session config was accepted upstream (SPEC risk R3 cleared).
   - **Not yet verified:** the full audio round trip (phone mic → WebRTC → transcription → turn → spoken question). The owner tests this on a phone with synthetic role-play.
 - **Pytest note:** 5 data_factory out-path-guard failures appear only in the `/private/tmp` integration worktree, and `repo_root` flakes in the main checkout while another session writes `web/.next`. V1 does not touch data_factory.
+
+## 2026-09-29 — Demo redeployed with u6 + V1 voice (medx-demo-u4)
+- **Source:** main `43aa1d3` (code tree `fe7892f`), staged with `scripts/vercel_stage.sh` and deployed with `vercel deploy --prod`. Inspect id `2rjB7a6UV1EGX5U1bNQwaNSgYquA`. Env vars unchanged; `medx-demo-t1` untouched.
+- **Pre-deploy checks:** vitest 133/133 and tsc clean. `make test` had one failure on the first run and passed on rerun (2206 passed, 3 skipped). e2e was 45/46 on the first run; the theme-token check failed once and passed when rerun alone. Both are recorded as unexplained transients.
+- **Live smoke (browser, 2026-09-29):**
+  - `/api/health` reports ok with `default_provider: mock`.
+  - One-click nurse login works.
+  - Opening the seeded demo run shows the u6 Overview for SYN-2026-0017: 8 vitals with direction words, "ไม่มีบันทึก" for the missing temperature, allergy, meds with 1 open discrepancy, abnormal Troponin I, and the red-flag banner first.
+  - `/live` loads. No OpenAI key pattern appears in the HTML or in any of the 9 loaded scripts (word-bounded `sk-` check; `mask-image` CSS was a false positive).
+  - RBAC: as a nurse, `/api/home/physician` and `/api/home/pharmacist` return 403.
+- **Approved by:** project owner (chat, 2026-09-29), per the entry above.
