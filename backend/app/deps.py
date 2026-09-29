@@ -10,6 +10,7 @@ from sqlalchemy import Engine, select
 
 from .config import Settings
 from .db import sessions, users
+from .demo import verify_session
 from .roles import Role
 from .security import token_digest
 
@@ -39,6 +40,8 @@ def optional_user(request: Request) -> CurrentUser | None:
     token = request.cookies.get(SESSION_COOKIE)
     if not token:
         return None
+    if get_settings(request).public_demo:
+        return _demo_user(request, token)
     stmt = (
         select(users.c.id, users.c.username, users.c.role)
         .join(sessions, sessions.c.user_id == users.c.id)
@@ -50,6 +53,19 @@ def optional_user(request: Request) -> CurrentUser | None:
     if row is None:
         return None
     return CurrentUser(id=row.id, username=row.username, role=Role(row.role))
+
+
+def _demo_user(request: Request, token: str) -> CurrentUser | None:
+    """Slice d1: signed stateless session, resolved against this instance's seeded user of the same role."""
+    claim = verify_session(get_settings(request).session_secret, token)
+    if claim is None:
+        return None
+    username, role = claim
+    with get_engine(request).connect() as conn:
+        row = conn.execute(select(users.c.id, users.c.role).where(users.c.username == username)).first()
+    if row is None or row.role != role.value:
+        return None
+    return CurrentUser(id=row.id, username=username, role=role)
 
 
 def require_user(request: Request) -> CurrentUser:
