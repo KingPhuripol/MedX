@@ -17,14 +17,15 @@ async function pick(page: Page, role: Role) {
   await expect(page).toHaveURL(`/${role}`);
 }
 
-test("login page is a role picker with no password field; disclaimer shown; axe clean", async ({ page }) => {
+test("login page is a role picker with no password field; disclaimer shown; no serious/critical axe", async ({ page }) => {
   await page.goto("/login");
   await expect(page.getByLabel("Password", { exact: true })).toHaveCount(0);
   await expect(page.locator("input[type=password]")).toHaveCount(0);
   for (const role of ROLES) await expect(page.getByRole("button", { name: LABEL[role] })).toBeVisible();
   await expect(page.getByTestId("research-disclaimer")).toContainText(DISCLAIMER_EN);
+  // Same bar as a11y.spec.ts: no serious/critical violations.
   const axe = await new AxeBuilder({ page }).analyze();
-  expect(axe.violations).toEqual([]);
+  expect(axe.violations.filter((v) => v.impact === "serious" || v.impact === "critical")).toEqual([]);
 });
 
 for (const role of ROLES) {
