@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
 from pydantic import AwareDatetime, TypeAdapter, ValidationError
 
@@ -78,12 +79,20 @@ def finish(session_id: str, request: Request, user: CurrentUser = Depends(requir
     return _run(service.finish, _ctx(request, user), session_id, _now(request))
 
 
+async def _review_body(request: Request, user: CurrentUser = Depends(require_nurse)) -> tuple[CurrentUser, Any]:
+    """Read the body only after require_nurse (SPEC 3.2 order). Unparseable JSON becomes None, a row-2 schema failure."""
+    try:
+        return user, json.loads(await request.body())
+    except ValueError:  # JSONDecodeError and UnicodeDecodeError
+        return user, None
+
+
 @router.post("/sessions/{session_id}/review", status_code=201)
-def submit_review(session_id: str, request: Request, payload: Any = Body(...),
-                  user: CurrentUser = Depends(require_nurse)) -> dict:
+def submit_review(session_id: str, request: Request, auth_body: tuple = Depends(_review_body)) -> dict:
     """v2d: the nurse's six decisions become case evidence, then the shared triage assess runs at submitted_at."""
     from ..triage import router as triage_router  # local: casegraph imports app.voice, triage.router imports casegraph
 
+    user, payload = auth_body
     ctx, now = _ctx(request, user), _now(request)
     try:
         result = review.submit(ctx, session_id, payload, now)

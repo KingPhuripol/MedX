@@ -141,10 +141,10 @@ def test_unknown_session_404(client, app, login, audit_rows):
     r = client.post(f"/api/voice/sessions/{'f' * 32}/review", json=it.payload() | {"session_id": "f" * 32})
     assert (r.status_code, r.json()["detail"]) == (404, "voice session not found")
     assert _snapshot(client, app) == before
-    assert _denied(audit_rows)[-1]["details"] == {"status": 404, "reason": "voice session not found"}
+    assert [d["details"] for d in _denied(audit_rows)] == [{"status": 404, "reason": "voice session not found"}]
 
 
-def test_second_review_409(client, app, login):
+def test_second_review_409(client, app, login, audit_rows):
     login("nurse1")
     it = Intake(client, app, 1)
     body = it.payload()
@@ -154,9 +154,10 @@ def test_second_review_409(client, app, login):
     r = it.review(body, expect=None)
     assert (r.status_code, r.json()["detail"]) == (409, "review_exists")
     assert _snapshot(client, app) == before
+    assert [d["details"] for d in _denied(audit_rows)] == [{"status": 409, "reason": "review_exists"}]
 
 
-def test_guided_session_422(client, app, login):
+def test_guided_session_422(client, app, login, audit_rows):
     login("nurse1")
     it = Intake(client, app, 1)
     it.finish()
@@ -168,9 +169,10 @@ def test_guided_session_422(client, app, login):
     r = client.post(f"/api/voice/sessions/{gid}/review", json=body | {"session_id": gid})
     assert (r.status_code, r.json()["detail"]) == (422, "session_not_ambient")
     assert _snapshot(client, app) == before
+    assert [d["details"] for d in _denied(audit_rows)] == [{"status": 422, "reason": "session_not_ambient"}]
 
 
-def test_not_synthetic_422(client, app, login):
+def test_not_synthetic_422(client, app, login, audit_rows):
     login("nurse1")
     it = Intake(client, app, 1)
     it.finish()
@@ -183,9 +185,10 @@ def test_not_synthetic_422(client, app, login):
     r = client.post("/api/voice/sessions/nonsyn/review", json=body | {"session_id": "nonsyn", "patient_ref": "PT-0001"})
     assert (r.status_code, r.json()["detail"]) == (422, "not_synthetic")
     assert _snapshot(client, app) == before
+    assert [d["details"] for d in _denied(audit_rows)] == [{"status": 422, "reason": "not_synthetic"}]
 
 
-def test_case_ref_too_long_422(client, app, login):
+def test_case_ref_too_long_422(client, app, login, audit_rows):
     login("nurse1")
     ref = "SYN-" + "A" * 59  # 63 chars: "V-" + ref is 65 > 64
     it = Intake(client, app, hand_turns(ref, ["มาด้วยอาการอะไรคะ", "ปวดหัวค่ะ"]))
@@ -194,10 +197,13 @@ def test_case_ref_too_long_422(client, app, login):
     r = it.review(expect=None)
     assert (r.status_code, r.json()["detail"]) == (422, "case_ref_too_long")
     assert _snapshot(client, app) == before
+    assert [d["details"] for d in _denied(audit_rows)] == [{"status": 422, "reason": "case_ref_too_long"}]
 
 
+@pytest.mark.parametrize("malformed", [False, True])
 @pytest.mark.parametrize("user", ["physician1", "pharmacist1", None])
-def test_role_and_login(client, app, login, user):
+def test_role_and_login(client, app, login, audit_rows, user, malformed):
+    """Row 1 runs before the body is read (auth wins over malformed JSON) and writes no denied row."""
     login("nurse1")
     it = Intake(client, app, 1)
     it.finish()
@@ -206,6 +212,74 @@ def test_role_and_login(client, app, login, user):
     if user:
         login(user)
     before = counts(app)
-    r = it.review(body, expect=None)
-    assert r.status_code == (403 if user else 401)
+    if malformed:
+        r = client.post(f"/api/voice/sessions/{it.sid}/review", content=b"{",
+                        headers={"content-type": "application/json"})
+    else:
+        r = it.review(body, expect=None)
+    assert r.status_code == (403 if user else 401), r.text
     assert counts(app) == before
+    assert _denied(audit_rows) == []
+
+
+@pytest.mark.parametrize("raw", [b"{", b"", b"[]", b"null", b"\xff"])
+def test_parse_errors_422(client, app, login, audit_rows, raw):
+    """Malformed JSON, an empty body and a non-object are row-2 failures with one denied row."""
+    login("nurse1")
+    it = Intake(client, app, 1)
+    it.finish()
+    before = _snapshot(client, app)
+    r = client.post(f"/api/voice/sessions/{it.sid}/review", content=raw, headers={"content-type": "application/json"})
+    assert r.status_code == 422 and isinstance(r.json()["detail"], list), r.text
+    assert _snapshot(client, app) == before
+    assert [d["details"] for d in _denied(audit_rows)] == [{"status": 422, "reason": "schema_invalid"}]
+
+
+def test_order_unknown_session_schema_invalid(client, app, login, audit_rows):
+    login("nurse1")
+    it = Intake(client, app, 1)
+    it.finish()
+    before = _snapshot(client, app)
+    r = client.post(f"/api/voice/sessions/{'f' * 32}/review", json=it.payload() | {"extra": 1})
+    assert r.status_code == 422 and isinstance(r.json()["detail"], list), r.text
+    assert _snapshot(client, app) == before
+    assert [d["details"] for d in _denied(audit_rows)] == [{"status": 422, "reason": "schema_invalid"}]
+
+
+def test_order_guided_session_id_mismatch(client, app, login, audit_rows):
+    login("nurse1")
+    it = Intake(client, app, 1)
+    it.finish()
+    body = it.payload()
+    r = client.post("/api/voice/sessions", json={"patient_ref": "SYN-V2A-01", "data_class": "synthetic"})
+    gid = r.json()["session"]["session_id"]
+    assert client.post(f"/api/voice/sessions/{gid}/finish").status_code == 200
+    before = _snapshot(client, app)
+    r = client.post(f"/api/voice/sessions/{gid}/review", json=body)  # body session_id is the ambient one
+    assert (r.status_code, r.json()["detail"]) == (422, "session_id_mismatch")
+    assert _snapshot(client, app) == before
+    assert [d["details"] for d in _denied(audit_rows)] == [{"status": 422, "reason": "session_id_mismatch"}]
+
+
+def test_order_active_red_flag_without_ack(client, app, login, audit_rows):
+    login("nurse1")
+    it = Intake(client, app, 6)
+    before = _snapshot(client, app)
+    r = it.review(it.payload() | {"red_flag_acknowledged_at": None}, expect=None)
+    assert (r.status_code, r.json()["detail"]) == (409, "session_not_finished")
+    assert _snapshot(client, app) == before
+    assert [d["details"] for d in _denied(audit_rows)] == [{"status": 409, "reason": "session_not_finished"}]
+
+
+def test_order_second_review_with_bad_decisions(client, app, login, audit_rows):
+    login("nurse1")
+    it = Intake(client, app, 1)
+    it.finish()
+    bad = it.payload()
+    bad["decisions"] = bad["decisions"][:5]
+    it.review(it.payload())
+    before = _snapshot(client, app)
+    r = it.review(bad, expect=None)
+    assert (r.status_code, r.json()["detail"]) == (409, "review_exists")
+    assert _snapshot(client, app) == before
+    assert [d["details"] for d in _denied(audit_rows)] == [{"status": 409, "reason": "review_exists"}]
