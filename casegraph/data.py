@@ -80,7 +80,7 @@ class Turn(TypedData):
     """One dialogue turn. ``spoken_at`` is when it started; ``ended_at``/``turn_id`` when the source has them."""
 
     turn_index: int = Field(ge=0)
-    speaker: Literal["nurse", "patient", "relative", "agent"]
+    speaker: Literal["nurse", "patient", "relative", "agent", "unknown"]  # unknown: ambient, no diarization
     text: str = Field(min_length=1)
     spoken_at: AwareDatetime
     ended_at: AwareDatetime | None = None

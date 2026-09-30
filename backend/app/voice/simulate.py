@@ -72,3 +72,27 @@ def simulate(ctx: VoiceContext, fixture: dict[str, Any], patient_ref: str | None
 
     run.finish = finish(ctx, run.session_id, cursor)
     return run
+
+
+ASR_FIXTURE_MODEL = "fixture-text"
+
+
+def simulate_ambient(ctx: VoiceContext, fixture: dict[str, Any], patient_ref: str | None = None) -> SimRun:
+    """Ambient replay (slice v2a): post EVERY fixture turn in order as ``speaker:"unknown"`` ASR text, with a
+    fake clock at each turn's end. No policy-driven skipping; the session is finished after the last turn."""
+    started = start_session(ctx, StartSessionBody(
+        patient_ref=patient_ref or fixture["patient_ref"], data_class="synthetic", mode="ambient",
+    ), _dt(fixture["turns"][0]["started_at"]))
+    run = SimRun(dialogue_id=fixture["dialogue_id"], session_id=started["session"]["session_id"], start=started)
+    run.decisions.append({"action": started["next_action"],
+                          "statuses": {s["field"]: s for s in started["field_statuses"]}})
+    for src in fixture["turns"]:
+        body = AddTurnBody(speaker="unknown", text=src["text"], started_at=_dt(src["started_at"]),
+                           ended_at=_dt(src["ended_at"]), source="asr", asr_model=ASR_FIXTURE_MODEL)
+        resp, ms = timed_add_turn(ctx, run.session_id, body, body.ended_at + timedelta(milliseconds=100))
+        run.latencies_ms.append(ms)
+        run.turn_map[src["turn_id"]] = resp["turn"]["turn_id"]
+        run.posts.append({"fixture_turn_id": src["turn_id"], "body": body, "response": resp})
+        run.decisions.append({"action": resp["next_action"], "statuses": {s["field"]: s for s in resp["field_statuses"]}})
+    run.finish = finish(ctx, run.session_id, _dt(fixture["turns"][-1]["ended_at"]) + timedelta(seconds=1))
+    return run

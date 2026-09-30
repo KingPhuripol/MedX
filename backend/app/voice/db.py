@@ -3,7 +3,7 @@ the only mutable column is ``voice_sessions.status``."""
 
 from __future__ import annotations
 
-from sqlalchemy import Column, Engine, Integer, MetaData, String, Table, Text, UniqueConstraint, text
+from sqlalchemy import Column, Engine, Integer, MetaData, String, Table, Text, UniqueConstraint, inspect, text
 
 voice_metadata = MetaData()
 
@@ -16,6 +16,7 @@ voice_sessions = Table(
     Column("created_at", String(40), nullable=False),
     Column("created_by", Integer, nullable=False),
     Column("status", String(16), nullable=False),
+    Column("mode", String(16), nullable=True),  # v2a: guided | ambient; NULL (pre-v2a row) reads as guided
 )
 
 voice_turns = Table(
@@ -28,7 +29,7 @@ voice_turns = Table(
     Column("text", Text, nullable=False),
     Column("started_at", String(40), nullable=False),
     Column("ended_at", String(40), nullable=False),
-    Column("field", String(32), nullable=True),  # agent turns: the field asked
+    Column("field", String(32), nullable=True),  # agent turns and classified nurse-question turns: the field asked
     Column("utterance_id", String(64), nullable=True),  # agent turns: allowlist id
     Column("nurse_attention", Integer, nullable=False, default=0),
     UniqueConstraint("session_id", "seq", name="uq_voice_turns_session_seq"),
@@ -61,16 +62,19 @@ voice_extractions = Table(
     Column("id", Integer, primary_key=True, autoincrement=True),
     Column("session_id", String(32), nullable=False, index=True),
     Column("turn_id", String(32), nullable=False),
-    Column("status", String(16), nullable=False),  # ok | error
+    Column("status", String(16), nullable=False),  # ok | error | skipped (nurse question, no gateway call)
     Column("reason", String(64), nullable=True),
     Column("provider", String(64), nullable=False),
     Column("model_version", String(128), nullable=False),
     Column("request_sha256", String(64), nullable=False),
     Column("latency_ms", String(32), nullable=False),
+    Column("held_json", Text, nullable=True),  # v2a: held (not written) facts of this call, JSON list
 )
 
 APPEND_ONLY = ("voice_turns", "voice_facts", "voice_extractions")
-_SESSION_FIXED_COLS = ("session_id", "patient_ref", "data_class", "created_at", "created_by")
+_SESSION_FIXED_COLS = ("session_id", "patient_ref", "data_class", "created_at", "created_by", "mode")
+# Columns added after the first release: added to an existing database idempotently.
+_ADDED_COLUMNS = (("voice_sessions", "mode", "VARCHAR(16)"), ("voice_extractions", "held_json", "TEXT"))
 
 
 def _sqlite_statements() -> list[str]:
@@ -85,8 +89,9 @@ def _sqlite_statements() -> list[str]:
         """CREATE TRIGGER IF NOT EXISTS voice_sessions_no_delete BEFORE DELETE ON voice_sessions
            BEGIN SELECT RAISE(ABORT, 'voice_sessions rows cannot be deleted'); END"""
     )
+    stmts.append("DROP TRIGGER IF EXISTS voice_sessions_fixed_cols")  # recreated with the current column list
     stmts.append(
-        f"""CREATE TRIGGER IF NOT EXISTS voice_sessions_fixed_cols
+        f"""CREATE TRIGGER voice_sessions_fixed_cols
             BEFORE UPDATE OF {", ".join(_SESSION_FIXED_COLS)} ON voice_sessions
             BEGIN SELECT RAISE(ABORT, 'only voice_sessions.status is mutable'); END"""
     )
@@ -125,6 +130,11 @@ def _pg_statements() -> list[str]:
 def create_voice_schema(engine: Engine) -> None:
     """Idempotently create the voice tables and their append-only triggers."""
     voice_metadata.create_all(engine)
+    with engine.begin() as conn:
+        insp = inspect(conn)
+        for table, column, sql_type in _ADDED_COLUMNS:
+            if column not in {c["name"] for c in insp.get_columns(table)}:
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {sql_type}"))
     dialect = engine.dialect.name
     if dialect == "sqlite":
         statements = _sqlite_statements()
