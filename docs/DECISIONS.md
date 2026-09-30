@@ -173,3 +173,37 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
   - D4: clinical sign-off of the Thai question allowlist and red-flag list.
   - D5: deploy `medx-mobile`.
 - **Approved by:** project owner (chat, 2026-09-30). Plan: `~/.claude/plans/pasted-content-id-524c-users-king-phuri-curious-mccarthy.md`.
+
+## 2026-09-30 — D1 approved: LiveKit Cloud + OpenAI STT for synthetic audio (slice v2b)
+- **What:** the v2b voice worker may use LiveKit Cloud (free Build plan) as the audio transport, with OpenAI `gpt-4o-mini-transcribe` (Thai) as the STT provider, for **synthetic audio only**.
+- **Guard change:** the provider-isolation guard may allow the `livekit` and `openai` packages only in `voice_agent/` and in the backend LiveKit token module. They stay forbidden everywhere else.
+- **Credentials:** `LIVEKIT_URL`, `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` are set by the owner directly in `.env`, never in chat. All automated tests mock LiveKit and OpenAI.
+- **Approved by:** project owner (chat, 2026-09-30).
+
+## 2026-09-30 — v2c mobile design comps approved
+- **What:** the owner approved the static comps and design section in `slices/v2c/` (branch `factory/v2c`, commit 5a17ed9) as the build target for `mobile/`.
+- **UI-SPEC exceptions, for `mobile/` only:**
+  - line-height 1.4 for 20/28px Thai headings;
+  - a round record button;
+  - the next-question box filled with `--primary-deep`.
+- **Also approved:**
+  - Recording cannot start until the nurse ticks "แจ้งผู้ป่วยแล้วว่าจะบันทึกเสียงบทสนทนา". Backend audit of that acknowledgement belongs to slice v2d.
+  - The transcript panel is hidden while a red flag is unacknowledged.
+  - The Thai question allowlist and red-flag lists stay placeholders pending D4.
+- **Approved by:** project owner (chat, 2026-09-30).
+
+## 2026-09-30 — D1 superseded: OpenAI Realtime transcription-only instead of LiveKit
+- **What:** the owner chose not to use LiveKit Cloud. The mobile scribe connects straight from the phone to the OpenAI Realtime API over WebRTC in a **transcription-only** session:
+  - session type `transcription`, model `gpt-4o-mini-transcribe`, language `th`, server VAD;
+  - no model output, no instructions, no tools.
+  The backend mints a short-lived client secret, extending `backend/app/voice_realtime.py`, and the key stays server-side. Synthetic audio only.
+- **Deviation from Proposal §3.1, accepted by the owner:**
+  - no LiveKit Agents and no cascade;
+  - audio bypasses the Model Gateway, the same known weakness as V1. The gateway still handles extraction, and the backend audits every mint and turn.
+  The slice report and the final documentation must state this deviation.
+- **Slice changes:**
+  - The LiveKit slice v2b is stopped. Its branch `factory/v2b` keeps a spec commit and uncommitted work; it is not merged and not deleted.
+  - New slice **v2t** covers the transcription session.
+  - v2c is re-planned against the v2t contract.
+- **Scope of the previous approvals:** the 2026-09-29 OpenAI Realtime approval (synthetic audio only) already covers this vendor. The D1 LiveKit guard change is void; `livekit` stays forbidden.
+- **Approved by:** project owner (chat, 2026-09-30).
