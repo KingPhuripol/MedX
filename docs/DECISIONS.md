@@ -207,3 +207,14 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
   - v2c is re-planned against the v2t contract.
 - **Scope of the previous approvals:** the 2026-09-29 OpenAI Realtime approval (synthetic audio only) already covers this vendor. The D1 LiveKit guard change is void; `livekit` stays forbidden.
 - **Approved by:** project owner (chat, 2026-09-30).
+
+## 2026-09-30 — Phone testing of the mobile scribe via a temporary HTTPS tunnel
+- **What:** to test `mobile/` on a real phone, where the microphone needs HTTPS, the local dev stack may be exposed through a temporary `cloudflared` quick tunnel.
+  - Scope: local backend plus `mobile/`.
+  - The tunnel is opened only for a test session and closed right after.
+  - Data: synthetic patients and synthetic role-play only.
+- **Preconditions:**
+  - The OpenAI key should be rotated first (D3).
+  - Access goes through the existing nurse login, plus the voice access code when set.
+- **Not approved:** a permanent deployment of `medx-mobile` (D5 is still pending).
+- **Approved by:** project owner (chat, 2026-09-30).
