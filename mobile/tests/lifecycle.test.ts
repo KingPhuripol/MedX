@@ -224,3 +224,64 @@ describe("single peer connection", () => {
     expect(b.rtc.open).toBe(1);
   });
 });
+
+describe("hard stop at max_session_seconds (carried v2t condition 2)", () => {
+  it("closes the peer connection at mint + max even when the data channel opened late and speech never stopped", async () => {
+    const b = installBrowser();
+    installApi();
+    const { rec } = await makeRecorder();
+    b.rtc.autoOpen = false;
+    rec.press();
+    await vi.advanceTimersByTimeAsync(0);
+    const pc0 = b.rtc.last();
+    await vi.advanceTimersByTimeAsync(6_000); // slow ICE: the channel opens 6 s after the mint
+    pc0.openNow();
+    expect(rec.getSnapshot().rec).toBe("listening");
+    b.rtc.emit({ type: "input_audio_buffer.speech_started", item_id: "long" }, pc0);
+    await vi.advanceTimersByTimeAsync(600_000 - 6_000 - 1);
+    expect(pc0.closed).toBe(false);
+    b.rtc.autoOpen = true;
+    await vi.advanceTimersByTimeAsync(1);
+    expect(pc0.closed).toBe(true); // at 600 s after the mint, before the open-relative rollover (601 s)
+    expect(b.rtc.pcs.length).toBe(2);
+    expect(rec.getSnapshot().rec).toBe("listening");
+    expect(b.rtc.maxOpen).toBe(1);
+  });
+
+  it("a short max_session_seconds (< 30 s) does not roll over in a loop, and a paused connection still ends silently", async () => {
+    const b = installBrowser();
+    const api = installApi({ mint: [{ status: 200, body: { ...(await import("./fixtures/realtime-session.json")).default, max_session_seconds: 20 } }] });
+    const { rec } = await makeRecorder();
+    rec.press();
+    await vi.advanceTimersByTimeAsync(9_000);
+    expect(b.rtc.pcs).toHaveLength(1);
+    expect(mints(api)).toBe(1);
+    rec.pause();
+    await vi.advanceTimersByTimeAsync(11_000);
+    expect(b.rtc.last().closed).toBe(true);
+    expect(b.rtc.open).toBe(0);
+    expect(rec.getSnapshot().rec).toBe("paused"); // a paused connection ends silently (T8)
+    await rec.resume();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(rec.getSnapshot().rec).toBe("listening");
+    expect(mints(api)).toBe(2);
+  });
+
+  it("a connection held open by a finish drain is still closed at max", async () => {
+    const b = installBrowser();
+    const api = installApi({ mint: [{ status: 200, body: { ...(await import("./fixtures/realtime-session.json")).default, max_session_seconds: 40 } }] });
+    api.on[`POST /api/voice/sessions/${(await import("./fixtures/scenario")).startResponse().session.session_id}/turns`] = () => new Promise(() => {}); // hangs
+    const { rec } = await makeRecorder();
+    rec.press();
+    await vi.advanceTimersByTimeAsync(0);
+    b.rtc.emit({ type: "input_audio_buffer.speech_started", item_id: "i1" });
+    await vi.advanceTimersByTimeAsync(34_000);
+    b.rtc.say("i1", "หนึ่ง");
+    void rec.finish(); // drains up to 5 s, which would run past 40 s
+    await vi.advanceTimersByTimeAsync(0);
+    expect(rec.getSnapshot().rec).toBe("finishing");
+    await vi.advanceTimersByTimeAsync(6_000);
+    expect(b.rtc.last().closed).toBe(true);
+    expect(b.rtc.pcs).toHaveLength(1); // no reconnect while finishing
+  });
+});

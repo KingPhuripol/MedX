@@ -4,9 +4,10 @@
  */
 import { act, render } from "@testing-library/react";
 import { createElement } from "react";
-import { afterEach, vi } from "vitest";
+import { afterEach, expect, vi } from "vitest";
 
 import { Recording } from "@/components/Recording";
+import { ALLOWED_CLIENT_EVENTS } from "@/lib/realtime";
 import { Recorder, type RecorderInit } from "@/lib/recorder";
 import { fromStart } from "@/lib/voice";
 
@@ -31,7 +32,17 @@ export class FakeDC {
   }
 }
 
+/** Every fake WebRTC stack created in a test; checked after each test (V2C-C8, carried v2t condition 1). */
+const allRtc: FakeRtc[] = [];
+afterEach(() => {
+  const types = allRtc.splice(0).flatMap((r) => r.sent.map((f) => (JSON.parse(f) as { type: string }).type));
+  expect(types.filter((t) => !ALLOWED_CLIENT_EVENTS.includes(t))).toEqual([]);
+});
+
 export class FakeRtc {
+  constructor() {
+    allRtc.push(this);
+  }
   pcs: FakePC[] = [];
   sent: string[] = [];
   open = 0;

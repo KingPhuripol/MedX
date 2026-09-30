@@ -104,7 +104,7 @@ export class Recorder {
   private asrModel = "";
   private accessCode: string;
   private config: RealtimeConfig | null;
-  private t: Partial<Record<"backoff" | "grace" | "open" | "roll", ReturnType<typeof setTimeout>>> = {};
+  private t: Partial<Record<"backoff" | "grace" | "open" | "roll" | "hard", ReturnType<typeof setTimeout>>> = {};
   readonly queue: TurnQueue<TurnResponse, SessionGet>;
   readonly sessionId: string;
   private onAuthLost: () => void;
@@ -378,6 +378,7 @@ export class Recorder {
     if (!this.micLive()) return { kind: "fatal", error: "no_mic" };
     this.asrModel = s.transcribe_model;
     this.maxMs = Math.max(0, s.max_session_seconds) * 1000;
+    const mintedAt = Date.now();
     this.closeConn(); // at most one peer connection at any time
     const gen = this.gen;
     try {
@@ -396,6 +397,9 @@ export class Recorder {
         return { kind: "aborted" };
       }
       this.conn = conn;
+      // Hard stop: the peer connection never outlives max_session_seconds counted from the mint, whatever the
+      // rollover, drain or state machine is doing (the vendor secret's session clock starts at the mint).
+      if (this.maxMs) this.t.hard = setTimeout(() => this.hardStop(gen), Math.max(0, this.maxMs - (Date.now() - mintedAt)));
       conn.setMic(true);
       if (this.snap.rec !== "listening") {
         this.t.open = setTimeout(() => gen === this.gen && this.snap.rec !== "listening" && this.onDrop(), OPEN_TIMEOUT_MS);
@@ -413,6 +417,7 @@ export class Recorder {
     clearTimeout(this.t.grace);
     clearTimeout(this.t.open);
     clearTimeout(this.t.roll);
+    clearTimeout(this.t.hard);
     this.conn?.close();
     this.conn = null;
     this.speaking = false;
@@ -476,8 +481,9 @@ export class Recorder {
     clearTimeout(this.t.roll);
     if (!this.maxMs) return;
     const gen = this.gen;
-    const quietAt = this.maxMs - ROLLOVER_QUIET_MS;
-    const hardAt = this.maxMs - ROLLOVER_HARD_MS;
+    // Never earlier than half the limit, so a short limit cannot make the rollover fire at once in a loop.
+    const quietAt = Math.max(this.maxMs / 2, this.maxMs - ROLLOVER_QUIET_MS);
+    const hardAt = Math.max(this.maxMs / 2, this.maxMs - ROLLOVER_HARD_MS);
     const check = () => {
       if (gen !== this.gen) return;
       const elapsed = Date.now() - this.openedAt;
@@ -504,6 +510,21 @@ export class Recorder {
     this.closeConn();
     this.queue.dropPending();
     if (this.snap.rec !== "listening") return;
+    this.reconnectNow();
+  }
+
+  /** `max_session_seconds` reached on this connection: close it unconditionally, then reconnect if live. */
+  private hardStop(gen: number) {
+    if (gen !== this.gen) return;
+    const rec = this.snap.rec;
+    this.closeConn();
+    this.queue.dropPending();
+    if (rec === "listening") this.reconnectNow();
+    else if (rec === "connecting" || rec === "reconnecting") this.scheduleReconnect();
+    // paused / finishing / error: stay closed; resume or retry re-mints (T8)
+  }
+
+  private reconnectNow() {
     this.patch({ attempt: 0 });
     this.setRec("connecting");
     void this.attemptNow();

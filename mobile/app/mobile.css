@@ -166,6 +166,8 @@ svg.i-fill { fill: currentColor; stroke: none; }
 .line { display: grid; grid-template-columns: 48px 1fr; gap: 8px; font-size: 16px; line-height: 1.5; animation: fade 150ms ease-out; }
 .line time { font-size: 14px; color: var(--muted-foreground); padding-top: 2px; }
 .line--interim span { color: var(--muted-foreground); }
+.line--failed { font-size: 14px; color: var(--warning-fg); align-items: center; }
+.line--failed svg { justify-self: start; }
 .line--flag span { background: var(--critical-bg); color: var(--critical-fg); font-weight: 700; border-radius: 4px; padding: 0 4px; }
 .heard--empty { mask-image: none; -webkit-mask-image: none; justify-content: center; text-align: center; color: var(--muted-foreground); font-size: 16px; padding: 0 16px; }
 

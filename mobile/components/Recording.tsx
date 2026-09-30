@@ -328,10 +328,12 @@ export function Recording({ recorder, patient, onFinished, onBackToStart }: Reco
   else if (rec === "error") dockTop = <NoticeBox notice={errorNotice(snap.errorKind, captured)} icon="triangle-alert" tone="warn" />;
   else if (rec === "reconnecting") dockTop = <NoticeBox notice={COPY.rec.reconnecting(Math.max(1, snap.attempt))} icon="loader" tone="warn" spin />;
   else if (rec === "paused") dockTop = <NoticeBox notice={snap.systemPause ? COPY.rec.systemPause : COPY.rec.paused} icon="pause" tone="muted" />;
-  else if (!snap.lines.length && !snap.interim) {
+  else if (!snap.lines.length && !snap.interim && !snap.failedSegments) {
     dockTop = <div className="heard heard--empty">{COPY.rec.transcriptEmpty}</div>;
   } else {
-    const last = snap.lines.slice(-(snap.interim ? 2 : 3));
+    // A failed segment is surfaced in the dock itself, not only in the sheet: silent loss must stay visible.
+    const failed = snap.failedSegments > 0;
+    const last = snap.lines.slice(-(3 - (snap.interim ? 1 : 0) - (failed ? 1 : 0)));
     dockTop = (
       <button type="button" className="heard" aria-label={COPY.rec.transcriptOpen} onClick={() => setSheet(true)} data-testid="transcript">
         {last.map((l) => (
@@ -344,6 +346,12 @@ export function Recording({ recorder, patient, onFinished, onBackToStart }: Reco
           <span className="line line--interim">
             <time className="num">{hhmm(snap.interim.atMs)}</time>
             <span>{snap.interim.text}…</span>
+          </span>
+        )}
+        {failed && (
+          <span className="line line--failed" data-testid="failed-segments">
+            <Icon name="triangle-alert" size="sm" className="warn-ic" />
+            <span>{PROPOSED_V2C.failedSegments(snap.failedSegments)}</span>
           </span>
         )}
       </button>

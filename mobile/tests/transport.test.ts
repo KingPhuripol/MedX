@@ -113,7 +113,7 @@ describe("transport (C7)", () => {
     expect(rec.getSnapshot().lines).toEqual(before.lines);
     expect(rec.getSnapshot().interim).toBeNull();
     expect(api.posted).toHaveLength(0);
-    for (const f of b.rtc.sent) expect(JSON.parse(f).type).toBe("input_audio_buffer.clear");
+    expect(b.rtc.sent).toEqual([]); // the recorder itself sends nothing at all
   });
 
   it("the ambiguous failure (network error, turn already stored) posts 0 extra through the recorder", async () => {

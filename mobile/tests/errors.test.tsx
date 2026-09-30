@@ -147,3 +147,33 @@ describe("T7 error mapping", () => {
     expect(state()).toBe("listening");
   });
 });
+
+describe("vendor failure events are surfaced, never silent (carried v2t condition 1)", () => {
+  it("an `error` event on the data channel → visible reconnecting notice, then back to listening; facts kept", async () => {
+    const r = await renderRecording();
+    await capture(r);
+    act(() => r.b.rtc.emit({ type: "error", error: { type: "server_error", message: "fixture" } }));
+    await tick();
+    expect(state()).toBe("reconnecting");
+    expect(screen.getByText(COPY.rec.reconnecting(1).head)).toBeInTheDocument();
+    stillShown();
+    await tick(1000);
+    expect(state()).toBe("listening");
+    expect(r.b.rtc.open).toBe(1);
+  });
+
+  it("a `.failed` transcription is shown in the dock (not only the sheet) and nothing is posted for it", async () => {
+    const r = await renderRecording();
+    await capture(r);
+    act(() => {
+      r.b.rtc.emit({ type: "conversation.item.input_audio_transcription.delta", item_id: "i2", delta: "เจ็บ" });
+      r.b.rtc.emit({ type: "input_audio_buffer.committed", item_id: "i2" });
+      r.b.rtc.emit({ type: "conversation.item.input_audio_transcription.failed", item_id: "i2", error: { message: "fixture" } });
+    });
+    await tick();
+    expect(screen.getByTestId("failed-segments")).toHaveTextContent(PROPOSED_V2C.failedSegments(1));
+    expect(within(screen.getByTestId("transcript")).queryByText(/เจ็บ/)).toBeNull();
+    expect(r.api.posted).toHaveLength(1);
+    stillShown();
+  });
+});
