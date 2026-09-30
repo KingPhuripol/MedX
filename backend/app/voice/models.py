@@ -31,8 +31,10 @@ SEVERITY_CATEGORIES = ("mild", "moderate", "severe")
 ALLERGY_VALUES = ("none", "present")
 ISO_DURATION = re.compile(r"^P(?:T\d{1,4}[HM]|\d{1,4}[DWMY])$")
 
-Speaker = Literal["agent", "patient", "relative", "nurse"]
-HumanSpeaker = Literal["patient", "relative", "nurse"]
+# "unknown": ambient single-mic intake without diarization (slice v2a).
+Speaker = Literal["agent", "patient", "relative", "nurse", "unknown"]
+HumanSpeaker = Literal["patient", "relative", "nurse", "unknown"]
+Mode = Literal["guided", "ambient"]
 FactState = Literal["KNOWN", "UNKNOWN", "REFUSED"]
 Status = Literal["MISSING", "KNOWN", "UNKNOWN", "REFUSED"]
 FactField = Literal[
@@ -40,6 +42,7 @@ FactField = Literal[
     "current_medications", "relevant_history",
 ]
 HandoffReason = Literal["complete", "attempts_exhausted", "nurse_attention_phrase", "extraction_unavailable"]
+AmbientReason = Literal["complete", "nurse_attention_phrase", "extraction_unavailable"]
 
 
 class _Strict(BaseModel):
@@ -89,6 +92,18 @@ class NextAction(_Strict):
     missing_fields: list[str] = Field(default_factory=list)
 
 
+class AmbientAction(_Strict):
+    """Ambient next action (v2a SPEC 3.3). Shown to the nurse on screen, never spoken: there is no
+    ``utterance_th``/``action`` key, so it cannot be fed to a speaking client."""
+
+    kind: Literal["prompt_nurse", "complete", "handoff"]
+    field: str | None
+    suggested_question_id: str | None
+    suggested_question_th: str | None
+    reason: AmbientReason | None
+    missing_fields: list[str] = Field(default_factory=list)
+
+
 # ---- extractor output (validated before anything is written) ----
 
 
@@ -112,6 +127,7 @@ class ExtractOutput(_Strict):
 class StartSessionBody(_Strict):
     patient_ref: str = Field(pattern=r"^SYN-[A-Za-z0-9-]{1,60}$")
     data_class: Literal["synthetic"]
+    mode: Mode = "guided"  # immutable for the session
 
 
 class AddTurnBody(_Strict):

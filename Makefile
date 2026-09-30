@@ -13,7 +13,7 @@ API_PORT ?= 8000
 WEB_PORT ?= 3000
 export API_PORT WEB_PORT
 
-.PHONY: install test dev e2e e2e-pharma pharma-eval test-pg clean data audit eval-voice research-dry-run triage-eval eval-e1-dev eval-e1-test eval-i2-dev eval-i2-test care-eval
+.PHONY: install test dev e2e e2e-pharma pharma-eval test-pg clean data audit eval-voice eval-voice-ambient research-dry-run triage-eval eval-e1-dev eval-e1-test eval-i2-dev eval-i2-test care-eval
 
 SEED ?= 20260926
 OUT ?= data/synthetic/v1
@@ -86,6 +86,10 @@ audit: $(VENV)/.installed
 ## Voice intake system evaluation (mock rules, synthetic fixtures) -> slices/s3/eval/voice_intake_eval.json
 eval-voice: install
 	$(PY) -m app.voice.eval
+
+## Ambient intake system evaluation (v2a; mock rules, synthetic ambient text, no audio/ASR) -> slices/v2a/eval/ambient_intake_eval.json
+eval-voice-ambient: install
+	$(PY) -m app.voice.eval_ambient
 
 ## s4 System Evaluation on synthetic fixtures -> slices/s4/eval/metrics_v1.json (offline, mock provider).
 triage-eval: install

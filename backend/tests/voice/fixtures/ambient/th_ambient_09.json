@@ -1,0 +1,96 @@
+{
+  "dialogue_id": "th_ambient_09",
+  "mode": "ambient",
+  "source_dialogue_id": "th_intake_09",
+  "source_sha256": "6fce3c984aa179f2dce8155240a9a3fadc2a21fa235dc88d0459e8503d3ee994",
+  "synthetic": true,
+  "author": "v2a-builder (converted from the S3 synthetic script; former agent turns rewritten as nurse questions; no real patient)",
+  "scenario_tags": [
+    "relative_speaker",
+    "nurse_attention",
+    "thai_number_words",
+    "dev"
+  ],
+  "patient_ref": "SYN-V2A-09",
+  "turns": [
+    {
+      "turn_id": "t01",
+      "speaker": "unknown",
+      "text": "น้องเป็นอะไรมาคะ",
+      "started_at": "2026-01-13T02:00:00Z",
+      "ended_at": "2026-01-13T02:00:03Z"
+    },
+    {
+      "turn_id": "t02",
+      "speaker": "unknown",
+      "text": "ลูกตัวร้อนค่ะ ไข้ขึ้นสูง",
+      "started_at": "2026-01-13T02:00:05Z",
+      "ended_at": "2026-01-13T02:00:10Z"
+    },
+    {
+      "turn_id": "t03",
+      "speaker": "unknown",
+      "text": "เป็นมากี่วันแล้วคะ",
+      "started_at": "2026-01-13T02:00:12Z",
+      "ended_at": "2026-01-13T02:00:15Z"
+    },
+    {
+      "turn_id": "t04",
+      "speaker": "unknown",
+      "text": "สองวันแล้วค่ะ",
+      "started_at": "2026-01-13T02:00:17Z",
+      "ended_at": "2026-01-13T02:00:21Z"
+    },
+    {
+      "turn_id": "t05",
+      "speaker": "unknown",
+      "text": "ไข้สูงมากไหมคะ",
+      "started_at": "2026-01-13T02:00:23Z",
+      "ended_at": "2026-01-13T02:00:26Z"
+    },
+    {
+      "turn_id": "t06",
+      "speaker": "unknown",
+      "text": "ไข้สูงมากค่ะ เมื่อกี้ลูกชักด้วยค่ะ",
+      "started_at": "2026-01-13T02:00:28Z",
+      "ended_at": "2026-01-13T02:00:34Z"
+    }
+  ],
+  "gold_question_turns": {
+    "t01": "chief_complaint",
+    "t03": "onset_duration",
+    "t05": "severity"
+  },
+  "gold_facts": [
+    {
+      "field": "chief_complaint",
+      "state": "KNOWN",
+      "value": "fever",
+      "items": null,
+      "span_turn_ids": [
+        "t02"
+      ]
+    },
+    {
+      "field": "onset_duration",
+      "state": "KNOWN",
+      "value": "P2D",
+      "items": null,
+      "span_turn_ids": [
+        "t04"
+      ]
+    }
+  ],
+  "answers_by_field": {
+    "chief_complaint": [
+      "t02"
+    ],
+    "onset_duration": [
+      "t04"
+    ],
+    "severity": [
+      "t06"
+    ]
+  },
+  "gold_nurse_attention": true
+}

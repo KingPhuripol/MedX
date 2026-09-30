@@ -1,0 +1,199 @@
+{
+  "dialogue_id": "th_ambient_13",
+  "mode": "ambient",
+  "source_dialogue_id": "th_intake_13",
+  "source_sha256": "7022965625b6ed9cdae00633bf92bacc70b5ddba5c3a13844d8b3e2ac427e0a1",
+  "synthetic": true,
+  "author": "v2a-builder (converted from the S3 synthetic script; former agent turns rewritten as nurse questions; no real patient)",
+  "scenario_tags": [
+    "allergy_present",
+    "meds_none",
+    "heldout"
+  ],
+  "patient_ref": "SYN-V2A-13",
+  "turns": [
+    {
+      "turn_id": "t01",
+      "speaker": "unknown",
+      "text": "มีอาการอะไรมาคะ",
+      "started_at": "2026-01-17T02:00:00Z",
+      "ended_at": "2026-01-17T02:00:03Z"
+    },
+    {
+      "turn_id": "t02",
+      "speaker": "unknown",
+      "text": "ฉี่แสบขัดค่ะ",
+      "started_at": "2026-01-17T02:00:05Z",
+      "ended_at": "2026-01-17T02:00:09Z"
+    },
+    {
+      "turn_id": "t03",
+      "speaker": "unknown",
+      "text": "เริ่มเป็นวันไหนคะ",
+      "started_at": "2026-01-17T02:00:11Z",
+      "ended_at": "2026-01-17T02:00:14Z"
+    },
+    {
+      "turn_id": "t04",
+      "speaker": "unknown",
+      "text": "เป็นมา 2 วันค่ะ",
+      "started_at": "2026-01-17T02:00:16Z",
+      "ended_at": "2026-01-17T02:00:21Z"
+    },
+    {
+      "turn_id": "t05",
+      "speaker": "unknown",
+      "text": "ถ้าให้คะแนนเต็มสิบ แสบประมาณเท่าไหร่คะ",
+      "started_at": "2026-01-17T02:00:23Z",
+      "ended_at": "2026-01-17T02:00:26Z"
+    },
+    {
+      "turn_id": "t06",
+      "speaker": "unknown",
+      "text": "สัก 4 ค่ะ",
+      "started_at": "2026-01-17T02:00:28Z",
+      "ended_at": "2026-01-17T02:00:32Z"
+    },
+    {
+      "turn_id": "t07",
+      "speaker": "unknown",
+      "text": "เคยแพ้ยาตัวไหนบ้างคะ",
+      "started_at": "2026-01-17T02:00:34Z",
+      "ended_at": "2026-01-17T02:00:37Z"
+    },
+    {
+      "turn_id": "t08",
+      "speaker": "unknown",
+      "text": "แพ้ amoxicillin กับ ibuprofen ค่ะ",
+      "started_at": "2026-01-17T02:00:39Z",
+      "ended_at": "2026-01-17T02:00:45Z"
+    },
+    {
+      "turn_id": "t09",
+      "speaker": "unknown",
+      "text": "มียาอะไรที่ทานประจำบ้างคะ",
+      "started_at": "2026-01-17T02:00:47Z",
+      "ended_at": "2026-01-17T02:00:50Z"
+    },
+    {
+      "turn_id": "t10",
+      "speaker": "unknown",
+      "text": "ไม่มีค่ะ",
+      "started_at": "2026-01-17T02:00:52Z",
+      "ended_at": "2026-01-17T02:00:56Z"
+    },
+    {
+      "turn_id": "t11",
+      "speaker": "unknown",
+      "text": "มีโรคประจำตัวหรือเปล่าคะ",
+      "started_at": "2026-01-17T02:00:58Z",
+      "ended_at": "2026-01-17T02:01:01Z"
+    },
+    {
+      "turn_id": "t12",
+      "speaker": "unknown",
+      "text": "เบาหวานค่ะ คุมด้วยการคุมอาหาร",
+      "started_at": "2026-01-17T02:01:03Z",
+      "ended_at": "2026-01-17T02:01:08Z"
+    }
+  ],
+  "gold_question_turns": {
+    "t01": "chief_complaint",
+    "t03": "onset_duration",
+    "t05": "severity",
+    "t07": "allergy_status",
+    "t09": "current_medications",
+    "t11": "relevant_history"
+  },
+  "gold_facts": [
+    {
+      "field": "chief_complaint",
+      "state": "KNOWN",
+      "value": "dysuria",
+      "items": null,
+      "span_turn_ids": [
+        "t02"
+      ]
+    },
+    {
+      "field": "onset_duration",
+      "state": "KNOWN",
+      "value": "P2D",
+      "items": null,
+      "span_turn_ids": [
+        "t04"
+      ]
+    },
+    {
+      "field": "severity",
+      "state": "KNOWN",
+      "value": 4,
+      "items": null,
+      "span_turn_ids": [
+        "t06"
+      ]
+    },
+    {
+      "field": "allergy_status",
+      "state": "KNOWN",
+      "value": "present",
+      "items": null,
+      "span_turn_ids": [
+        "t08"
+      ]
+    },
+    {
+      "field": "allergens",
+      "state": "KNOWN",
+      "value": null,
+      "items": [
+        "amoxicillin",
+        "ibuprofen"
+      ],
+      "span_turn_ids": [
+        "t08"
+      ]
+    },
+    {
+      "field": "current_medications",
+      "state": "KNOWN",
+      "value": null,
+      "items": [],
+      "span_turn_ids": [
+        "t10"
+      ]
+    },
+    {
+      "field": "relevant_history",
+      "state": "KNOWN",
+      "value": null,
+      "items": [
+        "เบาหวาน"
+      ],
+      "span_turn_ids": [
+        "t12"
+      ]
+    }
+  ],
+  "answers_by_field": {
+    "chief_complaint": [
+      "t02"
+    ],
+    "onset_duration": [
+      "t04"
+    ],
+    "severity": [
+      "t06"
+    ],
+    "allergy_status": [
+      "t08"
+    ],
+    "current_medications": [
+      "t10"
+    ],
+    "relevant_history": [
+      "t12"
+    ]
+  },
+  "gold_nurse_attention": false
+}

@@ -1,0 +1,84 @@
+{
+  "dialogue_id": "th_ambient_06",
+  "mode": "ambient",
+  "source_dialogue_id": "th_intake_06",
+  "source_sha256": "8b87338f032c3d753b60967e5f1a5675df47b84b25d979130381a9919d2f37cb",
+  "synthetic": true,
+  "author": "v2a-builder (converted from the S3 synthetic script; former agent turns rewritten as nurse questions; no real patient)",
+  "scenario_tags": [
+    "nurse_attention",
+    "dev"
+  ],
+  "patient_ref": "SYN-V2A-06",
+  "turns": [
+    {
+      "turn_id": "t01",
+      "speaker": "unknown",
+      "text": "คุณลุงเดินเข้ามาด้วยอาการเจ็บหน้าอกค่ะ",
+      "started_at": "2026-01-10T02:00:00Z",
+      "ended_at": "2026-01-10T02:00:06Z"
+    },
+    {
+      "turn_id": "t02",
+      "speaker": "unknown",
+      "text": "คุณลุงเป็นอะไรมาคะ",
+      "started_at": "2026-01-10T02:00:08Z",
+      "ended_at": "2026-01-10T02:00:11Z"
+    },
+    {
+      "turn_id": "t03",
+      "speaker": "unknown",
+      "text": "เจ็บหน้าอกครับ แน่นๆ",
+      "started_at": "2026-01-10T02:00:13Z",
+      "ended_at": "2026-01-10T02:00:18Z"
+    },
+    {
+      "turn_id": "t04",
+      "speaker": "unknown",
+      "text": "เป็นมากี่ชั่วโมงแล้วคะ",
+      "started_at": "2026-01-10T02:00:20Z",
+      "ended_at": "2026-01-10T02:00:23Z"
+    },
+    {
+      "turn_id": "t05",
+      "speaker": "unknown",
+      "text": "เป็นมาประมาณ 1 ชั่วโมงครับ ตอนนี้หายใจไม่ออกด้วย",
+      "started_at": "2026-01-10T02:00:25Z",
+      "ended_at": "2026-01-10T02:00:32Z"
+    }
+  ],
+  "gold_question_turns": {
+    "t02": "chief_complaint",
+    "t04": "onset_duration"
+  },
+  "gold_facts": [
+    {
+      "field": "chief_complaint",
+      "state": "KNOWN",
+      "value": "chest_pain",
+      "items": null,
+      "span_turn_ids": [
+        "t03"
+      ]
+    },
+    {
+      "field": "onset_duration",
+      "state": "KNOWN",
+      "value": "PT1H",
+      "items": null,
+      "span_turn_ids": [
+        "t05"
+      ]
+    }
+  ],
+  "answers_by_field": {
+    "chief_complaint": [
+      "t01",
+      "t03"
+    ],
+    "onset_duration": [
+      "t05"
+    ]
+  },
+  "gold_nurse_attention": true
+}

@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from collections.abc import Iterable, Mapping
 
-from .models import ASK_ORDER, FieldStatus, NextAction
+from .models import ASK_ORDER, AmbientAction, FieldStatus, NextAction
 from .utterances_th import utterance
 
 MAX_ASKS = 2
@@ -71,3 +71,22 @@ def next_action(statuses: Mapping[str, FieldStatus]) -> NextAction:
     if missing:
         return handoff("attempts_exhausted", missing)
     return handoff("complete")
+
+
+def ambient_action(statuses: Mapping[str, FieldStatus], attention: bool, extraction_error: bool) -> AmbientAction:
+    """Ambient mode (v2a): suggest the allowlisted question for the first MISSING field to the nurse.
+
+    Nurse attention, then extraction failure, preempt everything and are sticky. There is no ask limit.
+    """
+    missing = missing_fields(statuses)
+    if attention or extraction_error:
+        reason = "nurse_attention_phrase" if attention else "extraction_unavailable"
+        return AmbientAction(kind="handoff", field=None, suggested_question_id=None, suggested_question_th=None,
+                             reason=reason, missing_fields=missing)
+    if not missing:
+        return AmbientAction(kind="complete", field=None, suggested_question_id=None, suggested_question_th=None,
+                             reason="complete", missing_fields=[])
+    field = missing[0]
+    uid = f"{'ask' if statuses[field].times_asked == 0 else 'reask'}.{field}"
+    return AmbientAction(kind="prompt_nurse", field=field, suggested_question_id=uid,
+                         suggested_question_th=utterance(uid), reason=None, missing_fields=missing)
