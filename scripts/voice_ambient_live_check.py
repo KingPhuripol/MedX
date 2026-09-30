@@ -30,11 +30,10 @@ def main() -> int:
         if venv_py.exists() and Path(sys.executable).resolve() != venv_py.resolve():
             os.execv(str(venv_py), [str(venv_py), *sys.argv])
         raise
-    sys.path.insert(0, str(ROOT / "backend"))
+    sys.path[:0] = [str(ROOT), str(ROOT / "backend")]  # casegraph lives at the repo root
 
     import httpx
     from fastapi.testclient import TestClient
-    from sqlalchemy import text
 
     from app.config import Settings
     from app.main import create_app
@@ -63,14 +62,10 @@ def main() -> int:
         with TestClient(app) as c:
             c.post("/api/auth/login", json={"username": "nurse1", "password": dev_password(env_var, default)}
                    ).raise_for_status()
-            r = c.post("/api/voice/sessions", json={"patient_ref": "SYN-LIVE-A1B2C3", "data_class": "synthetic"})
+            r = c.post("/api/voice/sessions",
+                       json={"patient_ref": "SYN-LIVE-A1B2C3", "data_class": "synthetic", "mode": "ambient"})
             r.raise_for_status()
             sid = r.json()["session"]["session_id"]
-            with app.state.engine.begin() as conn:  # this branch has no mode column yet (v2a adds it)
-                cols = {row[1] for row in conn.execute(text("PRAGMA table_info(voice_sessions)"))}
-                if "mode" not in cols:
-                    conn.execute(text("ALTER TABLE voice_sessions ADD COLUMN mode VARCHAR(16)"))
-                conn.execute(text("UPDATE voice_sessions SET mode='ambient' WHERE session_id=:sid"), {"sid": sid})
             r = c.post("/api/voice/realtime/session", json={"voice_session_id": sid, "purpose": "ambient"})
     echo = echoes[-1] if echoes else None
     session = echo.get("session") if isinstance(echo, dict) else None
