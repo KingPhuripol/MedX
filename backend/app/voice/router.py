@@ -11,7 +11,6 @@ from pydantic import AwareDatetime, TypeAdapter, ValidationError
 
 from ..deps import CurrentUser, get_engine, request_id, require_user
 from ..roles import Role
-from ..triage import router as triage_router
 from . import review, service
 from .models import AddTurnBody, StartSessionBody
 
@@ -83,6 +82,8 @@ def finish(session_id: str, request: Request, user: CurrentUser = Depends(requir
 def submit_review(session_id: str, request: Request, payload: Any = Body(...),
                   user: CurrentUser = Depends(require_nurse)) -> dict:
     """v2d: the nurse's six decisions become case evidence, then the shared triage assess runs at submitted_at."""
+    from ..triage import router as triage_router  # local: casegraph imports app.voice, triage.router imports casegraph
+
     ctx, now = _ctx(request, user), _now(request)
     try:
         result = review.submit(ctx, session_id, payload, now)
