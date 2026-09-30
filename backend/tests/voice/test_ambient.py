@@ -676,3 +676,93 @@ def test_guided_next_action_keys_unchanged(client, login, app):
     responses.append(api.get().json())
     for r in responses:
         assert set(r["next_action"]) == GUIDED_KEYS
+
+
+# ---------------------------------------------------------------- V2A-H1..H3 (review round 1; SPEC section 7 H phrases, dev only)
+
+H1_QUESTIONS = ["มีไข้ไหมคะ", "ไอไหมคะ", "เจ็บหน้าอกไหมคะ", "มีอาการเจ็บหน้าอกไหมคะ", "ปวดท้องด้วยไหมคะ"]
+H1_REPLIES = ["ไม่มีค่ะ", "มีค่ะ", "ไม่ค่ะ", "ค่ะ"]
+
+
+def _statuses(body) -> dict:
+    return {s["field"]: (s["status"], s["times_asked"]) for s in body["field_statuses"]}
+
+
+@pytest.mark.parametrize("reply", H1_REPLIES)
+@pytest.mark.parametrize("q", H1_QUESTIONS)
+def test_h1_screening_question_no_facts(client, login, app, audit_rows, q, reply):
+    spy = _spy(app)
+    api = _ambient(client, login, app)
+    all_missing = {f: ("MISSING", 0) for f in ASK_ORDER}
+    # (a) first turn
+    before = len(audit_rows())
+    body = api.turn(q).json()
+    (add,) = [r for r in audit_rows()[before:] if r["action"] == "voice.turn.add"]
+    assert (add["details"]["question"], add["details"]["question_field"]) == (True, None)
+    assert spy.calls == [] and _rows(app, voice_facts, api.sid) == [] and api.get().json()["held_facts"] == []
+    (ext,) = _rows(app, voice_extractions, api.sid)
+    assert (ext["status"], ext["reason"]) == ("skipped", "nurse_question")
+    assert len(ASK_ORDER) == 6 and _statuses(body) == all_missing
+    assert (body["next_action"]["kind"], body["next_action"]["field"]) == ("prompt_nurse", "chief_complaint")
+    # (b) the reply is answered in no field's window and moves no field
+    body = api.turn(reply).json()
+    assert [c.inputs["last_asked_field"] for c in spy.calls] == [None]
+    assert _statuses(body) == all_missing
+    # (c) mid-session, after chief_complaint is KNOWN
+    api.start()
+    api.turn("มาด้วยอาการอะไรคะ")
+    body = api.turn("ปวดหัวค่ะ").json()
+    assert {f["field"]: f["value"] for f in api.get().json()["facts"]} == {"chief_complaint": "headache"}
+    n_facts, before_st = len(_rows(app, voice_facts, api.sid)), _statuses(body)
+    body = api.turn(q).json()
+    assert body["new_facts"] == [] and len(_rows(app, voice_facts, api.sid)) == n_facts
+    assert _statuses(body) == before_st
+
+
+H2_CASES = [
+    (["ไม่แพ้ยาค่ะ", "อ๋อ จริงๆเคยแพ้ยาซัลฟาค่ะ ทานยาอะไรประจำไหมคะ"], "อ๋อ จริงๆเคยแพ้ยาซัลฟาค่ะ"),
+    (["แพ้เพนิซิลลินค่ะ ทานยาอะไรประจำไหมคะ"], "แพ้เพนิซิลลินค่ะ"),
+    (["ปวดหัวมากค่ะ เป็นมากี่วันแล้วคะ"], "ปวดหัวมากค่ะ"),
+    (["แพ้ยาอะไรไหมคะ", "ไม่แพ้ยาค่ะ", "อ้อ แพ้เพนิซิลลินด้วย จะเป็นอะไรไหมคะ"], "อ้อ แพ้เพนิซิลลินด้วย"),
+    (["ไม่แพ้ยาค่ะ", "อ้อ แพ้เพนิซิลลินด้วย จะเป็นอะไรไหมคะ"], "อ้อ แพ้เพนิซิลลินด้วย"),
+]
+
+
+@pytest.mark.parametrize(("turns", "sent"), H2_CASES)
+def test_h2_answer_before_question_kept(client, login, app, turns, sent):
+    spy = _spy(app)
+    api = _ambient(client, login, app)
+    for t in turns:
+        api.turn(t)
+    assert spy.calls[-1].inputs["turns"][-1]["text"] == sent  # the question turn's call
+    got = api.get().json()
+    facts = {f["field"]: f for f in got["facts"]}
+    st = _statuses(got)
+    allergy = facts.get("allergy_status")
+    assert not (allergy and allergy["state"] == "KNOWN" and allergy["value"] == "none")  # allergy_false_none 0
+    if "ซัลฟา" in sent:
+        kept = allergy and (allergy["state"], allergy["value"]) == ("KNOWN", "present") \
+            and "ซัลฟา" in facts["allergens"]["value"]
+        held = any("ซัลฟา" in str(h["value"]) for h in got["held_facts"]) and "allergy_status" in got["next_action"]["missing_fields"]
+        assert kept or held
+    elif "เพนิซิลลิน" in sent:
+        assert (allergy["state"], allergy["value"]) == ("KNOWN", "present")
+        assert "เพนิซิลลิน" in facts["allergens"]["value"]
+        if len(turns) == 1:
+            assert st["current_medications"][1] == 1
+    else:
+        assert (facts["chief_complaint"]["state"], facts["chief_complaint"]["value"]) == ("KNOWN", "headache")
+        assert st["onset_duration"] == ("MISSING", 1)
+
+
+@pytest.mark.parametrize("turns", [["มีโรคประจำตัวไหมคะ เบาหวานค่ะ", "เดี๋ยววัดความดันนะคะ"],
+                                   ["มีโรคประจำตัวไหมคะ", "เบาหวานค่ะ", "เดี๋ยววัดความดันนะคะ"]])
+def test_h3_merged_turn_window(client, login, app, turns):
+    spy = _spy(app)
+    api = _ambient(client, login, app)
+    for t in turns:
+        body = api.turn(t).json()
+    assert [c.inputs["last_asked_field"] for c in spy.calls] == ["relevant_history", None]
+    assert spy.calls[0].inputs["turns"][-1]["text"] == "เบาหวานค่ะ"
+    assert {f["field"]: f["value"] for f in api.get().json()["facts"]}["relevant_history"] == ["เบาหวาน"]
+    assert _statuses(body)["relevant_history"][1] == 1
