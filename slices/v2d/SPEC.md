@@ -1,6 +1,6 @@
 # V2D — Nurse review and confirmed handoff of an ambient voice intake into a case (backend)
 
-Planner: innovation-lead. Revision 1, 2026-09-30. Branch: `factory/v2d` (base a27e4b1, which already carries v2a and v2t). Gantt owner: ภูริณัฐ (Voice Agent, PROPOSAL row 16).
+Planner: innovation-lead. Revision 2, 2026-09-30 (rev 2 fixes checker findings: D8 names the one allowed edit to an existing test; 3.2 defines which 4xx write `voice.review.denied`, puts JSON parse errors in scope, and D6 now measures both plus the check order). Branch: `factory/v2d` (base a27e4b1, which already carries v2a and v2t). Gantt owner: ภูริณัฐ (Voice Agent, PROPOSAL row 16).
 Sources: `docs/PROPOSAL.md` §1.3.1 ("ส่งข้อมูลให้ Case Graph เสนอแผนกที่ควรเข้ารับบริการให้พยาบาลยืนยัน"), §3.1, §3.5, Table 3.2. Also `docs/DECISIONS.md` 2026-09-30 "V2 voice direction": the nurse reviews and confirms the facts, and only then do they go to the case as ClinicalText and feed the existing department suggestion. That entry is the owner approval this slice builds on. It closes **D-V1-2** and the v2c carry-over **D-V2C-4**. The proposal wins on any conflict.
 
 This is a research prototype that uses synthetic data only. The system suggests. The nurse confirms twice: first the facts on the phone, then the department in the web app.
@@ -36,7 +36,7 @@ A nurse at the bedside has finished an ambient voice session (v2a) on the phone 
 
 ## 3. Contract
 
-### 3.1 Request (LOCKED by the orchestrator; the v2c client `mobile/lib/review.ts` already sends it)
+### 3.1 Request (fixed by the orchestrator to match `mobile/lib/review.ts` on factory/v2c, which already sends it; do not rename)
 
 `POST /api/voice/sessions/{id}/review`. Nurse role only. The body is strict (`extra="forbid"`, 422 on unknown keys):
 
@@ -54,12 +54,16 @@ The client first calls `POST /finish`. A 409 there means the session is already 
 
 ### 3.2 Validation. Order is normative. Every failure makes zero case writes.
 
-"Case writes" means rows in `voice_reviews`, `voice_review_decisions` and `triage_assessments`, and any new entry in `/api/triage/cases`. After authentication, every 4xx writes one audit row `voice.review.denied` `{status, reason}`.
+"Case writes" means rows in `voice_reviews`, `voice_review_decisions` and `triage_assessments`, and any new entry in `/api/triage/cases`.
+
+- **Order.** Checks run top to bottom; a request that fails several checks gets the status and `detail` of the first failing row. Row 1 runs before the body is read, so authentication always wins over any body problem (e.g. logged out + malformed JSON → 401, not 422).
+- **Denied audit.** Row 1 (401/403) is the shared `require_nurse` and writes **no** `voice.review.denied` row (unchanged behaviour of every voice route). Every failure in rows 2–17 writes **exactly one** audit row `voice.review.denied` `{status, reason}`, where `reason` is the `detail` string of that row (`schema_invalid` for row 2).
+- **Parse errors are in scope (row 2).** Malformed JSON, an empty body and a JSON value that is not an object are row-2 failures, the same as a schema error. Mechanism is the builder's choice (e.g. read the raw body in a dependency that runs after `require_nurse`); FastAPI's own pre-handler body parsing must not be the path, because it skips both the auth-first order and the denied row.
 
 | # | Check | Status | `detail` |
 |---|---|---|---|
 | 1 | not logged in / not nurse | 401 / 403 | existing `require_nurse` |
-| 2 | body schema (types, enum, extra keys, missing keys, naive datetimes) | 422 | FastAPI |
+| 2 | body parses as a JSON object, and it matches 3.1 (types, enum, extra keys, missing keys, naive datetimes) | 422 | a list of error objects (FastAPI shape); audit `reason` `schema_invalid` |
 | 3 | session exists | 404 | `voice session not found` |
 | 4 | `body.session_id == {id}` | 422 | `session_id_mismatch` |
 | 5 | session `mode == "ambient"` | 422 | `session_not_ambient` |
@@ -178,7 +182,7 @@ The transcript is stored evidence only. In this slice nothing re-extracts facts 
 - `voice.review.consent_ack` `{review_id, session_id, consent_acknowledged_at}`
 - `voice.review.red_flag_ack` `{review_id, session_id, red_flag_acknowledged_at, attention_turn_ids}` (only if `red_flag`)
 - after commit: `voice.review.handoff` `{review_id, case_ref, assessment_id|null, department_status, error_type|null}`, plus the existing `triage.assess` row from the reused assess path
-- `voice.review.denied` `{status, reason}` for each 4xx in 3.2
+- `voice.review.denied` `{status, reason}` for each failure in 3.2 rows 2–17 (none for row 1)
 
 **B6. Automatic assessment.** After commit, the review handler runs the shared assess function at `as_of = submitted_at`, with the same nurse as actor. This is the code `POST /api/triage/cases/{ref}/assess` uses: S4 engine, Case Graph, fail-safe, `triage.assess` audit and `triage_assessments` insert. The nurse can later assess again from `/nurse/triage`. Department confirmation stays in the existing triage review endpoints and UI, which are unchanged.
 
@@ -191,9 +195,9 @@ The transcript is stored evidence only. In this slice nothing re-extracts facts 
 | V2D-D3 | Rejected or unknown facts never enter the case as positive facts | For every field × {reject, unknown, confirm-of-UNKNOWN/REFUSED}: 0 `VoiceFact`s for that field, the field is in `missing_fields`, and 0 S4 facts of that kind. A rejected chief complaint whose words are in the transcript gives 0 `chief_complaint` S4 facts and 0 `symptom.*` facts | `test_review_case.py::test_rejected_and_unknown_never_positive` (parametrized, ≥ 12 cases) |
 | V2D-D4 | Allergy never becomes `none` unless the nurse confirmed a system `none` | Across all 7 cases the case holds `allergy_status value "none"` **only** in case (a): (a) confirm on negative-allowed (fixture 01) gives `"none"`; (b) missing + unknown; (c) missing + add "ไม่แพ้ยา"; (d) KNOWN none + reject; (e) KNOWN none + edit "ไม่แพ้"; (f) `allergy_conflict` + confirm UNCLEAR; (g) fixture 03/10 UNKNOWN + confirm. Cases (b)–(g) give no fact or `value null` | `test_review_case.py::test_allergy_none_only_by_nurse_confirm` |
 | V2D-D5 | Red flag is required, carried and shown first | Fixture 06 (or 09) with `red_flag_acknowledged_at: null` → **422** `red_flag_ack_required`, 0 case writes. With the ack → 201, `red_flag:true`. In the case list the case is at index 0 with `red_flag:true`. The assessment has `alerts[0].rule_id == "voice.nurse_attention"`, alerts serialized before `department`, and `escalation_required:true`. `/confirm` without the ack → 409 `alerts_not_acknowledged`; with it → 200. The alert is still present in: a re-assessment after a second non-red-flag review of the same patient; a run with `casegraph_run.run_graph` monkeypatched to raise; and a run with a department provider returning `error` | `test_review_redflag.py` (≥ 5 tests) |
-| V2D-D6 | Validation → correct 4xx, zero case writes | Each row of 3.2 #3–#17 has ≥ 1 test with the exact status + `detail`, plus: physician and pharmacist → 403; logged out → 401; guided → 422; active → 409; unknown id → 404; 2nd review → 409; 5 and 7 decisions, a duplicate field, and `allergens` as a field → 422; confirm value ≠ display (incl. raw `"none"` on an UNCLEAR row) → 422. After each: `voice_reviews`, `voice_review_decisions` and `triage_assessments` counts unchanged, and `/api/triage/cases` unchanged | `test_review_validation.py` (parametrized) |
+| V2D-D6 | Validation → correct 4xx, denied audit, order, zero case writes | (a) Each row of 3.2 #2–#17 has ≥ 1 test with the exact status + `detail` (row 2: status 422 and `detail` is a list), plus: physician and pharmacist → 403; logged out → 401; guided → 422; active → 409; unknown id → 404; 2nd review → 409; 5 and 7 decisions, a duplicate field, and `allergens` as a field → 422; confirm value ≠ display (incl. raw `"none"` on an UNCLEAR row) → 422. (b) **Parse errors** as a logged-in nurse: malformed JSON (`b"{"`), empty body, and JSON `[]` → each 422 with exactly 1 new `voice.review.denied` `{status:422, reason:"schema_invalid"}`. (c) **Denied audit count**: every case in (a)/(b) for rows 2–17 adds exactly 1 `voice.review.denied` row whose `{status, reason}` equals the response; every 401/403 case adds 0. (d) **Order**: logged out + malformed JSON → 401; pharmacist + malformed JSON → 403; unknown session id + schema-invalid body → 422 `schema_invalid`; body `session_id` ≠ path on a guided session → 422 `session_id_mismatch`; active red-flag ambient session without ack → 409 `session_not_finished`; second review whose decisions are also wrong → 409 `review_exists`. (e) After every case: `voice_reviews`, `voice_review_decisions` and `triage_assessments` counts unchanged, and `/api/triage/cases` unchanged | `test_review_validation.py` (parametrized) |
 | V2D-D7 | Append-only and audit | On SQLite, `UPDATE` and `DELETE` on `voice_reviews` and `voice_review_decisions` raise. The PG equivalents (including TRUNCATE) pass under `make test-pg` when PG is available, and are otherwise reported as skipped. After D2 there is exactly 1 each of `voice.review.submit`, `voice.review.consent_ack` and `voice.review.handoff`; after D5, 1 `voice.review.red_flag_ack`. Each has `actor_id`, `actor_role:"nurse"` and `ts_utc`. No audit `details_json` contains any turn text, edited value or reason text (substring check over all rows) | `test_review_audit.py`, `test_pg_voice_review.py` (`pg` marker) |
-| V2D-D8 | Guided mode and fixture triage unchanged | `git diff --diff-filter=MD <spec commit>..HEAD -- backend/tests casegraph/tests tests web mobile` is empty. With no reviews, `/api/triage/cases` equals the pre-slice 40-item list (same order and 3 keys). The guided `POST /review` → 422 | checker runs the git command; `test_review_case.py::test_fixture_case_list_unchanged` |
+| V2D-D8 | Guided mode and fixture triage unchanged | (a) `git diff --name-only --diff-filter=MD a27e4b1..HEAD -- backend/tests casegraph/tests tests web mobile` prints **only** `backend/tests/voice/test_api_audit.py` (or nothing). (b) That file's one allowed edit is in `test_no_voice_mutation_routes`: the two counts `len(voice_routes) == 5` and `len(paths) == 5` become `== 6` for the new review route; `git diff -U0 a27e4b1..HEAD -- backend/tests/voice/test_api_audit.py` has exactly 2 `-` and 2 `+` code lines, and they differ only in `5`→`6` (a trailing `#` comment is allowed). No other assertion in that test or file changes. (c) With no reviews, `/api/triage/cases` equals the pre-slice 40-item list (same order and 3 keys). (d) The guided `POST /review` → 422 | checker runs both git commands; `test_review_case.py::test_fixture_case_list_unchanged` |
 | V2D-D9 | End-to-end mobile sequence | One test reproduces `submitFlow` exactly: login nurse → start `{mode:"ambient"}` → turns (`speaker:"unknown"`, `source:"asr"`, `asr_model`) → `GET` session → decisions built by a test-local port of 3.3 from the GET payload → `POST /finish` 200 → `POST /review` 201. A second variant calls finish twice (409, treated as done) and then review → 201. Retrying review → 409 | `test_review_e2e.py::test_mobile_submit_flow` (+ `_finish_409_variant`) |
 | V2D-A10 | Time validity | Assess of `V-…` at `as_of < submitted_at` → 422 `as_of_before_evidence`. An assessment at `as_of` between two reviews sees only the first review's S4 facts and alert. No stored item or fact has `available_at_time > submitted_at` | `test_review_case.py::test_time_validity` |
 | V2D-A11 | Fail safe | With `triage_engine.assess` patched to raise → 201, `department_suggestion.status "pending"`, `assessment_id null`, `triage_path "/nurse/triage"`, review and decisions committed, `voice.review.handoff` with `error_type`. A case with 0 S4 facts (cc and onset rejected) is listed, and assess → 201 with `abstained` | `test_review_case.py::test_pending_on_assess_failure`, `::test_zero_s4_facts` |
@@ -256,5 +260,6 @@ cd /Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent/.claud
 .venv/bin/python -m pytest -q backend/tests/triage backend/tests/voice casegraph/tests
 make test
 make test-pg          # if a PG URL is available; else report D7-PG as skipped
-git diff --diff-filter=MD <spec-commit>..HEAD -- backend/tests casegraph/tests tests web mobile   # D8: must be empty
+git diff --name-only --diff-filter=MD a27e4b1..HEAD -- backend/tests casegraph/tests tests web mobile   # D8a: only test_api_audit.py
+git diff -U0 a27e4b1..HEAD -- backend/tests/voice/test_api_audit.py                                      # D8b: only the two 5->6 counts
 ```
