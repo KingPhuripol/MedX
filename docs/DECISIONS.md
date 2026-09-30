@@ -173,3 +173,9 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
   - D4: clinical sign-off of the Thai question allowlist and red-flag list.
   - D5: deploy `medx-mobile`.
 - **Approved by:** project owner (chat, 2026-09-30). Plan: `~/.claude/plans/pasted-content-id-524c-users-king-phuri-curious-mccarthy.md`.
+
+## 2026-09-30 — D1 approved: LiveKit Cloud + OpenAI STT for synthetic audio (slice v2b)
+- **What:** the v2b voice worker may use LiveKit Cloud (free Build plan) as the audio transport, with OpenAI `gpt-4o-mini-transcribe` (Thai) as the STT provider, for **synthetic audio only**.
+- **Guard change:** the provider-isolation guard may allow the `livekit` and `openai` packages only in `voice_agent/` and in the backend LiveKit token module. They stay forbidden everywhere else.
+- **Credentials:** `LIVEKIT_URL`, `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` are set by the owner directly in `.env`, never in chat. All automated tests mock LiveKit and OpenAI.
+- **Approved by:** project owner (chat, 2026-09-30).
