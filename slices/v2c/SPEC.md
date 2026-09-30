@@ -663,3 +663,81 @@ git diff --stat $(git merge-base HEAD main) -- backend casegraph schemas web req
 Microphone capture on a phone needs HTTPS or localhost; phone testing through a tunnel or deployment is out of scope (D5).
 
 The builder's evidence must contain: the `make test` tail, the mobile vitest and tsc output, the bundle-scan output, the 22 screenshot paths, the Playwright summary, and the C19 diff. The slice report states the Proposal §3.1 deviation (direct vendor WebRTC, audio outside the gateway, owner-accepted 2026-09-30).
+
+---
+
+# Part C: continuation, round 4 (T5 × T9 silent loss)
+
+Planner: innovation-lead (2026-09-30). Code base for this round: `55d4948`. Parts A and B (sections 1–16, design and build) are final and unchanged; this part only adds the fix for the one regression the round-3 checker found, plus its acceptance. Where this part is silent, sections 1–16 apply.
+
+## 17. Scope
+
+**Defect (checker round 3, `tests/e2e/v2c/checker.spec.ts` "T5xT9 probe").** A `/turns` POST is in flight when the nurse taps "จบการบันทึก". The 5 s drain (T9) runs out, `finish()` calls `queue.stop()`, and the POST later fails (503 at about 12 s, turn not stored). In `mobile/lib/turnQueue.ts` `send()`, the next loop iteration sees `stopped` and returns `"fatal"` without calling `hooks.onFailed(key)`. `pump()` has already shifted the entry out of `order`, so `restart()` (from "บันทึกต่อ") has nothing to resume. The segment is lost, and the failed-segment count does not show it. This breaks the T5 rule "then the item is counted as failed" and the §14 mitigation for silent loss.
+
+**Required behaviour (T5 × T9).** When `stop()` cuts off a turn whose outcome is not yet known (a network error, timeout or 5xx, with the retry budget not used up), the item is never silently dropped. Exactly one of these must happen:
+
+- **(B, default) Held and re-posted.** The item is kept at the head of the queue in its commit-order position, with its original body (same `text`, `started_at`, `ended_at`). On `restart()` (the nurse resumes on the same active session), the queue first reconciles with `GET /api/voice/sessions/{id}`. If a turn with the same `text` and `started_at` is already stored, the key is marked posted and no POST is sent. Otherwise the item is re-posted before any later item. The retry budget carries over: **at most 3 POSTs per key for the life of the voice session** (1 + the 2 retries in T5). If the budget runs out, the item is counted as failed. If the session ends without a resume (submit, sign-out, 401, 409, or unmount), each held item is counted as failed exactly once.
+- **(A, accepted alternative) Counted as failed at once.** `hooks.onFailed(key)` is called exactly once when the stop cuts the item off. The key is final and is never posted again.
+
+**What must not change:**
+- T9: no `/turns` POST starts after `finish()` has stopped the queue, and none starts until the nurse resumes. A GET for reconcile after the stop is allowed.
+- 401 and 409 stay fatal: they stop the queue, send no retry, and follow T5.
+- Every C7 guarantee holds: exactly once per key, commit order, and 0 extra POSTs in the ambiguous-stored case.
+
+Files in scope: `mobile/lib/turnQueue.ts`, `mobile/lib/recorder.ts` (only if needed for the held-item or session-end accounting), `mobile/tests/turn-queue.test.ts`, `mobile/tests/lifecycle.test.ts`, and the checker evidence under `artifacts/factory/v2c/`.
+
+## 18. Out of scope
+
+- Any change to sections 1–16. That includes copy, design, comps, contracts, T1–T12 semantics and C1–C19 thresholds.
+- New UI. The count uses the existing D-V2C-2 string "ถอดข้อความไม่ได้ n ช่วง", in the existing dock and transcript-sheet places. The review screen gets no failed-segment count (see §21).
+- Any backend, `web/`, `casegraph/` or `schemas/` change (C19).
+- Committing `tests/e2e/v2c/`. It is the checker's harness, and C19 limits the builder's changes to `mobile/`, `scripts/sync_theme.sh`, `Makefile` and `slices/v2c/`.
+
+## 19. Acceptance (round 4)
+
+C1–C19 in section 12 still apply unchanged, and the checker re-runs all of them. The new criteria are:
+
+| ID | Criterion | Threshold | How measured |
+|---|---|---|---|
+| V2C-C20 | No silent loss when finish cuts off a failing POST | In the T5xT9 probe (the first `/turns` POST hangs 12 s, then returns 503 and is not stored; finish is tapped while it hangs; "บันทึกต่อ" is tapped, then record → `listening`; wait 6 s): `reposted ≥ 1` **or** `failedCount ≥ 1`, where the dock shows exactly "ถอดข้อความไม่ได้ 1 ช่วง". Under B, the re-post carries the same `text` and `started_at` as the first attempt. Across the whole session, each key ends in exactly one outcome: posted once, or counted failed once, never both and never neither | checker Playwright `tests/e2e/v2c/checker.spec.ts` "T5xT9 probe" (the probe's `console.log` JSON goes into the report) |
+| V2C-C21 | T9 kept: no turn is POSTed after finish | In the same probe: 0 `/turns` requests start between the "ตรวจทานข้อมูล" heading becoming visible and the record button reaching `data-state="listening"`. In unit tests, after `finish()` resolves, advancing fake timers 60 s adds 0 `/turns` POSTs. A session that is submitted (backend `finish` called) without a resume makes 0 `/turns` POSTs after `finish` | probe timestamps (the checker records the heading-visible and listening times next to `posts[].at`); `lifecycle.test.ts` "finish stops the turn queue (T9)" and a new case for submit without resume |
+| V2C-C22 | Unit coverage: stop during failure | `mobile/tests/turn-queue.test.ts` has a `describe("stop during failure (T5 × T9)")` block with at least the cases in §20, all passing. The block fails at `55d4948` (the builder shows this red run in its evidence) and passes after the fix | `cd mobile && npx vitest run tests/turn-queue.test.ts`; builder evidence includes the failing run at `55d4948` |
+| V2C-C23 | Retry budget and dedupe survive the hold | For any key: the number of `/turns` POSTs over the session is ≤ 3. A held item whose turn was in fact stored (reconcile finds it) gets 0 further POSTs and is not counted as failed. The held item is posted before any item committed after it, and `started_at` stays non-decreasing across all posted turns (C16) | `turn-queue.test.ts` §20 cases 2, 5, 6 |
+| V2C-C24 | No regression | `make test` exit 0 (C1). The mobile vitest count is ≥ the count at `55d4948` + 5, with 0 failures. `tsc --noEmit` has 0 errors. Every test in `tests/e2e/v2c/checker.spec.ts` passes, and `cd mobile && npx playwright test` passes. The C19 diff is still empty | checker runs every §22 command and attaches the tails |
+
+## 20. Required test cases (added to `mobile/tests/turn-queue.test.ts`, fake timers)
+
+In every case, "stop" means `q.stop()` called while `hooks.post` for the head item is pending. The mock then resolves with the stated status. Each case asserts both the POST count and the `onFailed` / `onPosted` calls.
+
+1. **5xx, not stored, then restart.** Stop, then 503; `fetchSession` returns no matching turn. Advance 30 s: POSTs stay at 1. Under B: `restart()` leads to one GET, then exactly one POST with a body deep-equal to the first, then `onPosted`, and `onFailed` is never called. Under A: `onFailed(key)` is called once at stop time, and `restart()` sends 0 POSTs for that key.
+2. **5xx, already stored.** Stop, then 503; reconcile finds the turn. The key is marked posted (`wasPosted` is true), `onFailed` is not called, and there are 0 further POSTs, including after `restart()`.
+3. **Network error (`post` rejects or returns status 0) during stop.** Same outcomes as case 1.
+4. **Stop during the retry backoff.** The first attempt returns 503, not stored, and the queue is sleeping its 1 s backoff. Stop, then advance 10 s: 0 new POSTs. Outcome as in case 1.
+5. **Order after restart.** Items a (held), b and c complete while the queue is stopped. `restart()` produces the POST order a, b, c, with `started_at` non-decreasing.
+6. **Budget.** The held item has already used 2 of its 3 attempts. After `restart()`, one more 503 (not stored) means `onFailed` is called once, the POST total for that key is 3, and the next item is posted.
+7. **Session ends without resume.** B only (skip under A). The item is held, and the recorder is disposed, or submit is called without a resume. `onFailed` is called exactly once, and 0 POSTs follow. Cover this in `lifecycle.test.ts` if the accounting lives in `recorder.ts`.
+8. **401 / 409 during stop.** Still fatal: 0 retries, and `onFatal` is called as before.
+
+Also, a recorder-level case in `mobile/tests/lifecycle.test.ts` mirrors the probe: a POST hangs past the 5 s drain, then `finish()` runs, then the POST returns 503, then `reopen()` and resume. The case checks the `failedSegments` snapshot, or the re-post, against C20, and 0 `/turns` POSTs between the `finish()` resolve and the resume (C21).
+
+## 21. Clinical and product risks (round 4)
+
+| Risk | Mitigation | Residual |
+|---|---|---|
+| A patient statement said just before finishing is lost with no sign, so a fact (for example an allergy mention) never reaches review, and the nurse assumes it was captured | C20: the item is re-posted on resume or counted in the dock. The field stays MISSING, so review shows "ไม่มีข้อมูล" and never a negative (C6). The nurse re-asks or adds the value | If the nurse submits from review without resuming, the count is not shown on review (no new UI in this round). Only the MISSING tag signals the gap. The reviewer notes this; a review-screen count would be a later design change that needs owner approval |
+| A re-post creates a duplicate turn and duplicate facts | reconcile before re-post; ≤ 3 POSTs per key; one outcome per key (C20, C23) | a stored-but-not-visible turn (backend lag between POST and GET) could still duplicate; the same residual as the existing T5 ambiguous case |
+| A turn is posted after the nurse ended recording (T9 violated) | C21: no `/turns` POST between finish and resume, or after submit | none known |
+| A re-post long after the speech carries old timestamps | the original `started_at`/`ended_at` are kept, and both are ≤ the request time, so they stay time-valid (C16) | none |
+
+## 22. Run commands (round 4, from the worktree root)
+
+```bash
+cd mobile && npx vitest run tests/turn-queue.test.ts tests/lifecycle.test.ts     # C22, C23, C21 unit
+git stash push -- mobile/lib/turnQueue.ts mobile/lib/recorder.ts && (cd mobile && npx vitest run tests/turn-queue.test.ts); git stash pop   # C22 red run: new tests against the 55d4948 code (builder, before committing the fix)
+cd mobile && npm test && npm run typecheck                                        # C24
+make test                                                                          # C1, C24
+cd mobile && npx playwright test -c ../tests/e2e/v2c/playwright.checker.config.ts -g "T5xT9"   # C20, C21 (checker)
+cd mobile && npx playwright test -c ../tests/e2e/v2c/playwright.checker.config.ts # every checker probe (C24)
+cd mobile && npx playwright test                                                  # C24 browser parts
+git diff --stat $(git merge-base HEAD main) -- backend casegraph schemas web requirements.in requirements.lock pyproject.toml   # C19: expect empty
+```
