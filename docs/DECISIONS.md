@@ -153,3 +153,23 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
   - `/live` loads. No OpenAI key pattern appears in the HTML or in any of the 9 loaded scripts (word-bounded `sk-` check; `mask-image` CSS was a false positive).
   - RBAC: as a nurse, `/api/home/physician` and `/api/home/pharmacist` return 403.
 - **Approved by:** project owner (chat, 2026-09-29), per the entry above.
+
+## 2026-09-30 — V2 voice direction: ambient scribe in a separate mobile PWA
+- **What:** the next voice work (slices v2a–v2e) builds an **ambient + prompt** scribe.
+  - The nurse records an ordinary nurse–patient conversation.
+  - The system transcribes Thai speech and extracts intake facts.
+  - Missing fields appear on screen as suggested questions for the nurse to ask. The AI never speaks to the patient.
+  - The nurse reviews and confirms the facts. Only then do they go to the case as ClinicalText, feeding the existing department suggestion.
+- **Delivery:**
+  - The mobile app is a **separate project, `mobile/`** (Next.js PWA, its own Vercel project `medx-mobile`). It proxies `/api/*` to the central backend.
+  - The central backend keeps auth, audit, voice sessions, facts and triage.
+  - A LiveKit Agents worker (`voice_agent/`, STT only) is the transcription path, per Proposal §3.1.
+  - `web/` `/live` is unchanged.
+- **Process:** each slice runs through `product-loop`. The planner and reviewers run on Opus, the builder and checker on Sonnet (`args.models`). UI slices must load the mobile/design skills, and the owner approves an HTML comp before any UI build.
+- **Still pending the owner (not approved by this entry):**
+  - D1: LiveKit Cloud with OpenAI STT on synthetic audio, which lifts the provider-isolation guard for `voice_agent/` and the token module only.
+  - D2: a persistent demo database.
+  - D3: rotate the OpenAI key.
+  - D4: clinical sign-off of the Thai question allowlist and red-flag list.
+  - D5: deploy `medx-mobile`.
+- **Approved by:** project owner (chat, 2026-09-30). Plan: `~/.claude/plans/pasted-content-id-524c-users-king-phuri-curious-mccarthy.md`.
