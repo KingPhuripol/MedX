@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
+from fastapi.exceptions import RequestValidationError
 from pydantic import AwareDatetime, TypeAdapter, ValidationError
 
 from ..deps import CurrentUser, get_engine, request_id, require_user
 from ..roles import Role
-from . import service
+from ..triage import router as triage_router
+from . import review, service
 from .models import AddTurnBody, StartSessionBody
 
 router = APIRouter(prefix="/api/voice")
@@ -74,3 +77,44 @@ def get_facts(
 @router.post("/sessions/{session_id}/finish")
 def finish(session_id: str, request: Request, user: CurrentUser = Depends(require_nurse)) -> dict:
     return _run(service.finish, _ctx(request, user), session_id, _now(request))
+
+
+@router.post("/sessions/{session_id}/review", status_code=201)
+def submit_review(session_id: str, request: Request, payload: Any = Body(...),
+                  user: CurrentUser = Depends(require_nurse)) -> dict:
+    """v2d: the nurse's six decisions become case evidence, then the shared triage assess runs at submitted_at."""
+    ctx, now = _ctx(request, user), _now(request)
+    try:
+        result = review.submit(ctx, session_id, payload, now)
+    except review.ReviewDenied as exc:
+        if exc.errors is not None:
+            raise RequestValidationError(exc.errors) from None
+        raise HTTPException(status_code=exc.status, detail=exc.reason) from None
+    try:
+        a = triage_router.run_assessment(request, user, result.case_ref, now)
+    except Exception as exc:  # fail safe: the review stays committed; the nurse assesses from /nurse/triage
+        review.audit_handoff(ctx, result, None, "pending", type(exc).__name__)
+        a, suggestion = None, {
+            "status": "pending", "assessment_id": None, "as_of": None, "reason": "assessment_unavailable",
+            "top3": [], "missing_information": [], "alert_rule_ids": [], "escalation_required": None,
+        }
+    if a is not None:
+        dept = a.department
+        status = "suggested" if dept.status == "suggested" else "abstained"
+        suggestion = {
+            "status": status, "assessment_id": a.assessment_id, "as_of": a.as_of.isoformat(),
+            "reason": None if status == "suggested" else dept.reason,
+            "top3": [{"code": e.code, "label_th": e.label_th, "label_en": e.label_en, "score": e.score}
+                     for e in dept.top3] if status == "suggested" else [],
+            "missing_information": list(dept.missing_information),
+            "alert_rule_ids": [x.rule_id for x in a.alerts], "escalation_required": a.escalation_required,
+        }
+        review.audit_handoff(ctx, result, a.assessment_id, dept.status, None)
+    return {
+        "review_id": result.review_id, "session_id": result.session_id, "patient_ref": result.patient_ref,
+        "case_ref": result.case_ref, "submitted_at": result.submitted_at.isoformat(), "red_flag": result.red_flag,
+        "triage_path": f"/nurse/triage/{a.assessment_id}" if a is not None else "/nurse/triage",
+        "evidence_item_ids": result.evidence_item_ids, "confirmed_fields": result.confirmed_fields,
+        "missing_fields": result.missing_fields,
+        "department_suggestion": suggestion | {"label": "Suggestion for nurse review"},
+    }

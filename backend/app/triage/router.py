@@ -27,8 +27,9 @@ from ..roles import Role
 from . import casegraph_run, store
 from . import engine as triage_engine
 from .departments import BY_CODE, DEPARTMENT_LIST_VERSION, DEPARTMENTS
+from ..voice import review as voice_review
 from .fixtures import engine_cases
-from .models import TriageAssessment
+from .models import Case, TriageAssessment
 
 router = APIRouter(prefix="/api/triage")
 
@@ -95,10 +96,25 @@ def _load(request: Request, assessment_id: str) -> TriageAssessment:
     return a
 
 
+def _lookup(request: Request, case_ref: str) -> tuple[Case, voice_review.VoiceCase | None] | None:
+    """Fixture cases plus reviewed voice cases (slice v2d, ``V-<patient_ref>``)."""
+    case = engine_cases().get(case_ref)
+    if case is not None:
+        return case, None
+    vc = voice_review.voice_cases(get_engine(request)).get(case_ref)
+    return (vc.case, vc) if vc is not None else None
+
+
 @router.get("/cases")
 def list_cases(request: Request, user: CurrentUser = Depends(require_user)) -> dict:
     _require(request, user, READ_ROLES, "triage/cases")
-    items = []
+    # v2d: voice cases first (red flag first, then newest first), then the fixtures in their existing order.
+    voice = sorted(voice_review.voice_cases(get_engine(request)).values(),
+                   key=lambda v: (not v.red_flags, -v.latest.timestamp()))
+    items: list[dict] = [{
+        "case_ref": v.case.case_ref, "chief_complaint": v.chief_complaint, "suggested_as_of": v.latest.isoformat(),
+        "source": "voice_review", "red_flag": bool(v.red_flags),
+    } for v in voice]
     for ref, case in engine_cases().items():
         cc = next((f.value for f in case.facts if f.kind == "chief_complaint"), None)
         latest = max(f.available_at_time for f in case.facts)
@@ -115,13 +131,14 @@ def list_departments(request: Request, user: CurrentUser = Depends(require_user)
     }
 
 
-def _check_as_of(request: Request, user: CurrentUser, case_ref: str, case: Any, as_of: Any) -> None:
+def _check_as_of(request: Request, user: CurrentUser, case_ref: str, case: Any, as_of: Any,
+                 times: list | None = None) -> None:
     """C3 (S4 HIGH, D-I2-2): ``as_of`` must lie within [earliest evidence, latest evidence + skew].
 
     A later ``as_of`` would let an assessment claim a decision time no evidence supports (stale vitals read as
     current); an earlier one would assess a case with no evidence yet. Every rejection is audited.
     """
-    times = [f.available_at_time for f in case.facts]
+    times = times or [f.available_at_time for f in case.facts]  # v2d: a voice case uses its review times
     earliest, latest = min(times), max(times)
     skew = timedelta(seconds=float(request.app.state.settings.triage_as_of_skew_s))
     reason = None
@@ -141,20 +158,27 @@ def _check_as_of(request: Request, user: CurrentUser, case_ref: str, case: Any, 
 @router.post("/cases/{case_ref}/assess", status_code=201)
 def assess(case_ref: str, body: AssessBody, request: Request, user: CurrentUser = Depends(require_user)) -> dict:
     _require(request, user, WRITE_ROLES, f"triage/cases/{case_ref}/assess")
-    case = engine_cases().get(case_ref)
-    if case is None:
+    return run_assessment(request, user, case_ref, body.as_of).model_dump(mode="json")
+
+
+def run_assessment(request: Request, user: CurrentUser, case_ref: str, as_of: Any) -> TriageAssessment:
+    """The one assess path (S4 engine, Case Graph, fail-safe, insert, ``triage.assess`` audit). Also run by the
+    v2d voice review handoff."""
+    found = _lookup(request, case_ref)
+    if found is None:
         raise HTTPException(status_code=404, detail="unknown_case")
-    _check_as_of(request, user, case_ref, case, body.as_of)
+    case, voice = found
+    _check_as_of(request, user, case_ref, case, as_of, voice.submitted if voice else None)
     engine = get_engine(request)
     provider = request.app.state.provider
 
     def invoke(req: GatewayRequest) -> GatewayResponse:
         return gateway_service.invoke(engine, provider, req, user, request_id=request_id(request))
 
-    a = triage_engine.assess(case, body.as_of, invoke, actor_id=user.id)
+    a = triage_engine.assess(case, as_of, invoke, actor_id=user.id)
     graph_error = None
     try:  # i2 scope 7: the Case Graph over the same evidence at the same as_of
-        graph = casegraph_run.run_graph(request.app.state.casegraph, case, body.as_of, engine, provider, user,
+        graph = casegraph_run.run_graph(request.app.state.casegraph, case, as_of, engine, provider, user,
                                         request_id(request))
         screening = casegraph_run.screening_block(graph)
         graph_alerts = sorted({x["rule_id"] for x in (casegraph_run.graph_alerts(graph) or [])})
@@ -166,6 +190,9 @@ def assess(case_ref: str, body: AssessBody, request: Request, user: CurrentUser 
     except Exception as exc:  # fail safe: screening shows NOT PERFORMED (unavailable) and the case escalates
         graph_error, graph_alerts = type(exc).__name__, []
         a = a.model_copy(update={"screening": casegraph_run.unavailable_screening(), "escalation_required": True})
+    carried = voice_review.attention_alert(voice, as_of) if voice else None
+    if carried is not None:  # v2d B4: added after engine and graph, independent of both; never suppressible
+        a = a.model_copy(update={"alerts": [carried, *a.alerts], "escalation_required": True})
     store.insert_assessment(engine, a)
     dept = a.department
     _audit(request, user, "triage.assess", f"assessment/{a.assessment_id}", "success", {
@@ -187,7 +214,7 @@ def assess(case_ref: str, body: AssessBody, request: Request, user: CurrentUser 
         "graph_alert_rule_ids": graph_alerts,
         "screening_status": (a.screening or {}).get("status"),
     })
-    return a.model_dump(mode="json")
+    return a
 
 
 @router.get("/assessments/{assessment_id}")
@@ -206,7 +233,7 @@ def confirmed(case_ref: str, request: Request, user: CurrentUser = Depends(requi
     included so urgency from an unreviewed or rejected newer assessment is never hidden behind an older one.
     """
     _require(request, user, READ_ROLES, f"triage/cases/{case_ref}/confirmed")
-    if case_ref not in engine_cases():
+    if _lookup(request, case_ref) is None:
         raise HTTPException(status_code=404, detail="unknown_case")
     engine = get_engine(request)
     a = store.newest_assessment_for_case(engine, case_ref)

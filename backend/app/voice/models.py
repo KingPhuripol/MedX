@@ -144,3 +144,22 @@ class AddTurnBody(_Strict):
         if (self.source == "asr") != bool(self.asr_model):
             raise ValueError("asr_model is required if and only if source is 'asr'")
         return self
+
+
+# ---- slice v2d: nurse review of an ambient session (request LOCKED by mobile/lib/review.ts) ----
+
+
+class ReviewDecision(_Strict):
+    field: str
+    action: Literal["confirm", "edit", "reject", "add", "unknown"]
+    value: str | None
+    original: str | None
+    reason: str | None = Field(default=None, max_length=200)
+
+
+class ReviewPayload(_Strict):
+    session_id: str
+    patient_ref: str
+    decisions: list[ReviewDecision] = Field(min_length=1, max_length=16)
+    consent_acknowledged_at: AwareDatetime
+    red_flag_acknowledged_at: AwareDatetime | None

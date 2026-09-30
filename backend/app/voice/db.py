@@ -71,7 +71,44 @@ voice_extractions = Table(
     Column("held_json", Text, nullable=True),  # v2a: held (not written) facts of this call, JSON list
 )
 
-APPEND_ONLY = ("voice_turns", "voice_facts", "voice_extractions")
+# Slice v2d: the nurse's review of an ambient session and its six decisions (one review per session).
+voice_reviews = Table(
+    "voice_reviews",
+    voice_metadata,
+    Column("review_id", String(32), primary_key=True),
+    Column("session_id", String(32), nullable=False, unique=True),
+    Column("patient_ref", String(64), nullable=False),
+    Column("case_ref", String(64), nullable=False, index=True),
+    Column("reviewer_id", Integer, nullable=False),
+    Column("reviewer_role", String(16), nullable=False),
+    Column("submitted_at", String(40), nullable=False),
+    Column("consent_acknowledged_at", String(40), nullable=False),
+    Column("red_flag", Integer, nullable=False),
+    Column("red_flag_acknowledged_at", String(40), nullable=True),
+    Column("attention_turn_ids_json", Text, nullable=False),
+    Column("evidence_json", Text, nullable=False),
+    Column("case_facts_json", Text, nullable=False),  # S4 IntakeFacts (chief_complaint / onset_duration)
+)
+
+voice_review_decisions = Table(
+    "voice_review_decisions",
+    voice_metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("review_id", String(32), nullable=False, index=True),
+    Column("session_id", String(32), nullable=False),
+    Column("field", String(32), nullable=False),
+    Column("action", String(16), nullable=False),
+    Column("original", Text, nullable=True),
+    Column("final_value", Text, nullable=True),  # JSON of the final fact value; NULL when no fact
+    Column("final_state", String(8), nullable=False),  # KNOWN | none
+    Column("system_fact_id", String(32), nullable=True),
+    Column("reason", Text, nullable=True),
+    Column("actor_id", Integer, nullable=False),
+    Column("decided_at", String(40), nullable=False),
+    UniqueConstraint("review_id", "field", name="uq_voice_review_decisions_field"),
+)
+
+APPEND_ONLY = ("voice_turns", "voice_facts", "voice_extractions", "voice_reviews", "voice_review_decisions")
 _SESSION_FIXED_COLS = ("session_id", "patient_ref", "data_class", "created_at", "created_by", "mode")
 # Columns added after the first release: added to an existing database idempotently.
 _ADDED_COLUMNS = (("voice_sessions", "mode", "VARCHAR(16)"), ("voice_extractions", "held_json", "TEXT"))
