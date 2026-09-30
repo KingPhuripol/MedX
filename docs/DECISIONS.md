@@ -218,3 +218,8 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
   - Access goes through the existing nurse login, plus the voice access code when set.
 - **Not approved:** a permanent deployment of `medx-mobile` (D5 is still pending).
 - **Approved by:** project owner (chat, 2026-09-30).
+
+## 2026-09-30 — v2d closes D-V1-2 and D-V2C-4 (no new approval)
+- **What:** slice v2d adds `POST /api/voice/sessions/{id}/review`. The nurse's six confirmed decisions become ClinicalText evidence of case `V-<patient_ref>`, and the existing triage assess runs on it: red-flag alert first, then a department suggestion or abstention for nurse confirmation in `/nurse/triage`. This closes **D-V1-2** (voice→triage handoff) and the v2c carry-over **D-V2C-4** (the review endpoint the phone submits to).
+- **Authority:** built under the 2026-09-30 "V2 voice direction" approval above ("the nurse reviews and confirms the facts; only then do they go to the case as ClinicalText, feeding the existing department suggestion"). This entry records the closure and is not a new approval.
+- **Still open:** D-V2D-1 (no vitals/age/sex path, so every voice case abstains), D-V2D-3 (display strings mirror PROPOSED_V2C copy, pending D-V2C-2), D4 (clinical sign-off of the red-flag phrase list).
