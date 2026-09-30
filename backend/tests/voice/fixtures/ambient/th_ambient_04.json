@@ -1,0 +1,188 @@
+{
+  "dialogue_id": "th_ambient_04",
+  "mode": "ambient",
+  "source_dialogue_id": "th_intake_04",
+  "source_sha256": "19b82068cec10290f6e74d598df9946059be24e37f8775875181adf737a9c7b3",
+  "synthetic": true,
+  "author": "v2a-builder (converted from the S3 synthetic script; former agent turns rewritten as nurse questions; no real patient)",
+  "scenario_tags": [
+    "correction",
+    "allergy_refused",
+    "thai_number_words",
+    "dev"
+  ],
+  "patient_ref": "SYN-V2A-04",
+  "turns": [
+    {
+      "turn_id": "t01",
+      "speaker": "unknown",
+      "text": "วันนี้เป็นอะไรมาคะ",
+      "started_at": "2026-01-08T02:00:00Z",
+      "ended_at": "2026-01-08T02:00:03Z"
+    },
+    {
+      "turn_id": "t02",
+      "speaker": "unknown",
+      "text": "ปวดหัวครับ ปวดตุ้บๆ ที่ขมับ",
+      "started_at": "2026-01-08T02:00:05Z",
+      "ended_at": "2026-01-08T02:00:10Z"
+    },
+    {
+      "turn_id": "t03",
+      "speaker": "unknown",
+      "text": "เป็นมากี่วันแล้วคะ",
+      "started_at": "2026-01-08T02:00:12Z",
+      "ended_at": "2026-01-08T02:00:15Z"
+    },
+    {
+      "turn_id": "t04",
+      "speaker": "unknown",
+      "text": "ปวดมาสามวันแล้วครับ",
+      "started_at": "2026-01-08T02:00:17Z",
+      "ended_at": "2026-01-08T02:00:22Z"
+    },
+    {
+      "turn_id": "t05",
+      "speaker": "unknown",
+      "text": "ปวดกี่คะแนนคะ",
+      "started_at": "2026-01-08T02:00:24Z",
+      "ended_at": "2026-01-08T02:00:27Z"
+    },
+    {
+      "turn_id": "t06",
+      "speaker": "unknown",
+      "text": "เอ๊ะ เดี๋ยวครับ ไม่ใช่สามวัน สี่วันแล้วครับ นับผิด ส่วนความปวดให้ 8 เต็ม 10",
+      "started_at": "2026-01-08T02:00:29Z",
+      "ended_at": "2026-01-08T02:00:38Z"
+    },
+    {
+      "turn_id": "t07",
+      "speaker": "unknown",
+      "text": "แพ้ยาอะไรไหมคะ",
+      "started_at": "2026-01-08T02:00:40Z",
+      "ended_at": "2026-01-08T02:00:43Z"
+    },
+    {
+      "turn_id": "t08",
+      "speaker": "unknown",
+      "text": "เรื่องนี้ไม่ขอตอบครับ",
+      "started_at": "2026-01-08T02:00:45Z",
+      "ended_at": "2026-01-08T02:00:50Z"
+    },
+    {
+      "turn_id": "t09",
+      "speaker": "unknown",
+      "text": "ทานยาอะไรประจำไหมคะ",
+      "started_at": "2026-01-08T02:00:52Z",
+      "ended_at": "2026-01-08T02:00:55Z"
+    },
+    {
+      "turn_id": "t10",
+      "speaker": "unknown",
+      "text": "กินพาราเซตามอลครับ",
+      "started_at": "2026-01-08T02:00:57Z",
+      "ended_at": "2026-01-08T02:01:02Z"
+    },
+    {
+      "turn_id": "t11",
+      "speaker": "unknown",
+      "text": "มีโรคประจำตัวไหมคะ",
+      "started_at": "2026-01-08T02:01:04Z",
+      "ended_at": "2026-01-08T02:01:07Z"
+    },
+    {
+      "turn_id": "t12",
+      "speaker": "unknown",
+      "text": "ไม่มีครับ",
+      "started_at": "2026-01-08T02:01:09Z",
+      "ended_at": "2026-01-08T02:01:13Z"
+    }
+  ],
+  "gold_question_turns": {
+    "t01": "chief_complaint",
+    "t03": "onset_duration",
+    "t05": "severity",
+    "t07": "allergy_status",
+    "t09": "current_medications",
+    "t11": "relevant_history"
+  },
+  "gold_facts": [
+    {
+      "field": "chief_complaint",
+      "state": "KNOWN",
+      "value": "headache",
+      "items": null,
+      "span_turn_ids": [
+        "t02"
+      ]
+    },
+    {
+      "field": "onset_duration",
+      "state": "KNOWN",
+      "value": "P4D",
+      "items": null,
+      "span_turn_ids": [
+        "t06"
+      ]
+    },
+    {
+      "field": "severity",
+      "state": "KNOWN",
+      "value": 8,
+      "items": null,
+      "span_turn_ids": [
+        "t06"
+      ]
+    },
+    {
+      "field": "allergy_status",
+      "state": "REFUSED",
+      "value": null,
+      "items": null,
+      "span_turn_ids": [
+        "t08"
+      ]
+    },
+    {
+      "field": "current_medications",
+      "state": "KNOWN",
+      "value": null,
+      "items": [
+        "พาราเซตามอล"
+      ],
+      "span_turn_ids": [
+        "t10"
+      ]
+    },
+    {
+      "field": "relevant_history",
+      "state": "KNOWN",
+      "value": null,
+      "items": [],
+      "span_turn_ids": [
+        "t12"
+      ]
+    }
+  ],
+  "answers_by_field": {
+    "chief_complaint": [
+      "t02"
+    ],
+    "onset_duration": [
+      "t04"
+    ],
+    "severity": [
+      "t06"
+    ],
+    "allergy_status": [
+      "t08"
+    ],
+    "current_medications": [
+      "t10"
+    ],
+    "relevant_history": [
+      "t12"
+    ]
+  },
+  "gold_nurse_attention": false
+}
