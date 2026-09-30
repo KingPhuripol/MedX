@@ -369,7 +369,7 @@ export function Recording({ recorder, patient, onFinished, onBackToStart }: Reco
           </h2>
           <span className="t-meta muted">{COPY.rec.factsCount(captured)}</span>
         </div>
-        <ul className="group" data-testid="facts">
+        <ul className="group" data-testid="facts" tabIndex={0} aria-labelledby="fh">
           {factRows.map((r) => (
             <FactRow key={r.field} row={r} />
           ))}

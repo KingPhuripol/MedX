@@ -128,7 +128,7 @@ export function Start(props: StartProps) {
         {list.kind === "ready" && view.rows.length > 0 && (
           <ul className="group" role="radiogroup" aria-label="ผู้ป่วยที่รอซักประวัติ" style={{ marginTop: 16 }}>
             {view.rows.map((p) => (
-              <li key={p.id}>
+              <li key={p.id} role="none">
                 <label className="pick">
                   <input
                     type="radio"

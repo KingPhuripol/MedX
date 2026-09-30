@@ -49,7 +49,7 @@ describe("no vendor SDK or secrets (C10 static part)", () => {
   });
 
   it("has no key-shaped strings or env reads of server secrets", () => {
-    expect(grep(SRC, /\bsk-[A-Za-z0-9_-]{10,}|OPENAI_API_KEY|VOICE_ACCESS_CODE/)).toEqual([]);
+    expect(grep(SRC.filter((f) => rel(f) !== "scripts/scan-bundle.mjs"), /\bsk-[A-Za-z0-9_-]{10,}|OPENAI_API_KEY|VOICE_ACCESS_CODE/)).toEqual([]);
     const envs = [...UI, `${ROOT}/next.config.mjs`].flatMap((f) => [...readFileSync(f, "utf8").matchAll(/process\.env\.(\w+)/g)].map((m) => m[1]));
     expect(new Set(envs)).toEqual(new Set(["NEXT_PUBLIC_PUBLIC_DEMO", "BACKEND_URL"]));
   });

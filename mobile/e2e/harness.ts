@@ -142,6 +142,18 @@ export async function setup(page: Page, patch: Partial<ApiState> = {}): Promise<
   return api;
 }
 
+/** Wait until every finite CSS animation/transition has finished (fades would skew contrast checks). */
+export async function settle(page: Page) {
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+        .map((a) => a.finished.catch(() => undefined)),
+    ),
+  );
+}
+
 /** Emit one transcribed item: started → stopped → committed → completed. */
 export async function say(page: Page, id: string, text: string) {
   await page.evaluate(
