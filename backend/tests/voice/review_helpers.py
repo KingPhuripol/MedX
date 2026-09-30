@@ -99,8 +99,9 @@ def build_decisions(get: dict, overrides: dict[str, tuple[str, str | None]] | No
 class Intake:
     """One ambient session of a dev fixture, driven through /api/voice with a fixed server clock."""
 
-    def __init__(self, client, app, n: int, patient_ref: str | None = None, shift: timedelta = timedelta(0)):
-        self.c, self.app, self.fx = client, app, ambient_fixture(n)
+    def __init__(self, client, app, n: int | dict, patient_ref: str | None = None, shift: timedelta = timedelta(0)):
+        self.c, self.app = client, app
+        self.fx = n if isinstance(n, dict) else ambient_fixture(n)
         self.ref = patient_ref or self.fx["patient_ref"]
         self.shift = shift
         self.clock = Clock(dt(self.fx["turns"][0]["started_at"]) + shift - timedelta(seconds=1))
@@ -172,3 +173,15 @@ def stored_case_facts(app, review_id: str) -> list[dict]:
 def voice_facts_of(app, review_id: str) -> dict[str, dict]:
     facts = next(e for e in stored_evidence(app, review_id) if e["data_type"] == "VoiceIntakeFacts")["facts"]
     return {f["field"]: f for f in facts}
+
+
+def hand_turns(ref: str, texts: list[str], day: int = 20) -> dict:
+    """A hand-authored ambient dialogue (synthetic): 3 s turns, 2 s apart."""
+    base = datetime.fromisoformat(f"2026-01-{day:02d}T02:00:00+00:00")
+    turns = [{"turn_id": f"h{i}", "text": t, "started_at": (base + timedelta(seconds=5 * i)).isoformat(),
+              "ended_at": (base + timedelta(seconds=5 * i + 3)).isoformat()} for i, t in enumerate(texts)]
+    return {"patient_ref": ref, "turns": turns}
+
+
+ALLERGY_CONFLICT_TURNS = ["มาด้วยอาการอะไรคะ", "ปวดหัวค่ะ", "แพ้ยาอะไรไหมคะ", "แพ้เพนิซิลลินค่ะ",
+                          "แพ้ยาอะไรไหมคะ", "ไม่แพ้ค่ะ"]
