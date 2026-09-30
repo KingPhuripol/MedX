@@ -1,9 +1,30 @@
 # V2D — Nurse review and confirmed handoff of an ambient voice intake into a case (backend)
 
-Planner: innovation-lead. Revision 2, 2026-09-30 (rev 2 fixes checker findings: D8 names the one allowed edit to an existing test; 3.2 defines which 4xx write `voice.review.denied`, puts JSON parse errors in scope, and D6 now measures both plus the check order). Branch: `factory/v2d` (base a27e4b1, which already carries v2a and v2t). Gantt owner: ภูริณัฐ (Voice Agent, PROPOSAL row 16).
+Planner: innovation-lead. Revision 3, 2026-09-30. Rev 3 changes no contract, check, status, `detail` or acceptance text of rev 2 (65f24a3). It adds §0 (continuation scope), acceptance rows V2D-A14 and V2D-A15, and run commands for them. Rev 2 fixed checker findings: D8 names the one allowed edit to an existing test; 3.2 defines which 4xx write `voice.review.denied`, puts JSON parse errors in scope, and D6 now measures both plus the check order. Branch: `factory/v2d` (base a27e4b1, which already carries v2a and v2t). Gantt owner: ภูริณัฐ (Voice Agent, PROPOSAL row 16).
 Sources: `docs/PROPOSAL.md` §1.3.1 ("ส่งข้อมูลให้ Case Graph เสนอแผนกที่ควรเข้ารับบริการให้พยาบาลยืนยัน"), §3.1, §3.5, Table 3.2. Also `docs/DECISIONS.md` 2026-09-30 "V2 voice direction": the nurse reviews and confirms the facts, and only then do they go to the case as ClinicalText and feed the existing department suggestion. That entry is the owner approval this slice builds on. It closes **D-V1-2** and the v2c carry-over **D-V2C-4**. The proposal wins on any conflict.
 
 This is a research prototype that uses synthetic data only. The system suggests. The nurse confirms twice: first the facts on the phone, then the department in the web app.
+
+## 0. Continuation (rev 3): auth before body, denied audit, check order
+
+**Problem.** On 74d6605 the route declared `payload: Any = Body(...)`. FastAPI parsed the body before `require_nurse`, so a malformed body got 422 before authentication and wrote no `voice.review.denied` row. That breaks the 3.2 order (row 1 first) and the denied-audit rule (rows 2–17 write exactly one row).
+
+**Scope (this round).**
+- `backend/app/voice/router.py` only on the product side. The `/review` handler declares **no** `Body(...)` parameter. It gets the body from a dependency that itself depends on `require_nurse`, reads `await request.body()`, and parses it with `json.loads`. Any parse failure (malformed JSON, empty body, invalid UTF-8, `NaN`/`Infinity`/`-Infinity`, nesting deep enough to raise `RecursionError`) becomes a row-2 failure: 422, `detail` a list, 1 denied row `{422, "schema_invalid"}`. A JSON value that parses but is not an object (`[]`, `null`) is also row 2.
+- New tests in `backend/tests/voice/test_review_validation.py` for V2D-D6 (b), (c) and (d).
+
+**State at planning time (HEAD 39f9626).** Commits 3bb3bb0 and 39f9626 already contain this change (`_review_body` dependency on `require_nurse`, `parse_constant` rejection, `RecursionError` catch). `pytest backend/tests/voice -k review` gives 97 passed and 2 skipped (`pg`). The builder confirms these commits against A14/A15 and D6. The builder adds or changes code only where a check fails. Building everything again from scratch is not needed.
+
+**Out of scope (this round).** Everything outside this section is frozen at rev 2 and has already been built:
+- request/response shapes (3.1, 3.5);
+- the check table 3.2, including statuses, `detail` strings and row order;
+- 3.3/3.4 semantics;
+- `review.py` validation logic;
+- `mobile/`, `web/`, the triage module, and existing tests other than the D8 allowance.
+
+Content-type is not enforced. The mobile client sends `application/json`. A body sent with another content type is parsed the same way (planner default D-V2D-6). The OpenAPI document may lose the typed request body for this route. No client uses it, and the wire contract is 3.1.
+
+**Clinical risk of this round.** Low. The change moves a rejection earlier and adds audit evidence of denied attempts. A regression here could only make a denied request invisible in the audit log, or make an unauthenticated caller learn the body schema. No case write path changes. That is why A15 also asserts that 0 case writes happen on every parse-error input.
 
 ## 1. User and job
 
@@ -203,6 +224,8 @@ The transcript is stored evidence only. In this slice nothing re-extracts facts 
 | V2D-A11 | Fail safe | With `triage_engine.assess` patched to raise → 201, `department_suggestion.status "pending"`, `assessment_id null`, `triage_path "/nurse/triage"`, review and decisions committed, `voice.review.handoff` with `error_type`. A case with 0 S4 facts (cc and onset rejected) is listed, and assess → 201 with `abstained` | `test_review_case.py::test_pending_on_assess_failure`, `::test_zero_s4_facts` |
 | V2D-A12 | Contract shape | The request model is exactly 3.1 (strict). The response keys are exactly 3.5. `department_suggestion.status ∈ {suggested, abstained, pending}` in every test | `test_review.py::test_response_shape` |
 | V2D-A13 | Records | `docs/DECISIONS.md` has a dated line: D-V1-2 and D-V2C-4 closed by v2d under the 2026-09-30 "V2 voice direction" approval (not a new approval) | checker reads the file |
+| V2D-A14 | The /review wire contract is unchanged by the auth-first change (rev 3) | (a) `git diff 74d6605..HEAD -- backend/app/voice/review.py mobile web` is empty. (b) All of the following still pass unchanged: D9 (the mobile `submitFlow` port, which posts JSON with `content-type: application/json`), A12 (strict 3.1 request, exact 3.5 response keys) and D2. (c) The route stays `POST /api/voice/sessions/{id}/review`, and a success returns 201 | checker runs the git command; `test_review_e2e.py`, `test_review.py::test_response_shape`, `::test_happy_path_confirm_edit_reject` |
+| V2D-A15 | Auth runs before the body is read, and parse errors never reach 5xx (rev 3) | (a) In `backend/app/voice/router.py`, the `submit_review` signature has no `Body(` parameter. Its body comes only from a dependency whose parameters include `Depends(require_nurse)`; `grep -n "Body(" backend/app/voice/router.py` prints nothing. (b) As a logged-in nurse on a finished ambient session, each of these 10 raw bodies gives **422**, a list `detail`, exactly 1 `voice.review.denied` `{status:422, reason:"schema_invalid"}`, 0 case writes and 0 responses ≥ 500: `b"{"`, `b""`, `b"[]"`, `b"null"`, `b"\xff"`, `b"NaN"`, `b"Infinity"`, `b"-Infinity"`, `b'{"session_id": NaN}'`, and 100 000 `[` followed by 100 000 `]`. (c) Logged out, physician and pharmacist each send `b"{"` → 401/403/403, and 0 denied rows | `test_review_validation.py::test_parse_errors_422` (10 params), `::test_role_and_login` (6 params); checker runs the grep |
 
 ## 6. Required test cases (new files only, under `backend/tests/voice/`)
 
@@ -251,6 +274,7 @@ The transcript is stored evidence only. In this slice nothing re-extracts facts 
 - **D-V2D-3 (planner default, integration).** 3.3 mirrors the v2c display strings (PROPOSED_V2C, which are pending owner copy approval D-V2C-2). A copy change there makes confirms 422. After merge, the orchestrator adds a cross-check test that reads `mobile/lib/copy.ts`.
 - **D-V2D-4 (planner default).** Voice cases use `case_ref "V-" + patient_ref`, so they never collide with fixture refs such as `SYN-S4-001`. Refs over 62 chars are rejected (422).
 - **D-V2D-5 (planner default).** No `symptom.*` facts are derived from voice facts. Symptom red-flag rules on voice cases show as not evaluable, which is visible and not negative.
+- **D-V2D-6 (planner default, rev 3).** `/review` does not enforce `content-type`. The raw body is parsed as JSON whatever the header says, so a non-JSON header with a valid body is accepted as before, and an invalid body is a row-2 failure. Enforcing `application/json` (415) would add a status that 3.2 does not have. That would be a contract change and needs a new spec revision.
 
 ## 9. Run commands
 
@@ -262,4 +286,7 @@ make test
 make test-pg          # if a PG URL is available; else report D7-PG as skipped
 git diff --name-only --diff-filter=MD a27e4b1..HEAD -- backend/tests casegraph/tests tests web mobile   # D8a: only test_api_audit.py
 git diff -U0 a27e4b1..HEAD -- backend/tests/voice/test_api_audit.py                                      # D8b: only the two 5->6 counts
+.venv/bin/python -m pytest -q backend/tests/voice/test_review_validation.py                              # D6 (a)-(e), A15 (b)(c)
+git diff 74d6605..HEAD -- backend/app/voice/review.py mobile web                                          # A14a: empty
+grep -n "Body(" backend/app/voice/router.py                                                               # A15a: no output
 ```
