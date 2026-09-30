@@ -311,27 +311,69 @@ describe("session clock", () => {
 });
 
 describe("finish stops the turn queue (T9)", () => {
-  it("a slow failing POST is never retried after the 5 s drain; reopen resumes posting", async () => {
-    const { b, api, rec } = await listening();
-    const turnPosts = () => api.calls.filter((c) => c.method === "POST" && c.url.endsWith("/turns")).length;
-    api.on[`POST /api/voice/sessions/${rec.sessionId}/turns`] = () =>
+  const turnPosts = (api: { calls: { method: string; url: string }[] }) =>
+    api.calls.filter((c) => c.method === "POST" && c.url.endsWith("/turns")).length;
+  const hang503 = (api: ReturnType<typeof installApi>, sid: string) => {
+    api.on[`POST /api/voice/sessions/${sid}/turns`] = () =>
       new Promise((r) => setTimeout(() => r({ status: 503, body: { detail: "slow" } }), 12_000));
+  };
+
+  it("T5xT9 probe mirror: POST hangs past the drain, finish, 503 -> counted failed once; 0 POSTs until resume (C20, C21)", async () => {
+    const { b, api, rec } = await listening();
+    hang503(api, rec.sessionId);
     b.rtc.say("i1", "หนึ่ง");
     await vi.advanceTimersByTimeAsync(0);
-    expect(turnPosts()).toBe(1);
+    expect(turnPosts(api)).toBe(1);
     const done = rec.finish();
     await vi.advanceTimersByTimeAsync(5_000);
     expect(await done).toBe("done");
-    await vi.advanceTimersByTimeAsync(30_000); // 503 lands at 12 s; the T5 retry would fire at ~13 s
-    expect(turnPosts()).toBe(1);
+    const atFinish = turnPosts(api);
+    await vi.advanceTimersByTimeAsync(60_000); // 503 lands at 12 s; the T5 retry would fire at ~13 s
+    expect(turnPosts(api)).toBe(atFinish);
+    expect(rec.getSnapshot().failedSegments).toBe(1); // option A: counted, not silently lost
 
     delete api.on[`POST /api/voice/sessions/${rec.sessionId}/turns`];
     rec.reopen();
+    await vi.advanceTimersByTimeAsync(0);
     rec.press();
     await vi.advanceTimersByTimeAsync(0);
     expect(rec.getSnapshot().rec).toBe("listening");
+    expect(turnPosts(api)).toBe(atFinish); // 0 /turns between finish() resolving and the resume
+    await vi.advanceTimersByTimeAsync(6_000);
+    expect(turnPosts(api)).toBe(1); // the failed key is not re-posted (one outcome per key)
+    expect(rec.getSnapshot().failedSegments).toBe(1);
     b.rtc.say("i2", "สอง");
     await vi.advanceTimersByTimeAsync(0);
     expect(api.posted.map((p) => p.text)).toContain("สอง");
+  });
+
+  it("submit without resume: 0 /turns POSTs after finish, even with a completed item queued behind the cut-off POST (C21)", async () => {
+    const { b, api, rec } = await listening();
+    hang503(api, rec.sessionId);
+    api.on[`POST /api/voice/sessions/${rec.sessionId}/review`] = () => ({ status: 200, body: {} });
+    b.rtc.say("i1", "หนึ่ง");
+    b.rtc.say("i2", "สอง");
+    await vi.advanceTimersByTimeAsync(0);
+    expect(turnPosts(api)).toBe(1);
+    const done = rec.finish();
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(await done).toBe("done");
+    const { submitFlow } = await import("@/lib/review");
+    const submitted = submitFlow(rec.sessionId, {
+      session_id: rec.sessionId,
+      patient_ref: "SYN-2026-0023",
+      decisions: [],
+      consent_acknowledged_at: "2026-09-30T10:28:00.000+07:00",
+      red_flag_acknowledged_at: null,
+    });
+    await vi.advanceTimersByTimeAsync(0);
+    expect((await submitted).outcome).toBe("submitted");
+    expect(api.calls.filter((c) => c.url.endsWith("/finish"))).toHaveLength(1);
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(turnPosts(api)).toBe(1);
+    expect(rec.getSnapshot().failedSegments).toBe(1); // the cut-off key is counted, not silent
+    rec.dispose();
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(turnPosts(api)).toBe(1);
   });
 });
