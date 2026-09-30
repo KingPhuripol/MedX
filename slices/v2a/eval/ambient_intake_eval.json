@@ -4,7 +4,7 @@
   "mode": "ambient",
   "provider": "mock",
   "extractor": "voice-mock-rules-0.3.0",
-  "inputs_sha256": "18996838afc614e625bcf6c223dc3d17c6dc9237abf6f119a038b3ed7e9bd9d0",
+  "inputs_sha256": "9a285709362920a2ab929148cf555ef3da6763695619abc3c21db788e4d8ae5f",
   "n_dialogues": 15,
   "bootstrap": {
     "resamples": 2000,
@@ -505,8 +505,8 @@
   "attention_on_question_turns": 0,
   "latency_ms": {
     "n_turns": 161,
-    "p50": 2.102,
-    "p95": 2.755,
+    "p50": 1.773,
+    "p95": 2.216,
     "scope": "per-turn processing, mock provider in process, local"
   },
   "per_dialogue": [

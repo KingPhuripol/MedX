@@ -3,7 +3,7 @@
   "slice": "s3",
   "provider": "mock",
   "extractor": "voice-mock-rules-0.3.0",
-  "inputs_sha256": "9affceea6015f06017c0b024b81614b227f6c7fd70ef03fd52475085a20cfa5c",
+  "inputs_sha256": "8dad7501d9aa1f68af112f9822c25efd846783fb79db04c51b4e6b8947dd38b6",
   "n_dialogues": 15,
   "bootstrap": {
     "resamples": 2000,
@@ -550,8 +550,8 @@
   "allergy_false_none": 0,
   "latency_ms": {
     "n_turns": 80,
-    "p50": 2.221,
-    "p95": 2.582,
+    "p50": 2.064,
+    "p95": 2.419,
     "scope": "per-turn processing, mock provider in process"
   },
   "per_dialogue": [

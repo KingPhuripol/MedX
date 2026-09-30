@@ -4,7 +4,8 @@ Ambient intake has one phone mic and no diarization, so a nurse's question and a
 arrive as ``speaker:"unknown"``. A clause is a nurse question for field F iff it ends in a question form
 AND matches a field-intent pattern for F. A question form governed by a patient non-answer
 ("ไม่แน่ใจว่า...หรือเปล่า") or by a leading negation ("ไม่แพ้ยาอะไรค่ะ") is never a question, except a
-confirmation tag ("ไม่แพ้ยาใช่ไหมคะ"), which is a leading question.
+confirmation tag ("ไม่แพ้ยาใช่ไหมคะ"), which is a leading question. A question form with no field intent
+("มีไข้ไหมคะ", a symptom screening question) is still a question: it sets no window and yields no facts.
 
 MOCK-grade rules for a research prototype. A missed question leaves the answer window unset (the field stays
 MISSING and the nurse is prompted again); a false question yields no facts. Neither fabricates a negative.
@@ -31,6 +32,7 @@ _GLUED_END = re.compile(rf"{_QP}{_QTAIL}*(?:ค่ะ|คะ|ครับ|คั
 _CLAUSE = re.compile(r"[^\s?？]+(?:\s*[?？])?|[?？]")
 _LEADING_NEG = re.compile(r"^(?:แล้ว|ก็|อ๋อ|อ้อ|อืม|คือ)*(?:ไม่(?!สบาย)|ปฏิเสธ)")
 _PARTICLES_ONLY = re.compile(rf"^(?:{_POLITE}|[\s?？.,!ๆ])*$")
+_BARE_Q = re.compile(rf"^(?:{_QP}){_QTAIL}*\s*{_POLITE}*\s*[?？]?\s*$")  # a question particle alone
 
 _DURATION_UNIT = r"(?:นาที|ชั่วโมง|ชม\.|วัน|สัปดาห์|อาทิตย์|เดือน|ปี)"
 INTENTS: dict[str, re.Pattern[str]] = {
@@ -60,8 +62,9 @@ INTENTS: dict[str, re.Pattern[str]] = {
 
 @dataclass(frozen=True)
 class Classified:
-    field: str
-    remainder: str  # text after the question clause ("" for a pure question turn)
+    field: str | None  # field of the last field-intent question clause; None: question form, no field intent
+    remainder: str  # the turn text with every question clause removed ("" for a pure question turn)
+    answer_after: bool = False  # text follows the last field question clause (question + answer merge)
 
 
 def _clauses(text: str) -> list[tuple[int, int]]:
@@ -77,32 +80,59 @@ def _clauses(text: str) -> list[tuple[int, int]]:
     return spans
 
 
-def _question_field(clause: str) -> str | None:
+def _question(clause: str) -> tuple[bool, str | None]:
+    """(is a question, field of its intent or None)."""
     q = QUESTION_FORM.search(clause)
     if q is None:
-        return None
+        return False, None
     head = clause[: q.start(1)]
     if UNKNOWN_PHRASES.search(head) or REFUSED_PHRASES.search(head):
-        return None  # "ไม่แน่ใจว่าแม่เคยแพ้ยาอะไรหรือเปล่า", "จำไม่ได้ว่าแพ้ยาอะไร"
+        return False, None  # "ไม่แน่ใจว่าแม่เคยแพ้ยาอะไรหรือเปล่า", "จำไม่ได้ว่าแพ้ยาอะไร"
     if _LEADING_NEG.search(clause) and not _CONFIRM_RE.match(q.group(1)):
-        return None  # "ไม่แพ้ยาอะไรค่ะ" is an answer; "ไม่แพ้ยาใช่ไหมคะ" is a leading question
+        return False, None  # "ไม่แพ้ยาอะไรค่ะ" is an answer; "ไม่แพ้ยาใช่ไหมคะ" is a leading question
     best: tuple[int, str] | None = None
     for field, pat in INTENTS.items():
         for m in pat.finditer(clause):
             if best is None or m.end() > best[0]:  # the intent ending last wins
                 best = (m.end(), field)
-    return best[1] if best else None
+    return True, best[1] if best else None
+
+
+def _question_spans(text: str) -> list[tuple[int, int, str | None]]:
+    """Question clauses of the turn. A bare particle clause ("เจ็บหน้าอก ไหมคะ", an ASR space before the
+    particle) takes the clause before it."""
+    out: list[tuple[int, int, str | None]] = []
+    prev: int | None = None
+    for start, end in _clauses(text):
+        if prev is not None and _BARE_Q.match(text[start:end]):
+            if out and out[-1][0] == prev:
+                out.pop()
+            start = prev
+        prev = start
+        is_q, field = _question(text[start:end])
+        if is_q:
+            out.append((start, end, field))
+    return out
 
 
 def classify_turn(text: str) -> Classified | None:
-    """The last question clause of the turn and the text after it (a merged question + answer segment)."""
-    found: Classified | None = None
-    for start, end in _clauses(text):
-        field = _question_field(text[start:end])
-        if field is not None:
-            rest = text[end:].strip()
-            found = Classified(field, "" if _PARTICLES_ONLY.match(rest) else rest)
-    return found
+    """None if the turn has no question clause. Otherwise the field of its last field question and the turn
+    text with every question clause removed, so an answer said before or after a question (ASR joined the
+    segments, or a patient asked a question after a disclosure) is still extracted. A question with no field
+    intent ("มีไข้ไหมคะ") is removed too: a question is never an answer."""
+    spans = _question_spans(text)
+    if not spans:
+        return None
+    kept, pos = [], 0
+    for start, end, _ in spans:
+        kept.append((pos, text[pos:start]))
+        pos = end
+    kept.append((pos, text[pos:]))
+    kept = [(at, part.strip()) for at, part in kept if not _PARTICLES_ONLY.match(part)]
+    fields = [(end, f) for _, end, f in spans if f]
+    field = fields[-1][1] if fields else None
+    after = bool(fields) and any(at >= fields[-1][0] for at, _ in kept)
+    return Classified(field, " ".join(part for _, part in kept), after)
 
 
 def classify(text: str) -> str | None:

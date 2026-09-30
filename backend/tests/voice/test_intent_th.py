@@ -59,6 +59,34 @@ def test_merged_segment(text, field, remainder):
     assert (c.field, c.remainder) == (field, remainder)
 
 
+# Symptom / history screening questions with no field intent (reviewer HIGH, dev-only phrasings).
+SCREENING = ["มีไข้ไหมคะ", "ไอไหมคะ", "เจ็บหน้าอกไหมคะ", "ปวดท้องด้วยไหมคะ", "มีอาการเจ็บหน้าอกไหมคะ",
+             "เจ็บหน้าอก ไหมคะ", "หายใจเหนื่อยหรือเปล่าคะ", "เป็นเบาหวานไหมคะ", "ความดันสูงไหมคะ",
+             "ขอไปเข้าห้องน้ำก่อนได้ไหมครับ"]
+
+
+@pytest.mark.parametrize("text", SCREENING)
+def test_fieldless_question_is_removed(text):
+    c = classify_turn(text)
+    assert (c.field, c.remainder) == (None, "")  # a question, no window, nothing left to extract
+
+
+@pytest.mark.parametrize(("text", "field", "remainder", "after"), [
+    # an answer before the next question (ASR joined the segments): kept for extraction, never dropped
+    ("แพ้เพนิซิลลินค่ะ ทานยาอะไรประจำไหมคะ", "current_medications", "แพ้เพนิซิลลินค่ะ", False),
+    ("อ๋อ จริงๆเคยแพ้ยาซัลฟาค่ะ ทานยาอะไรประจำไหมคะ", "current_medications", "อ๋อ จริงๆเคยแพ้ยาซัลฟาค่ะ", False),
+    ("ปวดหัวมากค่ะ เป็นมากี่วันแล้วคะ", "onset_duration", "ปวดหัวมากค่ะ", False),
+    # a patient question after a disclosure
+    ("อ้อ แพ้เพนิซิลลินด้วย จะเป็นอะไรไหมคะ", "chief_complaint", "อ้อ แพ้เพนิซิลลินด้วย", False),
+    # text on both sides of the question
+    ("ไม่แพ้ค่ะ ทานยาอะไรไหมคะ ไม่ได้ทานค่ะ", "current_medications", "ไม่แพ้ค่ะ ไม่ได้ทานค่ะ", True),
+    ("มีไข้ไหมคะ ไม่มีค่ะ", None, "ไม่มีค่ะ", False),
+])
+def test_answer_around_question_is_kept(text, field, remainder, after):
+    c = classify_turn(text)
+    assert (c.field, c.remainder, c.answer_after) == (field, remainder, after)
+
+
 def test_last_intent_wins():
     # medication intent ends before the allergy intent: the question is about allergy
     assert classify("กินยาแล้วแพ้ไหมคะ") == "allergy_status"

@@ -23,7 +23,7 @@ from casegraph.data import EVIDENCE_ADAPTER
 
 from ..conftest import PASSWORDS
 from .helpers import StubProvider, VoiceAPI, dict_keys_deep, nurse_ctx
-from .test_intent_th import LEADING, QUESTIONS
+from .test_intent_th import LEADING, QUESTIONS, SCREENING
 
 AMBIENT_KEYS = {"kind", "field", "suggested_question_id", "suggested_question_th", "reason", "missing_fields"}
 GUIDED_KEYS = {"action", "field", "utterance_id", "utterance_th", "reason", "missing_fields"}
@@ -237,6 +237,84 @@ def test_stale_window_closes(client, login, app):
     assert facts["relevant_history"] == ["เบาหวาน"]
 
 
+def test_stale_window_closes_after_merged_turn(client, login, app):
+    """A merged question + answer turn is the first window turn, so the next remark is outside the window."""
+    spy = _spy(app)
+    api = _ambient(client, login, app)
+    api.turn("มีโรคประจำตัวไหมคะ เบาหวานค่ะ")
+    api.turn("เดี๋ยววัดความดันนะคะ")
+    assert [c.inputs["last_asked_field"] for c in spy.calls] == ["relevant_history", None]
+    facts = {f["field"]: f["value"] for f in api.get().json()["facts"]}
+    assert facts["relevant_history"] == ["เบาหวาน"]
+
+
+@pytest.mark.parametrize("q", SCREENING)
+def test_screening_question_no_facts(client, login, app, audit_rows, q):
+    """A yes/no symptom or history question with no field intent is never recorded as a patient fact."""
+    api = _ambient(client, login, app)
+    before = len(audit_rows())
+    body = api.turn(q).json()
+    assert body["new_facts"] == [] and _rows(app, voice_facts, api.sid) == []
+    assert not [r for r in audit_rows()[before:] if r["action"] == "gateway.invoke"]
+    (ext,) = _rows(app, voice_extractions, api.sid)
+    assert (ext["status"], ext["reason"]) == ("skipped", "nurse_question")
+    statuses = {s["field"]: s for s in body["field_statuses"]}
+    assert all(s["status"] == "MISSING" and s["times_asked"] == 0 for s in statuses.values())
+    assert (body["next_action"]["kind"], body["next_action"]["field"]) == ("prompt_nurse", "chief_complaint")
+
+
+def test_screening_question_does_not_become_chief_complaint(client, login, app):
+    api = _ambient(client, login, app)
+    for t in ("มีไข้ไหมคะ", "ไม่มีค่ะ", "แล้วมาด้วยอาการอะไรคะ", "ปวดท้องค่ะ"):
+        body = api.turn(t).json()
+    assert body["chief_complaint_conflict"] is False and body["held_facts"] == []
+    got = api.get().json()
+    assert {f["field"]: f["value"] for f in got["facts"]} == {"chief_complaint": "abdominal_pain"}
+    assert got["held_facts"] == []
+
+
+@pytest.mark.parametrize("turns", [
+    ["แพ้ยาอะไรไหมคะ", "ไม่แพ้ยาค่ะ", "อ้อ แพ้เพนิซิลลินด้วย จะเป็นอะไรไหมคะ"],
+    ["ไม่แพ้ยาค่ะ", "อ้อ แพ้เพนิซิลลินด้วย จะเป็นอะไรไหมคะ"],
+    ["แพ้ยาอะไรไหมคะ", "ไม่แพ้ยาค่ะ", "อ๋อ จริงๆเคยแพ้ยาซัลฟาค่ะ ทานยาอะไรประจำไหมคะ"],
+    ["ไม่แพ้ยาค่ะ", "อ๋อ จริงๆเคยแพ้ยาซัลฟาค่ะ ทานยาอะไรประจำไหมคะ"],
+    ["แพ้ยาอะไรไหมคะ", "แพ้ยาซัลฟาค่ะ ทานยาอะไรประจำไหมคะ"],
+    ["แพ้เพนิซิลลินค่ะ ทานยาอะไรประจำไหมคะ"],
+])
+def test_allergy_before_question_is_kept(client, login, app, turns):
+    """An allergy disclosed before a question in the same segment is extracted, never lost, and a later
+    disclosure replaces an earlier 'none' (the allergy is never left as a false none)."""
+    api = _ambient(client, login, app)
+    for t in turns:
+        api.turn(t)
+    facts = {f["field"]: f for f in api.get().json()["facts"]}
+    assert (facts["allergy_status"]["state"], facts["allergy_status"]["value"]) == ("KNOWN", "present")
+    assert facts["allergens"]["value"] and "allergy_status" not in api.get().json()["next_action"]["missing_fields"]
+
+
+def test_answer_before_question_uses_the_earlier_window(client, login, app):
+    spy = _spy(app)
+    api = _ambient(client, login, app)
+    api.turn("แพ้ยาอะไรไหมคะ")
+    api.turn("แพ้ยาซัลฟาค่ะ ทานยาอะไรประจำไหมคะ")  # the answer belongs to the allergy question
+    api.turn("เมทฟอร์มินค่ะ")  # the answer to the medication question
+    assert [c.inputs["last_asked_field"] for c in spy.calls] == ["allergy_status", "current_medications"]
+    assert spy.calls[0].inputs["turns"][-1]["text"] == "แพ้ยาซัลฟาค่ะ"
+    facts = {f["field"]: f["value"] for f in api.get().json()["facts"]}
+    assert facts["allergens"] == ["ซัลฟา"] and facts["current_medications"] == ["เมทฟอร์มิน"]
+
+
+def test_merged_negative_before_question_is_held(client, login, app):
+    """'none' said in the same segment as a question stays held (never recorded), so the nurse asks again."""
+    api = _ambient(client, login, app)
+    api.turn("แพ้ยาอะไรไหมคะ")
+    body = api.turn("ไม่แพ้ยาค่ะ ทานยาอะไรประจำไหมคะ").json()
+    assert [(h["field"], h["reason"]) for h in body["held_facts"]] == [
+        ("allergy_status", "merged_segment_allergy_negative")]
+    assert not [f for f in _rows(app, voice_facts, api.sid) if f["field"] == "allergy_status"]
+    assert "allergy_status" in body["next_action"]["missing_fields"]
+
+
 def test_scalar_window_closes_after_fact(client, login, app):
     spy = _spy(app)
     api = _ambient(client, login, app)
@@ -443,7 +521,11 @@ def test_ambient_gateway_audit_counts(app, audit_rows):
     adds = [r for r in rows if r["action"] == "voice.turn.add"]
     assert len(adds) == len(texts) and all(r["details"]["mode"] == "ambient" for r in adds)
     skipped = [r for r in adds if r["details"]["extraction"] == "skipped"]
-    assert len(skipped) == pure_questions and all(r["details"]["question_field"] in ASK_ORDER for r in skipped)
+    assert len(skipped) == pure_questions and all(r["details"]["question_field"] in ASK_ORDER for r in skipped
+                                                  if r["details"]["question_field"] is not None)
+    # the only field-less pure question in the fixtures is th_ambient_07 t14 "ขอไปเข้าห้องน้ำก่อนได้ไหมครับ"
+    assert sum(1 for r in skipped if r["details"]["question_field"] is None) == sum(
+        1 for t in texts if (c := classify_turn(t)) and not c.remainder and c.field is None) >= 1
     assert all(r["details"]["request_sha256"] is None for r in skipped)
 
 

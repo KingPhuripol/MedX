@@ -48,7 +48,7 @@ from .models import (
     StartSessionBody,
     Turn,
 )
-from .intent_th import classify_turn
+from .intent_th import Classified, classify_turn
 from .policy import MAX_ASKS, ambient_action, handoff, missing_fields, next_action, nurse_attention_hit
 from .utterances_th import utterance
 
@@ -60,8 +60,9 @@ QUESTION_REASON = "nurse_question"
 EVIDENCE_SOURCE = "voice_agent.cascade"
 # Ambient answer window (SPEC B2 ii). The current turn is counted: the window covers the first non-question
 # turn after the question and the second one closes it, so a later unrelated remark ("เดี๋ยววัดความดันนะคะ")
-# is never attached to the question. List fields are not closed early by (iii); a list said across more
-# turns still accumulates where the extractor recognises it without a window.
+# is never attached to the question. A merged question + answer turn is itself the first window turn. List
+# fields are not closed early by (iii); a list said across more turns still accumulates where the extractor
+# recognises it without a window.
 AMBIENT_ASK_WINDOW = 2
 SCALAR_FIELDS = frozenset({"chief_complaint", "onset_duration", "severity", "allergy_status"})
 
@@ -209,18 +210,20 @@ def _last_asked_guided(turns: list[dict]) -> str | None:
     return None
 
 
-def _last_asked_ambient(turns: list[dict], facts: list[IntakeFact]) -> str | None:
+def _last_asked_ambient(turns: list[dict], facts: list[IntakeFact], question: Classified | None) -> str | None:
     """SPEC B2: the field of the latest classified question, reset by (i) a later nurse-attention turn,
     (ii) AMBIENT_ASK_WINDOW non-question turns (current counted) or (iii) a scalar fact already written in
-    the window. ``turns[-1]`` is the current turn; a merged question + answer turn opens its own window."""
-    current = turns[-1]
-    if current["field"]:
-        return current["field"]
+    the window. ``turns[-1]`` is the current turn. A merged question + answer turn opens its own window and
+    counts as its first turn; an answer said *before* a question in the same turn belongs to the earlier window."""
+    if question is not None and question.field and question.answer_after:
+        return question.field
     q = next((i for i in range(len(turns) - 2, -1, -1) if turns[i]["field"]), None)
     if q is None:
         return None
     field, after = turns[q]["field"], turns[q + 1:]
-    if any(t["nurse_attention"] for t in after[:-1]) or len(after) >= AMBIENT_ASK_WINDOW:
+    merged = classify_turn(turns[q]["text"])
+    used = len(after) + int(bool(merged and merged.answer_after))
+    if any(t["nurse_attention"] for t in after[:-1]) or used >= AMBIENT_ASK_WINDOW:
         return None
     window = {t["turn_id"] for t in turns[q:-1]}
     if field in SCALAR_FIELDS and any(f.field == field and window & set(f.span_turn_ids) for f in facts):
@@ -513,6 +516,8 @@ def add_turn(ctx: VoiceContext, session_id: str, body: AddTurnBody, now: datetim
         attention = nurse_attention_hit(body.text, prior)
         # Nurse-question classifier: every turn in ambient mode, nurse turns only in guided mode.
         question = classify_turn(body.text) if mode == "ambient" or body.speaker == "nurse" else None
+        if mode == "guided" and question is not None and question.field is None:
+            question = None  # guided: only field questions; the extractor's nurse guard covers the rest
         turn = {
             "turn_id": _new_id(), "session_id": session_id, "seq": len(turns) + 1, "speaker": body.speaker,
             "text": body.text, "started_at": _iso(body.started_at), "ended_at": _iso(body.ended_at),
@@ -522,8 +527,9 @@ def add_turn(ctx: VoiceContext, session_id: str, body: AddTurnBody, now: datetim
         turns.append(turn)
         existing = _fact_rows(conn, session_id)
 
-    # 2. Extraction through the Model Gateway: only turns that had ended by this turn's end. A pure nurse
-    # question makes no gateway call and yields no facts; a merged question + answer sends only the answer part.
+    # 2. Extraction through the Model Gateway: only turns that had ended by this turn's end. A pure question
+    # (with or without field intent) makes no gateway call and yields no facts; a turn that mixes questions and
+    # answers sends only the answer text, with every question clause removed.
     current_end = body.ended_at
     visible = [t for t in turns if _dt(t["ended_at"]) <= current_end]
     gw = None
@@ -531,7 +537,7 @@ def add_turn(ctx: VoiceContext, session_id: str, body: AddTurnBody, now: datetim
     reason: str | None = QUESTION_REASON
     if question is None or question.remainder:
         if mode == "ambient":
-            last_asked = _last_asked_ambient(turns, existing)
+            last_asked = _last_asked_ambient(turns, existing, question)
         else:
             last_asked = _last_asked_guided(turns)
         request = GatewayRequest(
