@@ -43,7 +43,13 @@ def test_ambient_eval_thresholds():
     assert r["splits"]["heldout"]["micro_gated"]["f1"] >= 0.80
     assert r["allergy_false_none"] == 0  # A03
     dev = r["classifier"]["dev"]  # A04
-    assert dev["correct_field"] == dev["n_question_turns"] > 0 and dev["answer_turns_flagged"] == 0
+    assert dev["correct_field"] == dev["n_question_turns"] > 0
+    # SPEC rev 2 conflict (reported to the planner): A04 asks for 0 flagged dev answer turns, but th_ambient_07 t14
+    # "ขอไปเข้าห้องน้ำก่อนได้ไหมครับ" is a patient request that SPEC B1.3 and section 7 require to be a field-less
+    # question (question:true). It is the only flagged dev answer turn; any other one fails this test.
+    assert dev["flagged_answer_turns"] == ["th_ambient_07:t14"] == [
+        f"{fx['dialogue_id']}:{t['turn_id']}" for fx in eval_ambient.load_fixtures() for t in fx["turns"]
+        if t["text"] == "ขอไปเข้าห้องน้ำก่อนได้ไหมครับ"]
     assert r["classifier"]["heldout"]["correct_field_rate"] >= 0.80
     assert r["final_action"]["dev"]["matched"] == 10 and r["final_action"]["heldout"]["matched"] >= 4  # A05
     assert isinstance(r["attention_on_question_turns"], int)

@@ -5,7 +5,9 @@ arrive as ``speaker:"unknown"``. A clause is a nurse question for field F iff it
 AND matches a field-intent pattern for F. A question form governed by a patient non-answer
 ("ไม่แน่ใจว่า...หรือเปล่า") or by a leading negation ("ไม่แพ้ยาอะไรค่ะ") is never a question, except a
 confirmation tag ("ไม่แพ้ยาใช่ไหมคะ"), which is a leading question. A question form with no field intent
-("มีไข้ไหมคะ", a symptom screening question) is still a question: it sets no window and yields no facts.
+("มีไข้ไหมคะ", a symptom screening question) is still a question: it yields no facts and resets the window.
+A final บ้าง is a question form only after a wh-word in the same clause or before ``?``; otherwise it is the
+quantifier "some/sometimes" and the clause is an answer ("ไอบ้างค่ะ"; "กินยาอะไรอยู่บ้างคะ" is a question).
 
 MOCK-grade rules for a research prototype. A missed question leaves the answer window unset (the field stays
 MISSING and the nurse is prompted again); a false question yields no facts. Neither fabricates a negative.
@@ -33,6 +35,7 @@ _CLAUSE = re.compile(r"[^\s?？]+(?:\s*[?？])?|[?？]")
 _LEADING_NEG = re.compile(r"^(?:แล้ว|ก็|อ๋อ|อ้อ|อืม|คือ)*(?:ไม่(?!สบาย)|ปฏิเสธ)")
 _PARTICLES_ONLY = re.compile(rf"^(?:{_POLITE}|[\s?？.,!ๆ])*$")
 _BARE_Q = re.compile(rf"^(?:{_QP}){_QTAIL}*\s*{_POLITE}*\s*[?？]?\s*$")  # a question particle alone
+_WH = re.compile(r"อะไร|ไหน|ใคร|ยังไง|อย่างไร|เท่าไร|เท่าไหร่|กี่[ก-๙]|เมื่อไร|เมื่อไหร่")
 
 _DURATION_UNIT = r"(?:นาที|ชั่วโมง|ชม\.|วัน|สัปดาห์|อาทิตย์|เดือน|ปี)"
 INTENTS: dict[str, re.Pattern[str]] = {
@@ -62,9 +65,15 @@ INTENTS: dict[str, re.Pattern[str]] = {
 
 @dataclass(frozen=True)
 class Classified:
-    field: str | None  # field of the last field-intent question clause; None: question form, no field intent
+    field: str | None  # field of the last field-intent question clause (stored as ``voice_turns.field``)
     remainder: str  # the turn text with every question clause removed ("" for a pure question turn)
-    answer_after: bool = False  # text follows the last field question clause (question + answer merge)
+    # The window after the turn (SPEC B2): the field of the turn's last question clause, None if field-less.
+    window: str | None = None
+    # The last kept text follows a question clause; its window is that clause's field (``answer_field``).
+    answer_after: bool = False
+    answer_field: str | None = None
+    # Kept text follows the turn's last question clause: a merged question + answer (first window turn).
+    merged: bool = False
 
 
 def _clauses(text: str) -> list[tuple[int, int]]:
@@ -86,6 +95,8 @@ def _question(clause: str) -> tuple[bool, str | None]:
     if q is None:
         return False, None
     head = clause[: q.start(1)]
+    if q.group(1) == "บ้าง" and not _WH.search(head) and not re.search(r"[?？]", q.group(0)):
+        return False, None  # quantifier บ้าง: "ไอบ้างค่ะ", "ไข้ขึ้นบ้างลงบ้างค่ะ" are answers
     if UNKNOWN_PHRASES.search(head) or REFUSED_PHRASES.search(head):
         return False, None  # "ไม่แน่ใจว่าแม่เคยแพ้ยาอะไรหรือเปล่า", "จำไม่ได้ว่าแพ้ยาอะไร"
     if _LEADING_NEG.search(clause) and not _CONFIRM_RE.match(q.group(1)):
@@ -123,16 +134,19 @@ def classify_turn(text: str) -> Classified | None:
     spans = _question_spans(text)
     if not spans:
         return None
-    kept, pos = [], 0
-    for start, end, _ in spans:
-        kept.append((pos, text[pos:start]))
+    kept, pos = [], 0  # (index of the question clause before the text or -1, text)
+    for i, (start, end, _) in enumerate(spans):
+        kept.append((i - 1, text[pos:start]))
         pos = end
-    kept.append((pos, text[pos:]))
-    kept = [(at, part.strip()) for at, part in kept if not _PARTICLES_ONLY.match(part)]
-    fields = [(end, f) for _, end, f in spans if f]
-    field = fields[-1][1] if fields else None
-    after = bool(fields) and any(at >= fields[-1][0] for at, _ in kept)
-    return Classified(field, " ".join(part for _, part in kept), after)
+    kept.append((len(spans) - 1, text[pos:]))
+    kept = [(q, part.strip()) for q, part in kept if not _PARTICLES_ONLY.match(part)]
+    fields = [f for _, _, f in spans if f]
+    last_q = kept[-1][0] if kept else -1
+    return Classified(
+        field=fields[-1] if fields else None, remainder=" ".join(part for _, part in kept), window=spans[-1][2],
+        answer_after=last_q >= 0, answer_field=spans[last_q][2] if last_q >= 0 else None,
+        merged=last_q == len(spans) - 1,
+    )
 
 
 def classify(text: str) -> str | None:

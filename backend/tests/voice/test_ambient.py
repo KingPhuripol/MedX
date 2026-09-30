@@ -23,7 +23,7 @@ from casegraph.data import EVIDENCE_ADAPTER
 
 from ..conftest import PASSWORDS
 from .helpers import StubProvider, VoiceAPI, dict_keys_deep, nurse_ctx
-from .test_intent_th import LEADING, QUESTIONS, SCREENING
+from .test_intent_th import BANG_ANSWERS, LEADING, QUESTIONS, SCREENING
 
 AMBIENT_KEYS = {"kind", "field", "suggested_question_id", "suggested_question_th", "reason", "missing_fields"}
 GUIDED_KEYS = {"action", "field", "utterance_id", "utterance_th", "reason", "missing_fields"}
@@ -172,8 +172,8 @@ def test_question_turn_no_facts_no_gateway(client, login, app, audit_rows, field
     rows = audit_rows()[before:]
     assert body["new_facts"] == [] and not [r for r in rows if r["action"] == "gateway.invoke"]
     (add,) = [r for r in rows if r["action"] == "voice.turn.add"]
-    assert (add["details"]["question_field"], add["details"]["mode"], add["details"]["extraction"]) == (
-        field, "ambient", "skipped")
+    assert (add["details"]["question"], add["details"]["question_field"], add["details"]["mode"],
+            add["details"]["extraction"]) == (True, field, "ambient", "skipped")
     (ext,) = _rows(app, voice_extractions, api.sid)
     assert (ext["status"], ext["reason"]) == ("skipped", "nurse_question")
     statuses = {s["field"]: s for s in body["field_statuses"]}
@@ -256,6 +256,8 @@ def test_screening_question_no_facts(client, login, app, audit_rows, q):
     body = api.turn(q).json()
     assert body["new_facts"] == [] and _rows(app, voice_facts, api.sid) == []
     assert not [r for r in audit_rows()[before:] if r["action"] == "gateway.invoke"]
+    (add,) = [r for r in audit_rows()[before:] if r["action"] == "voice.turn.add"]
+    assert (add["details"]["question"], add["details"]["question_field"]) == (True, None)
     (ext,) = _rows(app, voice_extractions, api.sid)
     assert (ext["status"], ext["reason"]) == ("skipped", "nurse_question")
     statuses = {s["field"]: s for s in body["field_statuses"]}
@@ -328,6 +330,63 @@ def test_volunteered_facts_without_window(client, login, app):
     body = api.turn("เจ็บคอ ไอด้วยค่ะ เป็นมาสองวันแล้ว").json()
     assert {f["field"]: f["value"] for f in body["new_facts"]} == {"chief_complaint": "sore_throat",
                                                                   "onset_duration": "P2D"}
+
+
+@pytest.mark.parametrize("q", ["มีไข้ไหมคะ", "เจ็บหน้าอกไหมคะ", "ไอบ้างไหมคะ"])
+def test_fieldless_question_resets_allergy_window(client, login, app, q):
+    """SPEC 7 windows: "แพ้ยาอะไรไหมคะ" -> a field-less question -> "ไม่มีค่ะ": the answer belongs to the
+    field-less question, so allergy stays MISSING and is never recorded as none."""
+    spy = _spy(app)
+    api = _ambient(client, login, app)
+    api.turn("แพ้ยาอะไรไหมคะ")
+    api.turn(q)
+    body = api.turn("ไม่มีค่ะ").json()
+    assert [c.inputs["last_asked_field"] for c in spy.calls] == [None]
+    assert not [f for f in _rows(app, voice_facts, api.sid) if f["field"] in ("allergy_status", "allergens")]
+    assert {s["field"]: s["status"] for s in body["field_statuses"]}["allergy_status"] == "MISSING"
+
+
+def test_merged_fieldless_question_answer_has_no_window(client, login, app):
+    spy = _spy(app)
+    api = _ambient(client, login, app)
+    api.turn("แพ้ยาอะไรไหมคะ")
+    api.turn("มีไข้ไหมคะ ไม่มีค่ะ")
+    assert [c.inputs["last_asked_field"] for c in spy.calls] == [None]
+    assert spy.calls[0].inputs["turns"][-1]["text"] == "ไม่มีค่ะ"
+    assert not [f for f in _rows(app, voice_facts, api.sid) if f["field"] == "allergy_status"]
+
+
+def test_question_clause_never_sent(app):
+    """A08: across the 15 replays no question clause text reaches the gateway."""
+    spy = _spy(app)
+    fixtures, _ = _replays(app)
+    sent = [c.inputs["turns"][-1]["text"] for c in spy.calls]
+    questions = [t["text"] for fx in fixtures for t in fx["turns"] if classify_turn(t["text"]) is not None]
+    assert len(questions) > 60 and not set(questions) & set(sent)
+    assert all(classify_turn(text) is None for text in sent)  # no question clause left in what was sent
+
+
+@pytest.mark.parametrize("answer", BANG_ANSWERS)
+def test_bang_answers_not_questions(client, login, app, audit_rows, answer):
+    """A15: a บ้าง answer is an answer: question:false and exactly one gateway call."""
+    api = _ambient(client, login, app)
+    before = len(audit_rows())
+    api.turn(answer)
+    rows = audit_rows()[before:]
+    (add,) = [r for r in rows if r["action"] == "voice.turn.add"]
+    assert (add["details"]["question"], add["details"]["question_field"]) == (False, None)
+    assert len([r for r in rows if r["action"] == "gateway.invoke"]) == 1
+
+
+def test_bang_answer_extracted_in_window(client, login, app):
+    api = _ambient(client, login, app)
+    api.turn("มาด้วยอาการอะไรคะ")
+    body = api.turn("ไอบ้างค่ะ").json()
+    assert {s["field"]: s["status"] for s in body["field_statuses"]}["chief_complaint"] == "KNOWN"
+    api.turn("มีโรคประจำตัวไหมคะ")
+    api.turn("เป็นเบาหวานกับความดันบ้างค่ะ")
+    history = {f["field"]: f["value"] for f in api.get().json()["facts"]}["relevant_history"]
+    assert any("เบาหวาน" in h for h in history) and any("ความดัน" in h for h in history), history
 
 
 # ---------------------------------------------------------------- A05 next action
@@ -520,6 +579,8 @@ def test_ambient_gateway_audit_counts(app, audit_rows):
     assert sum(1 for e in ext if e["status"] == "skipped") == pure_questions > 60
     adds = [r for r in rows if r["action"] == "voice.turn.add"]
     assert len(adds) == len(texts) and all(r["details"]["mode"] == "ambient" for r in adds)
+    assert [r["details"]["question"] for r in adds] == [classify_turn(t) is not None for t in texts]
+    assert len(ext) == len(texts)  # exactly one voice_extractions row per non-agent turn
     skipped = [r for r in adds if r["details"]["extraction"] == "skipped"]
     assert len(skipped) == pure_questions and all(r["details"]["question_field"] in ASK_ORDER for r in skipped
                                                   if r["details"]["question_field"] is not None)

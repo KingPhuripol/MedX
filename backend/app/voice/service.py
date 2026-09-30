@@ -211,19 +211,23 @@ def _last_asked_guided(turns: list[dict]) -> str | None:
 
 
 def _last_asked_ambient(turns: list[dict], facts: list[IntakeFact], question: Classified | None) -> str | None:
-    """SPEC B2: the field of the latest classified question, reset by (i) a later nurse-attention turn,
-    (ii) AMBIENT_ASK_WINDOW non-question turns (current counted) or (iii) a scalar fact already written in
-    the window. ``turns[-1]`` is the current turn. A merged question + answer turn opens its own window and
-    counts as its first turn; an answer said *before* a question in the same turn belongs to the earlier window."""
-    if question is not None and question.field and question.answer_after:
-        return question.field
-    q = next((i for i in range(len(turns) - 2, -1, -1) if turns[i]["field"]), None)
-    if q is None:
+    """SPEC B2. ``turns[-1]`` is the current turn. Text after a question clause in the same turn belongs to that
+    clause (None if it has no field). Otherwise the window is set by the last question clause of the latest
+    earlier question turn: a field question opens it, a field-less question resets it to None. An open window
+    closes on (i) a later nurse-attention turn, (ii) AMBIENT_ASK_WINDOW turns with extraction text (current
+    counted; a merged question + answer turn is the first) or (iii) a scalar fact already written in it."""
+    if question is not None and question.answer_after:
+        return question.answer_field
+    for q in range(len(turns) - 2, -1, -1):
+        asked = classify_turn(turns[q]["text"])
+        if asked is not None:
+            break
+    else:
         return None
-    field, after = turns[q]["field"], turns[q + 1:]
-    merged = classify_turn(turns[q]["text"])
-    used = len(after) + int(bool(merged and merged.answer_after))
-    if any(t["nurse_attention"] for t in after[:-1]) or used >= AMBIENT_ASK_WINDOW:
+    field, after = asked.window, turns[q + 1:]
+    if field is None:
+        return None
+    if any(t["nurse_attention"] for t in after[:-1]) or len(after) + int(asked.merged) >= AMBIENT_ASK_WINDOW:
         return None
     window = {t["turn_id"] for t in turns[q:-1]}
     if field in SCALAR_FIELDS and any(f.field == field and window & set(f.span_turn_ids) for f in facts):
@@ -605,7 +609,8 @@ def add_turn(ctx: VoiceContext, session_id: str, body: AddTurnBody, now: datetim
     extraction = "skipped" if gw is None else "ok" if extracted is not None else "error"
     _audit(ctx, "voice.turn.add", session_id, "success", {
         "session_id": session_id, "mode": mode, "turn_id": turn["turn_id"], "speaker": body.speaker,
-        "source": body.source, "asr_model": body.asr_model, "question_field": turn["field"],
+        "source": body.source, "asr_model": body.asr_model, "question": question is not None,
+        "question_field": turn["field"],
         "request_sha256": gw.request_sha256 if gw else None, "extraction": extraction,
         "new_fact_ids": [f.fact_id for f in new_facts], "agent_turn_id": agent_turn_id,
         "held": [{k: h[k] for k in ("field", "state", "value", "span_turn_ids", "reason")} for h in held],

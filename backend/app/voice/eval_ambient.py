@@ -22,6 +22,7 @@ from ..deps import CurrentUser
 from ..gateway import build_provider
 from ..roles import Role
 from .db import create_voice_schema, voice_turns
+from .intent_th import classify_turn
 from .eval import FIXTURE_DIR, N_BOOT, REPO_ROOT, SEED, _percentile, bootstrap_ci, field_counts, final_predictions, prf
 from .mock_rules import EXTRACTOR_VERSION
 from .models import ASK_ORDER, FACT_FIELDS
@@ -88,7 +89,8 @@ def _classifier(rows: list[dict]) -> dict:
         "wrong_field": sum(1 for t in q if t["pred"] and t["pred"] != t["gold"]),
         "missed": sum(1 for t in q if not t["pred"]),
         "correct_field_rate": round(correct / len(q), 4) if q else "n/a",
-        "n_answer_turns": len(answers), "answer_turns_flagged": sum(1 for t in answers if t["pred"]),
+        "n_answer_turns": len(answers), "answer_turns_flagged": sum(1 for t in answers if t["question"]),
+        "flagged_answer_turns": [t["ref"] for t in answers if t["question"]],
         "confusion": confusion,
     }
 
@@ -113,10 +115,11 @@ def run_eval() -> dict:
         pred = final_predictions(run)
         final = run.decisions[-1]["action"]
         exp = expected_final(fx)
-        turns = [{"turn_id": ftid, "gold": fx["gold_question_turns"].get(ftid), "pred": stored[sid].field}
-                 for ftid, sid in run.turn_map.items()]
-        attention_on_questions += sum(1 for ftid, sid in run.turn_map.items()
-                                      if stored[sid].field and stored[sid].nurse_attention)
+        # "question": the turn has any question clause, field-less included (a flagged answer if gold says answer)
+        turns = [{"turn_id": ftid, "ref": f"{fx['dialogue_id']}:{ftid}", "gold": fx["gold_question_turns"].get(ftid), "pred": stored[sid].field,
+                  "question": classify_turn(stored[sid].text) is not None} for ftid, sid in run.turn_map.items()]
+        attention_on_questions += sum(1 for t, sid in zip(turns, run.turn_map.values())
+                                      if t["question"] and stored[sid].nurse_attention)
         rows.append({
             "dialogue_id": fx["dialogue_id"], "heldout": "heldout" in fx["scenario_tags"],
             "counts": {f: field_counts(gold.get(f), pred.get(f), f) for f in FACT_FIELDS},
@@ -165,7 +168,10 @@ def run_eval() -> dict:
                  "before intent_th.py existed, but by the same author, so the held-out split is not independent "
                  "evidence. Held-out results were not used to change rules. Text only: no audio, no ASR errors, "
                  "no diarization errors beyond the unknown speaker. A nurse statement (not a question) is extracted "
-                 "like a patient statement; v2d nurse review is the control. With n=15 the CIs are wide by design.",
+                 "like a patient statement, and a nurse question phrased with a final บ้าง but no wh-word and no "
+                 "'?' ('ไอบ้างคะ') is read as an answer; v2d nurse review is the control. L-1: a question followed "
+                 "by a trailing adverb leaves non-empty residue (1 gateway call, usually 0 facts). With n=15 the CIs "
+                 "are wide by design.",
     }
 
 
