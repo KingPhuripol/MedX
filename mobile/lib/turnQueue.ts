@@ -62,6 +62,8 @@ export class TurnQueue<R = unknown, G = unknown> {
   /** Item ids already accepted as completed, failed or skipped: never posted again. */
   private final = new Set<string>();
   private postedKeys = new Set<string>();
+  /** Keys already counted failed: never posted again, even after restart(). */
+  private failedKeys = new Set<string>();
   private times = new Map<string, { start?: number; end?: number }>();
   private busy = false;
   private stopped = false;
@@ -208,9 +210,15 @@ export class TurnQueue<R = unknown, G = unknown> {
         const parts = splitText(head.text);
         for (let i = 0; i < parts.length; i++) {
           const key = parts.length > 1 ? `${head.id}#${i + 1}` : head.id;
-          if (this.postedKeys.has(key)) continue;
+          if (this.postedKeys.has(key) || this.failedKeys.has(key)) continue;
           const ok = await this.send(key, this.body(head, parts[i]));
           if (ok === "fatal") return;
+          if (ok === "stopped") {
+            // Stopped before this part was sent: hold the item at the head for restart().
+            this.entries.set(head.id, head);
+            this.order.unshift(head);
+            return;
+          }
         }
         this.times.delete(head.id);
       }
@@ -244,11 +252,22 @@ export class TurnQueue<R = unknown, G = unknown> {
     this.lastEnd = Date.parse(body.ended_at);
   }
 
-  /** T5. Returns "posted", "failed" or "fatal". */
-  private async send(key: string, body: TurnBody): Promise<"posted" | "failed" | "fatal"> {
+  private fail(key: string): "failed" {
+    this.failedKeys.add(key);
+    this.hooks.onFailed(key);
+    return "failed";
+  }
+
+  /** T5. Returns "posted", "failed", "fatal" or "stopped" (nothing sent; caller holds the item). */
+  private async send(key: string, body: TurnBody): Promise<"posted" | "failed" | "fatal" | "stopped"> {
     if (!body.text) return "failed"; // empty after normalising (silence): nothing to post, not a lost segment
     for (let attempt = 0; ; attempt++) {
-      if (this.stopped) return "fatal";
+      if (this.stopped) {
+        if (attempt === 0) return "stopped";
+        // T5 × T9 (SPEC §17 option A): finish cut off a failing POST that reconcile did not find stored.
+        // Count it failed exactly once; it is never posted again.
+        return this.fail(key);
+      }
       const r = await this.hooks.post(body);
       if (r.data) {
         this.accept(key, body);
@@ -261,8 +280,7 @@ export class TurnQueue<R = unknown, G = unknown> {
         return "fatal";
       }
       if (r.status === 422 || (r.status >= 400 && r.status < 500 && r.status !== 408 && r.status !== 429)) {
-        this.hooks.onFailed(key);
-        return "failed";
+        return this.fail(key);
       }
       // Network error, timeout or 5xx: the turn may already be stored. Reconcile before any retry.
       const got = await this.hooks.fetchSession();
@@ -271,10 +289,7 @@ export class TurnQueue<R = unknown, G = unknown> {
         this.hooks.onReconciled(body, got.data);
         return "posted";
       }
-      if (attempt >= RETRY_DELAYS_MS.length) {
-        this.hooks.onFailed(key);
-        return "failed";
-      }
+      if (attempt >= RETRY_DELAYS_MS.length) return this.fail(key);
       await sleep(RETRY_DELAYS_MS[attempt]);
     }
   }
