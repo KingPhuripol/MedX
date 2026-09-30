@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MedX Scribe · พร้อมส่ง</title>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="comp.css">
+</head>
+<body>
+<!-- Review complete: every item decided (5 confirmed, 1 edited). The one filled primary becomes active. -->
+<main class="screen">
+  <header class="appbar">
+    <button class="btn btn--ghost" style="margin-left:-8px; color:var(--primary); font-weight:700">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>บันทึกต่อ
+    </button>
+  </header>
+
+  <h1 class="t-display" style="margin-top:8px">ตรวจทานข้อมูล</h1>
+  <p class="t-meta muted"><span class="num">SYN-2026-0023</span> · บันทึก 6 นาที 12 วินาที</p>
+  <p class="t-body" style="margin-top:8px">ยืนยัน แก้ไข หรือปฏิเสธทีละหัวข้อ ข้อมูลจะเข้าเคสเมื่อกดส่งเท่านั้น</p>
+
+  <ul class="group review-list" style="margin-top:24px">
+    <li class="decided">
+      <div class="rv-top"><span class="rv-lead"><span class="t-meta b muted">อาการสำคัญ</span><span class="tag tag--ok"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>ยืนยันแล้ว</span></span><button class="linkbtn" aria-label="เปลี่ยนอาการสำคัญ">เปลี่ยน</button></div>
+      <p class="t-body b">ปวดท้องใต้ลิ้นปี่ ปวดบิด</p>
+    </li>
+    <li class="decided">
+      <div class="rv-top"><span class="rv-lead"><span class="t-meta b muted">ระยะเวลาที่เป็น</span><span class="tag tag--ok"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>ยืนยันแล้ว</span></span><button class="linkbtn" aria-label="เปลี่ยนระยะเวลาที่เป็น">เปลี่ยน</button></div>
+      <p class="t-body b">ประมาณ 1 วัน (เริ่มเมื่อคืน)</p>
+    </li>
+    <li class="decided">
+      <div class="rv-top"><span class="rv-lead"><span class="t-meta b muted">ความรุนแรง</span><span class="tag tag--ok"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>ยืนยันแล้ว</span></span><button class="linkbtn" aria-label="เปลี่ยนความรุนแรง">เปลี่ยน</button></div>
+      <p class="t-body b">7 จาก 10</p>
+    </li>
+    <li class="decided">
+      <div class="rv-top"><span class="rv-lead"><span class="t-meta b muted">ประวัติแพ้ยา</span><span class="tag tag--ok"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>ยืนยันแล้ว</span></span><button class="linkbtn" aria-label="เปลี่ยนประวัติแพ้ยา">เปลี่ยน</button></div>
+      <p class="t-body b">แพ้อะม็อกซีซิลลิน (ผื่นขึ้นทั้งตัว)</p>
+    </li>
+    <li class="decided">
+      <div class="rv-top"><span class="rv-lead"><span class="t-meta b muted">ยาที่ใช้อยู่</span><span class="tag tag--warn"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>แก้ไขแล้ว</span></span><button class="linkbtn" aria-label="เปลี่ยนยาที่ใช้อยู่">เปลี่ยน</button></div>
+      <p class="t-body b">ยาลดกรด ไม่ทราบชื่อ ญาติจะนำซองยามาให้ดู</p>
+      <p class="t-meta muted">ระบบได้ยินว่า: ยาลดกรด</p>
+    </li>
+    <li class="decided">
+      <div class="rv-top"><span class="rv-lead"><span class="t-meta b muted">โรคประจำตัว</span><span class="tag tag--ok"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>ยืนยันแล้ว</span></span><button class="linkbtn" aria-label="เปลี่ยนโรคประจำตัว">เปลี่ยน</button></div>
+      <p class="t-body b">ความดันโลหิตสูง</p>
+    </li>
+  </ul>
+
+  <div class="bar">
+    <div class="bar-meta"><span class="b">ตรวจครบ 6 หัวข้อ</span><span class="muted">แก้ไข 1 หัวข้อ</span></div>
+    <button class="btn btn--primary btn--block"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>ยืนยันและส่งเข้าเคส</button>
+    <p class="t-meta muted">ระบบจะเสนอแผนกจากข้อมูลที่ยืนยันแล้ว และรอพยาบาลยืนยันอีกครั้งในเคส</p>
+    <p class="limit">ข้อมูลสังเคราะห์ · ต้นแบบเพื่อการวิจัย</p>
+  </div>
+</main>
+</body>
+</html>

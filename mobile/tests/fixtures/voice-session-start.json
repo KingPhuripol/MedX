@@ -1,0 +1,67 @@
+{
+  "session": {
+    "session_id": "vs_fixture_0023",
+    "patient_ref": "SYN-2026-0023",
+    "mode": "ambient",
+    "status": "active",
+    "data_class": "synthetic",
+    "nurse_attention": false,
+    "extraction_error": false,
+    "allergy_conflict": false,
+    "chief_complaint_conflict": false,
+    "created_at": "2026-09-30T10:28:00+07:00"
+  },
+  "next_action": {
+    "kind": "prompt_nurse",
+    "field": "chief_complaint",
+    "suggested_question_id": "ask.chief_complaint",
+    "suggested_question_th": "วันนี้มีอาการอะไรมาคะ",
+    "reason": null,
+    "missing_fields": [
+      "chief_complaint",
+      "onset_duration",
+      "severity",
+      "allergy_status",
+      "current_medications",
+      "relevant_history"
+    ]
+  },
+  "field_statuses": [
+    {
+      "field": "chief_complaint",
+      "status": "MISSING",
+      "times_asked": 0,
+      "not_elicited": false
+    },
+    {
+      "field": "onset_duration",
+      "status": "MISSING",
+      "times_asked": 0,
+      "not_elicited": false
+    },
+    {
+      "field": "severity",
+      "status": "MISSING",
+      "times_asked": 0,
+      "not_elicited": false
+    },
+    {
+      "field": "allergy_status",
+      "status": "MISSING",
+      "times_asked": 0,
+      "not_elicited": false
+    },
+    {
+      "field": "current_medications",
+      "status": "MISSING",
+      "times_asked": 0,
+      "not_elicited": false
+    },
+    {
+      "field": "relevant_history",
+      "status": "MISSING",
+      "times_asked": 0,
+      "not_elicited": false
+    }
+  ]
+}

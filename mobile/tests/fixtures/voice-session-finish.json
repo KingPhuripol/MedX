@@ -1,0 +1,81 @@
+{
+  "session": {
+    "session_id": "vs_fixture_0023",
+    "patient_ref": "SYN-2026-0023",
+    "mode": "ambient",
+    "status": "finished",
+    "data_class": "synthetic",
+    "nurse_attention": false,
+    "extraction_error": false,
+    "allergy_conflict": false,
+    "chief_complaint_conflict": false,
+    "created_at": "2026-09-30T10:28:00+07:00"
+  },
+  "handoff_reason": "finished_by_nurse",
+  "missing_fields": [
+    "onset_duration",
+    "severity",
+    "allergy_status",
+    "current_medications",
+    "relevant_history"
+  ],
+  "evidence": [],
+  "facts": [
+    {
+      "fact_id": "vf_0001",
+      "session_id": "vs_fixture_0023",
+      "field": "chief_complaint",
+      "state": "KNOWN",
+      "value": "abdominal_pain",
+      "value_text": "ปวดท้องใต้ลิ้นปี่",
+      "span_turn_ids": [
+        "vt_0001"
+      ],
+      "event_time": "2026-09-30T10:31:02+07:00",
+      "available_at_time": "2026-09-30T10:31:05+07:00",
+      "extractor": "mock_rules",
+      "provider": "mock",
+      "model_version": "mock-0",
+      "request_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "supersedes_fact_id": null
+    }
+  ],
+  "field_statuses": [
+    {
+      "field": "chief_complaint",
+      "status": "KNOWN",
+      "times_asked": 0,
+      "not_elicited": false
+    },
+    {
+      "field": "onset_duration",
+      "status": "MISSING",
+      "times_asked": 0,
+      "not_elicited": false
+    },
+    {
+      "field": "severity",
+      "status": "MISSING",
+      "times_asked": 0,
+      "not_elicited": false
+    },
+    {
+      "field": "allergy_status",
+      "status": "MISSING",
+      "times_asked": 0,
+      "not_elicited": false
+    },
+    {
+      "field": "current_medications",
+      "status": "MISSING",
+      "times_asked": 0,
+      "not_elicited": false
+    },
+    {
+      "field": "relevant_history",
+      "status": "MISSING",
+      "times_asked": 0,
+      "not_elicited": false
+    }
+  ]
+}

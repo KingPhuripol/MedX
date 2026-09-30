@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MedX Scribe · เลือกผู้ป่วย</title>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="comp.css">
+</head>
+<body>
+<main class="screen screen--fixed">
+  <header class="appbar">
+    <span class="wordmark" style="font-size:20px" role="img" aria-label="MedX">Med<span>X</span></span>
+    <button class="btn btn--ghost t-meta" aria-label="ออกจากระบบ (nurse1)">
+      <span class="muted">nurse1</span>
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="color:var(--muted-foreground)"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>
+    </button>
+  </header>
+
+  <h1 class="t-display" style="margin-top:16px">เลือกผู้ป่วย</h1>
+  <p class="t-body muted">ผู้ป่วยสังเคราะห์ที่รอซักประวัติ</p>
+
+  <div class="input" style="margin-top:16px">
+    <span class="adorn"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg></span>
+    <input aria-label="ค้นหาหรือพิมพ์รหัสผู้ป่วยสังเคราะห์" placeholder="ค้นหาหรือพิมพ์รหัส SYN-">
+  </div>
+
+  <ul class="group" role="radiogroup" aria-label="ผู้ป่วยที่รอซักประวัติ" style="margin-top:16px; overflow:hidden">
+    <li class="pick pick--on" role="radio" aria-checked="true" tabindex="0">
+      <span class="radio radio--on" aria-hidden="true"></span>
+      <span><span class="b num">SYN-2026-0023</span> <span class="t-body">· หญิง 46 ปี</span><br><span class="t-meta muted">เตียง 7 · มาถึง 10:24 น.</span></span>
+    </li>
+    <li class="pick" role="radio" aria-checked="false" tabindex="-1">
+      <span class="radio" aria-hidden="true"></span>
+      <span><span class="b num">SYN-2026-0017</span> <span class="t-body">· ชาย 58 ปี</span><br><span class="t-meta muted">เตียง 4 · มาถึง 10:05 น.</span></span>
+    </li>
+    <li class="pick" role="radio" aria-checked="false" tabindex="-1">
+      <span class="radio" aria-hidden="true"></span>
+      <span><span class="b num">SYN-2026-0031</span> <span class="t-body">· ชาย 71 ปี</span><br><span class="t-meta muted">รถเข็น 2 · มาถึง 10:40 น.</span></span>
+    </li>
+  </ul>
+
+  <section aria-labelledby="mic-h" style="margin-top:24px; display:flex; flex-direction:column; gap:8px">
+    <h2 id="mic-h" class="t-body b" style="display:flex; gap:8px; align-items:center">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="color:var(--primary)"><path d="M12 19v3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><rect x="9" y="2" width="6" height="13" rx="3"/></svg>
+      ก่อนเริ่มบันทึก
+    </h2>
+    <ul class="explain t-meta">
+      <li><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span>ครั้งแรกที่กดเริ่มบันทึก เบราว์เซอร์จะขอใช้ไมโครโฟน ให้เลือก “อนุญาต”</span></li>
+      <li><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span>แอปฟังเฉพาะตอนกำลังบันทึก และไม่พูดกับผู้ป่วย คุณเป็นคนถามเอง</span></li>
+    </ul>
+    <label class="consent t-body" style="margin-top:8px">
+      <span class="check check--on" role="checkbox" aria-checked="true"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true" style="stroke-width:3"><path d="M20 6 9 17l-5-5"/></svg></span>
+      แจ้งผู้ป่วยแล้วว่าจะบันทึกเสียงบทสนทนา
+    </label>
+  </section>
+
+  <button class="btn btn--primary btn--block" style="margin-top:auto">เปิดหน้าบันทึก</button>
+  <p class="limit">ข้อมูลสังเคราะห์ · ต้นแบบเพื่อการวิจัย</p>
+</main>
+</body>
+</html>

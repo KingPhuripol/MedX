@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MedX Scribe · ข้อมูลครบ</title>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="comp.css">
+</head>
+<body>
+<!-- State: all required fields captured. 'จบการบันทึก' becomes the one filled primary; record button goes quiet. -->
+<main class="screen screen--fixed">
+  <header class="appbar">
+    <div class="patient"><span class="b num">SYN-2026-0023</span><span class="t-meta muted">หญิง 46 ปี · เตียง 7</span></div>
+  </header>
+
+  <section class="slot slot--done" aria-live="polite">
+    <h2 class="slot-head t-title"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m16 9-5.5 5.5L8 12"/></svg>ได้ข้อมูลครบ 6 หัวข้อแล้ว</h2>
+    <p class="t-body">จบการบันทึกเพื่อตรวจทานได้เลย หรือคุยต่อถ้ามีข้อมูลเพิ่ม</p>
+  </section>
+
+  <section class="facts" aria-labelledby="fh" style="margin-top:16px">
+    <div class="facts-head"><h2 id="fh" class="t-body b">ข้อมูลที่ได้</h2><span class="t-meta muted">6 จาก 6 หัวข้อ</span></div>
+    <ul class="group">
+      <li class="fact"><span class="ok"><svg class="i" viewBox="0 0 24 24" aria-label="ได้ข้อมูลแล้ว"><circle cx="12" cy="12" r="10"/><path d="m16 9-5.5 5.5L8 12"/></svg></span><span class="lbl">อาการสำคัญ</span><span class="val">ปวดท้องใต้ลิ้นปี่</span></li>
+      <li class="fact"><span class="ok"><svg class="i" viewBox="0 0 24 24" aria-label="ได้ข้อมูลแล้ว"><circle cx="12" cy="12" r="10"/><path d="m16 9-5.5 5.5L8 12"/></svg></span><span class="lbl">ระยะเวลาที่เป็น</span><span class="val">ประมาณ 1 วัน</span></li>
+      <li class="fact"><span class="ok"><svg class="i" viewBox="0 0 24 24" aria-label="ได้ข้อมูลแล้ว"><circle cx="12" cy="12" r="10"/><path d="m16 9-5.5 5.5L8 12"/></svg></span><span class="lbl">ความรุนแรง</span><span class="val">7 จาก 10</span></li>
+      <li class="fact"><span class="ok"><svg class="i" viewBox="0 0 24 24" aria-label="ได้ข้อมูลแล้ว"><circle cx="12" cy="12" r="10"/><path d="m16 9-5.5 5.5L8 12"/></svg></span><span class="lbl">ประวัติแพ้ยา</span><span class="val">แพ้อะม็อกซีซิลลิน</span></li>
+      <li class="fact"><span class="ok"><svg class="i" viewBox="0 0 24 24" aria-label="ได้ข้อมูลแล้ว"><circle cx="12" cy="12" r="10"/><path d="m16 9-5.5 5.5L8 12"/></svg></span><span class="lbl">ยาที่ใช้อยู่</span><span class="val">ยาลดกรด</span></li>
+      <li class="fact"><span class="ok"><svg class="i" viewBox="0 0 24 24" aria-label="ได้ข้อมูลแล้ว"><circle cx="12" cy="12" r="10"/><path d="m16 9-5.5 5.5L8 12"/></svg></span><span class="lbl">โรคประจำตัว</span><span class="val">ความดันโลหิตสูง</span></li>
+    </ul>
+  </section>
+
+  <section class="dock" aria-label="เครื่องบันทึก">
+    <button class="heard" aria-label="เปิดบทสนทนาทั้งหมด">
+      <p class="line"><time class="num">10:35</time><span>มีโรคประจำตัวไหมคะ</span></p>
+      <p class="line"><time class="num">10:35</time><span>ความดันสูงค่ะ กินยาทุกเช้า</span></p>
+      <p class="line"><time class="num">10:36</time><span>จำชื่อยาไม่ได้ค่ะ</span></p>
+    </button>
+    <div class="controls">
+      <div class="state" role="status">
+        <span class="clock num">06:12</span>
+        <span class="say"><span class="meter" aria-hidden="true"><i style="height:6px"></i><i style="height:12px"></i><i style="height:16px"></i><i style="height:8px"></i><i style="height:4px"></i></span>กำลังฟัง</span>
+      </div>
+      <div class="rec-wrap">
+        <button class="rec rec--quiet" aria-label="หยุดบันทึกชั่วคราว"><svg class="i i-lg" viewBox="0 0 24 24" aria-hidden="true" style="fill:currentColor; stroke:none"><rect x="14" y="3" width="5" height="18" rx="1"/><rect x="5" y="3" width="5" height="18" rx="1"/></svg></button>
+        <span class="rec-label" aria-hidden="true">หยุดชั่วคราว</span>
+      </div>
+      <button class="btn finish btn--primary">จบการบันทึก</button>
+    </div>
+    <p class="limit" style="padding-top:0">ข้อมูลสังเคราะห์ · ต้นแบบเพื่อการวิจัย</p>
+  </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MedX Scribe · หยุดชั่วคราว</title>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="comp.css">
+</head>
+<body>
+<!-- State: paused. Navy slot is reserved for 'live and asking'; paused drops it to neutral. -->
+<main class="screen screen--fixed">
+  <header class="appbar">
+    <div class="patient"><span class="b num">SYN-2026-0023</span><span class="t-meta muted">หญิง 46 ปี · เตียง 7</span></div>
+  </header>
+
+  <section class="slot slot--idle" aria-live="polite" aria-labelledby="q">
+    <p id="q" class="slot-q" lang="th">มีอาการนี้มานานเท่าไรแล้วคะ</p>
+    <p class="slot-note">หยุดชั่วคราวอยู่ · กดบันทึกต่อเมื่อพร้อม</p>
+  </section>
+
+  <section class="facts" aria-labelledby="fh" style="margin-top:16px">
+    <div class="facts-head"><h2 id="fh" class="t-body b">ข้อมูลที่ได้</h2><span class="t-meta muted">2 จาก 6 หัวข้อ</span></div>
+    <ul class="group">
+      <li class="fact"><span class="ok"><svg class="i" viewBox="0 0 24 24" aria-label="ได้ข้อมูลแล้ว"><circle cx="12" cy="12" r="10"/><path d="m16 9-5.5 5.5L8 12"/></svg></span><span class="lbl">อาการสำคัญ</span><span class="val">ปวดท้องใต้ลิ้นปี่</span></li>
+      <li class="fact"><span class="open"><svg class="i" viewBox="0 0 24 24" aria-label="ยังไม่มีข้อมูล"><path d="M10.1 2.182a10 10 0 0 1 3.8 0"/><path d="M13.9 21.818a10 10 0 0 1-3.8 0"/><path d="M17.609 3.721a10 10 0 0 1 2.69 2.7"/><path d="M2.182 13.9a10 10 0 0 1 0-3.8"/><path d="M20.279 17.609a10 10 0 0 1-2.7 2.69"/><path d="M21.818 10.1a10 10 0 0 1 0 3.8"/><path d="M3.721 6.391a10 10 0 0 1 2.7-2.69"/><path d="M6.391 20.279a10 10 0 0 1-2.69-2.7"/></svg></span><span class="lbl">ระยะเวลาที่เป็น</span><span class="val val--empty">ยังไม่มี</span></li>
+      <li class="fact"><span class="ok"><svg class="i" viewBox="0 0 24 24" aria-label="ได้ข้อมูลแล้ว"><circle cx="12" cy="12" r="10"/><path d="m16 9-5.5 5.5L8 12"/></svg></span><span class="lbl">ความรุนแรง</span><span class="val">7 จาก 10</span></li>
+      <li class="fact"><span class="open"><svg class="i" viewBox="0 0 24 24" aria-label="ยังไม่มีข้อมูล"><path d="M10.1 2.182a10 10 0 0 1 3.8 0"/><path d="M13.9 21.818a10 10 0 0 1-3.8 0"/><path d="M17.609 3.721a10 10 0 0 1 2.69 2.7"/><path d="M2.182 13.9a10 10 0 0 1 0-3.8"/><path d="M20.279 17.609a10 10 0 0 1-2.7 2.69"/><path d="M21.818 10.1a10 10 0 0 1 0 3.8"/><path d="M3.721 6.391a10 10 0 0 1 2.7-2.69"/><path d="M6.391 20.279a10 10 0 0 1-2.69-2.7"/></svg></span><span class="lbl">ประวัติแพ้ยา</span><span class="val val--empty">ยังไม่มี</span></li>
+      <li class="fact"><span class="open"><svg class="i" viewBox="0 0 24 24" aria-label="ยังไม่มีข้อมูล"><path d="M10.1 2.182a10 10 0 0 1 3.8 0"/><path d="M13.9 21.818a10 10 0 0 1-3.8 0"/><path d="M17.609 3.721a10 10 0 0 1 2.69 2.7"/><path d="M2.182 13.9a10 10 0 0 1 0-3.8"/><path d="M20.279 17.609a10 10 0 0 1-2.7 2.69"/><path d="M21.818 10.1a10 10 0 0 1 0 3.8"/><path d="M3.721 6.391a10 10 0 0 1 2.7-2.69"/><path d="M6.391 20.279a10 10 0 0 1-2.69-2.7"/></svg></span><span class="lbl">ยาที่ใช้อยู่</span><span class="val val--empty">ยังไม่มี</span></li>
+      <li class="fact"><span class="open"><svg class="i" viewBox="0 0 24 24" aria-label="ยังไม่มีข้อมูล"><path d="M10.1 2.182a10 10 0 0 1 3.8 0"/><path d="M13.9 21.818a10 10 0 0 1-3.8 0"/><path d="M17.609 3.721a10 10 0 0 1 2.69 2.7"/><path d="M2.182 13.9a10 10 0 0 1 0-3.8"/><path d="M20.279 17.609a10 10 0 0 1-2.7 2.69"/><path d="M21.818 10.1a10 10 0 0 1 0 3.8"/><path d="M3.721 6.391a10 10 0 0 1 2.7-2.69"/><path d="M6.391 20.279a10 10 0 0 1-2.69-2.7"/></svg></span><span class="lbl">โรคประจำตัว</span><span class="val val--empty">ยังไม่มี</span></li>
+    </ul>
+  </section>
+
+  <section class="dock" aria-label="เครื่องบันทึก">
+    <div class="notice notice--muted" role="status"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="14" y="3" width="5" height="18" rx="1"/><rect x="5" y="3" width="5" height="18" rx="1"/></svg><div><strong>หยุดบันทึกชั่วคราว</strong>เสียงช่วงนี้ไม่ถูกบันทึก ข้อมูลเดิมยังอยู่ครบ</div></div>
+    <div class="controls">
+      <div class="state" role="status">
+        <span class="clock num">03:42</span>
+        <span class="say"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true" style="color:var(--muted-foreground)"><rect x="14" y="3" width="5" height="18" rx="1"/><rect x="5" y="3" width="5" height="18" rx="1"/></svg>หยุดชั่วคราว</span>
+      </div>
+      <div class="rec-wrap">
+        <button class="rec" aria-label="บันทึกต่อ"><svg class="i i-lg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19v3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><rect x="9" y="2" width="6" height="13" rx="3"/></svg></button>
+        <span class="rec-label" aria-hidden="true">บันทึกต่อ</span>
+      </div>
+      <button class="btn finish">จบการบันทึก</button>
+    </div>
+    <p class="limit" style="padding-top:0">ข้อมูลสังเคราะห์ · ต้นแบบเพื่อการวิจัย</p>
+  </section>
+</main>
+</body>
+</html>
