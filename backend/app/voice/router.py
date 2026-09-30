@@ -79,11 +79,15 @@ def finish(session_id: str, request: Request, user: CurrentUser = Depends(requir
     return _run(service.finish, _ctx(request, user), session_id, _now(request))
 
 
+def _reject_constant(name: str) -> Any:
+    raise ValueError(f"non-standard JSON constant {name}")
+
+
 async def _review_body(request: Request, user: CurrentUser = Depends(require_nurse)) -> tuple[CurrentUser, Any]:
     """Read the body only after require_nurse (SPEC 3.2 order). Unparseable JSON becomes None, a row-2 schema failure."""
     try:
-        return user, json.loads(await request.body())
-    except ValueError:  # JSONDecodeError and UnicodeDecodeError
+        return user, json.loads(await request.body(), parse_constant=_reject_constant)
+    except (ValueError, RecursionError):  # JSONDecodeError, UnicodeDecodeError, NaN/Infinity, deep nesting
         return user, None
 
 

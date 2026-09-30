@@ -222,7 +222,8 @@ def test_role_and_login(client, app, login, audit_rows, user, malformed):
     assert _denied(audit_rows) == []
 
 
-@pytest.mark.parametrize("raw", [b"{", b"", b"[]", b"null", b"\xff"])
+@pytest.mark.parametrize("raw", [b"{", b"", b"[]", b"null", b"\xff", b"NaN", b"Infinity", b"-Infinity",
+                                 b'{"session_id": NaN}', b"[" * 100000 + b"]" * 100000])
 def test_parse_errors_422(client, app, login, audit_rows, raw):
     """Malformed JSON, an empty body and a non-object are row-2 failures with one denied row."""
     login("nurse1")
