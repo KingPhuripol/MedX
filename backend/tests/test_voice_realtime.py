@@ -129,6 +129,7 @@ def test_b1_config_enabled_shape(env):
     assert c.get("/api/voice/realtime/config").json() == {
         "enabled": True, "reason": None, "access_code_required": False, "max_session_seconds": 300,
         "vendor_label": "OpenAI", "model": "gpt-realtime-2.1-mini", "transcribe_model": "gpt-4o-mini-transcribe",
+        "ambient_supported": True, "ambient_model": "gpt-4o-mini-transcribe",
     }
 
 
@@ -237,7 +238,7 @@ def test_b5_no_secret_leaks(tmp_path, caplog):
     (ok,) = [r for r in rt_rows(app) if r["outcome"] == "success"]
     assert set(ok["details"]) == {
         "model", "transcribe_model", "instructions_version", "instructions_sha256", "max_session_seconds",
-        "expires_at", "upstream_status", "upstream_session_id",
+        "expires_at", "upstream_status", "upstream_session_id", "purpose",
     }
     assert ok["details"]["upstream_session_id"] == "sess_abc123"
     assert ok["details"]["instructions_sha256"] == vr.INSTRUCTIONS_SHA256

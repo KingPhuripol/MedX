@@ -1,4 +1,7 @@
 """Slice v1 (MedX Live): short-lived realtime client secret for browser speech in/out.
+Slice v2t: ``purpose: "ambient"`` mints a transcription-only session (no model output at all) for the
+ambient mobile scribe. Audio goes phone -> OpenAI directly, not through the Model Gateway (owner-accepted
+deviation from Proposal 3.1, DECISIONS.md 2026-09-30); every mint is audited with its purpose.
 
 The vendor realtime model is used for speech only. Questions come from the deterministic voice policy;
 facts come from the rules-based intake. This module mints a 60 s client secret and nothing else. It is
@@ -12,13 +15,13 @@ import hashlib
 import hmac
 import time
 from collections import deque
-from typing import Any
+from typing import Any, Literal
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import select
+from sqlalchemy import text
 
 from .audit import write_audit
 from .config import Settings
@@ -46,12 +49,14 @@ INSTRUCTIONS = (
     "Never answer, advise, reassure, name a disease, or add any words."
 )
 INSTRUCTIONS_SHA256 = hashlib.sha256(INSTRUCTIONS.encode("utf-8")).hexdigest()
+TRANSCRIBE_CONFIG_VERSION = "v2-transcribe-0.1.0"
 
 
 class SessionBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
     voice_session_id: str = Field(min_length=1, max_length=64)
     access_code: str | None = Field(default=None, max_length=128)
+    purpose: Literal["guided", "ambient"] = "guided"
 
 
 def unavailable_reason(s: Settings) -> str | None:
@@ -95,6 +100,25 @@ def _mint_body(s: Settings) -> dict[str, Any]:
     }
 
 
+def _transcribe_body(s: Settings) -> dict[str, Any]:
+    """Transcription-only session: no model, instructions, tools or output keys exist in this session type."""
+    return {
+        "expires_after": {"anchor": "created_at", "seconds": SECRET_TTL_S},
+        "session": {
+            "type": "transcription",
+            "audio": {
+                "input": {
+                    "transcription": {"model": s.voice_transcribe_model, "language": "th"},
+                    "noise_reduction": {"type": "near_field"},
+                    "turn_detection": {
+                        "type": "server_vad", "threshold": 0.5, "prefix_padding_ms": 300, "silence_duration_ms": 700,
+                    },
+                },
+            },
+        },
+    }
+
+
 @router.get("/config")
 def realtime_config(request: Request, user: CurrentUser = Depends(require_nurse)) -> dict:
     s = get_settings(request)
@@ -103,6 +127,7 @@ def realtime_config(request: Request, user: CurrentUser = Depends(require_nurse)
         "enabled": reason is None, "reason": reason, "access_code_required": _code_required(s),
         "max_session_seconds": s.voice_max_session_seconds, "vendor_label": VENDOR_LABEL,
         "model": s.voice_realtime_model, "transcribe_model": s.voice_transcribe_model,
+        "ambient_supported": True, "ambient_model": s.voice_transcribe_model,
     }
 
 
@@ -121,13 +146,13 @@ def _rate_limited(request: Request) -> int | None:
     return None
 
 
-def _mint(request: Request, s: Settings) -> tuple[dict[str, Any] | None, int, str | None]:
+def _mint(request: Request, s: Settings, payload: dict[str, Any]) -> tuple[dict[str, Any] | None, int, str | None]:
     """Returns (parsed vendor body, upstream_status, failure reason)."""
     transport = getattr(request.app.state, "realtime_transport", None)
     try:
         with httpx.Client(transport=transport, timeout=MINT_TIMEOUT_S) as http:
             resp = http.post(
-                MINT_URL, json=_mint_body(s),
+                MINT_URL, json=payload,
                 headers={"Authorization": f"Bearer {s.voice_api_key}", "Content-Type": "application/json"},
             )
     except httpx.TimeoutException:
@@ -151,8 +176,11 @@ def realtime_session(body: SessionBody, request: Request, user: CurrentUser = De
     s = get_settings(request)
     engine = get_engine(request)
     target = f"voice_session/{body.voice_session_id}"
-    base = {"model": s.voice_realtime_model, "transcribe_model": s.voice_transcribe_model,
-            "instructions_version": INSTRUCTIONS_VERSION, "instructions_sha256": INSTRUCTIONS_SHA256,
+    ambient = body.purpose == "ambient"
+    model = s.voice_transcribe_model if ambient else s.voice_realtime_model
+    version = TRANSCRIBE_CONFIG_VERSION if ambient else INSTRUCTIONS_VERSION
+    base = {"purpose": body.purpose, "model": model, "transcribe_model": s.voice_transcribe_model,
+            "instructions_version": version, "instructions_sha256": None if ambient else INSTRUCTIONS_SHA256,
             "max_session_seconds": s.voice_max_session_seconds}
 
     def audit(outcome: str, **extra: Any) -> None:
@@ -174,18 +202,23 @@ def realtime_session(body: SessionBody, request: Request, user: CurrentUser = De
         supplied = (body.access_code or "").encode("utf-8")
         if not supplied or not hmac.compare_digest(supplied, s.voice_access_code.encode("utf-8")):
             fail(403, "access_code_invalid", "denied")
+    # SELECT * so a ``mode`` column added by v2a is picked up; absent or NULL means "guided".
+    # After v2a merges this can become ``select(voice_sessions.c.status, voice_sessions.c.mode)``.
     with engine.connect() as conn:
         row = conn.execute(
-            select(voice_sessions.c.status).where(voice_sessions.c.session_id == body.voice_session_id)
-        ).first()
+            text(f"SELECT * FROM {voice_sessions.name} WHERE session_id = :sid"), {"sid": body.voice_session_id}
+        ).mappings().first()
     if row is None:
         audit("error", reason="session_not_found")
         raise HTTPException(status_code=404, detail="voice session not found")
-    if row.status != "active":
+    if row["status"] != "active":
         audit("error", reason="session_not_active")
         raise HTTPException(status_code=409, detail="voice session is not active")
+    if (row.get("mode") or "guided") != body.purpose:
+        audit("error", reason="session_mode_mismatch")
+        raise HTTPException(status_code=409, detail="voice session mode does not match purpose")
 
-    data, upstream_status, failure = _mint(request, s)
+    data, upstream_status, failure = _mint(request, s, _transcribe_body(s) if ambient else _mint_body(s))
     if failure is not None:
         if failure == "upstream_timeout":
             fail(504, failure, "error")
@@ -200,9 +233,9 @@ def realtime_session(body: SessionBody, request: Request, user: CurrentUser = De
     return JSONResponse(
         {
             "client_secret": data["value"], "expires_at": data["expires_at"], "connect_url": CONNECT_URL,
-            "data_channel": DATA_CHANNEL, "model": s.voice_realtime_model,
+            "data_channel": DATA_CHANNEL, "model": model,
             "transcribe_model": s.voice_transcribe_model, "vendor_label": VENDOR_LABEL,
-            "max_session_seconds": s.voice_max_session_seconds, "instructions_version": INSTRUCTIONS_VERSION,
+            "max_session_seconds": s.voice_max_session_seconds, "instructions_version": version,
         },
         headers={"Cache-Control": "no-store"},
     )
