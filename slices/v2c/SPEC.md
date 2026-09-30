@@ -1,8 +1,10 @@
 # Slice v2c: MedX mobile scribe app (`mobile/`)
 
-Status: **design section only, awaiting owner approval of the comps.** The build section (API wiring, LiveKit, PWA, tests, acceptance) is added after approval. The builder does not start until the owner approves the comps in `slices/v2c/comp/png/`.
+Planner: innovation-lead (2026-09-30). Branch: `factory/v2c`. Gantt owner: ภูริณัฐ (Voice Agent, PROPOSAL row 16).
 
-Source of truth: Proposal v8 §1.3.1 (Voice Agent), §2.1.6, §3.5; `docs/DECISIONS.md` 2026-09-30 (ambient + prompt scribe, separate `mobile/` PWA); `docs/UI-SPEC.md` (tokens, copy rules); `web/app/theme.css` (the only colours).
+Status: **design approved 2026-09-30** (`docs/DECISIONS.md` "v2c mobile design comps approved"); **build section added 2026-09-30** (sections 9–16) against the owner's transport decision "D1 superseded: OpenAI Realtime transcription-only instead of LiveKit". Sections 1–8 are the approved design and are binding; the only edits to them are the two transport words in the 3.1 table (LiveKit room/token → realtime connection/mint), which follow the D1-superseded decision.
+
+Source of truth: Proposal v8 §1.3.1 (Voice Agent), §2.1.6, §3.1, §3.5, Table 3.2; `docs/DECISIONS.md` 2026-09-30 (ambient + prompt scribe, separate `mobile/` PWA); `docs/UI-SPEC.md` (tokens, copy rules); `web/app/theme.css` (the only colours).
 
 ---
 
@@ -157,10 +159,10 @@ The record state is one enum. The red flag and all-complete are separate flags l
 | `idle` | open screen | mic · เริ่มบันทึก · "เริ่มบันทึก" | filled `--primary` | disabled | mic · พร้อมบันทึก · 00:00 |
 | `requesting_permission` | first tap in `idle` | mic · กำลังขอสิทธิ์ | disabled | disabled | กำลังขอใช้ไมโครโฟน |
 | `connecting` | permission granted, or retry | loader · กำลังเชื่อมต่อ | disabled | enabled if ≥1 turn | กำลังเชื่อมต่อ |
-| `listening` | LiveKit room joined | pause · หยุดชั่วคราว · "หยุดบันทึกชั่วคราว" | `--primary-deep` with 2px `--primary` ring | outline | level meter · กำลังฟัง · clock runs |
+| `listening` | realtime data channel `oai-events` open | pause · หยุดชั่วคราว · "หยุดบันทึกชั่วคราว" | `--primary-deep` with 2px `--primary` ring | outline | level meter · กำลังฟัง · clock runs |
 | `paused` | tap in `listening`, or page hidden (system pause) | mic · บันทึกต่อ · "บันทึกต่อ" | filled `--primary` | outline | pause · หยุดชั่วคราว · clock frozen |
 | `reconnecting` | unexpected disconnect; up to 3 automatic attempts | spinning loader · กำลังเชื่อมต่อ | disabled | outline | wifi-off · ขาดสัญญาณ |
-| `error` | 3 attempts failed, or token/room error | rotate-ccw · ลองอีกครั้ง · "ลองเชื่อมต่ออีกครั้ง" | filled `--primary` | outline | mic-off · หยุดบันทึก |
+| `error` | 3 attempts failed, or a non-retryable mint/connection error (section 11, T7) | rotate-ccw · ลองอีกครั้ง · "ลองเชื่อมต่ออีกครั้ง" | filled `--primary` | outline | mic-off · หยุดบันทึก |
 | `permission_denied` | mic permission denied | mic-off · ขอสิทธิ์อีกครั้ง | filled `--primary` | enabled if ≥1 turn | mic-off · ไม่มีสิทธิ์ไมโครโฟน |
 | `finishing` | tap "จบการบันทึก" | disabled | disabled | loader · กำลังจบการบันทึก | clock frozen |
 
@@ -449,3 +451,215 @@ The render uses Playwright at 390×844 and DPR 2; the output goes to `comp/png/`
 | `03f-complete.html` | Recording: all fields complete |
 | `04-review.html` (+ `-full.png`) | Review in progress |
 | `04b-review-ready.html` (+ `-full.png`) | Review complete, submit enabled |
+
+---
+
+# Part B: build
+
+## 9. Scope
+
+**User and job.** A nurse at the bedside, holding one phone, records an ordinary Thai nurse–patient conversation. The phone shows what is still missing, suggests the next question (the nurse asks it; the app never speaks), raises nurse-attention cues above everything else, and lets the nurse review every captured fact before anything reaches the case.
+
+In scope, all under a **new** `mobile/` project plus the three repo files named below:
+1. `mobile/`: Next.js 15 + React 19 + TypeScript PWA with its own `package.json`, `package-lock.json`, `tsconfig.json`, vitest config and Playwright config. It has no imports from `web/` and no shared package. Logic from `web/lib/realtime.ts` and `web/components/live/useLiveCall.ts` is **copied/ported**, not imported.
+2. The screens and states of sections 2–5 and every comp in section 8: login, start, recording (idle, listening, paused, reconnecting, error, permission_denied, red flag, complete, finishing), transcript sheet, leave guard, review (waiting, deciding, editing, rejecting, ready, submitting, submitted, submit error, not-yet-connected).
+3. The transport client (section 11): a direct phone → realtime-vendor WebRTC **transcription-only** session, minted by the backend.
+4. Thin API clients for the backend contracts in section 10, mocked in tests.
+5. PWA: manifest, icons, a minimal service worker, Screen Wake Lock, reconnect on visibility/network changes, mic-permission error state.
+6. `scripts/sync_theme.sh` (copies `web/app/theme.css` → `mobile/app/theme.css`).
+7. `Makefile`: `mobile/node_modules/.installed` install rule; `make test` also runs `cd mobile && npm test && npm run typecheck`; a new `make mobile-dev` target.
+
+Out of scope:
+- **Any backend change** (`backend/`, `casegraph/`, `schemas/`), and any `web/` change. v2a, v2t and v2d build the server side in parallel on other branches.
+- LiveKit (the `livekit` package stays forbidden), any cascade or TTS, any audio the model speaks.
+- Deployment, the `medx-mobile` Vercel project (D5), HTTPS tunnels, native wrappers.
+- Audio storage or upload of any kind (no `MediaRecorder`, no audio blobs).
+- The review submit endpoint, consent audit and red-flag-acknowledgement audit (v2d). v2c builds the UI and a thin client marked `TODO(v2d)`.
+- Diarization, speaker labels, triage/department display, offline mode, and changing the Thai allowlist or red-flag list (D4).
+
+## 10. Contracts consumed (mocked in tests; never implemented here)
+
+All calls are same-origin `/api/*`. `mobile/next.config.mjs` rewrites `/api/:path*` → `${process.env.BACKEND_URL ?? "http://127.0.0.1:8000"}/api/:path*` (the `web/next.config.mjs` pattern), so the session cookie stays first-party. Every contract below has a JSON fixture in `mobile/tests/fixtures/` whose shape copies the locked contract; the integration auditor diffs these fixtures against the real v2a/v2t responses once those branches merge.
+
+| Call | Contract | Owner |
+|---|---|---|
+| `POST /api/auth/login {username,password}`; `GET /api/me`; `POST /api/auth/logout` | existing `backend/app/auth.py`; user `{id, username, role, home}` | existing |
+| `POST /api/auth/demo-login {role:"nurse"}` | existing `backend/app/public_demo.py`; used only when `NEXT_PUBLIC_PUBLIC_DEMO=1`, where the login screen shows the one-click CTA "เข้าสู่ระบบเดโม" and hides the username/password fields | existing |
+| `POST /api/voice/sessions {patient_ref, data_class:"synthetic", mode:"ambient"}` | `{session:{session_id, patient_ref, mode, status, nurse_attention, extraction_error, …}, next_action, field_statuses}` | v2a §3.1 |
+| `POST /api/voice/sessions/{id}/turns {speaker:"unknown", text, started_at, ended_at, source:"asr", asr_model}` | `{turn:{turn_id,…}, new_facts[], field_statuses[], next_action, nurse_attention, extraction_error, session}` | v2a §3.2 |
+| ambient `next_action` | exactly `{kind: prompt_nurse\|complete\|handoff, field, suggested_question_id, suggested_question_th, reason, missing_fields}` | v2a §3.3 |
+| `GET /api/voice/sessions/{id}` | `{session, turns, facts, field_statuses, next_action}`; used for review data and for reconcile-before-retry (T5) | existing + v2a |
+| `POST /api/voice/sessions/{id}/finish` | 200 `{session, facts, field_statuses, …}`; 409 = already finished (treated as done) | existing |
+| `GET /api/voice/realtime/config` | `{enabled, reason, access_code_required, ambient_supported, ambient_model, max_session_seconds, vendor_label, …}` | v2t |
+| `POST /api/voice/realtime/session {voice_session_id, access_code?, purpose:"ambient"}` | 200 `{client_secret, expires_at, connect_url, data_channel, model, transcribe_model, vendor_label, max_session_seconds, instructions_version}`; errors 403 `access_code_invalid`, 404, 409 not active, 429 + `Retry-After`, 502, 503 `{reason}`, 504 | v2t (error set as in current `voice_realtime.py`) |
+| review submit | `mobile/lib/review.ts` `submitReview(sessionId, decisions)`, one `fetch` marked `// TODO(v2d): endpoint and body owned by slice v2d` | v2d |
+
+**Display rules derived from the contracts:**
+- Six rows in `ASK_ORDER`. "ประวัติแพ้ยา" combines `allergy_status` + `allergens`.
+- Row value: `MISSING` → "ยังไม่มี" (or "กำลังถาม" for `next_action.field`); `UNKNOWN` → "ผู้ป่วยไม่ทราบ"; `REFUSED` → "ผู้ป่วยไม่ตอบ"; `KNOWN` → the latest fact's `value_text` for that field.
+- The allergy row may show a negative **only** when the latest `allergy_status` fact is `state:"KNOWN", value:"none"`. Every other case (no fact, MISSING, UNKNOWN, REFUSED, `allergy_conflict`, `extraction_error`, unknown value) never renders "ไม่แพ้" or "ไม่มีประวัติแพ้".
+- Red flag = `nurse_attention === true` on any turn/session response, or `next_action.kind==="handoff" && reason==="nurse_attention_phrase"`. The quoted words are the text of the turn whose response first set it. Sticky for the session.
+- `kind==="handoff" && reason==="extraction_unavailable"` → the "Extraction unavailable" warning notice; the slot goes neutral and keeps the last received `suggested_question_th` (or no question if none was ever received).
+- Question text on screen comes **only** from `suggested_question_th`; the client has no question strings of its own.
+
+## 11. Transport and lifecycle rules
+
+**T1. Connect.** On the first record press: `getUserMedia({audio:{echoCancellation:true, noiseSuppression:true, autoGainControl:true}})` → mint (`purpose:"ambient"`, `access_code` from memory if required) → `RTCPeerConnection`, add the mic track, create data channel `oai-events` (the name from `data_channel`), POST the SDP offer to `connect_url` with `Authorization: Bearer <client_secret>` and `Content-Type: application/sdp`, apply the answer. `listening` is entered when the data channel opens.
+- `connect_url` comes only from the mint response and must start with `https://`; anything else is a non-retryable error.
+- The SDP POST carries only the SDP body and those two headers: no patient ref, no cookie, no transcript.
+- `ontrack` attaches nothing. No `<audio>`/`<video>` element is ever created.
+
+**T2. Client never makes the model speak.** The data-channel sender is a single function with a frozen allowlist `ALLOWED_CLIENT_EVENTS = ["input_audio_buffer.clear"]`. Anything else throws and is not sent, including `response.create`, `response.cancel`, `conversation.item.create`, `session.update` and `transcription_session.update`. The session configuration is server-owned (v2t).
+
+**T3. Events consumed.**
+- `input_audio_buffer.speech_started {item_id}` → `started_at` for that item (client wall clock, ISO-8601 with offset).
+- `input_audio_buffer.speech_stopped {item_id}` → `ended_at`.
+- `input_audio_buffer.committed {item_id, previous_item_id}` → the item's place in the post order.
+- `conversation.item.input_audio_transcription.delta {item_id, delta}` → live partial line (muted, ends in "…"), never posted.
+- `conversation.item.input_audio_transcription.completed {item_id, transcript}` → final line + one POST (T4).
+- `conversation.item.input_audio_transcription.failed {item_id}` → the partial line is removed, nothing is posted, the item releases the queue, and the transcript sheet shows the failed-segment count (D-V2C-2).
+- `error` and connection-state `failed`/`disconnected`/`closed` → T6.
+- Every other event type, including any `response.*` or output-audio/text event, is ignored and never rendered.
+
+**T4. Turn posting (exactly once, in order).**
+- One FIFO queue per voice session, in commit order (items completed with no prior `committed` event are appended in completion order). One POST in flight at a time.
+- A completed item waits until every earlier committed item is completed, failed or has waited **15 s**; a timed-out earlier item is skipped (no fabricated text).
+- Dedupe key = `item_id` (plus `#n` when a transcript over 2,000 chars is split at whitespace into ordered parts). A key is posted at most once for the life of the voice session, across every reconnect; a duplicate `completed` event is ignored.
+- Body: `{speaker:"unknown", text: normalise(transcript), started_at, ended_at, source:"asr", asr_model: <mint transcribe_model>}`. `normalise` = the ported `normaliseTranscript`. Empty text after normalising is not posted. `started_at ≤ ended_at ≤` the POST time; missing `speech_*` times fall back to the `committed` time.
+- Each response replaces `field_statuses`, `next_action`, the facts shown, and the red-flag/extraction flags.
+
+**T5. Turn POST failure.**
+- 401 → stop recording, go to login.
+- 409 (session not active) → stop, error state, no retry.
+- 422 → the item is dropped, counted as failed, not retried.
+- Network error, timeout or 5xx → `GET /api/voice/sessions/{id}`; if a turn with the same `text` and `started_at` already exists, mark the key posted; otherwise retry. At most 2 retries (1 s, 3 s). Then the item is counted as failed and the queue moves on.
+
+**T6. Reconnect.** Unexpected data-channel close, peer connection `failed`/`disconnected` for > 2 s, the `offline` event, or the vendor session ending at `max_session_seconds` → `reconnecting`: close the old connection, re-mint, reconnect.
+- Up to 3 attempts, backoff 1 s / 2 s / 4 s (a 429 waits `Retry-After` instead). The `online` event triggers the next attempt at once.
+- At most **one** open `RTCPeerConnection` at any time (two live connections would transcribe the same audio twice).
+- Planned rollover: when a connection has run `max_session_seconds − 30 s` and no speech is in progress (last `speech_started` has its `speech_stopped`), or at `max_session_seconds − 5 s` regardless, the client drains pending completions for up to 3 s, then closes and reconnects through the same path.
+- Queued and already-posted turns are never lost or re-posted by a reconnect.
+
+**T7. Error mapping** (non-retryable → `error` state with its notice; recovery is always "ลองอีกครั้ง" and "จบการบันทึก" when ≥ 1 turn exists):
+
+| Cause | State | Auto-retry |
+|---|---|---|
+| mic `NotAllowedError`/`SecurityError` | `permission_denied` + Permission denied notice | no |
+| mic `NotFoundError`/`NotReadableError` | `error` + No microphone notice | no |
+| config `enabled:false` or `ambient_supported:false`, mint 503 | `error` + voice-unavailable notice (D-V2C-2) | no |
+| mint 403 `access_code_invalid` | `error` + access-code notice; "ลองอีกครั้ง" returns to start with the field focused | no |
+| mint 409 / 404 | `error` + session-ended notice; recovery is "จบการบันทึก" to review, or start a new session | no |
+| mint 429 / 502 / 504 / network; SDP POST non-2xx; disconnect | `reconnecting` (T6), then `error` + the "3 attempts" notice | yes, ≤ 3 |
+
+**T8. Pause, visibility, wake lock.**
+- Pause disables the mic track (`track.enabled=false`); the connection stays open if it can. Resume re-enables it; if the connection died or expired while paused, resume goes through `connecting` with a fresh mint. A connection that dies while paused never shows `reconnecting` or `error` by itself.
+- `visibilitychange → hidden` while `listening` forces `paused` with the System pause copy; returning to visible does **not** auto-resume.
+- `navigator.wakeLock.request("screen")` is held only in `listening`; released on every exit from `listening` and on unmount. Unsupported → no error.
+
+**T9. Finish and review data.** "จบการบันทึก" (`finishing`): stop the mic, drain the turn queue (≤ 5 s), close the connection, then `GET /api/voice/sessions/{id}` for the review. The backend `finish` is called at submit (D-V2C-3), so "บันทึกต่อ" can reopen recording (paused) on the same active session. No turn is ever posted after `finish`.
+
+**T10. Review submit.** Enabled only when all 6 rows have a decision (ยืนยัน / แก้ไข / ปฏิเสธ with reason / เพิ่มข้อมูล / ระบุว่าไม่ทราบ). Submit = `POST …/finish` (409 counts as done) → `submitReview` (`TODO(v2d)`), whose payload carries the decisions, the original value per row, the red-flag acknowledgement time if any, and the consent acknowledgement.
+- Only a 2xx from `submitReview` shows "ส่งเข้าเคสแล้ว".
+- 404/405/501 → the **not-yet-connected** notice (D-V2C-2); the decisions stay on screen; the success screen is never shown.
+- Other failures → the Submit error notice.
+- Once `finish` has succeeded, "บันทึกต่อ" is hidden.
+
+**T11. Storage and privacy.** Transcript, facts, decisions and the access code live in React memory only. Nothing is written to `localStorage`, `sessionStorage`, IndexedDB, Cache Storage or cookies by the client. The service worker has no Cache Storage use at all and no fetch caching. No `console.*` call logs transcript text. Sign-out clears in-memory state.
+
+**T12. Patient list.** No backend endpoint lists waiting patients, and backend changes are out of scope. The list is a bundled synthetic roster `mobile/lib/roster.ts` (the comp rows: `SYN-` ids with synthetic sex/age/bed/arrival) plus typed `SYN-` ids, validated `^SYN-[A-Za-z0-9-]{1,60}$` with the "Non-synthetic id" copy on mismatch. Only `patient_ref` is sent to the backend (D-V2C-1).
+
+## 12. Acceptance
+
+Base = `git merge-base HEAD main` at build start. The checker records it.
+
+| ID | Criterion | Threshold | How measured |
+|---|---|---|---|
+| V2C-C1 | `make test` is green including mobile | Exit 0. pytest count ≥ the base count with 0 new failures; web vitest unchanged; mobile `vitest run` 100% pass with ≥ 1 test per row of section 13; `tsc --noEmit` 0 errors in `mobile/`. `make mobile-dev` starts API + mobile and `GET /` returns 200 | `make test` tail; `cd mobile && npm test && npm run typecheck`; checker runs `make mobile-dev` and curls `/` and `/api/health` through the rewrite |
+| V2C-C2 | Every comp screen/state is implemented and matches the comp | 11 states × 2 viewports = **22 PNGs** at 390×844 and 360×800 (DPR 2) in `artifacts/factory/v2c/screens/<state>-<w>x<h>.png`, for `login, start, idle, recording, paused, reconnecting, error, redflag, complete, review, review-ready`, rendered from the production build with mocked `/api` using the comp's synthetic data. The checker builds 11 side-by-side sheets (comp PNG left, 390×844 build right) and lists every deviation in layout order, copy, token role, icon, component presence or size > 4 px. Threshold: **0 unlisted deviations**, and every listed deviation is either fixed or owner-accepted. The 360×800 set has no horizontal scroll, no clipped or ellipsised safety text, and the dock/slot stay fixed | `cd mobile && npm run screens` (Playwright); checker side-by-side sheets in `artifacts/factory/v2c/compare/`; deviation list in the checker report |
+| V2C-C3 | Only synced theme tokens | 0 matches of `#[0-9a-fA-F]{3,8}\b`, `rgba?\(`, `hsla?\(` and CSS named colours in `mobile/**/*.{ts,tsx,css,mjs}` outside `mobile/app/theme.css` (node_modules/.next excluded). `mobile/app/theme.css` is byte-identical to `web/app/theme.css`. `scripts/sync_theme.sh` recreates it. Manifest `theme_color`/`background_color` equal token values (test-read from theme.css) | `mobile/tests/theme.test.ts` (grep + sha256 equality + manifest check); checker runs `scripts/sync_theme.sh && git diff --exit-code mobile/app/theme.css` |
+| V2C-C4 | Consent gates recording | "เปิดหน้าบันทึก" is disabled for all 4 combinations except (patient selected AND consent ticked). The consent control is a native `<input type=checkbox>` with the exact §5 label. Unticking re-disables. No `POST /api/voice/sessions` and no `getUserMedia` before both hold | `start.test.tsx` (parametrised), fetch/getUserMedia spies |
+| V2C-C5 | Red flag cannot be missed | On a turn response with `nurse_attention:true`: an element with `role="alert"` containing the `triangle-alert` icon **and** the heading text "พบสัญญาณที่ต้องประเมินเร่งด่วน"; `document.activeElement` is the heading; **no transcript text** (final or partial) in the DOM outside the quoted words; the prompt slot and any `suggested_question_th` are absent; recording state unchanged and "ยังบันทึกอยู่" shown; "จบการบันทึก" does not finish, focuses the alert and shows "รับทราบสัญญาณเร่งด่วนก่อนจบการบันทึก"; pause still works. After "รับทราบ": the strip with "รับทราบเมื่อ HH:MM น." stays on recording and review, and transcript lines received during the alert reappear. No animation on the alert (computed `animation-name: none`, `transition-duration: 0s`). The red flag is never downgraded by a later response without `nurse_attention` | `redflag.test.tsx`; Playwright `redflag` state for focus and computed style |
+| V2C-C6 | Missing is never negative | For each state in {no fact, MISSING, UNKNOWN, REFUSED, KNOWN present, `allergy_conflict:true`, `extraction_error:true`, unknown value}: the allergy row (recording and review) matches neither `/ไม่แพ้/` nor `/ไม่มีประวัติแพ้/`; only `KNOWN`+`none` shows the negative and the "ยืนยันว่าไม่มีประวัติแพ้ยา" button. Every MISSING row shows "ยังไม่มี" (recording) / tag "ไม่มีข้อมูล" (review), never blank, "-", "ไม่มี" alone or a negative | `facts-display.test.tsx` (table-driven over all 6 fields × all states) |
+| V2C-C7 | Completed items only, exactly once, in order, across reconnect | With a mocked `RTCPeerConnection`/data channel: deltas cause 0 POSTs; each `completed` causes exactly 1 POST; duplicate `completed` → 0 extra; out-of-order completion is posted in commit order; a failed item is skipped without blocking; a 15 s stuck item is skipped. Script: 3 items → forced disconnect with 1 item committed-not-completed → reconnect → 2 more items + a late duplicate from the old connection. Expect the POST sequence to equal the expected item order, with no repeats and no lost completed items. The ambiguous-failure case (network error, turn already stored) posts 0 extra | `transport.test.ts`, `turn-queue.test.ts` (fake timers) |
+| V2C-C8 | The client never makes the model speak | Over every transport test, the set of frames sent on the data channel ⊆ `{"input_audio_buffer.clear"}`. Calling the sender with `response.create`, `response.cancel`, `conversation.item.create`, `session.update`, `transcription_session.update` throws and sends nothing. 0 `<audio>`/`<video>` elements after `ontrack`. `response.*` events received from the vendor render nothing. Static: `grep -rE "response\.create\|conversation\.item\.create\|session\.update" mobile/{app,components,lib}` matches only the deny-list/test code | `realtime.test.ts`; grep in `static.test.ts` |
+| V2C-C9 | Every failure has a visible state and a recovery | Mic denied → `permission_denied` notice + "ขอสิทธิ์อีกครั้ง"; mint 503 and config disabled → `error` + voice-unavailable notice, no auto-retry; mint 409 → `error` + session-ended notice, "จบการบันทึก" reaches review; mint 403 → access-code notice, returns to start with the field focused; disconnect → `reconnecting` "(ครั้งที่ n จาก 3)" → success returns to `listening`, or 3 failures → `error` with the 3-attempts copy and "ลองอีกครั้ง" reconnects. In every case, captured facts and posted turns are still shown | `errors.test.tsx` (one test per row of T7); Playwright `reconnecting` and `error` states |
+| V2C-C10 | No secrets or vendor SDK in the client | Build with `OPENAI_API_KEY=sk-SENTINELv2c000000000000` and `VOICE_ACCESS_CODE=CODESENTINELv2c` in the env: `mobile/.next/static/**` has 0 matches of `\bsk-[A-Za-z0-9_-]{10,}`, `SENTINEL`, `ek_[A-Za-z0-9]{8,}`, `OPENAI_API_KEY`. `mobile/package.json` + lockfile contain no `livekit`, `openai` or other speech/LLM SDK. No `api.openai.com` or `openai` string in `mobile/{app,components,lib,public}` (the vendor comes only from `connect_url`/`vendor_label`) | `npm run build && npm run scan-bundle`; `static.test.ts` |
+| V2C-C11 | Installable, touch-safe, motion-safe PWA | `manifest.webmanifest`: `name`, `short_name`, `lang:"th"`, `start_url:"/"`, `scope:"/"`, `display:"standalone"`, `orientation:"portrait"`, icons 192, 512 and 512 maskable (files exist, sizes match). `navigator.serviceWorker.getRegistration()` is truthy on the production build; `sw.js` contains no `caches`, no `cache.put` and no `/api` handling. Every visible interactive element (button, link, input, `[role=radio]`, checkbox label row) is ≥ 44×44 CSS px in every C2 state at both viewports, and primary/record/secondary/review/patient-row sizes equal §1.5 (56/72/48/44/64). With `reducedMotion:"reduce"`: level-meter bars are static and loaders do not rotate (computed `animation-name: none` or duration 0) | `pwa.test.ts`; Playwright `pwa.spec.ts`, `touch.spec.ts`, `motion.spec.ts` |
+| V2C-C12 | Standalone, brand-true project | 0 imports or path aliases resolving into `../web` (grep `from ["'].*\.\./web` and tsconfig `paths`). Fonts: only SCBXBeta2 via the synced `theme.css` `@font-face` (files in `mobile/public/fonts/`); no `next/font`, no Google Fonts, no other `font-family` literal. Wordmark is text "Med"+"X" with `aria-label="MedX"`; 0 occurrences of the SCBX logo or name in UI files | `static.test.ts`; `wordmark.test.tsx` |
+| V2C-C13 | Accessibility | axe-core: **0 serious/critical** violations in each of the 22 C2 screenshots' states. Unit tests assert the §4 roles: record `aria-label` per the 3.1 table for all 9 states, status `role="status"`, slot `aria-live="polite"`, patient list `role="radiogroup"`, fact glyph labels, `lang="th"` on `<html>`. Focus ring visible (computed outline ≥ 2 px, `--primary`) on every control in keyboard traversal. Tab order equals §4 Order | Playwright `a11y.spec.ts` (axe + tab order); `a11y.test.tsx` |
+| V2C-C14 | Claim boundary and exact copy | Every §5 string used by an implemented state appears byte-exact (table-driven test over a copy module `mobile/lib/copy.ts`, compared with a fixture extracted from §5). The limitation label "ข้อมูลสังเคราะห์ · ต้นแบบเพื่อการวิจัย" is the last text on every screen. 0 occurrences in UI strings of `วินิจฉัย`, `อัจฉริยะ`, `AI-powered`, `Submit`, `OK`, `Cancel`, `Retry`. Transcript lines carry no speaker label | `copy.test.ts`; `static.test.ts` |
+| V2C-C15 | Review never pretends success | Submit disabled until 6/6 decided. `submitReview` 404/405/501 → not-yet-connected notice, 0 renders of "ส่งเข้าเคสแล้ว"; 500/network → Submit error, decisions kept; only 2xx → submitted screen. `finish` is called exactly once per submit before `submitReview`, and its 409 is treated as done. After `finish`, "บันทึกต่อ" is hidden. Edited rows show "ระบบได้ยินว่า: <original>". `review.ts` contains `TODO(v2d)` | `review.test.tsx`, `review-client.test.ts` |
+| V2C-C16 | Privacy and time validity | Spies show 0 writes to `localStorage`, `sessionStorage`, `indexedDB`, `caches` during a full scripted session. 0 `MediaRecorder` references in `mobile/`. The SDP POST has only the SDP body and the `Authorization`/`Content-Type` headers (no `patient_ref`, no `credentials:"include"`). Every posted turn has ISO-8601 `started_at`/`ended_at` with an offset, `started_at ≤ ended_at ≤` the request time, and non-decreasing `started_at` across the session. Playwright runs make 0 requests to non-local hosts | `privacy.test.ts`; `turn-queue.test.ts`; Playwright request guard |
+| V2C-C17 | Nurse-only access | Non-nurse `GET /api/me` → the "Wrong role" copy + logout, no session start. 401 from any call → login screen with in-memory state cleared. `NEXT_PUBLIC_PUBLIC_DEMO=1` → one-click `POST /api/auth/demo-login {role:"nurse"}`; otherwise username/password → `POST /api/auth/login`; 401 / other / network → the three §5 login copies | `login.test.tsx` |
+| V2C-C18 | Lifecycle | Wake lock requested on entering `listening` and released on every exit (paused, reconnecting, error, finishing, unmount). `hidden` while listening → `paused` + System pause copy, and visible does not auto-resume. Resume after the connection died while paused → `connecting` + one mint. `offline` while listening → `reconnecting`; `online` → an attempt within 100 ms. Planned rollover at `max_session_seconds` produces 0 duplicate and 0 lost completed items. At most 1 open peer connection at any moment | `lifecycle.test.ts` (fake timers, mocked `wakeLock`, `document.visibilityState`, `navigator.onLine`) |
+| V2C-C19 | Scope held | `git diff --stat <base> -- backend casegraph schemas web requirements.in requirements.lock pyproject.toml` is empty. Changes are limited to `mobile/`, `scripts/sync_theme.sh`, `Makefile` and `slices/v2c/`. Existing isolation tests (`test_isolation_hygiene.py`, `backend/tests/voice/test_api_audit.py`) pass unmodified | checker `git diff`; `make test` |
+
+## 13. Required test cases (mobile vitest unless marked Playwright)
+
+| File | Cases (minimum) |
+|---|---|
+| `theme.test.ts` | theme byte-equality; colour-literal grep; manifest colours = tokens |
+| `static.test.ts` | no `../web` import; no `livekit`/`openai` dep or string; no `MediaRecorder`; allowed-event grep; banned-word grep; no ad-hoc `font-family`; no SCBX name |
+| `login.test.tsx` | password login ok / 401 / 500 / network; demo one-click; wrong role; 401 mid-session |
+| `start.test.tsx` | consent × patient matrix (C4); `SYN-` validation and non-synthetic copy; access-code field shown only if `access_code_required`; code kept out of storage; patient list skeleton/empty/no-match states |
+| `realtime.test.ts` | handshake order and headers (T1); https-only `connect_url`; send allowlist (C8); no media element on `ontrack`; `response.*` ignored |
+| `turn-queue.test.ts` | delta → 0 POST; completed → 1 POST with exact body; duplicate; out-of-order; failed; 15 s timeout; >2000-char split; T5 409/422/5xx reconcile-then-retry; timestamps (C16) |
+| `transport.test.ts` | the C7 reconnect script; mid-flight POST during reconnect; late event from a closed connection |
+| `errors.test.tsx` | one case per T7 row (C9) |
+| `lifecycle.test.ts` | wake lock, visibility, online/offline, rollover, single peer connection (C18) |
+| `prompt-slot.test.tsx` | priority red flag > complete > listening > other; slot colour role by state; `aria-live`; question text only from `suggested_question_th`; extraction-unavailable notice keeps the last question on the neutral slot; complete slot swaps the one filled primary |
+| `redflag.test.tsx` | all C5 assertions, including partial-delta hiding and post-acknowledgement transcript restore |
+| `facts-display.test.tsx` | C6 table (6 fields × every state) |
+| `review.test.tsx` / `review-client.test.ts` | confirm / edit / reject-with-reason / add / unknown; decided collapse and "เปลี่ยน"; 6/6 gate; C15 submit outcomes; edit shows the original |
+| `copy.test.ts`, `a11y.test.tsx`, `wordmark.test.tsx`, `pwa.test.ts` | C14, C13, C12, C11 static parts |
+| Playwright `screens.spec.ts` | 22 screenshots (C2) plus the access-code variant and the not-yet-connected variant at 390×844 |
+| Playwright `a11y.spec.ts`, `touch.spec.ts`, `motion.spec.ts`, `pwa.spec.ts` | C13, C11 |
+
+Playwright runs against `next build && next start` on 127.0.0.1 with `page.route("/api/**")` fixtures and an init script that fakes `getUserMedia`, `RTCPeerConnection`, the data channel and `wakeLock`. It blocks and fails on any non-local request.
+
+## 14. Clinical, privacy and product risks
+
+| Risk | Mitigation in v2c | Residual |
+|---|---|---|
+| The model speaks to the patient, or model text is shown as a question | T2 send allowlist + C8; no media element; questions only from `suggested_question_th` (allowlist) | none known |
+| Red flag missed on a busy screen | C5: full-bleed alert, `role=alert`, focus, transcript hidden, prompts suppressed, finish blocked, no motion | acknowledgement is audited only once v2d exists (D-V2C-4) |
+| Missing or uncertain allergy shown as "no allergy" | C6 table-driven test; negative only for KNOWN `none` | depends on v2a's allergy guard for the fact itself |
+| Lost or duplicated turns around reconnects produce wrong or duplicate facts | T4–T6, C7, C18; single peer connection | speech during a disconnect is not transcribed; the reconnecting copy says so and the fields stay "ยังไม่มี" |
+| Silent loss of a segment (transcription failed, POST failed) | failed-segment count in the transcript sheet (D-V2C-2); field stays MISSING, so the nurse is prompted again | a lost segment is not re-transcribed |
+| Facts reach the case without human review | review requires 6/6 decisions; submit never fakes success (C15) | v2d owns the actual write |
+| Recording without telling the patient | consent checkbox gates the record flow (C4) | the tick is not audited until v2d (D-V2C-4) |
+| Audio bypasses the Model Gateway (owner-accepted deviation from Proposal §3.1) | secret minted and audited server-side; vendor URL only from the server; no vendor SDK or key in the client (C10) | disclosed in the slice report and final documentation (DECISIONS 2026-09-30) |
+| Real patient data sent to the vendor | synthetic-only copy and `SYN-` ids; only audio + SDP go to the vendor; no patient ref to the vendor (C16) | the app cannot technically stop a real person speaking; the owner's approval covers synthetic role-play only |
+| Transcript persisted on a shared phone | T11 memory only; SW without caches (C16, C11) | screen content is visible to bystanders by design (patient present) |
+
+## 15. Decisions (the builder proceeds with the default; the reviewer or owner confirms)
+
+- **D-V2C-1 (default: bundled roster).** The patient list is a bundled synthetic roster plus typed `SYN-` ids, because no backend endpoint lists waiting patients. A real queue endpoint is a later slice.
+- **D-V2C-2 (default: proposed copy; owner confirms).** New strings not in the approved §5. The builder keeps them in `mobile/lib/copy.ts` under a `PROPOSED_V2C` key so the reviewer can find them:
+  - access-code label "รหัสเข้าใช้บันทึกเสียง" and error "รหัสเข้าใช้ไม่ถูกต้อง ↵ ตรวจรหัสแล้วลองอีกครั้ง";
+  - voice unavailable "ระบบบันทึกเสียงยังไม่พร้อมใช้งาน ↵ ข้อมูลที่ได้ยังอยู่ครบ จบเพื่อตรวจทานได้";
+  - session ended "การบันทึกนี้ปิดไปแล้ว ↵ จบเพื่อตรวจทาน หรือเริ่มผู้ป่วยใหม่";
+  - failed segments "ถอดข้อความไม่ได้ n ช่วง";
+  - slot after an acknowledged red flag "คำถามแนะนำหยุดไว้ในการบันทึกนี้ ↵ ให้ประเมินผู้ป่วยตามแนวปฏิบัติของหน่วยงาน";
+  - not yet connected "ยังส่งเข้าเคสไม่ได้ ↵ ส่วนเชื่อมต่อกับเคสยังไม่พร้อมในต้นแบบนี้ ข้อมูลที่ตรวจแล้วยังอยู่ในหน้านี้".
+- **D-V2C-3 (default: finish at submit).** The backend `finish` is called at submit, not when leaving recording, so the approved "บันทึกต่อ" back link works on an active session. v2d must accept an already-finished session at submit.
+- **D-V2C-4 (v2d).** Server-side audit of the consent tick and the red-flag acknowledgement belongs to v2d. Until then, both are client-local and are sent in the `TODO(v2d)` payload.
+- **D-V2C-5 (clinical-safety-reviewer / D4).** v2a makes nurse-attention handoff sticky, so after "รับทราบ" no suggested question appears for the rest of the session. This is conservative and not a downgrade; confirm it is acceptable.
+- **D-V2C-6 (integration).** Until v2a (`speaker:"unknown"`, `mode:"ambient"`, `next_action.kind`) and v2t (`purpose:"ambient"`, `ambient_supported`) are merged, the real backend rejects the mobile calls. v2c is accepted on mocks; an end-to-end check against the merged backend is a separate integration step, run by the integration-auditor.
+
+## 16. Run commands (from the worktree root)
+
+```bash
+scripts/sync_theme.sh && git diff --exit-code mobile/app/theme.css      # C3
+make test                                                                 # C1 (pytest + web vitest + mobile vitest + tsc)
+cd mobile && npm test && npm run typecheck                                # C1, C4–C9, C12–C18 unit parts
+cd mobile && OPENAI_API_KEY=sk-SENTINELv2c000000000000 VOICE_ACCESS_CODE=CODESENTINELv2c npm run build && npm run scan-bundle   # C10
+cd mobile && npx playwright install chromium && npm run screens          # C2 -> artifacts/factory/v2c/screens/
+cd mobile && npx playwright test                                          # C2, C11, C13, C16 browser parts
+make mobile-dev                                                           # API :8000 + mobile :3002 (MOBILE_PORT), BACKEND_URL=http://127.0.0.1:8000
+git diff --stat $(git merge-base HEAD main) -- backend casegraph schemas web requirements.in requirements.lock pyproject.toml   # C19: expect empty
+```
+
+Microphone capture on a phone needs HTTPS or localhost; phone testing through a tunnel or deployment is out of scope (D5).
+
+The builder's evidence must contain: the `make test` tail, the mobile vitest and tsc output, the bundle-scan output, the 22 screenshot paths, the Playwright summary, and the C19 diff. The slice report states the Proposal §3.1 deviation (direct vendor WebRTC, audio outside the gateway, owner-accepted 2026-09-30).
