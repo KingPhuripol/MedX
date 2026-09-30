@@ -179,3 +179,15 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
 - **Guard change:** the provider-isolation guard may allow the `livekit` and `openai` packages only in `voice_agent/` and in the backend LiveKit token module. They stay forbidden everywhere else.
 - **Credentials:** `LIVEKIT_URL`, `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` are set by the owner directly in `.env`, never in chat. All automated tests mock LiveKit and OpenAI.
 - **Approved by:** project owner (chat, 2026-09-30).
+
+## 2026-09-30 — v2c mobile design comps approved
+- **What:** the owner approved the static comps and design section in `slices/v2c/` (branch `factory/v2c`, commit 5a17ed9) as the build target for `mobile/`.
+- **UI-SPEC exceptions, for `mobile/` only:**
+  - line-height 1.4 for 20/28px Thai headings;
+  - a round record button;
+  - the next-question box filled with `--primary-deep`.
+- **Also approved:**
+  - Recording cannot start until the nurse ticks "แจ้งผู้ป่วยแล้วว่าจะบันทึกเสียงบทสนทนา". Backend audit of that acknowledgement belongs to slice v2d.
+  - The transcript panel is hidden while a red flag is unacknowledged.
+  - The Thai question allowlist and red-flag lists stay placeholders pending D4.
+- **Approved by:** project owner (chat, 2026-09-30).
