@@ -1,6 +1,6 @@
 # V2A — Ambient intake mode for the voice session API (backend only)
 
-Planner: innovation-lead. Revision 2 (2026-09-30), which resolves checker SP-1 and SP-2 on 211d1a1. Branch: `factory/v2a`. Gantt owner: ภูริณัฐ (Voice Agent, PROPOSAL row 16).
+Planner: innovation-lead. Revision 3 (2026-09-30): resolves checker SP-3 (field-less gold, A04) and SP-4 (B1.4 scope) on fe3460e. Rev 2 resolved SP-1/SP-2. Branch: `factory/v2a`. Gantt owner: ภูริณัฐ (Voice Agent, PROPOSAL row 16).
 Sources: `docs/PROPOSAL.md` §1.3.1 ("ถามเพิ่มเฉพาะข้อมูลที่ยังขาด"), §3.1, §3.5, Table 3.2; `docs/DECISIONS.md` 2026-09-30 (V2 ambient scribe direction). The proposal wins on any conflict.
 This is a research prototype that uses synthetic data only. The nurse is present and in charge. The system suggests. It never speaks, diagnoses or triages.
 
@@ -74,7 +74,7 @@ This resolves SP-1. Ambient mode applies it to every non-agent turn. Guided mode
    - **บ้าง** is a question form only if a wh-word (อะไร, ไหน, ใคร, ยังไง, อย่างไร, เท่าไร, เท่าไหร่, กี่…, เมื่อไร) occurs earlier in the same clause, or if `?` follows. Otherwise it is the quantifier "some/sometimes" and the clause is an answer. Examples: "ไอบ้างค่ะ" is an answer; "กินยาอะไรอยู่บ้างคะ" is a question.
    - A question form governed by a patient non-answer (`UNKNOWN_PHRASES`/`REFUSED_PHRASES` before it) or by a leading negation is **not** a question. The exception is a confirmation tag (ใช่ไหม…): "ไม่แพ้ยาใช่ไหมคะ" is a leading question.
 3. **Question field.** Each question clause has field F if a field-intent pattern matches; the intent that ends last wins. Otherwise it is a **field-less question**: a screening question ("มีไข้ไหมคะ"), a patient request ("ขอไปเข้าห้องน้ำก่อนได้ไหมครับ") or a question to the nurse.
-4. **Extraction text.** This is the turn text with every question clause removed, of any field or none, and with particle-only residue dropped. **No question clause ever reaches the gateway, and no question clause ever produces a fact.**
+4. **Extraction text.** This is the turn text with every question clause removed, of any field or none, and with particle-only residue dropped. **Scope (SP-4): no question clause of the current turn is sent as the current turn's text (`inputs.turns[-1].text`), and no question clause ever produces a fact.** Earlier turns in `inputs.turns[:-1]` are sent in full as read-only context, as before v2a (gateway contract unchanged); they are context only and never a new fact source for this turn.
 5. **Per-turn outcome.** Every non-agent turn writes exactly one `voice_extractions` row.
 
    | Extraction text | Gateway | `voice_extractions` | Facts |
@@ -145,6 +145,15 @@ An ambient `finish()` returns valid `VoiceIntakeFacts` + `IntakeTranscript`:
 
 Added keys: `mode`, `source_dialogue_id`, `source_sha256` and `gold_question_turns {turn_id: field}`. `gold_facts`, `answers_by_field` and `gold_nurse_attention` are byte-identical to the source.
 
+**Field-less question gold (planner-owned, SP-3).** `gold_question_turns` cannot label a question with no field, so the planner owns this list here; fixtures are not edited. The eval holds it as a constant `GOLD_FIELDLESS_QUESTION_TURNS` that cites this section.
+
+| Split | Turns |
+|---|---|
+| dev | `th_ambient_07:t14` "ขอไปเข้าห้องน้ำก่อนได้ไหมครับ" (a patient request; also a §7 field-less phrase) |
+| held-out | none labelled; held-out field-less handling is reported only |
+
+Turn classes for the classifier block: **field question** = in `gold_question_turns`; **field-less question** = in the list above; **answer** = every other non-agent turn.
+
 **Held out.**
 - 11–15 are tagged `heldout`.
 - Each field has at least one held-out question wording that is absent from dev.
@@ -160,7 +169,7 @@ Added keys: `mode`, `source_dialogue_id`, `source_sha256` and `gold_question_tur
   - `micro_gated` over `chief_complaint, onset_duration, severity, allergy_status, allergens, current_medications`;
   - reported `relevant_history`/`micro_overall`;
   - `allergy_false_none`;
-  - the classifier block, where a "flagged answer" is an answer turn with any question clause;
+  - the classifier block, per split: field-question counts and confusion; `fieldless_question_turns` with each turn's `question`/`question_field`; `flagged_answer_turns` = **answer** turns (as classed above) with any question clause;
   - `final_action`;
   - `attention_on_question_turns`;
   - `latency_ms`;
@@ -175,11 +184,11 @@ Added keys: `mode`, `source_dialogue_id`, `source_sha256` and `gold_question_tur
 | V2A-A01 | Guided mode and existing tests are unchanged | `make test` exits 0. No existing test file is modified, except `tests/e1r/test_syne0196_replay.py` per D-V2A-1. The guided `next_action` key set is exactly the 6 keys. `make eval-voice` guided `tp/fp/fn` per field and `allergy_false_none` equal `<base>`'s `slices/s3/eval/voice_intake_eval.json` (dev 57/1/0, held-out 30/0/0, false-none 0) | `make test`; `test_guided_next_action_keys_unchanged`; `test_guided_eval_counts_unchanged` |
 | V2A-A02 | Ambient gated micro-F1 | dev 1–10 **≥ 0.90**; held-out 11–15 **≥ 0.80** | `splits.{dev,heldout}.micro_gated.f1`; `test_ambient_eval_thresholds` (fresh-or-rerun on `inputs_sha256`) |
 | V2A-A03 | No allergy false-none | 0 on all 15 fixtures, and 0 in every allergy unit case of §7 (merged, leading, field-less window reset) | eval `allergy_false_none`; §7 allergy tests |
-| V2A-A04 | Questions produce zero patient facts | Every §7 question phrase: `question:true`, correct `question_field` (null for field-less), 0 facts, 0 gateway calls. Every §7 answer phrase: `question:false`. Fixtures: dev question detection 52/52 with the correct field and 0 flagged answer turns; held-out correct-field rate ≥ 0.80 (reported) | `test_intent_th.py` (parametrised over §7); `test_question_turn_no_facts_no_gateway`; eval `classifier` |
+| V2A-A04 | Questions produce zero patient facts | Every §7 question phrase: `question:true`, correct `question_field` (null for field-less), 0 facts, 0 gateway calls. Every §7 answer phrase: `question:false`. Fixtures, dev: field questions 52/52 with the correct field; every §5 field-less gold turn (`th_ambient_07:t14`) has `question:true`, `question_field:null`, 0 facts; `flagged_answer_turns == []`. Held-out: correct-field rate ≥ 0.80; flagged answers reported, not gated | `test_intent_th.py` (parametrised over §7); `test_question_turn_no_facts_no_gateway`; eval `classifier` |
 | V2A-A05 | `prompt_nurse` only for missing fields, only with allowlisted text | Across every response of the 15 replays: `kind=="prompt_nurse"` ⇒ the field is MISSING, `suggested_question_th == UTTERANCES_TH[suggested_question_id]` and the id is `ask.`/`reask.`+field. A field is never prompted after it leaves MISSING. The final kind matches gold on dev 10/10 and held-out ≥ 4/5. The action has exactly the §3 keys | `test_ambient_prompt_only_missing`, `test_ambient_prompt_allowlist`, `test_ambient_next_action_keys`, `test_ambient_final_action_matches_gold` |
 | V2A-A06 | Red flag preempts in ambient mode | Fixtures 06, 09 and 12: from the attention turn onward, every response is `handoff`/`nurse_attention_phrase` with `nurse_attention:true`. A unit test with MISSING fields and "เมื่อกี้ลูกชักด้วยค่ะ" gives handoff. A question clause containing a listed phrase still fires. A gateway error gives `handoff`/`extraction_unavailable` with 0 facts | `test_ambient_attention_preempts`, `test_ambient_question_with_red_flag_still_fires`, `test_ambient_gateway_failure_fails_safe` |
 | V2A-A07 | DEF-E1R-001 (a)+(b) | Guided and ambient: after `nurse_attention_phrase`, the next gateway request has `last_asked_field` None, or the field of a later question. A different later chief complaint is held (`chief_complaint_conflict:true`, present in `held_facts`, the earlier one is still latest, and there is no superseding `voice_facts` row). SYNE-0196 shape (red flag → drug-reaction question → "แพ้ยาแก้ปวดข้อกลุ่มเอ็นเสดค่ะ"): the chief complaint is not changed to `joint_pain`. The frozen e1 artifacts are byte-unchanged | `test_def_e1r_001_last_asked_reset`, `test_def_e1r_001_cc_conflict_held`, `test_def_e1r_001_syne0196_shape`; `git diff <base> -- eval/results eval/manifests eval/ledger eval/posthoc` is empty |
-| V2A-A08 | Every extraction call goes through the gateway and is audited (restated for B1) | For each of the 15 ambient replays, three counts are equal: gateway audit rows (`invoke_audited`), turns with non-empty extraction text, and `voice_extractions` rows with status ok/error. There is exactly one `voice_extractions` row per non-agent turn. Turns with empty extraction text have status `skipped`/`nurse_question` and 0 gateway rows. Every turn's `voice.turn.add` audit has `mode`, `question` and `question_field`. No audit row contains transcript text. Gateway `inputs` keys are exactly `{"turns","last_asked_field"}`, and no question clause text appears in `inputs.turns[-1].text` | `test_ambient_gateway_audit_counts`, `test_ambient_audit_no_transcript_text`, `test_ambient_gateway_inputs_unchanged`, `test_question_clause_never_sent` |
+| V2A-A08 | Every extraction call goes through the gateway and is audited (restated for B1) | For each of the 15 ambient replays, three counts are equal: gateway audit rows (`invoke_audited`), turns with non-empty extraction text, and `voice_extractions` rows with status ok/error. There is exactly one `voice_extractions` row per non-agent turn. Turns with empty extraction text have status `skipped`/`nurse_question` and 0 gateway rows. Every turn's `voice.turn.add` audit has `mode`, `question` and `question_field`. No audit row contains transcript text. Gateway `inputs` keys are exactly `{"turns","last_asked_field"}`, and no question clause of the current turn appears in `inputs.turns[-1].text` (B1.4 scope; `inputs.turns[:-1]` context is not checked) | `test_ambient_gateway_audit_counts`, `test_ambient_audit_no_transcript_text`, `test_ambient_gateway_inputs_unchanged`, `test_question_clause_never_sent` |
 | V2A-A09 | Per-turn latency (mock provider, in process) | p95 ≤ **500 ms** over all ambient fixture turns (n ≥ 150) | eval `latency_ms`; `test_ambient_eval_thresholds` |
 | V2A-A10 | No new dependency or provider coupling | `requirements.in`, `requirements.lock`, `pyproject.toml` and `web/package.json` are unchanged vs `<base>`. No `livekit`/`openai`/network import under `backend/app/voice/`. The existing isolation tests pass unmodified | `git diff --stat`; `test_voice_provider_isolation`, `test_provider_isolation` |
 | V2A-A11 | Mode contract | Default `guided`; `mode:"x"` returns 422; `mode` is in every payload; an UPDATE of `mode` is rejected (SQLite; PG in `make test-pg`); an ambient session has 0 `agent` turns; the column add is idempotent on a pre-v2a DB | `test_mode_default_and_validation`, `test_mode_immutable`, `test_ambient_no_agent_turns`, `test_voice_schema_upgrade_idempotent` |
@@ -265,7 +274,8 @@ As the first turn of a session, each of these leaves `chief_complaint` MISSING.
 - **D-V2A-2** (clinical-safety-reviewer / D4): a listed red-flag phrase inside a question still triggers sticky attention. The default is yes.
 - **D-V2A-3** (v2d owner): Case Graph and symptom readers take `patient` turns only, so ambient `unknown` turns reach none of them. v2d must decide this before triage handoff.
 - **D-V2A-4** (Research, shared contract): the additive `"unknown"` value in `casegraph.data.Turn.speaker`.
-- **D-V2A-5** (this revision, SP-2): บ้าง-final answers are answers. The recall loss seen at 211d1a1 is **rejected**, not accepted.
+- **D-V2A-5** (rev 2, SP-2): บ้าง-final answers are answers. The recall loss seen at 211d1a1 is **rejected**, not accepted.
+- **D-V2A-6** (rev 3, SP-3/SP-4): field-less question gold lives in §5 (planner-owned, dev only) rather than in fixtures, so the committed fixtures and the A13 ancestor check stay intact. B1.4 applies to the current turn; prior-turn context in `inputs.turns[:-1]` is intended and unchanged. The builder updates `test_ambient_eval.py` to the rev-3 A04 and logs a `runs.jsonl` row with cause "SPEC rev 3 (SP-3/SP-4), no rule change".
 
 ## 9. Run commands (worktree root)
 
