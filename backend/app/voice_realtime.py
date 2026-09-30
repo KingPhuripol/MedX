@@ -21,7 +21,7 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import text
+from sqlalchemy import select
 
 from .audit import write_audit
 from .config import Settings
@@ -202,11 +202,11 @@ def realtime_session(body: SessionBody, request: Request, user: CurrentUser = De
         supplied = (body.access_code or "").encode("utf-8")
         if not supplied or not hmac.compare_digest(supplied, s.voice_access_code.encode("utf-8")):
             fail(403, "access_code_invalid", "denied")
-    # SELECT * so a ``mode`` column added by v2a is picked up; absent or NULL means "guided".
-    # After v2a merges this can become ``select(voice_sessions.c.status, voice_sessions.c.mode)``.
+    # NULL mode is a pre-v2a row and reads as "guided" (v2a keeps mode immutable after creation).
     with engine.connect() as conn:
         row = conn.execute(
-            text(f"SELECT * FROM {voice_sessions.name} WHERE session_id = :sid"), {"sid": body.voice_session_id}
+            select(voice_sessions.c.status, voice_sessions.c.mode)
+            .where(voice_sessions.c.session_id == body.voice_session_id)
         ).mappings().first()
     if row is None:
         audit("error", reason="session_not_found")
