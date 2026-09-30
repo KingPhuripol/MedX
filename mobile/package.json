@@ -1,0 +1,33 @@
+{
+  "name": "medx-mobile-scribe",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -H 127.0.0.1 -p ${MOBILE_PORT:-3002}",
+    "build": "next build",
+    "start": "next start -H 127.0.0.1 -p ${MOBILE_PORT:-3002}",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "scan-bundle": "node scripts/scan-bundle.mjs",
+    "screens": "playwright test e2e/screens.spec.ts"
+  },
+  "dependencies": {
+    "next": "15.5.26",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
+    "@playwright/test": "^1.63.0",
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^22.18.0",
+    "@types/react": "^19.1.12",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.2",
+    "jsdom": "^26.1.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

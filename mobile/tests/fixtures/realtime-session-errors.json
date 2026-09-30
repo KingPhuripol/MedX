@@ -1,0 +1,33 @@
+{
+  "403": {
+    "detail": {
+      "reason": "access_code_invalid"
+    }
+  },
+  "404": {
+    "detail": "voice session not found"
+  },
+  "409": {
+    "detail": "voice session is not active"
+  },
+  "429": {
+    "detail": {
+      "reason": "rate_limited"
+    }
+  },
+  "502": {
+    "detail": {
+      "reason": "upstream_error"
+    }
+  },
+  "503": {
+    "detail": {
+      "reason": "not_configured"
+    }
+  },
+  "504": {
+    "detail": {
+      "reason": "upstream_timeout"
+    }
+  }
+}

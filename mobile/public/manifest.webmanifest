@@ -1,0 +1,17 @@
+{
+  "name": "MedX Scribe (ต้นแบบวิจัย)",
+  "short_name": "MedX Scribe",
+  "description": "บันทึกซักประวัติข้างเตียง · ข้อมูลสังเคราะห์ · ต้นแบบเพื่อการวิจัย",
+  "lang": "th",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F5F8FB",
+  "theme_color": "#F5F8FB",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

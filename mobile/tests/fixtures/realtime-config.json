@@ -1,0 +1,11 @@
+{
+  "enabled": true,
+  "reason": null,
+  "access_code_required": false,
+  "max_session_seconds": 600,
+  "vendor_label": "Realtime vendor (fixture)",
+  "model": "fixture-transcribe",
+  "transcribe_model": "fixture-transcribe",
+  "ambient_supported": true,
+  "ambient_model": "fixture-transcribe"
+}
