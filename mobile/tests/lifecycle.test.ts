@@ -309,3 +309,29 @@ describe("session clock", () => {
     expect(elapsed(rec.getSnapshot())).toBe(17_000);
   });
 });
+
+describe("finish stops the turn queue (T9)", () => {
+  it("a slow failing POST is never retried after the 5 s drain; reopen resumes posting", async () => {
+    const { b, api, rec } = await listening();
+    const turnPosts = () => api.calls.filter((c) => c.method === "POST" && c.url.endsWith("/turns")).length;
+    api.on[`POST /api/voice/sessions/${rec.sessionId}/turns`] = () =>
+      new Promise((r) => setTimeout(() => r({ status: 503, body: { detail: "slow" } }), 12_000));
+    b.rtc.say("i1", "หนึ่ง");
+    await vi.advanceTimersByTimeAsync(0);
+    expect(turnPosts()).toBe(1);
+    const done = rec.finish();
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(await done).toBe("done");
+    await vi.advanceTimersByTimeAsync(30_000); // 503 lands at 12 s; the T5 retry would fire at ~13 s
+    expect(turnPosts()).toBe(1);
+
+    delete api.on[`POST /api/voice/sessions/${rec.sessionId}/turns`];
+    rec.reopen();
+    rec.press();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(rec.getSnapshot().rec).toBe("listening");
+    b.rtc.say("i2", "สอง");
+    await vi.advanceTimersByTimeAsync(0);
+    expect(api.posted.map((p) => p.text)).toContain("สอง");
+  });
+});

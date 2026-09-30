@@ -256,6 +256,8 @@ export class Recorder {
     this.stopMic();
     this.setRec("finishing");
     await this.queue.waitIdle(FINISH_DRAIN_MS);
+    // T9: nothing is posted after the drain (a POST still in flight is not retried); reopen() restarts the queue.
+    this.queue.stop();
     this.closeConn();
     this.queue.dropPending();
     const r = await call<SessionGet>(`/api/voice/sessions/${this.sessionId}`);
