@@ -173,11 +173,14 @@ export class Recorder {
     const prev = this.snap.rec;
     const now = Date.now();
     let { clockMs, clockSince } = this.snap;
-    if (prev === "listening" && rec !== "listening" && clockSince !== null) {
+    // The session clock keeps running through an unplanned drop (comp 03c 03:58 -> 03d 04:05);
+    // it freezes on pause, error, permission loss and finishing.
+    const runs = (s: RecState) => s === "listening" || s === "reconnecting";
+    if (!runs(rec) && clockSince !== null) {
       clockMs += now - clockSince;
       clockSince = null;
     }
-    if (rec === "listening" && prev !== "listening") clockSince = now;
+    if (rec === "listening" && clockSince === null) clockSince = now;
     this.patch({ rec, clockMs, clockSince, ...extra });
     if (rec === "listening") this.acquireWake();
     else this.releaseWake();

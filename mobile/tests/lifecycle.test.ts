@@ -285,3 +285,27 @@ describe("hard stop at max_session_seconds (carried v2t condition 2)", () => {
     expect(b.rtc.pcs).toHaveLength(1); // no reconnect while finishing
   });
 });
+
+describe("session clock", () => {
+  const elapsed = (s: { clockMs: number; clockSince: number | null }) => s.clockMs + (s.clockSince === null ? 0 : Date.now() - s.clockSince);
+
+  it("runs through reconnecting (comp 03c -> 03d) and freezes on pause and error", async () => {
+    const { b, api, rec } = await listening();
+    await vi.advanceTimersByTimeAsync(10_000);
+    rec.pause();
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(elapsed(rec.getSnapshot())).toBe(10_000);
+    rec.press();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(rec.getSnapshot().rec).toBe("listening");
+    api.mint.push({ status: 502, body: {} }, { status: 502, body: {} }, { status: 502, body: {} });
+    b.rtc.drop();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(rec.getSnapshot().rec).toBe("reconnecting");
+    await vi.advanceTimersByTimeAsync(7_000);
+    expect(rec.getSnapshot().rec).toBe("error");
+    expect(elapsed(rec.getSnapshot())).toBe(17_000);
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(elapsed(rec.getSnapshot())).toBe(17_000);
+  });
+});

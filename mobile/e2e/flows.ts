@@ -57,7 +57,7 @@ export async function mainFlow(page: Page, visit: Visit) {
 
   await page.getByTestId("rec-button").click();
   await expect(page.getByTestId("rec-button")).toHaveAttribute("data-state", "listening");
-  await page.clock.fastForward(16_000); // 03:58
+  await page.clock.fastForward(15_000); // 03:57; the drop + 1 s backoff shows 03:58
   api.mintStatus = 502;
   await page.evaluate(() => (window as unknown as { __drop: () => void }).__drop());
   await expect(page.getByTestId("rec-button")).toHaveAttribute("data-state", "reconnecting");
