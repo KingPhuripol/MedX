@@ -191,3 +191,19 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
   - The transcript panel is hidden while a red flag is unacknowledged.
   - The Thai question allowlist and red-flag lists stay placeholders pending D4.
 - **Approved by:** project owner (chat, 2026-09-30).
+
+## 2026-09-30 — D1 superseded: OpenAI Realtime transcription-only instead of LiveKit
+- **What:** the owner chose not to use LiveKit Cloud. The mobile scribe connects straight from the phone to the OpenAI Realtime API over WebRTC in a **transcription-only** session:
+  - session type `transcription`, model `gpt-4o-mini-transcribe`, language `th`, server VAD;
+  - no model output, no instructions, no tools.
+  The backend mints a short-lived client secret, extending `backend/app/voice_realtime.py`, and the key stays server-side. Synthetic audio only.
+- **Deviation from Proposal §3.1, accepted by the owner:**
+  - no LiveKit Agents and no cascade;
+  - audio bypasses the Model Gateway, the same known weakness as V1. The gateway still handles extraction, and the backend audits every mint and turn.
+  The slice report and the final documentation must state this deviation.
+- **Slice changes:**
+  - The LiveKit slice v2b is stopped. Its branch `factory/v2b` keeps a spec commit and uncommitted work; it is not merged and not deleted.
+  - New slice **v2t** covers the transcription session.
+  - v2c is re-planned against the v2t contract.
+- **Scope of the previous approvals:** the 2026-09-29 OpenAI Realtime approval (synthetic audio only) already covers this vendor. The D1 LiveKit guard change is void; `livekit` stays forbidden.
+- **Approved by:** project owner (chat, 2026-09-30).
