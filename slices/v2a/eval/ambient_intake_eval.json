@@ -4,7 +4,7 @@
   "mode": "ambient",
   "provider": "mock",
   "extractor": "voice-mock-rules-0.3.0",
-  "inputs_sha256": "4866e7da2468bda98f96d461f2585e99cb04afcb3831668f15a69665fa3e75c9",
+  "inputs_sha256": "b4bbd806bb0773f3cce88f5905a50ef6f90504b13e91c66952e50f2eefa2e764",
   "n_dialogues": 15,
   "bootstrap": {
     "resamples": 2000,
@@ -430,10 +430,16 @@
       "wrong_field": 0,
       "missed": 0,
       "correct_field_rate": 1.0,
-      "n_answer_turns": 53,
-      "answer_turns_flagged": 1,
-      "flagged_answer_turns": [
-        "th_ambient_07:t14"
+      "n_answer_turns": 52,
+      "answer_turns_flagged": 0,
+      "flagged_answer_turns": [],
+      "fieldless_question_turns": [
+        {
+          "ref": "th_ambient_07:t14",
+          "question": true,
+          "question_field": null,
+          "n_facts": 0
+        }
       ],
       "confusion": {
         "chief_complaint": {
@@ -454,8 +460,11 @@
         "relevant_history": {
           "relevant_history": 9
         },
+        "fieldless_question": {
+          "none": 1
+        },
         "answer": {
-          "none": 53
+          "none": 52
         }
       }
     },
@@ -468,6 +477,7 @@
       "n_answer_turns": 28,
       "answer_turns_flagged": 0,
       "flagged_answer_turns": [],
+      "fieldless_question_turns": [],
       "confusion": {
         "chief_complaint": {
           "chief_complaint": 5
@@ -509,8 +519,8 @@
   "attention_on_question_turns": 0,
   "latency_ms": {
     "n_turns": 161,
-    "p50": 1.822,
-    "p95": 2.361,
+    "p50": 1.777,
+    "p95": 2.246,
     "scope": "per-turn processing, mock provider in process, local"
   },
   "per_dialogue": [

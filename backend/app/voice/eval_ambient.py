@@ -21,7 +21,7 @@ from ..db import create_schema, make_engine
 from ..deps import CurrentUser
 from ..gateway import build_provider
 from ..roles import Role
-from .db import create_voice_schema, voice_turns
+from .db import create_voice_schema, voice_facts, voice_turns
 from .intent_th import classify_turn
 from .eval import FIXTURE_DIR, N_BOOT, REPO_ROOT, SEED, _percentile, bootstrap_ci, field_counts, final_predictions, prf
 from .mock_rules import EXTRACTOR_VERSION
@@ -33,6 +33,8 @@ AMBIENT_DIR = FIXTURE_DIR / "ambient"
 OUT_PATH = REPO_ROOT / "slices" / "v2a" / "eval" / "ambient_intake_eval.json"
 LABEL = "system evaluation — mock rules, synthetic ambient text dialogues (no audio/ASR), not clinical performance"
 GATED_FIELDS = ("chief_complaint", "onset_duration", "severity", "allergy_status", "allergens", "current_medications")
+# SPEC section 5 (rev 3, SP-3): planner-owned field-less question gold, dev only; held-out has none labelled.
+GOLD_FIELDLESS_QUESTION_TURNS = frozenset({"th_ambient_07:t14"})
 SOURCE_FILES = ("mock_rules.py", "policy.py", "service.py", "simulate.py", "eval.py", "eval_ambient.py", "models.py",
                 "intent_th.py", "utterances_th.py")
 
@@ -78,11 +80,12 @@ def _summarise(rows: list[dict]) -> dict:
 
 def _classifier(rows: list[dict]) -> dict:
     q = [t for r in rows for t in r["turns"] if t["gold"]]
-    answers = [t for r in rows for t in r["turns"] if not t["gold"]]
+    fieldless = [t for r in rows for t in r["turns"] if t["ref"] in GOLD_FIELDLESS_QUESTION_TURNS]
+    answers = [t for r in rows for t in r["turns"] if not t["gold"] and t["ref"] not in GOLD_FIELDLESS_QUESTION_TURNS]
     correct = sum(1 for t in q if t["pred"] == t["gold"])
     confusion: dict[str, dict[str, int]] = {}
-    for t in q + answers:
-        row = confusion.setdefault(t["gold"] or "answer", {})
+    for t in q + fieldless + answers:
+        row = confusion.setdefault(t["gold"] or ("fieldless_question" if t in fieldless else "answer"), {})
         row[t["pred"] or "none"] = row.get(t["pred"] or "none", 0) + 1
     return {
         "n_question_turns": len(q), "correct_field": correct,
@@ -91,6 +94,8 @@ def _classifier(rows: list[dict]) -> dict:
         "correct_field_rate": round(correct / len(q), 4) if q else "n/a",
         "n_answer_turns": len(answers), "answer_turns_flagged": sum(1 for t in answers if t["question"]),
         "flagged_answer_turns": [t["ref"] for t in answers if t["question"]],
+        "fieldless_question_turns": [{"ref": t["ref"], "question": t["question"], "question_field": t["pred"],
+                                      "n_facts": t["n_facts"]} for t in fieldless],
         "confusion": confusion,
     }
 
@@ -106,6 +111,7 @@ def run_eval() -> dict:
         runs: list[SimRun] = [simulate_ambient(ctx, fx) for fx in fixtures]
         with engine.connect() as conn:
             stored = {r.turn_id: r for r in conn.execute(select(voice_turns))}
+            fact_spans = [json.loads(r.span_turn_ids_json) for r in conn.execute(select(voice_facts))]
         engine.dispose()
 
     rows, latencies = [], []
@@ -117,7 +123,8 @@ def run_eval() -> dict:
         exp = expected_final(fx)
         # "question": the turn has any question clause, field-less included (a flagged answer if gold says answer)
         turns = [{"turn_id": ftid, "ref": f"{fx['dialogue_id']}:{ftid}", "gold": fx["gold_question_turns"].get(ftid), "pred": stored[sid].field,
-                  "question": classify_turn(stored[sid].text) is not None} for ftid, sid in run.turn_map.items()]
+                  "question": classify_turn(stored[sid].text) is not None,
+                  "n_facts": sum(1 for span in fact_spans if sid in span)} for ftid, sid in run.turn_map.items()]
         attention_on_questions += sum(1 for t, sid in zip(turns, run.turn_map.values())
                                       if t["question"] and stored[sid].nurse_attention)
         rows.append({
