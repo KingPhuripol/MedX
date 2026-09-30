@@ -176,8 +176,9 @@ export function Recording({ recorder, patient, onFinished, onBackToStart }: Reco
   const flagOpen = !!snap.redFlag && snap.ackAtMs === null;
   const complete = allComplete(scribe);
   const extractionDown = na?.kind === "handoff" && na.reason === "extraction_unavailable";
-  const attentionHandoff = na?.kind === "handoff" && na.reason === "nurse_attention_phrase";
-  const live = rec === "listening" && na?.kind === "prompt_nurse" && !flagOpen && !complete;
+  // Sticky on the client too (D-V2C-5): once a red flag was raised, no question is suggested again this session.
+  const attentionHandoff = !!snap.redFlag || (na?.kind === "handoff" && na.reason === "nurse_attention_phrase");
+  const live = rec === "listening" && na?.kind === "prompt_nurse" && !attentionHandoff && !complete;
   const factRows = rows(scribe, live);
   const captured = capturedCount(scribe);
 
