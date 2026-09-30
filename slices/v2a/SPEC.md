@@ -1,8 +1,20 @@
 # V2A — Ambient intake mode for the voice session API (backend only)
 
-Planner: innovation-lead. Revision 3 (2026-09-30): resolves checker SP-3 (field-less gold, A04) and SP-4 (B1.4 scope) on fe3460e. Rev 2 resolved SP-1/SP-2. Branch: `factory/v2a`. Gantt owner: ภูริณัฐ (Voice Agent, PROPOSAL row 16).
+Planner: innovation-lead. Revision 4 (2026-09-30): continuation run. Rev 3 (07603db) behaviour, contracts and A01–A15 are unchanged and verbatim; rev 4 adds §0, a normative counting note under B2(ii), acceptance V2A-H1..H3 and V2A-A16..A17, §7 H phrases and D-V2A-7. Rev 3 resolved SP-3/SP-4; rev 2 resolved SP-1/SP-2. Branch: `factory/v2a`. Gantt owner: ภูริณัฐ (Voice Agent, PROPOSAL row 16).
 Sources: `docs/PROPOSAL.md` §1.3.1 ("ถามเพิ่มเฉพาะข้อมูลที่ยังขาด"), §3.1, §3.5, Table 3.2; `docs/DECISIONS.md` 2026-09-30 (V2 ambient scribe direction). The proposal wins on any conflict.
 This is a research prototype that uses synthetic data only. The nurse is present and in charge. The system suggests. It never speaks, diagnoses or triages.
+
+## 0. Continuation (rev 4) — what the builder does in this run
+
+The code base is fe3460e (rev-2 implementation). The previous run used all 3 build rounds. This run has two jobs and no new behaviour.
+
+1. **Rev-3 bookkeeping (D-V2A-6).**
+   - The eval `classifier` block, per split, has `fieldless_question_turns` (one entry per §5 field-less gold turn: `ref`, `question`, `question_field`, `n_facts`) and `flagged_answer_turns` (answer turns as classed in §5, i.e. excluding field-less gold).
+   - `test_ambient_eval.py` asserts the rev-3 A04: dev `flagged_answer_turns == []` and `th_ambient_07:t14` in `fieldless_question_turns` with `question:true`, `question_field:null`, `n_facts:0`. The "SPEC rev 2 conflict" comment and the `== ["th_ambient_07:t14"]` assertion are removed.
+   - One `runs.jsonl` row is appended per eval run, with a `cause`. The first rev-3 row has cause "SPEC rev 3 (SP-3/SP-4), no rule change".
+2. **Proof that the three HIGH findings of review round 1 are fixed.** Each finding gets one dedicated dev-only test in `backend/tests/voice/test_ambient.py`: `test_h1_screening_question_no_facts`, `test_h2_answer_before_question_kept` and `test_h3_merged_turn_window` (§6 V2A-H1..H3, §7 "H phrases"). Planner probes on fe3460e (2026-09-30, temporary test file, deleted) found every §7 H case already behaves as required. So the expected diff is tests + eval bookkeeping only. If a dedicated test fails, fix the rule using only §7 dev phrases, never held-out 11–15, and log a `runs.jsonl` row with the cause.
+
+Contracts 1–3 (§3) stay exactly as locked. Existing tests that cover the same ground (`test_screening_question_no_facts`, `test_allergy_before_question_is_kept`, `test_stale_window_closes_after_merged_turn`) stay; the H tests are additional, named evidence and must not be made by renaming or weakening them.
 
 ## 1. Problem and user
 
@@ -105,6 +117,8 @@ An open window F closes (becomes None) on any of these:
 - (ii) `AMBIENT_ASK_WINDOW = 2` turns with non-empty extraction text. A merged question + answer turn counts as the first of the two;
 - (iii) for the scalar fields `chief_complaint`, `onset_duration`, `severity` and `allergy_status`: a fact for F written inside the window.
 
+Counting for (ii) (rev 4, normative; it restates fe3460e and the rev-3 §7 window tests, and is not a rule change): the question turn is the first window turn, so the window reaches exactly one later turn. A merged question + answer turn is the question turn **and** its own answer, so it uses both slots and the next turn is outside the window. Examples: "มีโรคประจำตัวไหมคะ" → "เบาหวานค่ะ" (in window) → "เดี๋ยววัดความดันนะคะ" (out); "มีโรคประจำตัวไหมคะ เบาหวานค่ะ" → "เดี๋ยววัดความดันนะคะ" (out).
+
 List fields (`current_medications`, `relevant_history`) close only by (i), (ii) or a field-less question. Only turns with `ended_at` ≤ the current turn's `ended_at` are used.
 
 Volunteered facts (window None) are extracted wherever the existing rules allow.
@@ -196,6 +210,11 @@ Turn classes for the classifier block: **field question** = in `gold_question_tu
 | V2A-A13 | Fixture discipline | The schema is valid. Gold keys are byte-equal to the source and `source_sha256` matches. There is no `agent` speaker. Held-out wording novelty holds. `runs.jsonl` has one row per eval run with its cause | `test_ambient_fixtures_schema_and_source`; `git merge-base --is-ancestor 97e7dbc <first intent_th.py commit>` |
 | V2A-A14 | RBAC unchanged | Non-nurse roles get 403 on all `/api/voice` routes in both modes | `test_voice_auth_matrix` + ambient parametrisation |
 | V2A-A15 | บ้าง answers keep their facts (SP-2) | Each §7 บ้าง answer: `question:false`, 1 gateway call. After "มาด้วยอาการอะไรคะ", "ไอบ้างค่ะ" makes `chief_complaint` KNOWN. After "มีโรคประจำตัวไหมคะ", "เป็นเบาหวานกับความดันบ้างค่ะ" makes `relevant_history` contain both เบาหวาน and ความดัน | `test_bang_answers_not_questions`, `test_bang_answer_extracted_in_window` |
+| V2A-H1 | A screening yes/no question with no field intent yields zero facts and moves no field (review H1) | For each of the 5 §7 H1 questions, in a fresh ambient session: (a) as the first turn: `voice.turn.add` audit `question:true`, `question_field:null`; 0 `voice_facts` rows; `held_facts == []`; 0 gateway calls; the `voice_extractions` row is `skipped`/`nurse_question`; all 6 `ASK_ORDER` fields MISSING with `times_asked` 0; `next_action` = `prompt_nurse`/`chief_complaint`. (b) followed by each §7 H1 reply ("ไม่มีค่ะ", "มีค่ะ", "ไม่ค่ะ", "ค่ะ"): the reply's gateway request has `last_asked_field` None, and all 6 fields are still MISSING (5 × 4 = 20 cases, 0 exceptions). (c) mid-session, after `chief_complaint` is KNOWN: the question turn adds 0 facts and leaves every field status and `times_asked` unchanged | `test_h1_screening_question_no_facts` (parametrised; dev phrases only) |
+| V2A-H2 | Non-question text before a question clause in the same turn is still extracted; a disclosure is never lost to a following question (review H2) | Each §7 H2 case, 5/5: `inputs.turns[-1].text` of the question turn's gateway call equals the pre-question text, whitespace-trimmed (no question clause). ["ไม่แพ้ยาค่ะ", "อ๋อ จริงๆเคยแพ้ยาซัลฟาค่ะ ทานยาอะไรประจำไหมคะ"]: the final latest `allergy_status` fact is **not** KNOWN `none`; it is KNOWN `present` with `allergens` ⊇ ["ซัลฟา"], **or** the sulfa disclosure is in `held_facts` and `allergy_status` is in `next_action.missing_fields`. "แพ้เพนิซิลลินค่ะ ทานยาอะไรประจำไหมคะ": `allergy_status` KNOWN `present`, `allergens` ⊇ ["เพนิซิลลิน"], `current_medications.times_asked == 1`. "ปวดหัวมากค่ะ เป็นมากี่วันแล้วคะ": `chief_complaint` KNOWN `headache`, `onset_duration` MISSING with `times_asked == 1`. ["แพ้ยาอะไรไหมคะ", "ไม่แพ้ยาค่ะ", "อ้อ แพ้เพนิซิลลินด้วย จะเป็นอะไรไหมคะ"] and its 2-turn form without the opening question ("ไม่แพ้ยาค่ะ" first): `allergy_status` KNOWN `present`, `allergens` ⊇ ["เพนิซิลลิน"]. In every case `allergy_false_none` = 0 | `test_h2_answer_before_question_kept` (parametrised; dev phrases only) |
+| V2A-H3 | A merged question + answer turn is the first window turn (review H3; B2(ii) counting note) | ["มีโรคประจำตัวไหมคะ เบาหวานค่ะ", "เดี๋ยววัดความดันนะคะ"]: gateway `last_asked_field` sequence is exactly ["relevant_history", None]; `inputs.turns[-1].text` of call 1 is "เบาหวานค่ะ"; the final `relevant_history` value is exactly ["เบาหวาน"] (ความดัน absent); `times_asked[relevant_history] == 1`. Control: ["มีโรคประจำตัวไหมคะ", "เบาหวานค่ะ", "เดี๋ยววัดความดันนะคะ"] gives the same final value | `test_h3_merged_turn_window` |
+| V2A-A16 | Rev-3 bookkeeping done (D-V2A-6) | `ambient_intake_eval.json` `classifier.{dev,heldout}` each have `fieldless_question_turns` and `flagged_answer_turns`. Dev: `flagged_answer_turns == []`; `fieldless_question_turns` has exactly `th_ambient_07:t14` with `question:true`, `question_field:null`, `n_facts:0`. Held-out: both lists present, reported only. `test_ambient_eval.py` asserts this and contains no "SPEC rev 2 conflict" exception. `runs.jsonl` gains ≥ 1 row after run 3; every new row has `cause`, `inputs_sha256` and `status`; the first new row's cause is "SPEC rev 3 (SP-3/SP-4), no rule change"; the last row's `inputs_sha256` equals the committed JSON's | `test_ambient_eval_thresholds`; `tail -n +4 slices/v2a/eval/runs.jsonl` |
+| V2A-A17 | Whole suite green at the final commit | `make test` exits 0, with 0 failed and 0 errors; the three H tests are collected and pass (not skipped, not xfail) | `make test`; `.venv/bin/python -m pytest -q backend/tests/voice/test_ambient.py -k "h1_ or h2_ or h3_" -rA` |
 
 ## 7. Required test phrases
 
@@ -251,6 +270,16 @@ As the first turn of a session, each of these leaves `chief_complaint` MISSING.
 - Stale list: "มีโรคประจำตัวไหมคะ" → "เบาหวานค่ะ" → "เดี๋ยววัดความดันนะคะ". `relevant_history` is ["เบาหวาน"] only.
 - Merged stale list: "มีโรคประจำตัวไหมคะ เบาหวานค่ะ" → "เดี๋ยววัดความดันนะคะ". "ความดัน" is not added.
 
+**H phrases (rev 4, dev only, planner-authored; none comes from fixtures 11–15).**
+- **H1 screening questions** (field-less): มีไข้ไหมคะ · ไอไหมคะ · เจ็บหน้าอกไหมคะ · มีอาการเจ็บหน้าอกไหมคะ · ปวดท้องด้วยไหมคะ. **H1 replies:** ไม่มีค่ะ · มีค่ะ · ไม่ค่ะ · ค่ะ. **H1 mid-session prefix:** "มาด้วยอาการอะไรคะ" → "ปวดหัวค่ะ" (chief_complaint KNOWN `headache`), then the question.
+- **H2 cases:**
+  1. "ไม่แพ้ยาค่ะ" → "อ๋อ จริงๆเคยแพ้ยาซัลฟาค่ะ ทานยาอะไรประจำไหมคะ": sent text "อ๋อ จริงๆเคยแพ้ยาซัลฟาค่ะ"; never ends KNOWN `none`.
+  2. "แพ้เพนิซิลลินค่ะ ทานยาอะไรประจำไหมคะ": sent text "แพ้เพนิซิลลินค่ะ".
+  3. "ปวดหัวมากค่ะ เป็นมากี่วันแล้วคะ": sent text "ปวดหัวมากค่ะ".
+  4. "แพ้ยาอะไรไหมคะ" → "ไม่แพ้ยาค่ะ" → "อ้อ แพ้เพนิซิลลินด้วย จะเป็นอะไรไหมคะ": sent text "อ้อ แพ้เพนิซิลลินด้วย".
+  5. "ไม่แพ้ยาค่ะ" → "อ้อ แพ้เพนิซิลลินด้วย จะเป็นอะไรไหมคะ": as 4.
+- **H3 cases:** "มีโรคประจำตัวไหมคะ เบาหวานค่ะ" → "เดี๋ยววัดความดันนะคะ"; control "มีโรคประจำตัวไหมคะ" → "เบาหวานค่ะ" → "เดี๋ยววัดความดันนะคะ".
+
 ## 8. Clinical risks, limitations and decisions
 
 | Risk | Mitigation |
@@ -262,6 +291,8 @@ As the first turn of a session, each of these leaves `chief_complaint` MISSING.
 | The chief complaint is silently replaced | B4(b) hold + flag. Cost: genuine corrections are also held for the nurse |
 | Red-flag false alarms from screening questions end prompting (sticky) | Accepted as conservative and counted (`attention_on_question_turns`). D-V2A-2 |
 | Mock results are read as clinical accuracy | The eval label, the same-author disclosure and the separate held-out split. v2e measures audio end to end |
+| A positive reply to a screening question ("เจ็บหน้าอกไหมคะ" → "มีค่ะ") records nothing (H1) | Accepted by design: no fact may come from a question, and a bare "มีค่ะ" has no field. The field stays MISSING and the nurse, who asked, hears the answer. Red-flag phrases still fire on the question text (B5). Not a false negative that the system hides: nothing is marked captured |
+| A patient question after a disclosure ("…จะเป็นอะไรไหมคะ") is classed as a `chief_complaint` question: it bumps `times_asked` (next prompt is `reask.chief_complaint`) and opens a one-turn window | Residual, not gated (planner probe on fe3460e). No fact comes from the question; a different chief complaint in the next turn is held by B4(b). Reported for the reviewer; no rule change in rev 4 |
 
 **L-1 (known limitation, accepted).** A question followed by a trailing adverb ("เป็นอะไรมาคะวันนี้", held-out fixture 12 t01) leaves non-empty extraction text. That text makes 1 gateway call with 0 facts and uses one window turn. It is not changed in v2a, because the observation comes from a held-out fixture. A08 counts it by the extraction-text rule.
 
@@ -276,12 +307,16 @@ As the first turn of a session, each of these leaves `chief_complaint` MISSING.
 - **D-V2A-4** (Research, shared contract): the additive `"unknown"` value in `casegraph.data.Turn.speaker`.
 - **D-V2A-5** (rev 2, SP-2): บ้าง-final answers are answers. The recall loss seen at 211d1a1 is **rejected**, not accepted.
 - **D-V2A-6** (rev 3, SP-3/SP-4): field-less question gold lives in §5 (planner-owned, dev only) rather than in fixtures, so the committed fixtures and the A13 ancestor check stay intact. B1.4 applies to the current turn; prior-turn context in `inputs.turns[:-1]` is intended and unchanged. The builder updates `test_ambient_eval.py` to the rev-3 A04 and logs a `runs.jsonl` row with cause "SPEC rev 3 (SP-3/SP-4), no rule change".
+- **D-V2A-7** (rev 4, continuation): review-round-1 findings H1–H3 are closed only by the three named dev-only tests (V2A-H1..H3) passing at the final commit, not by the pre-existing tests alone. The B2(ii) counting note restates existing behaviour; it is not a scope, contract or success-criterion change. Any rule change needed to pass an H test must cite the §7 H phrase that drove it in its commit message and its `runs.jsonl` cause.
 
 ## 9. Run commands (worktree root)
 
 ```bash
-make test                                                   # A01 and all unit tests
+make test                                                   # A01, A17 and all unit tests
 .venv/bin/python -m pytest -q backend/tests/voice           # voice suite incl. ambient, intent, §7
+.venv/bin/python -m pytest -q backend/tests/voice/test_ambient.py -k "h1_ or h2_ or h3_" -rA   # V2A-H1..H3
+.venv/bin/python -m pytest -q backend/tests/voice/test_ambient_eval.py                          # A02-A04, A09, A16
+tail -n +4 slices/v2a/eval/runs.jsonl                                                           # A16 new rows
 .venv/bin/python -m pytest -q tests/e1r eval/adapters/tests # A07, D-V2A-1
 make eval-voice            # A01 guided counts unchanged
 make eval-voice-ambient    # A02, A03, A04, A09 -> slices/v2a/eval/ambient_intake_eval.json
@@ -294,4 +329,5 @@ The builder's evidence must include:
 - every `runs.jsonl` row, including the revision-2 run and its cause;
 - the `make test` tail;
 - both eval summaries;
-- the D-V2A-1 diff.
+- the D-V2A-1 diff;
+- (rev 4) the `-rA` output of the three H tests, the dev `classifier` block of the eval JSON, and `git diff fe3460e --stat -- backend/app` (expected empty unless an H test forced a rule change under D-V2A-7).
