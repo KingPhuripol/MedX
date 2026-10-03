@@ -30,7 +30,7 @@ from .compiler import ValidatedGraph, validate
 from app.triage import department as s4_department
 
 from . import pharma_s5, reader_text, triage_bridge  # noqa: F401  (pharma_s5 registers the S5 hook)
-from .conversation_meds import MED_KIND, consumed_refs, newest, ordered, parse_medication_facts, parse_ts, same_time_conflict, fact_refs
+from .conversation_meds import MED_KIND, allergen_name_ok, allergens_problem, consumed_refs, newest, ordered, parse_medication_facts, parse_ts, same_time_conflict, fact_refs
 from .data import (
     CLINICAL_TEXT_TYPES,
     PLACEHOLDER_RULE_SET,
@@ -77,7 +77,7 @@ PENDING_KEY = "pending_review"
 # Version of the executor-side Pharma semantics (allergy/conversation gates, fact ordering, fact_use). It is part of the
 # Pharma node's input hash, so a persistent Output Store entry computed under older semantics can never be served. The
 # registered S5 pipeline string (s5-pipeline-2.6.0) is pinned by S5's own tests and is deliberately not bumped.
-PHARMA_GATES_VERSION = "cg-pharma-gates-3"
+PHARMA_GATES_VERSION = "cg-pharma-gates-4"
 PHARMA_FACT_KINDS = frozenset({"allergy_status", "allergens", "current_medications"})
 _ACTION_STATUS = {"confirm": "confirmed", "edit": "edited", "reject": "rejected"}
 
@@ -483,14 +483,12 @@ class Executor:
             isinstance(n, str) and n.strip() for n in (allergens["value"] if isinstance(allergens["value"], (list, tuple))
                                                        else ()))
         out: list[tuple[str, tuple[str, ...]]] = []
-        raw = allergens["value"] if allergens is not None and allergens["state"] == "KNOWN" else None
         if allergens is not None and allergens["state"] in ("UNKNOWN", "REFUSED"):
             out.append(("allergy_conversation", (f"conversation.allergens={allergens['state']}",)))
-        elif raw is not None and (not isinstance(raw, (list, tuple))
-                                  or any(not (isinstance(n, str) and n.strip()) for n in raw)):
-            out.append(("allergy_conversation", ("conversation.allergens:unparseable",)))
-        elif present and not named:
+        elif present and not named and (allergens is None or allergens_problem(allergens) is None):
             out.append(("allergy_conversation", ("conversation.allergens:unnamed_allergy",)))
+        if any(allergens_problem(f) for f in of("allergens")):  # S5 reads every KNOWN fact, not only the newest
+            out.append(("allergy_conversation", ("conversation.allergens:unparseable",)))
         if status is not None and status["state"] in ("UNKNOWN", "REFUSED"):
             out.append(("allergy_conversation", (f"conversation.allergy_status={status['state']}",)))
         for kind, cur in (("allergy_status", status), ("allergens", allergens)):
@@ -547,12 +545,11 @@ class Executor:
             cur = newest(same)
             for f in same:
                 reason, use = None, "used"
-                if f is cur:  # the newest fact of the kind is the one the gates read
+                if kind == "allergens" and allergens_problem(f) is not None:  # any KNOWN fact S5 reads, newest or not
+                    reason = allergens_problem(f)
+                elif f is cur:  # the newest fact of the kind is the one the gates read
                     if f["state"] != "KNOWN":
                         reason = f"conversation.{kind}={f['state']}"
-                    elif kind == "allergens" and (not isinstance(f["value"], (list, tuple))
-                                                  or any(not (isinstance(x, str) and x.strip()) for x in f["value"])):
-                        reason = "conversation.allergens:unparseable"
                     if reason is None and same_time_conflict(same, f):
                         reason = f"conversation.{kind}:same_time_conflict"
                 elif same_time_conflict(same, f) and parse_ts(f["available_at_time"]) == parse_ts(
@@ -561,7 +558,8 @@ class Executor:
                 elif f["state"] != "KNOWN" or kind == "allergy_status":
                     use = "superseded"  # an older statement the newest one replaced
                 if reason is not None:
-                    use = "not_used"
+                    use = "partial" if reason.endswith(":unparseable") and isinstance(f["value"], (list, tuple)) and any(
+                        allergen_name_ok(x) for x in f["value"]) else "not_used"
                 out.append(ConversationFactUse(kind=kind, evidence_ref=refs[id(f)], state=f["state"],
                                                used=reason is None, use=use, reason=reason))
         return tuple(out)

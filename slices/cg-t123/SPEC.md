@@ -40,7 +40,7 @@
    - Pharma's only `Findings` edge comes from Reader:Text, which carries the conversation's allergy and medication facts. Findings from other Readers are not wired to Pharma.
    - The Human Checkpoint also reads `ConfirmedResult` evidence (ConfirmedEvidence available at or before `T`) and lists it as `prior_confirmed` in its pending payload. Rejected results never re-enter, because `resume` appends nothing on reject.
    - `GraphSpec` gains `stage: "T1"|"T2"|"T3"|null` and `trigger_refs`. The export schema bumps to `casegraph-export/0.4`. 0.3 exports still import read-only with `stage=null`. Any other version raises.
-   - Legacy `compile_graph` (no stage) keeps its current behaviour for the existing tests. The backend no longer uses it.
+   - Legacy `compile_graph` (no stage) keeps its graph shape, but **amended 2026-10-03 (owner, round 5, R5-1):** the Pharma allergy/conversation gates apply whenever Pharma runs, staged or not, and the gate semantics version (`PHARMA_GATES_VERSION`) is part of the Pharma input hash. Legacy Pharma output therefore changed, and `casegraph/tests/test_executor.py::test_pharma_missing_dose_not_evaluated` now also expects the `allergy_record` / `AllergyList` gap rows. The backend no longer uses `compile_graph`.
 3. **Time-correct cache key.**
    - Every node body that reads `T` includes `T`, or the T-derived values it uses, in its input hash. Red-flag rf-1.1.0 must do this. Red-flag therefore re-executes in every version at 0 gateway calls (it is a rules node).
    - The builder checks Reader:Text, Reasoning and Pharma for `T` dependence. For each one it either proves T-independence with a test or adds `T` to that node's key.

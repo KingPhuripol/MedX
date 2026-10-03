@@ -142,6 +142,14 @@ VARIANTS = {
     "tie_allergens": [
         {"minus": 15, "meds": None, "allergy_status": ("KNOWN", "present"), "allergens": ("KNOWN", ["penicillin"])},
         {"minus": 15, "meds": None, "allergens": ("KNOWN", ["sulfa"])}],
+    # an OLDER allergens fact that is partly / wholly unparseable must not be dropped silently (only the newest was checked)
+    "old_allergens_partial": [
+        {"minus": 30, "meds": None, "allergy_status": ("KNOWN", "present"),
+         "allergens": ("KNOWN", ["penicillin", {"name": "amoxicillin"}])},
+        {"minus": 15, "meds": None, "allergens": ("KNOWN", ["sulfa"])}],
+    "old_allergens_nonlist": [
+        {"minus": 30, "meds": None, "allergens": ("KNOWN", "penicillin")},
+        {"minus": 15, "meds": None, "allergens": ("KNOWN", ["sulfa"])}],
 }
 
 

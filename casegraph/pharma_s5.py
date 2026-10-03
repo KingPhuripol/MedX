@@ -22,7 +22,7 @@ from app.gateway import DataClass
 from app.pharma.models import AllergyRecord, MedEntry, MedSnapshot, MedSource
 from app.pharma.pipeline import PIPELINE_VERSION, issue_signature, reconcile
 
-from .conversation_meds import fact_refs, parse_medication_facts
+from .conversation_meds import allergen_name_ok, fact_refs, parse_medication_facts
 from .data import AllergyList, MedicationCheck, MedicationEntry, MedicationIssue, MedicationList, screening_status
 from .library import S5_PHARMA_VERSION
 from .providers import PharmaInput, register_pharma_provider
@@ -71,10 +71,10 @@ def _allergy_records(inp: PharmaInput) -> tuple[AllergyRecord, ...]:
         if fact["kind"] != "allergens" or fact["state"] != "KNOWN" or not isinstance(fact["value"], (list, tuple)):
             continue
         for n, name in enumerate(fact["value"]):
-            if isinstance(name, str) and name.strip() and name.strip().lower() not in known:
+            if allergen_name_ok(name) and name.strip().lower() not in known:
                 known.add(name.strip().lower())
                 out.append(AllergyRecord(
-                    text=name.strip()[:300], evidence_ref=f"{refs[id(fact)]}/{n}"[:128],
+                    text=name.strip(), evidence_ref=f"{refs[id(fact)]}/{n}"[:128],
                     available_at_time=fact["available_at_time"], provenance="casegraph.reader_text",
                     version="1"))
     return tuple(out)

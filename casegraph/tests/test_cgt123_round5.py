@@ -222,3 +222,28 @@ def test_conversation_refs_are_real_item_ids_and_unique(env):
                                   for c in ("c1", "c2"))
     cited = {s["evidence_ref"] for i in mi["issues"] for s in i["conflicting_sources"]}
     assert not any(r.startswith(("conversation:allergens#", "conversation:current_medications#")) for r in cited)
+
+
+@pytest.mark.parametrize("old_value,use", [
+    (["penicillin", {"name": "amoxicillin"}], "partial"),
+    (["penicillin", 7], "partial"),
+    (["penicillin", "  "], "partial"),
+    ("penicillin", "not_used"),
+])
+@pytest.mark.parametrize("staged", [True, False])
+def test_older_unparseable_allergens_fact_is_never_silently_dropped(env, old_value, use, staged):
+    """Integration audit round 5 (B1-r5): S5 reads every KNOWN allergens fact, so a bad entry in an OLDER fact is a gap
+    too, not only in the newest one."""
+    p = f"SYN-R5-OLDAL-{staged}-{use}-{len(str(old_value))}"
+    items = [*base(p, with_allergy=False), allergy(p, f"{p}-al", T1 - 48 * 60 * M, status="known"),
+             conv_meds(p, f"{p}-c1", T1 - 30 * M, meds=None, allergy_status=("KNOWN", "present"),
+                       allergens=("KNOWN", old_value)),
+             conv_meds(p, f"{p}-c2", T1 - 15 * M, meds=None, allergens=("KNOWN", ["sulfa"])),
+             order(p, f"{p}-o", T1 + 30 * M if staged else T1)]
+    g = build_versions(env.executor(), items, T1, T1 + 2 * H)[-1] if staged else _unstaged(env, items, p)
+    assert g.stage == ("T3" if staged else None)
+    mi = _mi(g)
+    assert mi["status"] != "evaluated"
+    assert "conversation.allergens:unparseable" in mi["missing_inputs"]
+    old = [u for u in mi["conversation_fact_use"] if u["kind"] == "allergens" and f"{p}-c1" in u["evidence_ref"]]
+    assert [(u["use"], u["used"], u["reason"]) for u in old] == [(use, False, "conversation.allergens:unparseable")]

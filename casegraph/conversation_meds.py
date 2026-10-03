@@ -20,6 +20,25 @@ MAX_ENTRY = 500  # S5 MedEntry.text limit: a longer name is unparseable here, ne
 _MIN = datetime.min.replace(tzinfo=timezone.utc)
 
 
+ALLERGEN_MAX = 300  # S5 AllergyRecord.text limit: a longer name is unparseable here, never truncated silently
+
+
+def allergen_name_ok(name: Any) -> bool:
+    """One conversation allergen name S5 can consume as-is."""
+    return isinstance(name, str) and 0 < len(name.strip()) <= ALLERGEN_MAX
+
+
+def allergens_problem(fact: dict[str, Any]) -> str | None:
+    """Why a KNOWN ``allergens`` fact is not fully consumed: None when every entry is a usable name. Checked for every
+    KNOWN fact S5 reads, not only the newest one, so no entry is ever dropped silently (rule 6)."""
+    if fact["state"] != "KNOWN":
+        return None
+    v = fact["value"]
+    if not isinstance(v, (list, tuple)) or not all(allergen_name_ok(n) for n in v):
+        return "conversation.allergens:unparseable"
+    return None
+
+
 def parse_ts(value: Any) -> datetime:
     """An aware datetime from an ISO string/datetime. Naive is read as UTC; unparseable sorts oldest (never newest)."""
     if isinstance(value, str):
