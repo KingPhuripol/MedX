@@ -241,3 +241,18 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
   - Remote: archive tags pushed, then the same deleted branches removed from `origin`.
 - **Approved by:** project owner (chat, 2026-10-03; chose "repo + Claude config", "keep latest work, archive old", "delete on remote too").
 - **Scope:** git refs, local checkouts and tooling config only. No product code, data, splits, labels or evaluation evidence changed.
+
+## 2026-10-03 — `docs/PROPOSAL.md` synced to Proposal v9.6
+- **What:** `docs/PROPOSAL.md` is replaced by a conversion of `Project Proposal v2 Trimmed Revised v9.6.docx`. This is the submitted version: the title in the PDF metadata reads v9.6, dated 2026-10-02.
+  - Tables are now Markdown tables. In v8 they were flattened.
+  - Shaded weeks in the Gantt chart are marked ■.
+  - Figures 3.1–3.4 are extracted to `docs/figures/`.
+  - Check: all 596 non-empty source lines appear in the Markdown.
+- **What changed vs v8:**
+  - Objective 2 drops the parameter count. The ~27B target stays in the scope section.
+  - Case Graph is the main contribution; Front Door is the demonstration system.
+  - T1/T2/T3 graph versions: T3 = new drug order → Pharma Agent → pharmacist.
+  - Voice wording is "e.g. LiveKit".
+  - v9.6 drops the separate 1.3.5 fallback and 3.7 prototype sections that were in the v9.0 draft. The fallback content is folded into 1.3.4.
+- **Approved by:** project owner (chat, 2026-10-03, "เริ่มเลย sync PROPOSAL.md เป็น v9.6").
+- **Scope:** source-of-truth document only. No change to splits, labels, success criteria or contracts. `CLAUDE.md` now points at v9.6.

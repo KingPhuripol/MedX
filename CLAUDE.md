@@ -24,7 +24,7 @@ Do not expose hidden chain-of-thought. The inspectable artifact is the executed 
 
 ## Read source of truth before acting
 
-- `docs/PROPOSAL.md` — Proposal v8, the single source of truth (reset on 26 Sep 2026; old code and docs are under git tags `archive/*`).
+- `docs/PROPOSAL.md` — Proposal v9.6 (the version submitted on 2 Oct 2026), the single source of truth. Figures are in `docs/figures/`. The project was reset to v8 on 26 Sep 2026; old code and docs are under git tags `archive/*`.
 - `slices/<id>/SPEC.md` — the spec for the slice being built.
 
 When a slice spec conflicts with the proposal, the proposal wins. Stop and request a human decision for unresolved material conflicts.
