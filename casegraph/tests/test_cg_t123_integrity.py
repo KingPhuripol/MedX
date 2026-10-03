@@ -464,3 +464,54 @@ def test_s5_parity(tmp_path, dataset, monkeypatch):
             assert _graph_signatures(mi) == sorted(pharma_s5.issue_signature(i) for i in direct["issues"]), case_id
             checked += 1
     assert checked >= 1
+
+
+# ------------------------------------------------------------------ H-1: failed Reader:Text at T3
+
+
+def _failing_reader(monkeypatch):
+    from casegraph import reader_text
+
+    def boom(*_a, **_k):
+        raise reader_text.ReaderError("provider_down")
+
+    monkeypatch.setattr(reader_text, "read_clinical_text", boom)
+
+
+@pytest.mark.parametrize("record", ["no_known_allergy", "known", "none"])
+def test_failed_reader_text_at_t3_is_never_a_full_evaluation(env, monkeypatch, record):
+    from .staged_fixtures import allergy, base, conv_allergy, order
+
+    p = f"SYN-RDERR-{record}"
+    items = [*base(p, with_allergy=False)]
+    if record != "none":
+        items.append(allergy(p, f"{p}-al", T1 - 48 * 60 * M, status=record))
+    items += [conv_allergy(p, f"{p}-conv", T1 - 15 * M), order(p, f"{p}-o", T1 + 30 * M)]
+    _failing_reader(monkeypatch)
+    t3, mi = _t3_pharma(env, items)
+    pharma = t3.by_type(NodeType.PHARMA_AGENT)
+    assert t3.by_type(NodeType.READER_TEXT).status == "error"
+    assert pharma.status == "ok" and "reader_text" in pharma.errored_inputs
+    assert mi["status"] != "evaluated"
+    rows = _allergy_rows(mi)
+    assert rows["allergy_conversation"]["status"] == "not_evaluated"
+    assert rows["allergy_conversation"]["missing_inputs"] == ["Findings<-Reader:Text:errored"]
+    med = {c["check"]: c for c in mi["check_results"]}["medication_conversation"]
+    assert med["status"] == "not_evaluated" and med["fired"] is None
+    assert "Findings<-Reader:Text:errored" in mi["missing_inputs"]
+
+
+def test_no_reader_text_node_means_no_conversation_evidence(env):
+    from .staged_fixtures import allergy, base, order
+
+    p = "SYN-NOREADER"
+    items = [*base(p, with_allergy=False), allergy(p, f"{p}-al", T1 - 48 * 60 * M, status="known"),
+             order(p, f"{p}-o", T1 + 30 * M)]
+    items = [i for i in items if i.data_type not in ("VoiceIntakeFacts", "ClinicalText")]
+    t3, mi = _t3_pharma(env, items)
+    pharma = t3.by_type(NodeType.PHARMA_AGENT)
+    if any(n.type is NodeType.READER_TEXT for n in t3.nodes):
+        pytest.skip("fixture still produces a Reader:Text node")
+    # nothing was dropped: no errored input, no fabricated conversation row; record gates are unchanged
+    assert pharma.errored_inputs == ()
+    assert not {"allergy_conversation", "medication_conversation"} & {c["check"] for c in mi["check_results"]}

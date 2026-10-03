@@ -485,6 +485,15 @@ class Executor:
                                                   "conversation.allergy_status=present",)))
         return out
 
+    @staticmethod
+    def _errored_conversation(ctx: _Ctx) -> tuple[str, ...]:
+        """Ids of Reader:Text producers feeding Pharma whose read did not succeed (the conversation was not read).
+
+        A snapshot with no Reader:Text node at all means no conversation evidence exists: nothing was dropped, and the
+        allergy record gates alone speak for what is missing."""
+        return tuple(sorted(u.node.id for u in ctx.upstream
+                            if u.edge.data_type == "Findings" and u.node.type is NodeType.READER_TEXT and not u.ok))
+
     def _allergy_gate(self, ctx: _Ctx, allergies: list[AllergyList], hook_api: int | None,
                       label: str) -> tuple[MedicationCheck, ...]:
         """Allergy evidence that is missing or unknown is ``not_evaluated``, never read as "no allergy" (rule 6).
@@ -502,6 +511,9 @@ class Executor:
             out.append(gate("allergy_record", ("AllergyList.status=unknown",)))
         for check, missing in self._conversation_allergy_gaps(latest, self._conversation_facts(ctx)):
             out.append(gate(check, missing))
+        if self._errored_conversation(ctx):  # the patient's own allergy/medication statements were not read (rule 6)
+            for check in ("allergy_conversation", "medication_conversation"):
+                out.append(gate(check, ("Findings<-Reader:Text:errored",)))
         if hook_api == 1:
             out.append(gate("allergy_conflict", ("allergy_conflict_check:not_implemented_by_provider",)))
         return tuple(out)
@@ -539,7 +551,8 @@ class Executor:
                     f for f in self._conversation_facts(ctx) if f["kind"] in ("allergy_status", "allergens")
                 ) if ctx.stage is not None else (),
             )
-            return _Result("ok", _dump(output))
+            errored = self._errored_conversation(ctx) if ctx.stage is not None else ()
+            return _Result("ok", _dump(output), errored_inputs=errored)
         upstream = {u.node.id: u.node.output for u in ctx.upstream if u.ok}
         output, _, err = self._call(ctx, {"evidence": dump_evidence([*lists, *allergies]), "upstream": upstream})
         if err:
