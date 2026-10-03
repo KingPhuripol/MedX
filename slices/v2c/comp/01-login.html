@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MedX Scribe · เข้าสู่ระบบ</title>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="comp.css">
+</head>
+<body>
+<main class="screen screen--fixed">
+  <div class="appbar"><span class="wordmark" style="font-size:28px" role="img" aria-label="MedX">Med<span>X</span></span></div>
+
+  <div style="margin-top:24px; display:flex; flex-direction:column; gap:8px">
+    <h1 class="t-display">บันทึกซักประวัติข้างเตียง</h1>
+    <p class="t-body muted">สำหรับพยาบาล อัดเสียงบทสนทนากับผู้ป่วย แล้วตรวจทานข้อมูลก่อนส่งเข้าเคส</p>
+  </div>
+
+  <form style="margin-top:auto; display:flex; flex-direction:column; gap:16px" aria-label="เข้าสู่ระบบ" onsubmit="return false">
+    <div class="field">
+      <label for="u">ชื่อผู้ใช้สังเคราะห์</label>
+      <div class="input"><input id="u" value="nurse1" autocomplete="username"></div>
+    </div>
+    <div class="field">
+      <label for="p">รหัสผ่าน</label>
+      <div class="input input--focus">
+        <input id="p" type="password" value="nurse1-dev" autocomplete="current-password">
+        <button type="button" class="adorn" aria-label="แสดงรหัสผ่าน"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
+    </div>
+    <button class="btn btn--primary btn--block" style="margin-top:8px">เข้าสู่ระบบเดโม</button>
+  </form>
+
+  <p class="limit" style="margin-top:16px">ข้อมูลสังเคราะห์ · ต้นแบบเพื่อการวิจัย</p>
+</main>
+</body>
+</html>

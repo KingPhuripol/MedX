@@ -1,0 +1,11 @@
+{
+  "client_secret": "ek_fixtureSecret0000",
+  "expires_at": 1790000000,
+  "connect_url": "https://127.0.0.1/v1/realtime/calls",
+  "data_channel": "oai-events",
+  "model": "fixture-transcribe",
+  "transcribe_model": "fixture-transcribe",
+  "vendor_label": "Realtime vendor (fixture)",
+  "max_session_seconds": 600,
+  "instructions_version": "v2-transcribe-0.1.0"
+}
