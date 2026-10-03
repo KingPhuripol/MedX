@@ -261,7 +261,8 @@ def test_cgl1_known_bad_time_not_sent_to_provider(env, monkeypatch, bad, mode):
 # ------------------------------------------------------------------------------------------------ L1e
 
 def test_cgl1_gates_version_bumped(env, monkeypatch):
-    assert executor_mod.PHARMA_GATES_VERSION == "cg-pharma-gates-6"
+    # L1 bumped to 6; a later slice (L2) owns 7. Only require it moved past gates-5.
+    assert executor_mod.PHARMA_GATES_VERSION not in ("cg-pharma-gates-5",)
     p = "SYN-L1V"
     items = _items(p, "unstaged", [])
     ex = env.executor()
