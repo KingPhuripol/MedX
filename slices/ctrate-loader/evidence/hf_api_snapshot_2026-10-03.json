@@ -1,0 +1,251 @@
+{
+  "api_root": {
+    "disabled": false,
+    "gated": "auto",
+    "id": "ibrahimhamamci/CT-RATE",
+    "lastModified": "2026-03-16T14:26:48.000Z",
+    "private": false,
+    "sha": "deeca4d89e9f978d4d1bccd88a55071ddbb146bb"
+  },
+  "configs": [
+    {
+      "config_name": "labels",
+      "data_files": [
+        {
+          "path": "dataset/multi_abnormality_labels/train_predicted_labels.csv",
+          "split": "train"
+        },
+        {
+          "path": "dataset/multi_abnormality_labels/valid_predicted_labels.csv",
+          "split": "validation"
+        }
+      ]
+    },
+    {
+      "config_name": "reports",
+      "data_files": [
+        {
+          "path": "dataset/radiology_text_reports/train_reports.csv",
+          "split": "train"
+        },
+        {
+          "path": "dataset/radiology_text_reports/validation_reports.csv",
+          "split": "validation"
+        }
+      ]
+    },
+    {
+      "config_name": "metadata",
+      "data_files": [
+        {
+          "path": "dataset/metadata/train_metadata.csv",
+          "split": "train"
+        },
+        {
+          "path": "dataset/metadata/validation_metadata.csv",
+          "split": "validation"
+        }
+      ]
+    }
+  ],
+  "extra_gated_fields": {
+    "Email": "text",
+    "I have read and agree with Terms and Conditions for using the CT-RATE dataset": "checkbox",
+    "Institution": "text",
+    "Name": "text"
+  },
+  "extra_gated_prompt": "## Terms and Conditions for Using the CT-RATE Dataset\n\n**1. Acceptance of Terms**\nAccessing and using the CT-RATE dataset implies your agreement to these terms and conditions. If you disagree with any part, please refrain from using the dataset.\n\n**2. Permitted Use**\n- The dataset is intended solely for academic, research, and educational purposes.\n- Any commercial exploitation of the dataset without prior permission is strictly forbidden.\n- You must adhere to all relevant laws, regulations, and research ethics, including data privacy and protection standards.\n\n**3. Data Protection and Privacy**\n- Acknowledge the presence of sensitive information within the dataset and commit to maintaining data confidentiality.\n- Direct attempts to re-identify individuals from the dataset are prohibited.\n- Ensure compliance with data protection laws such as GDPR and HIPAA.\n\n**4. Attribution**\n- Cite the dataset and acknowledge the providers in any publications resulting from its use.\n- Claims of ownership or exclusive rights over the dataset or derivatives are not permitted.\n\n**5. Redistribution**\n- Redistribution of the dataset or any portion thereof is not allowed.\n- Sharing derived data must respect the privacy and confidentiality terms set forth.\n\n**6. Disclaimer**\nThe dataset is provided \"as is\" without warranty of any kind, either expressed or implied, including but not limited to the accuracy or completeness of the data.\n\n**7. Limitation of Liability**\nUnder no circumstances will the dataset providers be liable for any claims or damages resulting from your use of the dataset.\n\n**8. Access Revocation**\nViolation of these terms may result in the termination of your access to the dataset.\n\n**9. Amendments**\nThe terms and conditions may be updated at any time; continued use of the dataset signifies acceptance of the new terms.\n\n**10. Governing Law**\nThese terms are governed by the laws of the location of the dataset providers, excluding conflict of law rules.\n\n**Consent:**\nAccessing and using the CT-RATE dataset signifies your acknowledgment and agreement to these terms and conditions.\n",
+  "license": "cc-by-nc-sa-4.0",
+  "note": "Public, unauthenticated Hugging Face Hub API metadata only. No dataset content. Volume files and CSV contents are gated and were NOT downloaded.",
+  "retrieved_at": "2026-10-03",
+  "retrieved_by": "research-lead (ctrate-loader planner)",
+  "tree": {
+    "dataset": [
+      {
+        "git_oid": "fba7e5466369b55ec787304bb85aff5cc73e6966",
+        "lfs_sha256": null,
+        "path": "dataset/anatomy_segmentation_labels",
+        "size": 0,
+        "type": "directory"
+      },
+      {
+        "git_oid": "f2ab6308a1a5b30c19f21eb5e18009b1068071e8",
+        "lfs_sha256": null,
+        "path": "dataset/metadata",
+        "size": 0,
+        "type": "directory"
+      },
+      {
+        "git_oid": "8f050d78da4417e8a8448e82dedb87b684969824",
+        "lfs_sha256": null,
+        "path": "dataset/multi_abnormality_labels",
+        "size": 0,
+        "type": "directory"
+      },
+      {
+        "git_oid": "9f60e7e868736769e5398ec8eb6cac7fa9b544d7",
+        "lfs_sha256": null,
+        "path": "dataset/radiology_text_reports",
+        "size": 0,
+        "type": "directory"
+      },
+      {
+        "git_oid": "476d65bf8d0fc171fa19139259a21a0d8453ee8e",
+        "lfs_sha256": null,
+        "path": "dataset/train",
+        "size": 0,
+        "type": "directory"
+      },
+      {
+        "git_oid": "67749182598bbde49a08a12491eb5fa41a247db9",
+        "lfs_sha256": null,
+        "path": "dataset/train_fixed",
+        "size": 0,
+        "type": "directory"
+      },
+      {
+        "git_oid": "0903c0d971f51092e5961d79bb2165fafd2c6530",
+        "lfs_sha256": null,
+        "path": "dataset/ts_seg",
+        "size": 0,
+        "type": "directory"
+      },
+      {
+        "git_oid": "ca68d739c6863c5d45eb5de8bb3f1560fe2b2876",
+        "lfs_sha256": null,
+        "path": "dataset/valid",
+        "size": 0,
+        "type": "directory"
+      },
+      {
+        "git_oid": "aebf4f8c78ed7c200ac864cf1aadb199d263e22f",
+        "lfs_sha256": null,
+        "path": "dataset/valid_fixed",
+        "size": 0,
+        "type": "directory"
+      },
+      {
+        "git_oid": "1d843d37e2ec66e081b2bba46c113b697688a9ab",
+        "lfs_sha256": null,
+        "path": "dataset/vqa",
+        "size": 0,
+        "type": "directory"
+      },
+      {
+        "git_oid": "7eac4738fbb9757643419ff53ff9c08078096fd1",
+        "lfs_sha256": null,
+        "path": "dataset/README.md",
+        "size": 1457,
+        "type": "file"
+      },
+      {
+        "git_oid": "ca1022b276b53b8b47ab42f33dcea1391dddeb1a",
+        "lfs_sha256": null,
+        "path": "dataset/data_correction_note.md",
+        "size": 2512,
+        "type": "file"
+      }
+    ],
+    "dataset/metadata": [
+      {
+        "git_oid": "ee0f911636c91aaf2e47232788b3fd2e381a0492",
+        "lfs_sha256": null,
+        "path": "dataset/metadata/Metadata_Attributes.xlsx",
+        "size": 11874,
+        "type": "file"
+      },
+      {
+        "git_oid": "a4d5d6c77303b0d0785d757898e3736b73dbb86d",
+        "lfs_sha256": null,
+        "path": "dataset/metadata/no_chest_train.txt",
+        "size": 40027,
+        "type": "file"
+      },
+      {
+        "git_oid": "207a6f8b7dd4c1b75ca5df514364c06b4bbe125c",
+        "lfs_sha256": null,
+        "path": "dataset/metadata/no_chest_valid.txt",
+        "size": 1831,
+        "type": "file"
+      },
+      {
+        "git_oid": "b37ed5aff71192d67510481f8604277c9fddccc4",
+        "lfs_sha256": "****************************************************************",
+        "path": "dataset/metadata/train_metadata.csv",
+        "size": 14922140,
+        "type": "file"
+      },
+      {
+        "git_oid": "9bd612019abfa79af0e67df871c9b8f9978f1e86",
+        "lfs_sha256": null,
+        "path": "dataset/metadata/validation_metadata.csv",
+        "size": 948083,
+        "type": "file"
+      }
+    ],
+    "dataset/multi_abnormality_labels": [
+      {
+        "git_oid": "97afa1ece6866fb1e33846a8c53c9be66e6927aa",
+        "lfs_sha256": null,
+        "path": "dataset/multi_abnormality_labels/train_predicted_labels.csv",
+        "size": 2755808,
+        "type": "file"
+      },
+      {
+        "git_oid": "1f653aae7050628e2ba6029fe469cbe7c5a4294b",
+        "lfs_sha256": null,
+        "path": "dataset/multi_abnormality_labels/valid_predicted_labels.csv",
+        "size": 174015,
+        "type": "file"
+      }
+    ],
+    "dataset/radiology_text_reports": [
+      {
+        "git_oid": "249c248ea3b07e7e967f79295c4a8ade38a51591",
+        "lfs_sha256": "****************************************************************",
+        "path": "dataset/radiology_text_reports/train_reports.csv",
+        "size": 79667286,
+        "type": "file"
+      },
+      {
+        "git_oid": "c8226376032d067895d0c8dc074f72d798d62d8a",
+        "lfs_sha256": null,
+        "path": "dataset/radiology_text_reports/validation_reports.csv",
+        "size": 5152619,
+        "type": "file"
+      }
+    ],
+    "dataset/train/train_1/train_1_a": [
+      {
+        "git_oid": "b659c183a6bb5a44507a44847e39b1f57503d196",
+        "lfs_sha256": "****************************************************************",
+        "path": "dataset/train/train_1/train_1_a/train_1_a_1.nii.gz",
+        "size": 138173761,
+        "type": "file"
+      },
+      {
+        "git_oid": "839fb8772adf2a308c43d9e27580d427e7b3d7b2",
+        "lfs_sha256": "****************************************************************",
+        "path": "dataset/train/train_1/train_1_a/train_1_a_2.nii.gz",
+        "size": 155520240,
+        "type": "file"
+      }
+    ],
+    "dataset/valid/valid_53": [
+      {
+        "git_oid": "463dc64b265bf92cef6e2e9e5584e929c55b2b4c",
+        "lfs_sha256": null,
+        "path": "dataset/valid/valid_53/valid_53_a",
+        "size": 0,
+        "type": "directory"
+      },
+      {
+        "git_oid": "0d7a27df0b990556da29d4e1f3e96fd96155bf7c",
+        "lfs_sha256": null,
+        "path": "dataset/valid/valid_53/valid_53_b",
+        "size": 0,
+        "type": "directory"
+      }
+    ]
+  }
+}

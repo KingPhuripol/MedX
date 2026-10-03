@@ -25,6 +25,17 @@ Every slice below passed its loop with CONDITIONAL_PASS. These conditions must c
 | S9r | MEDIUM | Approval block inside an HTML comment can count; duplicate JSON keys resolve last-wins. |
 | S9 | — | Human approver list for `approved_by`; GPU allocation (Tier 4) approval. |
 
+## ctrate-loader (CONDITIONAL_PASS ×2, 2026-10-03) — must close before the first real CT-RATE download/build
+| From | Sev | Condition |
+|---|---|---|
+| ctrate-loader | MEDIUM | Missing `no_chest_{split}.txt` is silently treated as "no exclusions" (`research/data/ctrate/loader.py` `_read_no_chest`); must fail loudly when expected. |
+| ctrate-loader | MEDIUM | Label-source guard lets a report from another scan of the same patient through; block same-patient reports before any stage-3 report-substitution sampler uses CT-RATE. |
+| ctrate-loader | MEDIUM | Missing-is-not-negative audit compares gold against counts derived from the same transformed values, so it cannot catch a pipeline bug; check against raw CSV blanks. |
+| ctrate-loader | LOW | Download approval gate (`research/data/ctrate/access.py` `approval_resolves`) is a substring match: `DEC-0001` matches `DEC-00012`, and a section that rejects the download still passes; require exact id + explicit approval line. |
+| ctrate-loader | LOW | `verify(root)` creates any path it is given; restrict to `data/raw/`. Two LFS files are size-checked only (HF masks LFS sha256); record our own sha256 after download. |
+| ctrate-loader | LOW | `AbnormalityLabels` needs a `label_origin` field (provider text-classifier predictions from the report); metrics must be named "agreement with report-derived labels". `--unseal-test` unseals inputs and gold together; revisit in the CT reader eval slice. |
+| ctrate-loader | — (human) | Download approval (who accepts terms, accessors, multi-TB storage); `train` vs `train_fixed` volumes; CC BY-NC-SA flow-down to released weights; confirm 10% dev / seed 20260926. |
+
 ## Standing (human)
 - D1: licensed clinical review of red-flag rules/thresholds, department list, Thai dialogue templates, cross-reactivity table, `missing_field` severity.
 - SCBXBeta2 font licence before any public push/deploy.

@@ -40,3 +40,10 @@ def _cpu_offline_env(monkeypatch):
     monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "")
     monkeypatch.setenv("HF_HUB_OFFLINE", "1")
     monkeypatch.setenv("TRANSFORMERS_OFFLINE", "1")
+
+
+@pytest.fixture
+def ctrate_raw(tmp_path):
+    from .ctrate_fixture import make_fixture
+
+    return make_fixture(tmp_path / "raw")
