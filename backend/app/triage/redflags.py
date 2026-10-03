@@ -16,8 +16,8 @@ from typing import Any
 from .models import Alert, NotEvaluable, Snapshot
 
 RULES_PATH = Path(__file__).with_name("rules") / "redflag_rules_v1.json"
-RULESET_VERSION = "rf-1.1.0"
-RULESET_SHA256 = "086e0a29bde7fe7395cfd650342434920314fda8f5df7f96f8e091ab26f11a3a"
+RULESET_VERSION = "rf-1.2.0"
+RULESET_SHA256 = "e576db8fe539f1b2f8e970a4032271b28849c5b376c61e986bcd052afe42299a"
 
 _OPS = {
     "<=": lambda a, b: a <= b,
@@ -76,7 +76,50 @@ def _leaf(cond: dict[str, Any], snap: Snapshot) -> _Result:
     return _Result(bool(hits), hits)
 
 
+NEWS_VITALS = ("rr", "spo2", "temp_c", "sbp", "hr")
+
+
+def _band(bands: list[list[Any]], x: float) -> int:
+    return next(score for upper, score in bands if upper is None or x <= upper)
+
+
+def _news_aggregate(spec: dict[str, Any], snap: Snapshot) -> _Result:
+    """Aggregate NEWS2 (RCP 2017, SpO2 scale 1). Fires when the present parameters already reach ``min_score``;
+    false only when the missing ones cannot reach it; otherwise unknown (never a missing parameter as 0).
+    Tied readings score their worst value; new confusion scores like V/P/U."""
+    bands, score, ceiling, evidence, missing = spec["bands"], 0, 0, [], []
+    confusion = [f for f in snap.values("vital.new_confusion") if f.value is True]
+    for name in (*NEWS_VITALS, "avpu", "on_oxygen"):
+        kind = f"vital.{name}"
+        table = bands["consciousness"] if name == "avpu" else bands["on_oxygen"] if name == "on_oxygen" else bands[name]
+        top = max(table.values()) if isinstance(table, dict) else max(s for _, s in table)
+        if name == "avpu" and confusion:  # new confusion is a positive finding: scores 3 whatever AVPU is
+            score += bands["new_confusion"]
+            evidence += [f.fact_id for f in confusion]
+            continue
+        facts = [] if kind in snap.flagged else snap.values(kind)
+        if not facts:
+            missing.append(f"conflict:{kind}" if kind in snap.flagged else kind)
+            ceiling += top
+            continue
+        if name == "avpu":
+            per = [(table[f.value], f) for f in facts]
+        elif name == "on_oxygen":
+            per = [(table[str(bool(f.value)).lower()], f) for f in facts]
+        else:
+            per = [(_band(table, f.value), f) for f in facts]
+        best = max(s for s, _ in per)
+        score += best
+        evidence += [f.fact_id for s, f in per if s == best and s > 0]
+    ceiling += score
+    if score >= spec["min_score"]:
+        return _Result(True, tuple(evidence))
+    return _Result(None, missing=tuple(missing)) if ceiling >= spec["min_score"] else _Result(False)
+
+
 def evaluate_condition(cond: dict[str, Any], snap: Snapshot) -> _Result:
+    if "news_aggregate" in cond:
+        return _news_aggregate(cond["news_aggregate"], snap)
     if "any" in cond or "all" in cond or "at_least" in cond:
         parts = [evaluate_condition(c, snap) for c in cond.get("any") or cond.get("all") or cond["of"]]
         trues = [p for p in parts if p.value is True]

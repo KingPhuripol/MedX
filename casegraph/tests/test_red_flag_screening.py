@@ -262,7 +262,7 @@ def test_rule_treats_non_finite_as_missing(bad):
 
 def test_red_flag_rule_set_version_and_label(env):
     # i2: the default is rf-1.1.0; the placeholder set is reachable only by explicit assignment
-    assert RULES_VERSIONS[N.RED_FLAG] == "rf-1.1.0"
+    assert RULES_VERSIONS[N.RED_FLAG] == "rf-1.2.0"
     assert PLACEHOLDER_RED_FLAG_VERSION == RED_FLAG_RULE_SET_VERSION == "placeholder-redflag-0.2"
     assert tuple(ALL_RULES) == RED_FLAG_RULE_IDS
     graph = env.executor().run_sync(compile_case("F5", F5_T))

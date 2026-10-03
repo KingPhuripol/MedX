@@ -104,7 +104,7 @@ def test_i2_summary_complete(i2_run):
         rf = v["red_flags"]
         assert set(rf["per_s1r_rule_recall"]) == S1R_RULES
         agg5 = rf["per_s1r_rule_recall"]["RF-NEWS-AGG5"]
-        assert agg5["point"] is None and "unmappable" in agg5["reason"]
+        assert agg5["point"] is not None or agg5["n_gold_pairs"] == 0  # rf-1.2.0: mappable via AGG5_OVERLAY
         for rule, e in rf["per_s1r_rule_recall"].items():
             if rule != "RF-NEWS-AGG5" and e.get("n"):
                 assert {"x", "n", "n_patients", "wilson", "clopper_pearson", "bootstrap", "reported_interval"} <= set(e)

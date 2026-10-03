@@ -16,7 +16,7 @@ SCREEN = (
 BASE = {
     "age": 40, "sex": "male", "chief_complaint": "synthetic complaint", "onset_duration": "1 day",
     "vital.hr": 80, "vital.rr": 16, "vital.sbp": 125, "vital.dbp": 78, "vital.spo2": 98, "vital.temp_c": 36.8,
-    "vital.avpu": "A", "vital.new_confusion": False, "vital.capillary_glucose_mg_dl": 100,
+    "vital.avpu": "A", "vital.new_confusion": False, "vital.on_oxygen": False, "vital.capillary_glucose_mg_dl": 100,
 } | {f"symptom.{s}": "absent" for s in SCREEN}
 DROP = object()
 

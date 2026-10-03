@@ -66,26 +66,26 @@ def dev_graphs(s1r_dataset):
 
 
 def test_red_flag_node_rf110(dev_graphs):
-    assert set(RF_IDS) == set(d.DECLARED_RULES[d.RF_110]) and len(RF_IDS) == 16
-    assert redflags.RULESET_VERSION == d.RF_110
+    assert set(RF_IDS) == set(d.DECLARED_RULES[d.RF_120]) and len(RF_IDS) == 17
+    assert redflags.RULESET_VERSION == d.RF_120
     graphs = [g for _, g in dev_graphs] + [_fixture_graph(e)[0] for e in ENTRIES]
     for graph in graphs:
         rf = graph.by_type(NodeType.RED_FLAG)
-        assert (rf.provider, rf.model_version, rf.status) == ("rules", d.RF_110, "ok")
+        assert (rf.provider, rf.model_version, rf.status) == ("rules", d.RF_120, "ok")
         alerts = rf.output["Alerts"]
-        assert alerts["rule_set_version"] == d.RF_110
-        assert sorted(r["rule_id"] for r in alerts["rule_results"]) == sorted(RF_IDS)  # 16, each once
-        assert alerts["label"] == d.RULE_SET_LABELS[d.RF_110] and "pending clinical expert review" in alerts["label"]
-        assert alerts["scope"] == d.RULE_SET_SCOPES[d.RF_110]
+        assert alerts["rule_set_version"] == d.RF_120
+        assert sorted(r["rule_id"] for r in alerts["rule_results"]) == sorted(RF_IDS)  # 17, each once
+        assert alerts["label"] == d.RULE_SET_LABELS[d.RF_120] and "pending clinical expert review" in alerts["label"]
+        assert alerts["scope"] == d.RULE_SET_SCOPES[d.RF_120]
         rfs = graph.red_flag_screening
-        assert (rfs.rule_set_version, rfs.n_declared) == (d.RF_110, 16)
-        assert rfs.n_evaluated + rfs.n_not_evaluated == 16
+        assert (rfs.rule_set_version, rfs.n_declared) == (d.RF_120, 17)
+        assert rfs.n_evaluated + rfs.n_not_evaluated == 17
         assert rfs.n_fired == len({a["rule_id"] for a in alerts["alerts"]})
 
 
 def test_placeholder_rules_unreachable(dev_graphs):
     config = ProviderConfig()
-    assert config.assignments[NodeType.RED_FLAG].model_version == RULES_VERSIONS[NodeType.RED_FLAG] == d.RF_110
+    assert config.assignments[NodeType.RED_FLAG].model_version == RULES_VERSIONS[NodeType.RED_FLAG] == d.RF_120
     assert all(a.model_version != d.PLACEHOLDER_RULE_SET for a in config.assignments.values())
     graphs = [g for _, g in dev_graphs] + [_fixture_graph(e)[0] for e in ENTRIES]
     for graph in graphs:
@@ -117,22 +117,22 @@ def test_never_no_red_flags(dev_graphs):
         statuses.add(rfs.status)
         for field in ("rule_set_version", "label", "scope"):
             assert getattr(rfs, field)
-        assert rfs.n_declared == 16
+        assert rfs.n_declared == 17
         payload = graph.by_type(NodeType.HUMAN_CHECKPOINT).output[PENDING_KEY]
         rendered = [to_json(graph), *inspect_lines(graph), payload["screening_summary"], json.dumps(payload,
                                                                                                ensure_ascii=False)]
         assert not any(OVERCLAIM.search(x) for x in rendered)
         if rfs.status == "evaluated" and rfs.n_fired == 0:
-            assert rfs.summary().startswith("0 of 16 declared rules fired")
+            assert rfs.summary().startswith("0 of 17 declared rules fired")
         if rfs.status == "partially_evaluated":
             assert payload["screening_summary"].startswith(d.BANNER_INCOMPLETE)
     assert statuses  # the status distribution is reported by run-s1r; here every status is checked
     # an evaluated 0-alert screen states counts and scope, never "no red flags"
     zero = d.RedFlagScreening(status="evaluated", performed=True, banner=None, rules_evaluated=RF_IDS,
-                              rules_not_evaluated=(), missing_inputs=(), rule_set_version=d.RF_110,
-                              label=d.RULE_SET_LABELS[d.RF_110], scope=d.RULE_SET_SCOPES[d.RF_110], n_declared=16,
-                              n_evaluated=16, n_not_evaluated=0, n_fired=0)
-    assert zero.summary().startswith("0 of 16 declared rules fired") and d.RULE_SET_SCOPES[d.RF_110] in zero.summary()
+                              rules_not_evaluated=(), missing_inputs=(), rule_set_version=d.RF_120,
+                              label=d.RULE_SET_LABELS[d.RF_120], scope=d.RULE_SET_SCOPES[d.RF_120], n_declared=17,
+                              n_evaluated=17, n_not_evaluated=0, n_fired=0)
+    assert zero.summary().startswith("0 of 17 declared rules fired") and d.RULE_SET_SCOPES[d.RF_120] in zero.summary()
     assert not OVERCLAIM.search(zero.summary())
 
 
@@ -143,13 +143,13 @@ def _alerts_kwargs(rule_ids):
     results = tuple(d.RuleResult(rule_id=r, status="not_evaluated", missing_inputs=(f"in:{r}",), evaluated_on=(),
                                  fired=None) for r in rule_ids)
     ids = sorted(set(rule_ids))
-    return dict(produced_by="red_flag", input_refs=(), provider="rules", model_version=d.RF_110,
+    return dict(produced_by="red_flag", input_refs=(), provider="rules", model_version=d.RF_120,
                 status="not_evaluated", alerts=(), rule_results=results, rules_evaluated=(), rules_not_evaluated=tuple(ids),
-                missing_inputs=tuple(sorted({f"in:{r}" for r in rule_ids})), rule_set_version=d.RF_110)
+                missing_inputs=tuple(sorted({f"in:{r}" for r in rule_ids})), rule_set_version=d.RF_120)
 
 
 def test_alerts_equals_declared_rules():
-    declared = list(d.DECLARED_RULES[d.RF_110])
+    declared = list(d.DECLARED_RULES[d.RF_120])
     d.Alerts(**_alerts_kwargs(declared))  # exactly the declared set is accepted
     cases = {"missing": declared[1:], "extra": [*declared, "RF-EXTRA"], "duplicate": [*declared, declared[0]]}
     rejected = []

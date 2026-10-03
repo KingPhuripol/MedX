@@ -1,0 +1,10 @@
+{
+ "SYN-S4-002": "RF-NEWS-AGG5 (rf-1.2.0, PROPOSED) fires because the fixture vitals reach aggregate NEWS2 >= 5; the S4 author gold predates this rule. Clinically consistent, not an over-alert.",
+ "SYN-S4-007": "RF-NEWS-AGG5 (rf-1.2.0, PROPOSED) fires because the fixture vitals reach aggregate NEWS2 >= 5; the S4 author gold predates this rule. Clinically consistent, not an over-alert.",
+ "SYN-S4-008": "RF-NEWS-AGG5 (rf-1.2.0, PROPOSED) fires because the fixture vitals reach aggregate NEWS2 >= 5; the S4 author gold predates this rule. Clinically consistent, not an over-alert.",
+ "SYN-S4-016": "RF-NEWS-AGG5 (rf-1.2.0, PROPOSED) fires because the fixture vitals reach aggregate NEWS2 >= 5; the S4 author gold predates this rule. Clinically consistent, not an over-alert.",
+ "SYN-S4-018": "RF-NEWS-AGG5 (rf-1.2.0, PROPOSED) fires because the fixture vitals reach aggregate NEWS2 >= 5; the S4 author gold predates this rule. Clinically consistent, not an over-alert.",
+ "SYN-S4-019": "RF-NEWS-AGG5 (rf-1.2.0, PROPOSED) fires because the fixture vitals reach aggregate NEWS2 >= 5; the S4 author gold predates this rule. Clinically consistent, not an over-alert.",
+ "SYN-S4-020": "RF-NEWS-AGG5 (rf-1.2.0, PROPOSED) fires because the fixture vitals reach aggregate NEWS2 >= 5; the S4 author gold predates this rule. Clinically consistent, not an over-alert.",
+ "SYN-S4-022": "RF-NEWS-AGG5 (rf-1.2.0, PROPOSED) fires because the fixture vitals reach aggregate NEWS2 >= 5; the S4 author gold predates this rule. Clinically consistent, not an over-alert."
+}

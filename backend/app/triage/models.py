@@ -14,10 +14,10 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validato
 
 SymptomState = Literal["present", "absent", "unknown"]
 NUMERIC_VITALS = ("hr", "rr", "sbp", "dbp", "spo2", "temp_c", "capillary_glucose_mg_dl")
-VITAL_NAMES = (*NUMERIC_VITALS, "avpu", "new_confusion")
+VITAL_NAMES = (*NUMERIC_VITALS, "avpu", "new_confusion", "on_oxygen")
 _KIND = re.compile(
     r"^(age|sex|chief_complaint|onset_duration|pregnancy_status"
-    r"|vital\.(hr|rr|sbp|dbp|spo2|temp_c|avpu|new_confusion|capillary_glucose_mg_dl)"
+    r"|vital\.(hr|rr|sbp|dbp|spo2|temp_c|avpu|new_confusion|on_oxygen|capillary_glucose_mg_dl)"
     r"|symptom\.[a-z][a-z0-9_]{0,47})$"
 )
 # Required before the department suggestion may answer (spec s4 scope 3). Order is canonical.
@@ -58,7 +58,7 @@ class IntakeFact(_Strict):
             ok = value in ("present", "absent", "unknown")
         elif kind == "vital.avpu":
             ok = value in ("A", "V", "P", "U")
-        elif kind == "vital.new_confusion":
+        elif kind in ("vital.new_confusion", "vital.on_oxygen"):
             ok = isinstance(value, bool)
         elif kind.startswith("vital.") or kind == "age":
             ok = isinstance(value, (int, float)) and not isinstance(value, bool) and 0 <= value <= 1000
@@ -120,6 +120,7 @@ class Vitals(_Strict):
     temp_c: VitalReading | None = None
     avpu: VitalReading | None = None
     new_confusion: VitalReading | None = None
+    on_oxygen: VitalReading | None = None
     capillary_glucose_mg_dl: VitalReading | None = None
 
 
@@ -133,6 +134,7 @@ WORST_MIN = frozenset({"vital.spo2", "vital.capillary_glucose_mg_dl"})
 WORST_ORDINAL: dict[str, tuple[Any, ...]] = {
     "vital.avpu": ("A", "V", "P", "U"),
     "vital.new_confusion": (False, True),
+    "vital.on_oxygen": (False, True),
     "pregnancy_status": ("negative", "unknown", "positive"),
 }
 SYMPTOM_ORDER = ("absent", "unknown", "present")

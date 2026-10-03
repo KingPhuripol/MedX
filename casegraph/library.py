@@ -12,7 +12,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .data import CLINICAL_TEXT_TYPES, PLACEHOLDER_RULE_SET, RF_110
+from .data import CLINICAL_TEXT_TYPES, PLACEHOLDER_RULE_SET, RF_120
 from .types import NodeType
 
 HUMAN_PROVIDERS = ("human:nurse", "human:physician", "human:pharmacist")
@@ -123,7 +123,7 @@ class ProviderAssignment(BaseModel):
 PLACEHOLDER_RED_FLAG_VERSION = PLACEHOLDER_RULE_SET  # reachable only by an explicit assignment
 RULES_VERSIONS = {
     NodeType.READER_VITALS_LABS: "placeholder-vitals-reader-0.1",
-    NodeType.RED_FLAG: RF_110,  # i2: the S4 engine; placeholder-redflag-0.2 only by explicit config
+    NodeType.RED_FLAG: RF_120,  # i2: the S4 engine; placeholder-redflag-0.2 only by explicit config
     NodeType.PHARMA_AGENT: "placeholder-pharma-0.2",  # s2r: check_results + status
 }
 

@@ -33,7 +33,7 @@ from . import reader_text, triage_bridge
 from .data import (
     CLINICAL_TEXT_TYPES,
     PLACEHOLDER_RULE_SET,
-    RF_110,
+    RF_120,
     Alerts,
     CareSuggestion,
     CaseSummary,
@@ -139,7 +139,7 @@ def department_from_s4(derived: dict[str, Any], s4: Any, rfs: str) -> Department
 
 def red_flag_screening(nodes: list[ExportedNode] | tuple[ExportedNode, ...]) -> RedFlagScreening:
     rf = next((n for n in nodes if n.type is NodeType.RED_FLAG), None)
-    return RedFlagScreening.from_alerts(_alerts_of(nodes), rf.model_version if rf is not None else RF_110)
+    return RedFlagScreening.from_alerts(_alerts_of(nodes), rf.model_version if rf is not None else RF_120)
 
 
 class Executor:
@@ -380,7 +380,7 @@ class Executor:
         vitals = [i for i in ctx.evidence if isinstance(i, Vitals)]
         findings = [u for u in ctx.upstream if u.edge.data_type == "Findings"]
         errored = tuple(sorted(u.node.id for u in ctx.upstream if u.node.status == "error"))
-        if ctx.node.model_version == RF_110:
+        if ctx.node.model_version == RF_120:
             return self._red_flag_rf110(ctx, errored)
         if ctx.node.model_version != PLACEHOLDER_RULE_SET:
             return _Result("error", reason="rule_set_unsupported", errored_inputs=errored)
