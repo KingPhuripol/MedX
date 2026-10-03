@@ -122,10 +122,12 @@ class ProviderAssignment(BaseModel):
 
 
 PLACEHOLDER_RED_FLAG_VERSION = PLACEHOLDER_RULE_SET  # reachable only by an explicit assignment
+S5_PHARMA_VERSION = "s5-pipeline-2.6.0"  # cg-t123: the S5 Pharma Agent (registered by casegraph.pharma_s5)
+PLACEHOLDER_PHARMA = "placeholder-pharma-0.2"  # reachable only by an explicit assignment
 RULES_VERSIONS = {
     NodeType.READER_VITALS_LABS: "placeholder-vitals-reader-0.1",
     NodeType.RED_FLAG: RF_110,  # i2: the S4 engine; placeholder-redflag-0.2 only by explicit config
-    NodeType.PHARMA_AGENT: "placeholder-pharma-0.2",  # s2r: check_results + status
+    NodeType.PHARMA_AGENT: S5_PHARMA_VERSION,  # cg-t123: S5 (was placeholder-pharma-0.2, kept by explicit config)
 }
 
 

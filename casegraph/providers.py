@@ -149,6 +149,8 @@ def mock_gateways(
     # i2: Reader:Text (S3 voice extraction + symptom extractor) calls registered mock tasks; their outputs
     # report ``mock-0.1.0+<handler version>`` (MOCK label rule), so no version override here.
     gateways.setdefault("voice_extract", LocalGateway(build_provider("mock", Settings()), audit_sink=audit_sink))
+    # cg-t123: the S5 Pharma Agent hook calls the registered mock tasks pharma.extract.v2 / pharma.phrase.v1
+    gateways.setdefault(PHARMA_HOOK, LocalGateway(build_provider("mock", Settings()), audit_sink=audit_sink))
     return gateways
 
 

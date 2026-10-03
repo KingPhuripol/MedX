@@ -263,7 +263,7 @@ def test_pharma_missing_dose_not_evaluated(env):
     pid = "SYN-PH1"
     items = [_meds(pid, "ph-a", {"name": "Paracetamol", "dose": "500 mg"}, {"name": "Amlodipine", "dose": "5 mg"}),
              _meds(pid, "ph-b", {"name": "paracetamol"})]  # second entry has no dose
-    graph = env.executor().run_sync(compile_graph(build_snapshot(items, DAY + 9 * H)))
+    graph = env.executor().run_sync(compile_graph(build_snapshot(items, DAY + 9 * H), s2_config()))
     mi = graph.node("pharma_agent").output["MedicationIssues"]
     gaps = [(c["medication"], c["check"], c["missing_inputs"]) for c in mi["checks_not_evaluated"]]
     assert gaps == [("paracetamol", "dose_mismatch", ["MedicationList.dose@ph-b"])]

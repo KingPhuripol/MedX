@@ -25,7 +25,7 @@ from casegraph.stages import plan_stages
 from casegraph.store import GraphVersionExists, replay
 from casegraph.types import NodeType
 
-from .conftest import FakeProvider
+from .conftest import Env, FakeProvider
 from .fixtures import M
 from .staged_fixtures import FIXTURES_STAGED, T1
 
@@ -354,3 +354,43 @@ def test_pharma_never_runs_before_new_orders(env, dataset):
     (t1,) = build_versions(env.executor(), sc.items, sc.t1, sc.horizon)
     assert t1.stage == "T1" and t1.by_type(NodeType.PHARMA_AGENT) is None
     assert any(i.data_type == "MedicationList" for i in sc.items)
+
+
+# ------------------------------------------------------------------------------------------ A7b
+
+
+def _graph_signatures(output: dict) -> list[tuple]:
+    from casegraph.pharma_s5 import issue_signature
+
+    return sorted(issue_signature({
+        "type": i["kind"], "rule_id": i["rule_id"], "ingredients": i["ingredients"],
+        "conflicting_sources": i["conflicting_sources"], "severity": i["severity"],
+        "severity_rank": i["severity_rank"], "field": i["field"]}) for i in output["issues"])
+
+
+def test_s5_parity(tmp_path, dataset, monkeypatch):
+    """The graph's Pharma issue signatures equal a direct app.pharma.pipeline.reconcile on the same MedSnapshot."""
+    from casegraph import pharma_s5
+
+    captured: list = []
+    real = pharma_s5.reconcile
+
+    def spy(snapshot, invoke, mode, **kw):
+        captured.append((snapshot, invoke))
+        return real(snapshot, invoke, mode, **kw)
+
+    monkeypatch.setattr(pharma_s5, "reconcile", spy)
+    ids = sorted(p.name for p in (dataset / "inputs" / "dev").iterdir())[:12]
+    checked = 0
+    for case_id in ids:
+        sc = s1r.load_staged_case(dataset, "dev", case_id, "T2")
+        captured.clear()
+        env = Env(tmp_path / case_id)
+        t3 = [g for g in build_versions(env.executor(), sc.items, sc.t1, sc.horizon) if g.stage == "T3"]
+        for g in t3:
+            snap, invoke = captured[-1]
+            direct = pharma_s5.reconcile_direct(snap, invoke)
+            mi = g.by_type(NodeType.PHARMA_AGENT).output["MedicationIssues"]
+            assert _graph_signatures(mi) == sorted(pharma_s5.issue_signature(i) for i in direct["issues"]), case_id
+            checked += 1
+    assert checked >= 1

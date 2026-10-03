@@ -188,10 +188,13 @@ def test_t_independence_of_untimed_node_bodies(env, monkeypatch):
             moved = original(ex, replace(ctx, T=ctx.T + later))
             if ctx.node.type is NodeType.RED_FLAG:
                 continue
+            if executor_module.t_dependent(ctx.node):  # S5 Pharma takes T as its snapshot as_of: keyed on T instead
+                assert ctx.node.type is NodeType.PHARMA_AGENT
+                continue
             assert sha256_json(moved.output) == sha256_json(result.output), (ctx.node.id, later)
             seen_types.add(ctx.node.type)
     assert seen_types >= {NodeType.READER_TEXT, NodeType.READER_VITALS_LABS, NodeType.READER_CXR,
-                          NodeType.REASONING, NodeType.PHARMA_AGENT, NodeType.HUMAN_CHECKPOINT}
+                          NodeType.REASONING, NodeType.HUMAN_CHECKPOINT}
     # ... while Red-flag does read T: 30 hours later the same vitals are stale and the output differs
     rf = next((c, r) for c, r in captured if c.node.type is NodeType.RED_FLAG)
     assert sha256_json(original(ex, replace(rf[0], T=rf[0].T + timedelta(hours=30))).output) != sha256_json(rf[1].output)

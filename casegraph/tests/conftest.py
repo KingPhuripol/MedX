@@ -66,6 +66,9 @@ def s2_config(base: ProviderConfig | None = None) -> ProviderConfig:
     cfg = base or ProviderConfig()
     cfg = cfg.with_assignment(NodeType.RED_FLAG, ProviderAssignment(provider="rules",
                                                                   model_version="placeholder-redflag-0.2"))
+    # cg-t123: the default Pharma is the S5 pipeline; s2/s2r tests pin the placeholder they were written for
+    cfg = cfg.with_assignment(NodeType.PHARMA_AGENT, ProviderAssignment(provider="rules",
+                                                                      model_version="placeholder-pharma-0.2"))
     # i2: the default checkpoint is the nurse confirm endpoint (human:nurse); s2 tests resume as a physician
     cfg = cfg.with_assignment(NodeType.HUMAN_CHECKPOINT, ProviderAssignment(provider="human:physician",
                                                                          model_version="human"))

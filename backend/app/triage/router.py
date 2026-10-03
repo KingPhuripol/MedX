@@ -19,6 +19,8 @@ from fastapi.responses import JSONResponse
 from pydantic import AwareDatetime, BaseModel, Field
 from sqlalchemy.exc import IntegrityError
 
+from casegraph.data import most_restrictive
+
 from ..audit import utc_now_iso, write_audit
 from ..deps import CurrentUser, get_engine, request_id, require_user
 from ..gateway import service as gateway_service
@@ -33,6 +35,7 @@ from .models import TriageAssessment
 router = APIRouter(prefix="/api/triage")
 
 READ_ROLES = {Role.NURSE, Role.PHYSICIAN}
+VERSION_READ_ROLES = {Role.NURSE, Role.PHYSICIAN, Role.PHARMACIST}  # cg-t123: each stage's reviewer
 WRITE_ROLES = {Role.NURSE}
 REVIEW_STATUS = {"confirm": "confirmed", "edit": "edited", "reject": "rejected"}
 MAX_REASON = 1000
@@ -188,6 +191,24 @@ def assess(case_ref: str, body: AssessBody, request: Request, user: CurrentUser 
         "screening_status": (a.screening or {}).get("status"),
     })
     return a.model_dump(mode="json")
+
+
+@router.get("/cases/{case_ref}/graph-versions")
+def graph_versions(case_ref: str, request: Request, user: CurrentUser = Depends(require_user)) -> dict:
+    """The staged Case Graph versions of a case (cg-t123): data only, no new page. Every read is audited."""
+    target = f"triage/cases/{case_ref}/graph-versions"
+    _require(request, user, VERSION_READ_ROLES, target)
+    stores = request.app.state.casegraph
+    if case_ref not in engine_cases() and stores.state.latest_version(case_ref) is None:
+        _audit(request, user, "triage.graph_versions.read", target, "denied", {"status": 404, "reason": "unknown_case"})
+        raise HTTPException(status_code=404, detail="unknown_case")
+    versions = casegraph_run.versions(stores, case_ref)
+    _audit(request, user, "triage.graph_versions.read", target, "success", {
+        "case_ref": case_ref, "n_versions": len(versions), "stages": [v["stage"] for v in versions],
+        "graph_ids": [v["graph_id"] for v in versions],
+    })
+    data_class = most_restrictive([v["data_class"] for v in versions if "data_class" in v] or ["synthetic"])
+    return {"case_ref": case_ref, "data_class": data_class, "versions": versions}
 
 
 @router.get("/assessments/{assessment_id}")

@@ -29,7 +29,7 @@ from app.gateway.contract import DataClass, GatewayRequest, GatewayResponse, can
 from .compiler import ValidatedGraph, validate
 from app.triage import department as s4_department
 
-from . import reader_text, triage_bridge
+from . import pharma_s5, reader_text, triage_bridge  # noqa: F401  (pharma_s5 registers the S5 hook)
 from .data import (
     CLINICAL_TEXT_TYPES,
     PLACEHOLDER_RULE_SET,

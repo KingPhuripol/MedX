@@ -609,6 +609,16 @@ class MedicationIssue(TypedData):
     kind: str = Field(min_length=1)
     medication: str = Field(min_length=1)
     message: str = Field(min_length=1)
+    # cg-t123: set by the S5 Pharma provider (kept so the S5 issue_signature is recoverable); the placeholder leaves them unset
+    rule_id: str | None = None
+    severity: str | None = None
+    severity_rank: int | None = None
+    ingredients: tuple[str, ...] = ()
+    conflicting_sources: tuple[dict[str, Any], ...] = ()
+    field: str | None = None
+    unverifiable: bool | None = None
+    issue_id: str | None = None
+    phrasing_source: str | None = None
 
 
 class MedicationCheck(_CheckResult):
