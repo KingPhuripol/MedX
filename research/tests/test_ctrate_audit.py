@@ -188,3 +188,29 @@ def test_manifest_names_label_metric(ctrate_raw, tmp_path):
     m = json.loads((_b(ctrate_raw, tmp_path) / "manifest.json").read_text())
     assert m["label_origin"] == "provider_text_classifier_prediction_from_report"
     assert m["label_metric_name"] == "agreement with report-derived labels"
+
+
+def test_empty_raw_is_not_given_never_pass(ctrate_raw, tmp_path):
+    """Review (ctrate-r1): `--raw ""` (e.g. an unset $CTRATE_RAW) must not skip the independent check and PASS."""
+    ds = _b(ctrate_raw, tmp_path)
+    for raw in ("", "   "):
+        rep = run_audit(ds, raw=raw)
+        assert rep["status"] != "PASS" and rep["steps"]["missing_not_negative"] == "NOT_RUN"
+        assert main(["audit", str(ds), "--raw", raw]) != 0
+
+
+def test_patient_silently_dropped_by_the_pipeline_fails_raw_audit(ctrate_raw, tmp_path, monkeypatch):
+    """Review (ctrate-r1): a raw label row whose patient never reached splits.json is an error unless the raw no_chest
+    file excludes it; a pipeline bug that drops a whole patient must not pass as "not built"."""
+    import research.data.ctrate.loader as L
+    orig = L._read_no_chest
+
+    def extra(root, rel, split, errors):
+        out = orig(root, rel, split, errors)
+        return out + [(10_000, "train_1_a_1.nii.gz")] if split == "train" else out
+    monkeypatch.setattr(L, "_read_no_chest", extra)
+    ds = _b(ctrate_raw, tmp_path)
+    monkeypatch.setattr(L, "_read_no_chest", orig)
+    rep = run_audit(ds, raw=ctrate_raw)
+    assert rep["status"] == "FAIL"
+    assert any("no patient in splits.json" in str(e) for e in rep["errors"])

@@ -222,8 +222,11 @@ def _step_missing_raw(ds: Path, raw: Path) -> list[str]:
                 scan = f"{m.group(1)}_{m.group(2)}_{m.group(3)}"
                 raw_scans.add(scan)
                 split = splits.get(f"{m.group(1)}_{m.group(2)}")
-                if split is None or not (ds / "gold" / split).is_dir():
-                    continue  # patient not built (excluded) or its split is sealed
+                if split is None:  # only raw no_chest exclusions may drop a row; anything else is a pipeline bug
+                    errs.append(f"{rel}:row={n}: raw label row of {scan} has no patient in splits.json")
+                    continue
+                if not (ds / "gold" / split).is_dir():
+                    continue  # its split is sealed (test gold is written only with --unseal-test)
                 g = gold.get(scan)
                 if g is None:
                     errs.append(f"{rel}:row={n}: raw label row of {scan} has no gold case in {split}")
@@ -248,6 +251,7 @@ def _step_missing_raw(ds: Path, raw: Path) -> list[str]:
 
 
 def run_audit(ds: Path | str, raw: Path | str | None = None) -> dict:
+    raw = raw if raw is not None and str(raw).strip() else None  # an empty --raw is "not given", never PASS
     ds = Path(ds)
     manifest = _load(ds / "manifest.json")
     steps = {
