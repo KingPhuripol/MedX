@@ -1,0 +1,146 @@
+{
+  "cache_key": "4f5636bfd30c67f9227bd699fc27775477b48472374968ae1ce6daf2a5d85e74",
+  "ended_at": "2026-10-03T18:22:37.749631+00:00",
+  "errored_inputs": [],
+  "gateway_calls": 0,
+  "missing_inputs": [],
+  "node_type": "pharma_agent",
+  "output": {
+    "MedicationIssues": {
+      "check_results": [
+        {
+          "check": "duplicate",
+          "evaluated_on": [
+            "f1-meds"
+          ],
+          "fired": false,
+          "label": "PLACEHOLDER — not clinical",
+          "medication": "amlodipine",
+          "missing_inputs": [],
+          "status": "evaluated"
+        },
+        {
+          "check": "duplicate",
+          "evaluated_on": [
+            "f1-meds"
+          ],
+          "fired": true,
+          "label": "PLACEHOLDER — not clinical",
+          "medication": "paracetamol",
+          "missing_inputs": [],
+          "status": "evaluated"
+        },
+        {
+          "check": "dose_mismatch",
+          "evaluated_on": [
+            "f1-meds"
+          ],
+          "fired": true,
+          "label": "PLACEHOLDER — not clinical",
+          "medication": "paracetamol",
+          "missing_inputs": [],
+          "status": "evaluated"
+        },
+        {
+          "check": "allergy_record",
+          "evaluated_on": [],
+          "fired": null,
+          "label": "PLACEHOLDER — not clinical",
+          "medication": "*",
+          "missing_inputs": [
+            "AllergyList"
+          ],
+          "status": "not_evaluated"
+        },
+        {
+          "check": "allergy_conflict",
+          "evaluated_on": [],
+          "fired": null,
+          "label": "PLACEHOLDER — not clinical",
+          "medication": "*",
+          "missing_inputs": [
+            "allergy_conflict_check:not_implemented_by_provider"
+          ],
+          "status": "not_evaluated"
+        }
+      ],
+      "checks_not_evaluated": [
+        {
+          "check": "allergy_record",
+          "evaluated_on": [],
+          "fired": null,
+          "label": "PLACEHOLDER — not clinical",
+          "medication": "*",
+          "missing_inputs": [
+            "AllergyList"
+          ],
+          "status": "not_evaluated"
+        },
+        {
+          "check": "allergy_conflict",
+          "evaluated_on": [],
+          "fired": null,
+          "label": "PLACEHOLDER — not clinical",
+          "medication": "*",
+          "missing_inputs": [
+            "allergy_conflict_check:not_implemented_by_provider"
+          ],
+          "status": "not_evaluated"
+        }
+      ],
+      "conversation_allergy_facts": [],
+      "conversation_fact_use": [],
+      "conversation_medication_facts": [],
+      "input_refs": [
+        "f1-meds",
+        "reader_text:d93f107554f93db18c66d6455d16aefa94ee2c0ade4ba3b878c3c099bbb32414",
+        "reader_vitals_labs:7d27f9992cffab6a575f32e6f127d8490e03d1e8f51bf4f6c263c637e6b709bd"
+      ],
+      "issues": [
+        {
+          "conflicting_sources": [],
+          "field": null,
+          "ingredients": [],
+          "issue_id": null,
+          "kind": "duplicate",
+          "medication": "paracetamol",
+          "message": "PLACEHOLDER — not clinical: listed 2 times",
+          "phrasing_source": null,
+          "rule_id": null,
+          "severity": null,
+          "severity_rank": null,
+          "unverifiable": null
+        },
+        {
+          "conflicting_sources": [],
+          "field": null,
+          "ingredients": [],
+          "issue_id": null,
+          "kind": "dose_mismatch",
+          "medication": "paracetamol",
+          "message": "PLACEHOLDER — not clinical: doses differ ['1 g', '500 mg']",
+          "phrasing_source": null,
+          "rule_id": null,
+          "severity": null,
+          "severity_rank": null,
+          "unverifiable": null
+        }
+      ],
+      "label": "PLACEHOLDER — not clinical",
+      "missing_inputs": [
+        "AllergyList",
+        "allergy_conflict_check:not_implemented_by_provider"
+      ],
+      "model_version": "placeholder-pharma-0.2",
+      "produced_by": "pharma_agent",
+      "provider": "rules",
+      "rule_set_version": "placeholder-pharma-0.2",
+      "status": "partially_evaluated",
+      "summary": null
+    }
+  },
+  "output_sha256": "d08eebe51d4b85f6fecb6cbdb7302d27f6b6383e8f229ddbeecb1f3eff4e6c56",
+  "reason": null,
+  "started_at": "2026-10-03T18:22:37.748831+00:00",
+  "status": "ok"
+}

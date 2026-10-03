@@ -1,0 +1,999 @@
+{
+  "T": "2026-01-01T10:30:00Z",
+  "edges": [
+    {
+      "data_type": "Findings",
+      "dst": "red_flag",
+      "src": "reader_text"
+    },
+    {
+      "data_type": "Findings",
+      "dst": "pharma_agent",
+      "src": "reader_text"
+    },
+    {
+      "data_type": "Findings",
+      "dst": "reasoning",
+      "src": "reader_text"
+    },
+    {
+      "data_type": "Findings",
+      "dst": "red_flag",
+      "src": "reader_vitals_labs"
+    },
+    {
+      "data_type": "Findings",
+      "dst": "pharma_agent",
+      "src": "reader_vitals_labs"
+    },
+    {
+      "data_type": "Findings",
+      "dst": "reasoning",
+      "src": "reader_vitals_labs"
+    },
+    {
+      "data_type": "ImageTokens",
+      "dst": "reasoning",
+      "src": "reader_cxr"
+    },
+    {
+      "data_type": "Alerts",
+      "dst": "reasoning",
+      "src": "red_flag"
+    },
+    {
+      "data_type": "Alerts",
+      "dst": "human_checkpoint",
+      "src": "red_flag"
+    },
+    {
+      "data_type": "MedicationIssues",
+      "dst": "human_checkpoint",
+      "src": "pharma_agent"
+    },
+    {
+      "data_type": "CareSuggestion",
+      "dst": "human_checkpoint",
+      "src": "reasoning"
+    },
+    {
+      "data_type": "CaseSummary",
+      "dst": "human_checkpoint",
+      "src": "reasoning"
+    },
+    {
+      "data_type": "DepartmentSuggestion",
+      "dst": "human_checkpoint",
+      "src": "reasoning"
+    }
+  ],
+  "evidence": [
+    {
+      "available_at_time": "2026-01-01T08:05:00Z",
+      "data_class": "synthetic",
+      "data_type": "Demographics",
+      "event_time": "2026-01-01T08:05:00Z",
+      "item_id": "f1-demo",
+      "sha256": "ff0673a7c4e5aacd072bdf41cb954f8d0fa5eac65b412c7c7c610d50844628b4",
+      "source": "synthetic-fixture",
+      "version": "1"
+    },
+    {
+      "available_at_time": "2026-01-01T08:05:00Z",
+      "data_class": "synthetic",
+      "data_type": "VoiceIntakeFacts",
+      "event_time": "2026-01-01T08:05:00Z",
+      "item_id": "f1-intake",
+      "sha256": "3303de33b2fea0b6d8a48e9c90f4f897b6ec97407b151b7f93d8109280158b5b",
+      "source": "synthetic-fixture",
+      "version": "1"
+    },
+    {
+      "available_at_time": "2026-01-01T08:05:00Z",
+      "data_class": "synthetic",
+      "data_type": "ClinicalText",
+      "event_time": "2026-01-01T08:00:00Z",
+      "item_id": "f1-text",
+      "sha256": "2852827544d060e3f04f80682a6c20ed555e9ed865b9eba1a791d2dca83ebc8f",
+      "source": "synthetic-fixture",
+      "version": "1"
+    },
+    {
+      "available_at_time": "2026-01-01T08:10:00Z",
+      "data_class": "synthetic",
+      "data_type": "Vitals",
+      "event_time": "2026-01-01T08:10:00Z",
+      "item_id": "f1-vitals",
+      "sha256": "ec511e9ed6c7bc8d7bc7708343fc990131acc50d9f3019d22d47cbf19cbf0bbd",
+      "source": "synthetic-fixture",
+      "version": "1"
+    },
+    {
+      "available_at_time": "2026-01-01T09:15:00Z",
+      "data_class": "synthetic",
+      "data_type": "CXRImage",
+      "event_time": "2026-01-01T09:00:00Z",
+      "item_id": "f1-cxr",
+      "sha256": "05615ef7812998a56a08a6ac4514998b1e84cd31efd019cf3893da3b8e6718a9",
+      "source": "synthetic-fixture",
+      "version": "1"
+    },
+    {
+      "available_at_time": "2026-01-01T09:30:00Z",
+      "data_class": "synthetic",
+      "data_type": "MedicationList",
+      "event_time": "2026-01-01T09:30:00Z",
+      "item_id": "f1-meds",
+      "sha256": "6bea16a50bdaa3555453a32314cee2dcf09668f09288696c1f86b34dcdbc44f9",
+      "source": "synthetic-fixture",
+      "version": "1"
+    }
+  ],
+  "graph_id": "SYN-F1/v1",
+  "nodes": [
+    {
+      "cache_key": "9d91432d45336f5fc8c3fea130c58fd1625ab2cd96819d8906adea2aad2b58dd",
+      "cached": false,
+      "confirmation": null,
+      "data_class": "synthetic",
+      "ended_at": "2026-10-03T18:22:37.747647+00:00",
+      "errored_inputs": [],
+      "evidence_refs": [
+        "f1-intake",
+        "f1-text"
+      ],
+      "gateway_calls": 1,
+      "id": "reader_text",
+      "missing_inputs": [],
+      "model_version": "proj-mock-0.1",
+      "output": {
+        "Findings": {
+          "facts": [],
+          "input_refs": [
+            "f1-intake",
+            "f1-text"
+          ],
+          "intake": [
+            {
+              "available_at_time": "2026-01-01T08:05:00Z",
+              "evidence_turns": [],
+              "kind": "chief_complaint",
+              "source_item": "f1-intake",
+              "span_text": null,
+              "state": "KNOWN",
+              "value": "synthetic: cough and fever",
+              "value_text": "synthetic: cough and fever"
+            },
+            {
+              "available_at_time": "2026-01-01T08:05:00Z",
+              "evidence_turns": [],
+              "kind": "onset_duration",
+              "source_item": "f1-intake",
+              "span_text": null,
+              "state": "KNOWN",
+              "value": "3 days",
+              "value_text": "3 days"
+            }
+          ],
+          "model_version": "proj-mock-0.1",
+          "produced_by": "reader_text",
+          "provider": "project_model",
+          "source_data_types": [
+            "ClinicalText",
+            "VoiceIntakeFacts"
+          ],
+          "statements": [
+            "f1-intake: VoiceIntakeFacts passed through (0 calls)",
+            "MOCK — not clinical. Placeholder output; no model was run."
+          ]
+        }
+      },
+      "output_sha256": "d93f107554f93db18c66d6455d16aefa94ee2c0ade4ba3b878c3c099bbb32414",
+      "params": {
+        "decoding": "greedy",
+        "temperature": 0
+      },
+      "provider": "project_model",
+      "reason": null,
+      "reproducible": true,
+      "started_at": "2026-10-03T18:22:37.746700+00:00",
+      "status": "ok",
+      "type": "reader_text"
+    },
+    {
+      "cache_key": "3f1902cf96135e9154edea973a02ead531ed60ca7e7a842b09a4576dbccde261",
+      "cached": false,
+      "confirmation": null,
+      "data_class": "synthetic",
+      "ended_at": "2026-10-03T18:22:37.747946+00:00",
+      "errored_inputs": [],
+      "evidence_refs": [
+        "f1-vitals"
+      ],
+      "gateway_calls": 0,
+      "id": "reader_vitals_labs",
+      "missing_inputs": [],
+      "model_version": "placeholder-vitals-reader-0.1",
+      "output": {
+        "Findings": {
+          "facts": [],
+          "input_refs": [
+            "f1-vitals"
+          ],
+          "intake": [],
+          "model_version": "placeholder-vitals-reader-0.1",
+          "produced_by": "reader_vitals_labs",
+          "provider": "rules",
+          "source_data_types": [
+            "Vitals"
+          ],
+          "statements": [
+            "f1-vitals: consciousness=A",
+            "f1-vitals: hr=88",
+            "f1-vitals: rr=16",
+            "f1-vitals: sbp=124",
+            "f1-vitals: spo2=97",
+            "f1-vitals: temp_c=37.2"
+          ]
+        }
+      },
+      "output_sha256": "7d27f9992cffab6a575f32e6f127d8490e03d1e8f51bf4f6c263c637e6b709bd",
+      "params": {},
+      "provider": "rules",
+      "reason": null,
+      "reproducible": true,
+      "started_at": "2026-10-03T18:22:37.747031+00:00",
+      "status": "ok",
+      "type": "reader_vitals_labs"
+    },
+    {
+      "cache_key": "af61283c1b85753cd8cb0e7304cd8c0c49b989256eb75b9ca60ebba46fd3c5b8",
+      "cached": false,
+      "confirmation": null,
+      "data_class": "synthetic",
+      "ended_at": "2026-10-03T18:22:37.748294+00:00",
+      "errored_inputs": [],
+      "evidence_refs": [
+        "f1-cxr"
+      ],
+      "gateway_calls": 1,
+      "id": "reader_cxr",
+      "missing_inputs": [],
+      "model_version": "enc2d-mock-0.1",
+      "output": {
+        "ImageTokens": {
+          "encoder_provider": "encoder_2d",
+          "input_refs": [
+            "f1-cxr"
+          ],
+          "modality": "CXRImage",
+          "model_version": "enc2d-mock-0.1",
+          "produced_by": "reader_cxr",
+          "provider": "encoder_2d",
+          "token_ref": "gateway-request:abeda3c260d860b1e2f34f2dfc85a8149fc179b156b8cebaae95199540695156",
+          "token_sha256": "51516b8899354ef1d7fb1044af7983214425dbe7659c11b6704981a7c5fe8acf"
+        }
+      },
+      "output_sha256": "7e8dbd77a6ddd1d9dc86e49e761117583880732c0c4a0acb0772000206415b9d",
+      "params": {},
+      "provider": "encoder_2d",
+      "reason": null,
+      "reproducible": true,
+      "started_at": "2026-10-03T18:22:37.747241+00:00",
+      "status": "ok",
+      "type": "reader_cxr"
+    },
+    {
+      "cache_key": "5f9cdedf3f1501d5bacd647bea3b04eac95f1d26079a561b3ae2ff2efd05c801",
+      "cached": false,
+      "confirmation": null,
+      "data_class": "synthetic",
+      "ended_at": "2026-10-03T18:22:37.749348+00:00",
+      "errored_inputs": [],
+      "evidence_refs": [
+        "f1-demo",
+        "f1-vitals"
+      ],
+      "gateway_calls": 0,
+      "id": "red_flag",
+      "missing_inputs": [],
+      "model_version": "placeholder-redflag-0.2",
+      "output": {
+        "Alerts": {
+          "alerts": [],
+          "conflicts": [],
+          "input_refs": [
+            "f1-demo",
+            "f1-vitals",
+            "reader_text:d93f107554f93db18c66d6455d16aefa94ee2c0ade4ba3b878c3c099bbb32414",
+            "reader_vitals_labs:7d27f9992cffab6a575f32e6f127d8490e03d1e8f51bf4f6c263c637e6b709bd"
+          ],
+          "label": "PLACEHOLDER — not clinical",
+          "missing_inputs": [],
+          "model_version": "placeholder-redflag-0.2",
+          "produced_by": "red_flag",
+          "provider": "rules",
+          "readings": [],
+          "rule_results": [
+            {
+              "evaluated_on": [
+                "f1-vitals"
+              ],
+              "fired": false,
+              "label": "PLACEHOLDER — not clinical",
+              "missing_inputs": [],
+              "rule_id": "RF-PH-001",
+              "status": "evaluated"
+            },
+            {
+              "evaluated_on": [
+                "f1-vitals"
+              ],
+              "fired": false,
+              "label": "PLACEHOLDER — not clinical",
+              "missing_inputs": [],
+              "rule_id": "RF-PH-002",
+              "status": "evaluated"
+            },
+            {
+              "evaluated_on": [
+                "f1-vitals"
+              ],
+              "fired": false,
+              "label": "PLACEHOLDER — not clinical",
+              "missing_inputs": [],
+              "rule_id": "RF-PH-003",
+              "status": "evaluated"
+            },
+            {
+              "evaluated_on": [
+                "f1-vitals"
+              ],
+              "fired": false,
+              "label": "PLACEHOLDER — not clinical",
+              "missing_inputs": [],
+              "rule_id": "RF-PH-004",
+              "status": "evaluated"
+            }
+          ],
+          "rule_set_version": "placeholder-redflag-0.2",
+          "rules_evaluated": [
+            "RF-PH-001",
+            "RF-PH-002",
+            "RF-PH-003",
+            "RF-PH-004"
+          ],
+          "rules_not_evaluated": [],
+          "scope": null,
+          "status": "evaluated",
+          "unmappable": []
+        }
+      },
+      "output_sha256": "ae408e47fb7321770f3cc636e957c3484d47e0bc11adcf83c12d61a031100bc6",
+      "params": {},
+      "provider": "rules",
+      "reason": null,
+      "reproducible": true,
+      "started_at": "2026-10-03T18:22:37.748659+00:00",
+      "status": "ok",
+      "type": "red_flag"
+    },
+    {
+      "cache_key": "4f5636bfd30c67f9227bd699fc27775477b48472374968ae1ce6daf2a5d85e74",
+      "cached": false,
+      "confirmation": null,
+      "data_class": "synthetic",
+      "ended_at": "2026-10-03T18:22:37.749631+00:00",
+      "errored_inputs": [],
+      "evidence_refs": [
+        "f1-meds"
+      ],
+      "gateway_calls": 0,
+      "id": "pharma_agent",
+      "missing_inputs": [],
+      "model_version": "placeholder-pharma-0.2",
+      "output": {
+        "MedicationIssues": {
+          "check_results": [
+            {
+              "check": "duplicate",
+              "evaluated_on": [
+                "f1-meds"
+              ],
+              "fired": false,
+              "label": "PLACEHOLDER — not clinical",
+              "medication": "amlodipine",
+              "missing_inputs": [],
+              "status": "evaluated"
+            },
+            {
+              "check": "duplicate",
+              "evaluated_on": [
+                "f1-meds"
+              ],
+              "fired": true,
+              "label": "PLACEHOLDER — not clinical",
+              "medication": "paracetamol",
+              "missing_inputs": [],
+              "status": "evaluated"
+            },
+            {
+              "check": "dose_mismatch",
+              "evaluated_on": [
+                "f1-meds"
+              ],
+              "fired": true,
+              "label": "PLACEHOLDER — not clinical",
+              "medication": "paracetamol",
+              "missing_inputs": [],
+              "status": "evaluated"
+            },
+            {
+              "check": "allergy_record",
+              "evaluated_on": [],
+              "fired": null,
+              "label": "PLACEHOLDER — not clinical",
+              "medication": "*",
+              "missing_inputs": [
+                "AllergyList"
+              ],
+              "status": "not_evaluated"
+            },
+            {
+              "check": "allergy_conflict",
+              "evaluated_on": [],
+              "fired": null,
+              "label": "PLACEHOLDER — not clinical",
+              "medication": "*",
+              "missing_inputs": [
+                "allergy_conflict_check:not_implemented_by_provider"
+              ],
+              "status": "not_evaluated"
+            }
+          ],
+          "checks_not_evaluated": [
+            {
+              "check": "allergy_record",
+              "evaluated_on": [],
+              "fired": null,
+              "label": "PLACEHOLDER — not clinical",
+              "medication": "*",
+              "missing_inputs": [
+                "AllergyList"
+              ],
+              "status": "not_evaluated"
+            },
+            {
+              "check": "allergy_conflict",
+              "evaluated_on": [],
+              "fired": null,
+              "label": "PLACEHOLDER — not clinical",
+              "medication": "*",
+              "missing_inputs": [
+                "allergy_conflict_check:not_implemented_by_provider"
+              ],
+              "status": "not_evaluated"
+            }
+          ],
+          "conversation_allergy_facts": [],
+          "conversation_fact_use": [],
+          "conversation_medication_facts": [],
+          "input_refs": [
+            "f1-meds",
+            "reader_text:d93f107554f93db18c66d6455d16aefa94ee2c0ade4ba3b878c3c099bbb32414",
+            "reader_vitals_labs:7d27f9992cffab6a575f32e6f127d8490e03d1e8f51bf4f6c263c637e6b709bd"
+          ],
+          "issues": [
+            {
+              "conflicting_sources": [],
+              "field": null,
+              "ingredients": [],
+              "issue_id": null,
+              "kind": "duplicate",
+              "medication": "paracetamol",
+              "message": "PLACEHOLDER — not clinical: listed 2 times",
+              "phrasing_source": null,
+              "rule_id": null,
+              "severity": null,
+              "severity_rank": null,
+              "unverifiable": null
+            },
+            {
+              "conflicting_sources": [],
+              "field": null,
+              "ingredients": [],
+              "issue_id": null,
+              "kind": "dose_mismatch",
+              "medication": "paracetamol",
+              "message": "PLACEHOLDER — not clinical: doses differ ['1 g', '500 mg']",
+              "phrasing_source": null,
+              "rule_id": null,
+              "severity": null,
+              "severity_rank": null,
+              "unverifiable": null
+            }
+          ],
+          "label": "PLACEHOLDER — not clinical",
+          "missing_inputs": [
+            "AllergyList",
+            "allergy_conflict_check:not_implemented_by_provider"
+          ],
+          "model_version": "placeholder-pharma-0.2",
+          "produced_by": "pharma_agent",
+          "provider": "rules",
+          "rule_set_version": "placeholder-pharma-0.2",
+          "status": "partially_evaluated",
+          "summary": null
+        }
+      },
+      "output_sha256": "d08eebe51d4b85f6fecb6cbdb7302d27f6b6383e8f229ddbeecb1f3eff4e6c56",
+      "params": {},
+      "provider": "rules",
+      "reason": null,
+      "reproducible": true,
+      "started_at": "2026-10-03T18:22:37.748831+00:00",
+      "status": "ok",
+      "type": "pharma_agent"
+    },
+    {
+      "cache_key": "84f7f3b15085beb62135f5fa5429d2ed3d6658d04671583bc4f430ad960238ca",
+      "cached": false,
+      "confirmation": null,
+      "data_class": "synthetic",
+      "ended_at": "2026-10-03T18:22:37.751086+00:00",
+      "errored_inputs": [],
+      "evidence_refs": [
+        "f1-demo",
+        "f1-vitals"
+      ],
+      "gateway_calls": 2,
+      "id": "reasoning",
+      "missing_inputs": [],
+      "model_version": "proj-mock-0.1",
+      "output": {
+        "CareSuggestion": {
+          "input_refs": [
+            "f1-demo",
+            "f1-vitals",
+            "reader_text:d93f107554f93db18c66d6455d16aefa94ee2c0ade4ba3b878c3c099bbb32414",
+            "reader_vitals_labs:7d27f9992cffab6a575f32e6f127d8490e03d1e8f51bf4f6c263c637e6b709bd",
+            "reader_cxr:7e8dbd77a6ddd1d9dc86e49e761117583880732c0c4a0acb0772000206415b9d",
+            "red_flag:ae408e47fb7321770f3cc636e957c3484d47e0bc11adcf83c12d61a031100bc6"
+          ],
+          "items": [],
+          "model_version": "proj-mock-0.1",
+          "produced_by": "reasoning",
+          "provider": "project_model",
+          "red_flag_screening": "evaluated"
+        },
+        "CaseSummary": {
+          "input_refs": [
+            "f1-demo",
+            "f1-vitals",
+            "reader_text:d93f107554f93db18c66d6455d16aefa94ee2c0ade4ba3b878c3c099bbb32414",
+            "reader_vitals_labs:7d27f9992cffab6a575f32e6f127d8490e03d1e8f51bf4f6c263c637e6b709bd",
+            "reader_cxr:7e8dbd77a6ddd1d9dc86e49e761117583880732c0c4a0acb0772000206415b9d",
+            "red_flag:ae408e47fb7321770f3cc636e957c3484d47e0bc11adcf83c12d61a031100bc6"
+          ],
+          "model_version": "proj-mock-0.1",
+          "produced_by": "reasoning",
+          "provider": "project_model",
+          "red_flag_screening": "evaluated",
+          "text": "MOCK — not clinical. Placeholder output; no model was run."
+        },
+        "DepartmentSuggestion": {
+          "contract_version": "0.1.0",
+          "gateway_model_version": "mock-0.1.0+baseline-kw-1.0.0",
+          "gateway_provider": "mock",
+          "input_refs": [
+            "f1-demo",
+            "f1-vitals",
+            "reader_text:d93f107554f93db18c66d6455d16aefa94ee2c0ade4ba3b878c3c099bbb32414",
+            "reader_vitals_labs:7d27f9992cffab6a575f32e6f127d8490e03d1e8f51bf4f6c263c637e6b709bd",
+            "reader_cxr:7e8dbd77a6ddd1d9dc86e49e761117583880732c0c4a0acb0772000206415b9d",
+            "red_flag:ae408e47fb7321770f3cc636e957c3484d47e0bc11adcf83c12d61a031100bc6"
+          ],
+          "missing_information": [],
+          "model_version": "proj-mock-0.1",
+          "produced_by": "reasoning",
+          "provider": "project_model",
+          "reason": null,
+          "red_flag_screening": "evaluated",
+          "request_sha256": "2eab7c26b6bbe19033417d14a988d465007c2f0907ec81d81798b6ecba6fe149",
+          "status": "suggested",
+          "top3": [
+            {
+              "code": "MED",
+              "evidence_refs": [
+                "rt0.0.chief_complaint"
+              ],
+              "label_en": "Internal medicine",
+              "label_th": "อายุรกรรม",
+              "score": 1.0
+            }
+          ],
+          "uncertainty": "medium",
+          "uncertainty_label": "MOCK baseline — not calibrated"
+        }
+      },
+      "output_sha256": "308da0559216d9d251e9c8c96e7cd9cfab4bd2ec736a6c112a2041e7171ca1aa",
+      "params": {
+        "decoding": "greedy",
+        "required_inputs": [
+          "Findings<-ClinicalText",
+          "Findings<-Vitals"
+        ],
+        "temperature": 0
+      },
+      "provider": "project_model",
+      "reason": null,
+      "reproducible": true,
+      "started_at": "2026-10-03T18:22:37.750074+00:00",
+      "status": "ok",
+      "type": "reasoning"
+    },
+    {
+      "cache_key": "e57fc17d3f5eb10ede1da001702d061b9e35dbff7706fdd5396779b21b34ddb8",
+      "cached": false,
+      "confirmation": null,
+      "data_class": "synthetic",
+      "ended_at": "2026-10-03T18:22:37.751823+00:00",
+      "errored_inputs": [],
+      "evidence_refs": [],
+      "gateway_calls": 0,
+      "id": "human_checkpoint",
+      "missing_inputs": [],
+      "model_version": "human",
+      "output": {
+        "pending_review": {
+          "abstained": {},
+          "abstained_outputs": {},
+          "alerts": {
+            "alerts": [],
+            "conflicts": [],
+            "input_refs": [
+              "f1-demo",
+              "f1-vitals",
+              "reader_text:d93f107554f93db18c66d6455d16aefa94ee2c0ade4ba3b878c3c099bbb32414",
+              "reader_vitals_labs:7d27f9992cffab6a575f32e6f127d8490e03d1e8f51bf4f6c263c637e6b709bd"
+            ],
+            "label": "PLACEHOLDER — not clinical",
+            "missing_inputs": [],
+            "model_version": "placeholder-redflag-0.2",
+            "produced_by": "red_flag",
+            "provider": "rules",
+            "readings": [],
+            "rule_results": [
+              {
+                "evaluated_on": [
+                  "f1-vitals"
+                ],
+                "fired": false,
+                "label": "PLACEHOLDER — not clinical",
+                "missing_inputs": [],
+                "rule_id": "RF-PH-001",
+                "status": "evaluated"
+              },
+              {
+                "evaluated_on": [
+                  "f1-vitals"
+                ],
+                "fired": false,
+                "label": "PLACEHOLDER — not clinical",
+                "missing_inputs": [],
+                "rule_id": "RF-PH-002",
+                "status": "evaluated"
+              },
+              {
+                "evaluated_on": [
+                  "f1-vitals"
+                ],
+                "fired": false,
+                "label": "PLACEHOLDER — not clinical",
+                "missing_inputs": [],
+                "rule_id": "RF-PH-003",
+                "status": "evaluated"
+              },
+              {
+                "evaluated_on": [
+                  "f1-vitals"
+                ],
+                "fired": false,
+                "label": "PLACEHOLDER — not clinical",
+                "missing_inputs": [],
+                "rule_id": "RF-PH-004",
+                "status": "evaluated"
+              }
+            ],
+            "rule_set_version": "placeholder-redflag-0.2",
+            "rules_evaluated": [
+              "RF-PH-001",
+              "RF-PH-002",
+              "RF-PH-003",
+              "RF-PH-004"
+            ],
+            "rules_not_evaluated": [],
+            "scope": null,
+            "status": "evaluated",
+            "unmappable": []
+          },
+          "conflicts": [],
+          "errored": [],
+          "escalation": false,
+          "escalation_reasons": [],
+          "for_review": {
+            "pharma_agent": {
+              "MedicationIssues": {
+                "check_results": [
+                  {
+                    "check": "duplicate",
+                    "evaluated_on": [
+                      "f1-meds"
+                    ],
+                    "fired": false,
+                    "label": "PLACEHOLDER — not clinical",
+                    "medication": "amlodipine",
+                    "missing_inputs": [],
+                    "status": "evaluated"
+                  },
+                  {
+                    "check": "duplicate",
+                    "evaluated_on": [
+                      "f1-meds"
+                    ],
+                    "fired": true,
+                    "label": "PLACEHOLDER — not clinical",
+                    "medication": "paracetamol",
+                    "missing_inputs": [],
+                    "status": "evaluated"
+                  },
+                  {
+                    "check": "dose_mismatch",
+                    "evaluated_on": [
+                      "f1-meds"
+                    ],
+                    "fired": true,
+                    "label": "PLACEHOLDER — not clinical",
+                    "medication": "paracetamol",
+                    "missing_inputs": [],
+                    "status": "evaluated"
+                  },
+                  {
+                    "check": "allergy_record",
+                    "evaluated_on": [],
+                    "fired": null,
+                    "label": "PLACEHOLDER — not clinical",
+                    "medication": "*",
+                    "missing_inputs": [
+                      "AllergyList"
+                    ],
+                    "status": "not_evaluated"
+                  },
+                  {
+                    "check": "allergy_conflict",
+                    "evaluated_on": [],
+                    "fired": null,
+                    "label": "PLACEHOLDER — not clinical",
+                    "medication": "*",
+                    "missing_inputs": [
+                      "allergy_conflict_check:not_implemented_by_provider"
+                    ],
+                    "status": "not_evaluated"
+                  }
+                ],
+                "checks_not_evaluated": [
+                  {
+                    "check": "allergy_record",
+                    "evaluated_on": [],
+                    "fired": null,
+                    "label": "PLACEHOLDER — not clinical",
+                    "medication": "*",
+                    "missing_inputs": [
+                      "AllergyList"
+                    ],
+                    "status": "not_evaluated"
+                  },
+                  {
+                    "check": "allergy_conflict",
+                    "evaluated_on": [],
+                    "fired": null,
+                    "label": "PLACEHOLDER — not clinical",
+                    "medication": "*",
+                    "missing_inputs": [
+                      "allergy_conflict_check:not_implemented_by_provider"
+                    ],
+                    "status": "not_evaluated"
+                  }
+                ],
+                "conversation_allergy_facts": [],
+                "conversation_fact_use": [],
+                "conversation_medication_facts": [],
+                "input_refs": [
+                  "f1-meds",
+                  "reader_text:d93f107554f93db18c66d6455d16aefa94ee2c0ade4ba3b878c3c099bbb32414",
+                  "reader_vitals_labs:7d27f9992cffab6a575f32e6f127d8490e03d1e8f51bf4f6c263c637e6b709bd"
+                ],
+                "issues": [
+                  {
+                    "conflicting_sources": [],
+                    "field": null,
+                    "ingredients": [],
+                    "issue_id": null,
+                    "kind": "duplicate",
+                    "medication": "paracetamol",
+                    "message": "PLACEHOLDER — not clinical: listed 2 times",
+                    "phrasing_source": null,
+                    "rule_id": null,
+                    "severity": null,
+                    "severity_rank": null,
+                    "unverifiable": null
+                  },
+                  {
+                    "conflicting_sources": [],
+                    "field": null,
+                    "ingredients": [],
+                    "issue_id": null,
+                    "kind": "dose_mismatch",
+                    "medication": "paracetamol",
+                    "message": "PLACEHOLDER — not clinical: doses differ ['1 g', '500 mg']",
+                    "phrasing_source": null,
+                    "rule_id": null,
+                    "severity": null,
+                    "severity_rank": null,
+                    "unverifiable": null
+                  }
+                ],
+                "label": "PLACEHOLDER — not clinical",
+                "missing_inputs": [
+                  "AllergyList",
+                  "allergy_conflict_check:not_implemented_by_provider"
+                ],
+                "model_version": "placeholder-pharma-0.2",
+                "produced_by": "pharma_agent",
+                "provider": "rules",
+                "rule_set_version": "placeholder-pharma-0.2",
+                "status": "partially_evaluated",
+                "summary": null
+              },
+              "red_flag_screening": "evaluated"
+            },
+            "reasoning": {
+              "CareSuggestion": {
+                "input_refs": [
+                  "f1-demo",
+                  "f1-vitals",
+                  "reader_text:d93f107554f93db18c66d6455d16aefa94ee2c0ade4ba3b878c3c099bbb32414",
+                  "reader_vitals_labs:7d27f9992cffab6a575f32e6f127d8490e03d1e8f51bf4f6c263c637e6b709bd",
+                  "reader_cxr:7e8dbd77a6ddd1d9dc86e49e761117583880732c0c4a0acb0772000206415b9d",
+                  "red_flag:ae408e47fb7321770f3cc636e957c3484d47e0bc11adcf83c12d61a031100bc6"
+                ],
+                "items": [],
+                "model_version": "proj-mock-0.1",
+                "produced_by": "reasoning",
+                "provider": "project_model",
+                "red_flag_screening": "evaluated"
+              },
+              "CaseSummary": {
+                "input_refs": [
+                  "f1-demo",
+                  "f1-vitals",
+                  "reader_text:d93f107554f93db18c66d6455d16aefa94ee2c0ade4ba3b878c3c099bbb32414",
+                  "reader_vitals_labs:7d27f9992cffab6a575f32e6f127d8490e03d1e8f51bf4f6c263c637e6b709bd",
+                  "reader_cxr:7e8dbd77a6ddd1d9dc86e49e761117583880732c0c4a0acb0772000206415b9d",
+                  "red_flag:ae408e47fb7321770f3cc636e957c3484d47e0bc11adcf83c12d61a031100bc6"
+                ],
+                "model_version": "proj-mock-0.1",
+                "produced_by": "reasoning",
+                "provider": "project_model",
+                "red_flag_screening": "evaluated",
+                "text": "MOCK — not clinical. Placeholder output; no model was run."
+              },
+              "DepartmentSuggestion": {
+                "contract_version": "0.1.0",
+                "gateway_model_version": "mock-0.1.0+baseline-kw-1.0.0",
+                "gateway_provider": "mock",
+                "input_refs": [
+                  "f1-demo",
+                  "f1-vitals",
+                  "reader_text:d93f107554f93db18c66d6455d16aefa94ee2c0ade4ba3b878c3c099bbb32414",
+                  "reader_vitals_labs:7d27f9992cffab6a575f32e6f127d8490e03d1e8f51bf4f6c263c637e6b709bd",
+                  "reader_cxr:7e8dbd77a6ddd1d9dc86e49e761117583880732c0c4a0acb0772000206415b9d",
+                  "red_flag:ae408e47fb7321770f3cc636e957c3484d47e0bc11adcf83c12d61a031100bc6"
+                ],
+                "missing_information": [],
+                "model_version": "proj-mock-0.1",
+                "produced_by": "reasoning",
+                "provider": "project_model",
+                "reason": null,
+                "red_flag_screening": "evaluated",
+                "request_sha256": "2eab7c26b6bbe19033417d14a988d465007c2f0907ec81d81798b6ecba6fe149",
+                "status": "suggested",
+                "top3": [
+                  {
+                    "code": "MED",
+                    "evidence_refs": [
+                      "rt0.0.chief_complaint"
+                    ],
+                    "label_en": "Internal medicine",
+                    "label_th": "อายุรกรรม",
+                    "score": 1.0
+                  }
+                ],
+                "uncertainty": "medium",
+                "uncertainty_label": "MOCK baseline — not calibrated"
+              },
+              "red_flag_screening": "evaluated"
+            }
+          },
+          "input_hash": "978ce103891f5a46f0c701d608d53e74974d86aa113a2a450600c4dcc1cfc6ab",
+          "prior_confirmed": [],
+          "red_flag_screening": {
+            "banner": null,
+            "conflicts": [],
+            "label": "PLACEHOLDER — not clinical",
+            "missing_inputs": [],
+            "n_declared": 4,
+            "n_evaluated": 4,
+            "n_fired": 0,
+            "n_not_evaluated": 0,
+            "performed": true,
+            "readings": [],
+            "rule_set_version": "placeholder-redflag-0.2",
+            "rules_evaluated": [
+              "RF-PH-001",
+              "RF-PH-002",
+              "RF-PH-003",
+              "RF-PH-004"
+            ],
+            "rules_not_evaluated": [],
+            "scope": "placeholder-redflag-0.2: 4 placeholder vitals thresholds only; PLACEHOLDER — not clinical",
+            "status": "evaluated"
+          },
+          "required_role": "physician",
+          "screening_summary": "0 of 4 declared rules fired (4 evaluated, 0 not evaluated); placeholder-redflag-0.2; placeholder-redflag-0.2: 4 placeholder vitals thresholds only; PLACEHOLDER — not clinical",
+          "vital_readings": []
+        }
+      },
+      "output_sha256": "5ad23074126bb3813c4275281ec42ef85becd06b2c6dc37f0fbfa28be7344c57",
+      "params": {},
+      "provider": "human:physician",
+      "reason": null,
+      "reproducible": true,
+      "started_at": "2026-10-03T18:22:37.751664+00:00",
+      "status": "pending_confirmation",
+      "type": "human_checkpoint"
+    }
+  ],
+  "parent_version": null,
+  "patient_ref": "SYN-F1",
+  "red_flag_screening": {
+    "banner": null,
+    "conflicts": [],
+    "label": "PLACEHOLDER — not clinical",
+    "missing_inputs": [],
+    "n_declared": 4,
+    "n_evaluated": 4,
+    "n_fired": 0,
+    "n_not_evaluated": 0,
+    "performed": true,
+    "readings": [],
+    "rule_set_version": "placeholder-redflag-0.2",
+    "rules_evaluated": [
+      "RF-PH-001",
+      "RF-PH-002",
+      "RF-PH-003",
+      "RF-PH-004"
+    ],
+    "rules_not_evaluated": [],
+    "scope": "placeholder-redflag-0.2: 4 placeholder vitals thresholds only; PLACEHOLDER — not clinical",
+    "status": "evaluated"
+  },
+  "schema_version": "casegraph-export/0.3",
+  "snapshot_id": "2308648df673a2b824416a5cc795333d3f978865673b520b991640477677f025",
+  "totals": {
+    "gateway_calls": 4,
+    "node_executions": 7,
+    "wall_time_ms": 5.646
+  },
+  "version": 1
+}

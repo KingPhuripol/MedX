@@ -1,0 +1,54 @@
+{
+  "cache_key": "9d91432d45336f5fc8c3fea130c58fd1625ab2cd96819d8906adea2aad2b58dd",
+  "ended_at": "2026-10-03T18:22:37.747647+00:00",
+  "errored_inputs": [],
+  "gateway_calls": 1,
+  "missing_inputs": [],
+  "node_type": "reader_text",
+  "output": {
+    "Findings": {
+      "facts": [],
+      "input_refs": [
+        "f1-intake",
+        "f1-text"
+      ],
+      "intake": [
+        {
+          "available_at_time": "2026-01-01T08:05:00Z",
+          "evidence_turns": [],
+          "kind": "chief_complaint",
+          "source_item": "f1-intake",
+          "span_text": null,
+          "state": "KNOWN",
+          "value": "synthetic: cough and fever",
+          "value_text": "synthetic: cough and fever"
+        },
+        {
+          "available_at_time": "2026-01-01T08:05:00Z",
+          "evidence_turns": [],
+          "kind": "onset_duration",
+          "source_item": "f1-intake",
+          "span_text": null,
+          "state": "KNOWN",
+          "value": "3 days",
+          "value_text": "3 days"
+        }
+      ],
+      "model_version": "proj-mock-0.1",
+      "produced_by": "reader_text",
+      "provider": "project_model",
+      "source_data_types": [
+        "ClinicalText",
+        "VoiceIntakeFacts"
+      ],
+      "statements": [
+        "f1-intake: VoiceIntakeFacts passed through (0 calls)",
+        "MOCK — not clinical. Placeholder output; no model was run."
+      ]
+    }
+  },
+  "output_sha256": "d93f107554f93db18c66d6455d16aefa94ee2c0ade4ba3b878c3c099bbb32414",
+  "reason": null,
+  "started_at": "2026-10-03T18:22:37.746700+00:00",
+  "status": "ok"
+}
