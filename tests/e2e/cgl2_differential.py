@@ -1,5 +1,7 @@
 """cg-l2 checker: run the conversation-fact sweep in ONE tree and dump every Pharma MedicationIssues as JSON.
-usage: python cgl2_differential.py <tree> <dataset> <variants.json|-> <out.json> ; tree on sys.path first."""
+usage: python cgl2_differential.py <tree> <dataset> <variants.json|-> <out.json> ; tree on sys.path first.
+manual evidence: two-tree differential against fixed base c6a7a92 (not a regression test of one tree); L2 behaviour is covered by casegraph/tests/test_cgl2_fact_use.py
+"""
 import sys, json, pathlib, tempfile
 from datetime import timedelta, timezone
 tree, dataset, vfile, out = sys.argv[1:5]

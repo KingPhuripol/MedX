@@ -1,6 +1,7 @@
 """cg-t123 independent checker: in-process measurement of A1-A7 against the real compiler/executor/S5 hook.
 
 Run: PYTHONPATH=backend:. .venv/bin/python tests/e2e/cgt123_inprocess_check.py <dataset> <scratch> <out.json>
+In make test: casegraph/tests/test_cgl6_cgt123_acceptance.py (imports `run_check`; no work at import time).
 Gold is re-derived here from raw journey.json `available_at_time` only (own code, not casegraph.stages).
 Synthetic, offline, mock gateway only.
 """
@@ -27,13 +28,22 @@ from casegraph.tests.fixtures import DAY, H, M, _common, ct, cxr, labs, mri, s4_
 from casegraph.tests.staged_fixtures import FIXTURES_STAGED, GOLD_STAGES, T1, allergy, home, order
 from casegraph.types import NodeType
 
-DATASET = Path(sys.argv[1])
-SCRATCH = Path(sys.argv[2])
-OUT = Path(sys.argv[3])
-SCRATCH.mkdir(parents=True, exist_ok=True)
-R: dict = {}
+REPO = Path(__file__).resolve().parents[2]
+AUDIT = REPO / "scripts" / "temporal_leakage_audit.py"
 ROLE = {"T1": "human:nurse", "T2": "human:physician", "T3": "human:pharmacist"}
 TASK = {"T1": "department", "T2": "care", "T3": None}
+
+
+class Ctx:
+    """Per-call state (replaces the old module globals)."""
+
+    def __init__(self, dataset, scratch):
+        self.dataset = Path(dataset)
+        self.scratch = Path(scratch)
+        self.scratch.mkdir(parents=True, exist_ok=True)
+        self.R = {}
+        self.cases = None
+        self.built = {}  # label -> (env, ex, graphs, seen, items, t1, horizon)
 
 
 def iso(s):
@@ -66,17 +76,17 @@ def plan_tuple(plans):
 
 
 # ---------- A1 ----------
-def a1():
+def a1(c):
     res = {"syn": {}, "mismatch": [], "lists": 0}
     counts = {"T1": Counter(), "T2": Counter()}
     for split in s1r.SPLITS:
-        for path in s1r.snapshot_paths(DATASET, split):
+        for path in s1r.snapshot_paths(c.dataset, split):
             if path.name != "snapshot_T1.json":
                 continue
             case = path.parent.name
             raw = json.loads((path.parent / "journey.json").read_text())["items"]
             for point in ("T1", "T2"):
-                sc = s1r.load_staged_case(DATASET, split, case, point)
+                sc = s1r.load_staged_case(c.dataset, split, case, point)
                 got = plan_tuple(plan_stages(sc.items, sc.t1, sc.horizon))
                 want = gold(raw, sc.t1, sc.horizon)
                 res["lists"] += 1
@@ -126,7 +136,7 @@ def a1():
     res["fixture_mismatch"] = fx_bad
     res["pass"] = (not res["mismatch"] and not adv_bad and not fx_bad and res["lists"] == 400
                    and res["counts_T1"] == {"T1": 200} and res["counts_T2"] == {"T1/T3/T2": 180, "T1/T2": 20})
-    R["A1"] = res
+    c.R["A1"] = res
 
 
 # ---------- helpers ----------
@@ -160,13 +170,13 @@ def build_counted(env, items, t1, horizon, cfg=None, ex=None, after=None):
     return ex, graphs, seen
 
 
-def all_cases():
+def all_cases(dataset):
     """(label, patient, items, t1, horizon) for 40 dev SYN (T2 horizon) + fixtures."""
     out = []
-    for path in s1r.snapshot_paths(DATASET, "dev"):
+    for path in s1r.snapshot_paths(dataset, "dev"):
         if path.name != "snapshot_T1.json":
             continue
-        sc = s1r.load_staged_case(DATASET, "dev", path.parent.name, "T2")
+        sc = s1r.load_staged_case(dataset, "dev", path.parent.name, "T2")
         out.append((f"SYN/{sc.case_id}", sc.patient_ref, list(sc.items), sc.t1, sc.horizon))
     for n, fn in FIXTURES_STAGED.items():
         p, items, hz = fn()
@@ -174,23 +184,18 @@ def all_cases():
     return out
 
 
-CASES = None
-BUILT = {}  # label -> (env, ex, graphs, seen, items, t1, horizon)
-
-
-def build_all():
-    global CASES
-    CASES = all_cases()
-    for label, p, items, t1, hz in CASES:
-        env = Env(SCRATCH / "all" / label.replace("/", "_"))
+def build_all(c):
+    c.cases = all_cases(c.dataset)
+    for label, p, items, t1, hz in c.cases:
+        env = Env(c.scratch / "all" / label.replace("/", "_"))
         ex, graphs, seen = build_counted(env, items, t1, hz)
-        BUILT[label] = (env, ex, graphs, seen, items, t1, hz)
+        c.built[label] = (env, ex, graphs, seen, items, t1, hz)
 
 
 # ---------- A2 ----------
-def a2():
+def a2(c):
     bad, n = [], 0
-    for label, (env, ex, graphs, seen, items, t1, hz) in BUILT.items():
+    for label, (env, ex, graphs, seen, items, t1, hz) in c.built.items():
         for g in graphs:
             n += 1
             types = {x.type: x for x in g.nodes}
@@ -215,14 +220,14 @@ def a2():
                 probs.append("reasoning_task")
             if probs:
                 bad.append([label, g.graph_id, g.stage, probs])
-    R["A2"] = {"versions": n, "bad": bad, "pass": not bad and n > 0}
+    c.R["A2"] = {"versions": n, "bad": bad, "pass": not bad and n > 0}
 
 
 # ---------- A3a / A3b ----------
-def a3():
+def a3(c):
     bad_a, bad_b = [], []
     n_nodes = n_cached = 0
-    for label, (env, ex, graphs, seen, items, t1, hz) in BUILT.items():
+    for label, (env, ex, graphs, seen, items, t1, hz) in c.built.items():
         produced = set()
         for k, (g, (aud, cnt)) in enumerate(zip(graphs, seen)):
             if not (g.totals.gateway_calls == sum(x.gateway_calls for x in g.nodes) == aud == cnt):
@@ -252,23 +257,23 @@ def a3():
                     if a.output_sha256 != b.output_sha256:
                         bad_b.append([label, g.graph_id, a.id])
     # F-STALE
-    _, _, gs, _, _, _, _ = BUILT["F-STALE"]
+    _, _, gs, _, _, _, _ = c.built["F-STALE"]
     t1g, t3g = gs[0], gs[-1]
     rd1 = {r["vital"]: r["fresh"] for r in t1g.by_type(NodeType.RED_FLAG).output["Alerts"]["readings"]}
     rd3 = {r["vital"]: r["fresh"] for r in t3g.by_type(NodeType.RED_FLAG).output["Alerts"]["readings"]}
     stale_ok = bool(rd1) and all(rd1.values()) and bool(rd3) and not any(rd3.values()) and not t3g.by_type(NodeType.RED_FLAG).cached
     sc3 = t3g.red_flag_screening.status
-    R["A3a"] = {"nodes": n_nodes, "bad": bad_a, "pass": not bad_a}
-    R["A3b"] = {"cached_nodes_checked": n_cached, "bad": bad_b, "fstale_t1_fresh_t3_stale": stale_ok,
+    c.R["A3a"] = {"nodes": n_nodes, "bad": bad_a, "pass": not bad_a}
+    c.R["A3b"] = {"cached_nodes_checked": n_cached, "bad": bad_b, "fstale_t1_fresh_t3_stale": stale_ok,
                 "fstale_t3_screening": sc3, "pass": not bad_b and stale_ok and sc3 in ("partially_evaluated", "not_evaluated")}
 
 
 # ---------- A4 ----------
-def a4():
+def a4(c):
     res = {}
     # all evidence <= T
     bad = []
-    for label, (env, ex, graphs, *_r) in BUILT.items():
+    for label, (env, ex, graphs, *_r) in c.built.items():
         for g in graphs:
             for r in g.evidence:
                 if r.available_at_time > g.T:
@@ -279,7 +284,7 @@ def a4():
                     bad.append([label, g.graph_id, "prior_confirmed", pc["item_id"]])
     res["future_evidence_in_versions"] = bad
     # F-FUTURE no version
-    _, _, gs, *_ = BUILT["F-FUTURE"]
+    _, _, gs, *_ = c.built["F-FUTURE"]
     res["f_future_versions"] = len(gs)
     # compile_stage with future item
     p, items, hz = FIXTURES_STAGED["F-CXR"]()
@@ -305,7 +310,7 @@ def a4():
     except Exception as e:  # noqa: BLE001
         adv.append(f"snapshot future raised {type(e).__name__}")
     # (c) forged spec: valid T2 spec with a future evidence ref
-    env, ex, gs, *_ = BUILT["F-CXR"]
+    env, ex, gs, *_ = c.built["F-CXR"]
     spec = gs[1].spec()
     d = spec.model_dump(mode="json")
     forged_ref = dict(d["evidence"][0])
@@ -335,7 +340,7 @@ def a4():
             adv.append(f"leaky snapshot rejected with {getattr(e, 'code', '')}")
     res["adversarial_issues"] = adv
     # LATECONFIRM
-    env2 = Env(SCRATCH / "lateconfirm")
+    env2 = Env(c.scratch / "lateconfirm")
     p, items, hz = FIXTURES_STAGED["F-CXR"]()
     clock = [T1 + 55 * M]
     ex2 = env2.executor(clock=lambda: clock[0])
@@ -349,30 +354,30 @@ def a4():
     # leakage audit CLI on every version: journey with the evidence items stored
     audit_bad = []
     for label in ("F-CXR", "F-SAME", "F-T3ONLY", "F-RED", "F-STALE", "F-PRE", "F-FUTURE"):
-        env, ex, gs, seen, items, t1, hz = BUILT[label]
+        env, ex, gs, seen, items, t1, hz = c.built[label]
         for g in gs:
             spec, its = ex.state.load_graph(g.graph_id)
-            jp = SCRATCH / f"journey_{label}_{g.version}.json"
+            jp = c.scratch / f"journey_{label}_{g.version}.json"
             jp.write_text(json.dumps({"items": [i.model_dump(mode="json") for i in its]}))
-            rc = subprocess.run([sys.executable, "scripts/temporal_leakage_audit.py", str(jp), "--as-of", g.T.isoformat()],
-                                capture_output=True, text=True).returncode
+            rc = subprocess.run([sys.executable, str(AUDIT), str(jp), "--as-of", g.T.isoformat()],
+                                capture_output=True, text=True, cwd=REPO).returncode
             if rc != 0:
                 audit_bad.append([label, g.version, rc])
     res["leakage_audit_version_failures"] = audit_bad
-    rc = subprocess.run([sys.executable, "scripts/temporal_leakage_audit.py", "--dataset", str(DATASET), "--report", str(SCRATCH / "audit_report.json")],
-                        capture_output=True, text=True)
+    rc = subprocess.run([sys.executable, str(AUDIT), "--dataset", str(c.dataset), "--report", str(c.scratch / "audit_report.json")],
+                        capture_output=True, text=True, cwd=REPO)
     res["leakage_audit_dataset_rc"] = rc.returncode
     res["pass"] = (not bad and res["f_future_versions"] == 1 and not adv and res["lateconfirm_absent_t2"]
                    and res["lateconfirm_present_t3"] and not audit_bad and rc.returncode == 0)
-    R["A4"] = res
+    c.R["A4"] = res
 
 
 # ---------- A5 ----------
-def a5():
+def a5(c):
     res = {}
     import sqlite3
     p, items, hz = FIXTURES_STAGED["F-CXR"]()
-    env = Env(SCRATCH / "immut")
+    env = Env(c.scratch / "immut")
     clock = [T1 + 5 * M]
     ex = env.executor(clock=lambda: clock[0])
     plans = plan_stages(items, T1, hz)
@@ -446,15 +451,15 @@ def a5():
     res["role_guard_issues"] = guard
     res["pass"] = (res["t1_spec_identical"] and res["t1_items_identical"] and res["t1_run_identical"]
                    and res["t1_outputs_identical"] and not resave and res["replay_calls"] == 0 and not rp_bad and not guard)
-    R["A5"] = res
+    c.R["A5"] = res
 
 
 # ---------- A6 ----------
-def a6():
+def a6(c):
     lost, runs = [], 0
     for mode in ("ok", "error", "schema_invalid", "raise"):
         for hostile in ("reasoning", "pharma", "both"):
-            env = Env(SCRATCH / f"a6_{mode}_{hostile}")
+            env = Env(c.scratch / f"a6_{mode}_{hostile}")
             tasks = {"reasoning", "pharma_agent"} if hostile == "both" else ({"reasoning"} if hostile == "reasoning" else {"pharma_agent"})
             env.gateways["project_model"] = LocalGateway(
                 FakeProvider(model_version="proj-mock-0.1", mode=mode, tasks=tasks), audit_sink=env.audit.append)
@@ -474,11 +479,11 @@ def a6():
                 urgent = {a["rule_id"] for a in alerts["alerts"] if a["severity"] == "urgent"}
                 if pay is None or pay["alerts"] != alerts or pay["escalation"] is not True or "RF-SPO2" not in urgent:
                     lost.append([mode, hostile, g.stage, "alert lost/escalation false"])
-    R["A6"] = {"runs": runs, "lost": lost, "pass": not lost and runs > 0}
+    c.R["A6"] = {"runs": runs, "lost": lost, "pass": not lost and runs > 0}
 
 
 # ---------- A7 ----------
-def a7():
+def a7(c):
     res = {"t3_versions": 0, "bad": []}
     from casegraph import pharma_s5
     from app.pharma.pipeline import issue_signature
@@ -491,7 +496,7 @@ def a7():
     pharma_s5.reconcile = spy
     parity_bad, parity_n, gold_med = [], 0, 0
     try:
-        for label, (env, ex, graphs, seen, items, t1, hz) in BUILT.items():
+        for label, (env, ex, graphs, seen, items, t1, hz) in c.built.items():
             for g in graphs:
                 if g.stage != "T3":
                     continue
@@ -525,10 +530,10 @@ def a7():
                     miss = json.dumps(mi.get("check_results"))
                     if "AllergyList" not in miss or mi["status"] == "evaluated":
                         res["bad"].append([label, "missing allergy not reported not_evaluated", mi["status"]])
-        for label, p_, items, t1, hz in CASES:
+        for label, p_, items, t1, hz in c.cases:
             if not (label.startswith("SYN/") or label == "F-T3ONLY"):
                 continue
-            env = Env(SCRATCH / "parity" / label.replace("/", "_"))
+            env = Env(c.scratch / "parity" / label.replace("/", "_"))
             captured.clear()
             gs = build_versions(env.executor(), items, t1, hz)
             for g in gs:
@@ -554,22 +559,38 @@ def a7():
     res["secondary_gold_med_issues"] = "NOT_MEASURABLE: gold/*.json has no medication_issues key"
     res["pass"] = not res["bad"]
     res["a7b_pass"] = not parity_bad and parity_n >= 36
-    R["A7a"] = {k: res[k] for k in ("t3_versions", "bad", "pass")}
-    R["A7b"] = {k: res[k] for k in ("parity_checked", "parity_bad", "secondary_gold_med_issues", "a7b_pass")}
+    c.R["A7a"] = {k: res[k] for k in ("t3_versions", "bad", "pass")}
+    c.R["A7b"] = {k: res[k] for k in ("parity_checked", "parity_bad", "secondary_gold_med_issues", "a7b_pass")}
 
 
-def main():
-    for name, fn in (("build_all", build_all), ("A1", a1), ("A2", a2), ("A3", a3), ("A4", a4), ("A5", a5), ("A6", a6), ("A7", a7)):
+STEPS = (("build_all", build_all), ("A1", a1), ("A2", a2), ("A3", a3), ("A4", a4), ("A5", a5), ("A6", a6), ("A7", a7))
+METRICS = ("A1", "A2", "A3a", "A3b", "A4", "A5", "A6", "A7a", "A7b")
+
+
+def status(v):
+    return "PASS" if v and (v.get("pass") or v.get("a7b_pass")) else "FAIL/ERR"
+
+
+def run_check(dataset, scratch, quiet=False) -> dict:
+    c = Ctx(dataset, scratch)
+    for name, fn in STEPS:
         try:
-            fn()
+            fn(c)
         except Exception:  # noqa: BLE001
-            R.setdefault("errors", {})[name] = traceback.format_exc()
-            print("ERROR in", name, file=sys.stderr)
-            traceback.print_exc()
-    OUT.write_text(json.dumps(R, indent=2, default=str))
-    for k in ("A1", "A2", "A3a", "A3b", "A4", "A5", "A6", "A7a", "A7b"):
-        v = R.get(k)
-        print(k, "PASS" if v and (v.get("pass") or v.get("a7b_pass")) else "FAIL/ERR")
+            c.R.setdefault("errors", {})[name] = traceback.format_exc()
+            if not quiet:
+                print("ERROR in", name, file=sys.stderr)
+                traceback.print_exc()
+    return c.R
 
 
-main()
+def main(argv):
+    out = Path(argv[2])
+    R = run_check(argv[0], argv[1])
+    out.write_text(json.dumps(R, indent=2, default=str))
+    for k in METRICS:
+        print(k, status(R.get(k)))
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

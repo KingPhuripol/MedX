@@ -1,6 +1,7 @@
 """cg-m1 independent checker: own timelines (shifted minutes vs the builder's), HTTP assess, oracle = union of
 stored graphs loaded by graph_id and re-derived from raw stores (not versions()). Synthetic, mock provider.
 Run: PYTHONPATH=backend:. .venv/bin/python -m pytest -q -p no:cacheprovider tests/e2e/cgm1_independent_check.py
+make test: tests/e2e/cgm1_independent_check.py (4 tests, listed in pyproject testpaths)
 """
 from datetime import datetime
 
