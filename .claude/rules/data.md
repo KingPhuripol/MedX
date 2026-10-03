@@ -1,9 +1,9 @@
 ---
 paths:
-  - "shared/**/*"
+  - "data_factory/**/*"
   - "schemas/**/*"
-  - "project_state/**/*"
   - "data/**/*"
+  - "scripts/temporal_leakage_audit.py"
 ---
 
 # Data and Shared Contract Rules

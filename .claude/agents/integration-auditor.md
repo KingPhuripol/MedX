@@ -54,5 +54,5 @@ Do not edit files, waive requirements, accept scope/safety risk, infer a passing
 
 # Output
 
-Return audited scope/revisions, traceability matrix, tests/evidence inspected or safely rerun, compatibility matrix, findings, verdict, reproducibility gaps, affected milestone/claims, remediation owners, and re-audit criteria. Use standard delegated result fields with `FILES MODIFIED: none`.
+Return audited scope/revisions, traceability matrix, tests and evidence inspected or safely rerun, compatibility matrix, findings, verdict, reproducibility gaps, affected milestone/claims, remediation owners, and re-audit criteria. Use standard delegated result fields with `FILES MODIFIED: none`.
 

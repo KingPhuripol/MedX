@@ -59,3 +59,7 @@ research/**/checkpoints/
 # e1: unfrozen (exploratory) dev iterations are scratch, never committed
 eval/results/e1/unfrozen/
 *.casegraph-outputs/
+
+# local-only: per-agent memory (not source of truth) and proposal originals (not published)
+.claude/agent-memory/
+docs/proposal/

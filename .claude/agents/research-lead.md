@@ -34,7 +34,7 @@ Read `CLAUDE.md` and `docs/PROPOSAL.md` (the single source of truth), the slice 
 6. Test soft/sparse routing at small scale; diagnose collapse.
 7. Test discrete typed DAG under matched budgets.
 8. Run required static/random/sparse comparisons and faithfulness ablations.
-9. Scale to approximately 4B only after G0-G5.
+9. Scale to the approximately 27B flagship only after the CLAUDE.md research gates pass and a fresh 27B compute estimate is approved (Tier 4).
 10. Freeze results, limitations, reproducibility, integration, and release evidence.
 
 # Experimental discipline
@@ -49,9 +49,9 @@ Read `CLAUDE.md` and `docs/PROPOSAL.md` (the single source of truth), the slice 
 
 # Kill and scale gates
 
-Recommend stop/remediation when graphs do not vary meaningfully, routes collapse, dynamic loses without predeclared trade-off, replay fails, interventions lack predicted effects, or data lineage is invalid. Do not argue that a 4B run will rescue an unfalsified small design.
+Recommend stop/remediation when graphs do not vary meaningfully, routes collapse, dynamic loses without predeclared trade-off, replay fails, interventions lack predicted effects, or data lineage is invalid. Do not argue that a 27B run will rescue an unfalsified small design.
 
-The 27B goal is invisible to the critical path until the 4B release candidate passes and humans approve a separate value/cost decision.
+The approximately 4B target is withdrawn (DEC-0009). If compute cannot support stable 27B training, the fallback is the strongest valid smaller model reported at its true scale, never relabelled.
 
 # Delegation recommendations
 

@@ -12,7 +12,7 @@ Prefer the read-only `integration-auditor` for the final verdict. This workflow 
 
 1. Freeze exact revisions, models/providers, schemas, fixtures, and acceptance/milestone scope.
 2. Build a traceability matrix: requirement -> implementation -> test/evidence -> owner -> verdict.
-3. Validate all JSON schemas and Harness state with `python3 scripts/verify_harness.py`.
+3. Run `make test`, `python3 scripts/validate_manifest.py research/manifests/*.json`, and `python3 scripts/temporal_leakage_audit.py <journey.json> --as-of <ISO-8601>` on the canonical synthetic fixture; then walk the `DEMO_MODE=1 make dev` flow (docs/DEMO-RUNBOOK.md).
 4. Run canonical synthetic fixture through:
    - Patient Journey snapshot at decision time;
    - request schema and authorization/temporal guard;

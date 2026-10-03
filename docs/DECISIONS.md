@@ -229,3 +229,15 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
 - **Checked before the push:** a full-history scan found no real API keys; the only key-like strings are `sk-SENTINEL…` test fixtures. `.env`, `data/raw|interim|processed|synthetic/`, artifacts and checkpoints are gitignored. No patient data is tracked.
 - **Not included:** untracked files (Proposal v8/v9 `.docx`/`.pdf`, `.claude/agent-memory/`).
 - **Approved by:** project owner (chat, 2026-10-03; chose public visibility and all branches + tags).
+
+## 2026-10-03 — Repository cleanup: branches, worktrees, archives
+- **What:**
+  - Deleted 69 local branches. 55+ were already merged into `main`. `factory/g2-redflag`, `factory/v2a` and `factory/v2t` are contained in branches that were kept. Nine unmerged old or superseded branches are first preserved as annotated tags `archive/branch/<name>`: `factory/v2b` (LiveKit), `feat/opd-p1..p5`, `fix/opd-safety-review`, `feat/public-demo-vercel`, `worktree-agent-afaec77afd4ead538`.
+  - Kept branches: `factory/g2-redflag-eval`, `factory/g2-simuser`, `factory/v2-int`, `factory/v2d`, `factory/u7`.
+  - Removed every `.claude/worktrees/*` checkout (about 9.6 GB). Uncommitted files of each worktree, including the uncommitted v2b LiveKit work, were saved first as tar and diff files to `../_archive-2026-10-03/worktree-dirty/`.
+  - Moved `artifacts/archive/` (about 4.4 GB of pre-reset worktree copies) and the duplicate v8 `.docx` to `../_archive-2026-10-03/`, outside the repo. Nothing was permanently deleted. The owner decides when to delete that folder.
+  - Proposal v9 originals now live in `docs/proposal/` (gitignored, not published). `.claude/agent-memory/` is gitignored.
+  - Project Claude config now points only at files that exist. The approval hook protects `docs/PROPOSAL.md`, `docs/DECISIONS.md` and the red-flag rule files. Skills use `make test`, `validate_manifest.py` and `temporal_leakage_audit.py`. Agents refer to the 27B flagship rather than the withdrawn 4B target.
+  - Remote: archive tags pushed, then the same deleted branches removed from `origin`.
+- **Approved by:** project owner (chat, 2026-10-03; chose "repo + Claude config", "keep latest work, archive old", "delete on remote too").
+- **Scope:** git refs, local checkouts and tooling config only. No product code, data, splits, labels or evaluation evidence changed.

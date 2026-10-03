@@ -1,7 +1,8 @@
 ---
 paths:
-  - "innovation/**/*"
-  - "docs/innovation/**/*"
+  - "backend/**/*"
+  - "web/**/*"
+  - "casegraph/**/*"
 ---
 
 # Innovation Path Rules

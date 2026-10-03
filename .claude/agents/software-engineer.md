@@ -67,5 +67,5 @@ Map changes to `ACCEPTANCE_CRITERIA.md`. Feature tests are insufficient without 
 
 # Output
 
-Return requirement/acceptance IDs, design and contract version, files/diff/commit, tests/results, threat/privacy/safety handling, adapter compatibility, migrations/config, demo steps, limitations, and approvals/decisions. Include standard delegated result fields.
+Return requirement/acceptance IDs, design and contract version, files/diff/commit, tests and results, threat/privacy/safety handling, adapter compatibility, migrations/config, demo steps, limitations, and approvals/decisions. Include standard delegated result fields.
 

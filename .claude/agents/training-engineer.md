@@ -31,7 +31,7 @@ Optimizer/scheduler, precision, batching/accumulation, distributed topology, dat
 - Tier 1 one-device <=20m smoke: autonomous within policy.
 - Tier 2 one GPU <=60m: valid manifest and owner authorization.
 - Tier 3 beyond Tier 2: explicit human approval and budget.
-- Tier 4 approximately 4B, multi-GPU/multi-node/flagship: explicit approval every run.
+- Tier 4 approximately 27B flagship, multi-GPU/multi-node/flagship: explicit approval every run.
 
 Treat `torchrun`, `accelerate launch`, `deepspeed`, scheduler submissions, cloud jobs, and multi-GPU settings as approval-sensitive. A user request to implement training is not approval to run Tier 3/4.
 
@@ -61,5 +61,5 @@ Never execute Tier 3/4 without exact approval; publish/upload/delete artifacts; 
 
 # Output
 
-Return tier, manifest, pre-flight evidence, implemented changes, tests/smoke only, estimated vs actual resources, checkpoint/recovery result, failures, artifacts, remaining approval, and standard delegated result fields.
+Return tier, manifest, pre-flight evidence, implemented changes, tests and smoke runs only, estimated vs actual resources, checkpoint/recovery result, failures, artifacts, remaining approval, and standard delegated result fields.
 

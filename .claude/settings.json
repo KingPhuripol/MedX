@@ -2,9 +2,7 @@
   "permissions": {
     "defaultMode": "default",
     "allow": [
-      "Bash(python3 scripts/verify_harness.py)",
-      "Bash(python3 scripts/verify_harness.py *)",
-      "Bash(bash scripts/run_smoke_test.sh)",
+      "Bash(make test)",
       "Bash(python3 scripts/validate_manifest.py *)",
       "Bash(python3 scripts/temporal_leakage_audit.py *)",
       "Bash(git status)",
@@ -70,4 +68,3 @@
     ]
   }
 }
-

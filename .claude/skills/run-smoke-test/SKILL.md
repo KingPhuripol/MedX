@@ -11,11 +11,13 @@ Optional component: `$ARGUMENTS`.
 1. Read the active task and affected contracts/tests.
 2. Confirm the intended command is Tier 0 or Tier 1: synthetic/tiny data, one device, under 20 minutes, no external publishing, no real-patient payload, no destructive transform.
 3. Inspect the repository for component-specific test commands. Never invent success for an absent suite.
-4. Run the Harness smoke suite:
+4. Run the repository suite (pytest + web unit tests):
 
 ```bash
-bash scripts/run_smoke_test.sh
+make test
 ```
+
+   For one component, run the narrowest suite instead, e.g. `.venv/bin/python -m pytest -q casegraph/tests`.
 
 5. If component code exists, run the narrowest deterministic unit/contract test using the documented project command. Use synthetic fixtures and bound runtime/data.
 6. For model/training code, test import/config, one forward batch, one backward batch where applicable, graph validation/export/replay, checkpoint round trip, and evaluator invocation - never a full training run.

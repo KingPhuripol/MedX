@@ -13,14 +13,10 @@ PROTECTED_EXACT = {
     "CLAUDE.md",
     ".claude/settings.json",
     ".claude/hooks/approval_gate.py",
-    "docs/PROJECT_CHARTER.md",
-    "docs/DECISION_LOG.md",
-    "docs/innovation/SAFETY_SPEC.md",
-    "docs/research/BENCHMARK_CONTRACT.md",
-    "docs/research/SUCCESS_CRITERIA.md",
-    "docs/shared/HUMAN_APPROVAL_POLICY.md",
+    "docs/PROPOSAL.md",
+    "docs/DECISIONS.md",
 }
-PROTECTED_PREFIXES = ("docs/shared/", "schemas/")
+PROTECTED_PREFIXES = ("schemas/", "backend/app/triage/rules/")
 
 COMMAND_GATES: tuple[tuple[str, re.Pattern[str]], ...] = (
     (

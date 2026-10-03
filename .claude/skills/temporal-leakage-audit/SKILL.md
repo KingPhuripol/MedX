@@ -8,11 +8,11 @@ argument-hint: <journey-file-or-dataset> [--as-of ISO-8601]
 
 Target/arguments: `$ARGUMENTS`.
 
-1. Read Data Contract, Patient Journey Schema, Evaluation Contract, dataset manifest, snapshot builder, feature/retrieval/preprocessing code, and dependent manifests.
+1. Read the evidence types in `casegraph/types.py`, the dataset manifest/DATACARD, snapshot builder, feature/retrieval/preprocessing code, and dependent manifests.
 2. Define the audited decision time(s), task, and exact input evidence IDs/checksum.
 3. Validate journey schema, unique event IDs, timestamp formats/order, patient/split identity, source/provenance, and label definitions.
 4. For every input and transitive dependency prove `available_at_time <= decision_time`. Include retrieved notes, derived features, image reports, terminology mappings, cache content, prompt examples, thresholds, imputation, normalization, and sampling.
-5. Treat final diagnosis, discharge summary, retrospective coding/annotation, disposition, intervention, deterioration/outcome, and later tests/images as forbidden until their actual availability.
+5. Treat final diagnosis, discharge summary, retrospective coding/annotation, disposition, intervention, deterioration/outcome, and later tests or images as forbidden until their actual availability.
 6. When timestamps are ambiguous, use the conservative latest plausible time or exclude the field; never assume early availability for convenience.
 7. Run the standard file audit when applicable:
 
