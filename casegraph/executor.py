@@ -461,6 +461,30 @@ class Executor:
                         if v["kind"] in PHARMA_FACT_KINDS]
         return tuple(out)
 
+    @staticmethod
+    def _conversation_allergy_gaps(latest: AllergyList | None, facts: tuple[dict[str, Any], ...]
+                                   ) -> list[tuple[str, tuple[str, ...]]]:
+        """(check, missing_inputs) rows for what the conversation says about allergy that no allergen name backs up,
+        or that contradicts the record. Never read as "no allergy" (rule 6)."""
+        def newest(kind: str) -> dict[str, Any] | None:
+            same = [f for f in facts if f["kind"] == kind]
+            return max(same, key=lambda f: str(f["available_at_time"]), default=None)
+
+        status, allergens = newest("allergy_status"), newest("allergens")
+        present = status is not None and status["state"] == "KNOWN" and status["value"] == "present"
+        named = allergens is not None and allergens["state"] == "KNOWN" and any(
+            isinstance(n, str) and n.strip() for n in (allergens["value"] if isinstance(allergens["value"], (list, tuple))
+                                                       else ()))
+        out: list[tuple[str, tuple[str, ...]]] = []
+        if allergens is not None and allergens["state"] in ("UNKNOWN", "REFUSED"):
+            out.append(("allergy_conversation", (f"conversation.allergens={allergens['state']}",)))
+        elif present and not named:
+            out.append(("allergy_conversation", ("conversation.allergens:unnamed_allergy",)))
+        if present and latest is not None and latest.status == "no_known_allergy":
+            out.append(("allergy_contradiction", ("AllergyList.status=no_known_allergy vs "
+                                                  "conversation.allergy_status=present",)))
+        return out
+
     def _allergy_gate(self, ctx: _Ctx, allergies: list[AllergyList], hook_api: int | None,
                       label: str) -> tuple[MedicationCheck, ...]:
         """Allergy evidence that is missing or unknown is ``not_evaluated``, never read as "no allergy" (rule 6).
@@ -476,6 +500,8 @@ class Executor:
             out.append(gate("allergy_record", ("AllergyList",)))
         elif latest.status == "unknown":
             out.append(gate("allergy_record", ("AllergyList.status=unknown",)))
+        for check, missing in self._conversation_allergy_gaps(latest, self._conversation_facts(ctx)):
+            out.append(gate(check, missing))
         if hook_api == 1:
             out.append(gate("allergy_conflict", ("allergy_conflict_check:not_implemented_by_provider",)))
         return tuple(out)
@@ -509,6 +535,9 @@ class Executor:
                 **self._derived(ctx), status=screening_status(checks, missing), issues=issues, check_results=checks,
                 checks_not_evaluated=tuple(c for c in checks if c.missing_inputs), missing_inputs=missing,
                 rule_set_version=ctx.node.model_version, label=hook.label,
+                conversation_allergy_facts=tuple(  # staged only: legacy outputs are unchanged
+                    f for f in self._conversation_facts(ctx) if f["kind"] in ("allergy_status", "allergens")
+                ) if ctx.stage is not None else (),
             )
             return _Result("ok", _dump(output))
         upstream = {u.node.id: u.node.output for u in ctx.upstream if u.ok}

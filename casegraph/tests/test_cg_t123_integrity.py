@@ -348,6 +348,76 @@ def test_t3_unknown_allergy_status_is_not_evaluated(env):
     assert "AllergyList.status=unknown" in mi["missing_inputs"]
 
 
+def _t3_pharma(env, items):
+    t3 = build_versions(env.executor(), items, T1, T1 + 2 * 60 * M)[-1]
+    assert t3.stage == "T3"
+    return t3, t3.by_type(NodeType.PHARMA_AGENT).output["MedicationIssues"]
+
+
+def _allergy_rows(mi):
+    return {c["check"]: c for c in mi["check_results"] if c["check"].startswith("allergy")}
+
+
+def _assert_not_negative(t3, mi, check, fact_kinds):
+    row = _allergy_rows(mi)[check]
+    assert row["status"] == "not_evaluated" and row["fired"] is None and row["missing_inputs"]
+    assert mi["status"] != "evaluated" and set(row["missing_inputs"]) <= set(mi["missing_inputs"])
+    shown = _payload(t3)["for_review"]["pharma_agent"]["MedicationIssues"]["conversation_allergy_facts"]
+    assert {f["kind"] for f in shown} >= set(fact_kinds)
+
+
+def test_t3only_conversation_allergy_unnamed_no_record(env):
+    p, items, horizon = FIXTURES_STAGED["F-T3ONLY"]()
+    t3, mi = _t3_pharma(env, items)
+    assert {"allergy_record", "allergy_conversation"} <= set(_allergy_rows(mi))
+    _assert_not_negative(t3, mi, "allergy_conversation", ["allergy_status"])
+
+
+def test_conversation_allergy_contradicts_no_known_allergy(env):
+    from .staged_fixtures import allergy, base, conv_allergy, order
+
+    p = "SYN-CONTRA"
+    items = [*base(p, with_allergy=False), allergy(p, f"{p}-al", T1 - 48 * 60 * M, status="no_known_allergy"),
+             conv_allergy(p, f"{p}-conv", T1 - 15 * M, allergens=("UNKNOWN", None)), order(p, f"{p}-o", T1 + 30 * M)]
+    t3, mi = _t3_pharma(env, items)
+    rows = _allergy_rows(mi)
+    assert "allergy_contradiction" in rows and "allergy_conversation" in rows
+    _assert_not_negative(t3, mi, "allergy_contradiction", ["allergy_status", "allergens"])
+    assert "AllergyList.status=no_known_allergy vs conversation.allergy_status=present" in mi["missing_inputs"]
+
+
+def test_conversation_allergens_refused_is_not_dropped(env):
+    from .staged_fixtures import base, conv_allergy, order
+
+    p = "SYN-REFUSED"
+    items = [*base(p), conv_allergy(p, f"{p}-conv", T1 - 15 * M, allergens=("REFUSED", None)),
+             order(p, f"{p}-o", T1 + 30 * M)]
+    t3, mi = _t3_pharma(env, items)
+    assert _allergy_rows(mi)["allergy_conversation"]["missing_inputs"] == ["conversation.allergens=REFUSED"]
+    _assert_not_negative(t3, mi, "allergy_conversation", ["allergens"])
+
+
+def test_known_list_plus_unnamed_extra_allergy(env):
+    from .staged_fixtures import base, conv_allergy, order
+
+    p = "SYN-EXTRA"
+    items = [*base(p), conv_allergy(p, f"{p}-conv", T1 - 15 * M), order(p, f"{p}-o", T1 + 30 * M)]
+    t3, mi = _t3_pharma(env, items)
+    assert "allergy_contradiction" not in _allergy_rows(mi)
+    assert _allergy_rows(mi)["allergy_conversation"]["missing_inputs"] == ["conversation.allergens:unnamed_allergy"]
+    _assert_not_negative(t3, mi, "allergy_conversation", ["allergy_status"])
+
+
+def test_named_allergen_with_known_list_adds_no_gap(env):
+    from .staged_fixtures import base, conv_allergy, order
+
+    p = "SYN-NAMED"
+    items = [*base(p), conv_allergy(p, f"{p}-conv", T1 - 15 * M, allergens=("KNOWN", ["sulfa"])),
+             order(p, f"{p}-o", T1 + 30 * M)]
+    _, mi = _t3_pharma(env, items)
+    assert not {"allergy_conversation", "allergy_contradiction"} & set(_allergy_rows(mi))
+
+
 def test_pharma_never_runs_before_new_orders(env, dataset):
     """T1 for a case with a home list and a patient-reported list has no Pharma node (3.2.2/3.2.4)."""
     sc = s1r.load_staged_case(dataset, "dev", "SYNE-0007", "T1")

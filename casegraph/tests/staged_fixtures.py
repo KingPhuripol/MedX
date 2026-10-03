@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from casegraph.data import AllergyEntry, AllergyList, MedicationEntry, MedicationList
+from casegraph.data import AllergyEntry, AllergyList, MedicationEntry, MedicationList, VoiceFact, VoiceIntakeFacts
 from casegraph.stages import plan_stages
 
 from .fixtures import DAY, H, M, _common, cxr, labs, s4_intake, vitals
@@ -34,6 +34,16 @@ def allergy(pid, iid, avail, status="known"):
     return AllergyList(**_common(pid, iid, avail - H, avail), status=status, entries=entries)
 
 
+def conv_allergy(pid, iid, t, *, status=("KNOWN", "present"), allergens=None):
+    """Conversation allergy facts (Reader:Text intake): ``status`` / ``allergens`` are (state, value) or None."""
+    facts = []
+    for field, spec in (("allergy_status", status), ("allergens", allergens)):
+        if spec is not None:
+            facts.append(VoiceFact(field=field, state=spec[0], value=spec[1], value_text=str(spec[1] or spec[0]),
+                                   event_time=t, available_at_time=t))
+    return VoiceIntakeFacts(**_common(pid, iid, t, t), facts=tuple(facts))
+
+
 def base(pid, *, vs=FRESH, with_allergy=True):
     """The T1 snapshot: intake facts, one fresh vitals, a home list and (optionally) an allergy record."""
     items = [*s4_intake(pid, pid, T1 - 20 * M),
@@ -51,9 +61,10 @@ def f_cxr():
 
 
 def f_t3only():
-    """No results; a new order at t1+30; no AllergyList (the conversation states an allergy)."""
+    """No results; a new order at t1+30; no AllergyList (the conversation states an unnamed allergy)."""
     p = "SYN-T3ONLY"
-    return p, [*base(p, with_allergy=False), order(p, f"{p}-order", T1 + 30 * M)], T1 + 2 * H
+    return p, [*base(p, with_allergy=False), conv_allergy(p, f"{p}-conv", T1 - 15 * M),
+               order(p, f"{p}-order", T1 + 30 * M)], T1 + 2 * H
 
 
 def f_same():

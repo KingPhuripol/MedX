@@ -637,6 +637,8 @@ class MedicationIssues(Derived):
     summary: str | None = None
     rule_set_version: str | None = None
     label: str = PLACEHOLDER_LABEL
+    # cg-t123: the conversation's allergy statements, shown next to the record for the reviewer (default: none)
+    conversation_allergy_facts: tuple[IntakeValue, ...] = ()
 
     @model_validator(mode="after")
     def _invariant(self) -> "MedicationIssues":
