@@ -1,5 +1,7 @@
 """cg-l1 independent checker (own scenarios): all three kinds bad-time at once, bad-time KNOWN meds+allergy next to
-valid facts, S5 never reads the bad fact, order/permutation of item arrival. Synthetic, mock only."""
+valid facts, S5 never reads the bad fact, order/permutation of item arrival. Synthetic, mock only.
+make test: tests/e2e/test_cgl1_checker.py (12 tests, listed in pyproject testpaths)
+"""
 import json
 import pytest
 from casegraph.compiler import build_snapshot, compile_graph

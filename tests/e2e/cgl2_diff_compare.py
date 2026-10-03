@@ -1,3 +1,4 @@
+"""manual evidence: compares two differential dumps (base c6a7a92 vs head); companion of cgl2_differential.py"""
 import json, sys, collections
 b = json.load(open(sys.argv[1])); h = json.load(open(sys.argv[2]))
 assert b.keys() == h.keys()
