@@ -256,3 +256,16 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
   - v9.6 drops the separate 1.3.5 fallback and 3.7 prototype sections that were in the v9.0 draft. The fallback content is folded into 1.3.4.
 - **Approved by:** project owner (chat, 2026-10-03, "เริ่มเลย sync PROPOSAL.md เป็น v9.6").
 - **Scope:** source-of-truth document only. No change to splits, labels, success criteria or contracts. `CLAUDE.md` now points at v9.6.
+
+## 2026-10-03 — UI-DAG comp approved (Case Graph tab)
+- **What:** the owner approved the comp `slices/ui-dag/comp/index.html` on branch `factory/ui-dag` (commit `0989480`) as the design for the Case Graph view in the Clinical Dashboard. The comp uses synthetic data only. Answers to the planner's open questions:
+  1. The tab label is **Case Graph**. The panel heading stays "ที่มาของข้อเสนอ".
+  2. The default version shown is **the stage of the signed-in role**: nurse → T1, physician → T2, pharmacist → T3, falling back to the latest version.
+  3. Evidence-to-node lines are **always drawn for every read**, not only Reader/Pharma reads.
+- **Gate:** the build starts only after `cg-t123` is merged. Then `factory/ui-dag` is rebased and the API contract `casegraph-view/0.1` is checked against the cg-t123 version model.
+- **Approved by:** project owner (chat, 2026-10-03).
+
+## 2026-10-03 — CT-RATE loader merged (no data downloaded)
+- **What:** `factory/ctrate-loader` is merged. It adds the CT-RATE manifest (revision `deeca4d8…`, CC BY-NC-SA 4.0, gated HF access), a loader, a patient-level split with the official valid set as sealed test, a synthetic-anchor `available_at_time` convention, an audit, and a download command that is refused unless an approval is recorded. The checker passed B1–B9. Both reviewers gave CONDITIONAL_PASS; the conditions are in `slices/CONDITIONS.md`.
+- **Not approved:** downloading CT-RATE. That needs a separate owner decision covering who accepts the terms, who gets access, and multi-TB storage.
+- **Approved by:** project owner (chat, 2026-10-03, "เริ่ม CT-RATE loader คู่ขนาน"); the merge followed the loop verdicts.
