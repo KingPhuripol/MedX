@@ -138,3 +138,38 @@ def test_partial_reconstruction_report_is_a_conflict(ctrate_raw):
     with pytest.raises(CTRateLoadError) as ei:
         load_tree(ctrate_raw)
     assert any(e.code == "reconstruction_conflict" for e in ei.value.errors)
+
+
+@pytest.mark.parametrize("split", ["train", "valid"])
+def test_missing_no_chest_file_fails_loudly(ctrate_raw, split, tmp_path):
+    rel = f"dataset/metadata/no_chest_{split}.txt"
+    (ctrate_raw / rel).unlink()
+    with pytest.raises(CTRateLoadError) as ei:
+        load_tree(ctrate_raw)
+    assert [e.file for e in ei.value.errors if e.code == "missing_file"] == [rel]
+    from research.data.ctrate.build import build
+    out = tmp_path / "out"
+    with pytest.raises(CTRateLoadError):
+        build(ctrate_raw, out)
+    assert not out.exists() or not any(out.iterdir())
+
+
+def test_empty_no_chest_file_means_zero_exclusions(ctrate_raw):
+    (ctrate_raw / "dataset/metadata/no_chest_train.txt").write_text("", encoding="utf-8")
+    r = load_tree(ctrate_raw)
+    assert r.exclusions == [] and r.row_counts["no_chest"] == 0
+    assert "train_10_b" in {v.scan_ref for v in r.volumes}
+
+
+def test_label_origin_required(ctrate_raw):
+    r = load_tree(ctrate_raw)
+    lab = r.labels[0]
+    assert lab.label_origin == "provider_text_classifier_prediction_from_report"
+    d = lab.model_dump()
+    d.pop("label_origin")
+    with pytest.raises(Exception):  # noqa: B017 - pydantic ValidationError
+        AbnormalityLabels(**d)
+    with pytest.raises(Exception):  # noqa: B017
+        AbnormalityLabels(**(d | {"label_origin": "radiologist_ground_truth"}))
+    from research.data.ctrate.types import LABEL_METRIC_NAME
+    assert LABEL_METRIC_NAME == "agreement with report-derived labels"

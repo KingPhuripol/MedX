@@ -72,3 +72,63 @@ def test_collator_normal_path_blocks_and_counts(parts):
     c = Collator(ModalityPolicy({"ct": 1.0}, True), seq_len=8)
     c([s], random.Random(0))
     assert c.events["blocked_label_source"] == 1
+
+
+def _decide(rep_ref, lab_ref, vol_ref, task="abnormality_labels"):
+    s = guard_sample(vol_ref, rep_ref, lab_ref, task=task)
+    ev = Counter()
+    d = decide_modalities(s, ModalityPolicy({"ct": 1.0}, report_substitution=True), random.Random(0), ev)
+    return d, ev
+
+
+@pytest.mark.parametrize("task", TASKS)
+def test_same_patient_other_scan_blocked_and_counted(parts, task):
+    r, rep, lab = parts
+    v = next(v for v in r.volumes if v.scan_ref == "train_2_a")
+    assert report_provenance(rep["train_2_b"].report_ref, lab["train_2_a"].label_source) == "same_patient"
+    d, ev = _decide(rep["train_2_b"].report_ref, lab["train_2_a"].label_source, v.volume_ref, task)
+    assert d["ct"] == D.DROPPED and ev["blocked_same_patient"] == 1 and not ev["blocked_label_source"]
+
+
+@pytest.mark.parametrize("task", TASKS)
+def test_same_patient_valid_pair_blocked(parts, task):
+    r, rep, lab = parts
+    v = next(v for v in r.volumes if v.scan_ref == "valid_21_a")
+    d, ev = _decide(rep["valid_21_b"].report_ref, lab["valid_21_a"].label_source, v.volume_ref, task)
+    assert d["ct"] == D.DROPPED and ev["blocked_same_patient"] == 1
+
+
+@pytest.mark.parametrize("variant", ["ct-rate:train_02_b", "ct-rate:train_\u0662_b", "CT_RATE:train_2_b_1.nii.gz"])
+def test_same_patient_digit_variants_blocked(parts, variant):
+    r, rep, lab = parts
+    assert report_provenance(variant, lab["train_2_a"].label_source) == "same_patient"
+    d, ev = _decide(variant, lab["train_2_a"].label_source, "ct-rate:train_2_a_1.nii.gz")
+    assert d["ct"] == D.DROPPED and ev["blocked_same_patient"] == 1
+
+
+def test_train_k_vs_valid_k_allowed(parts):
+    r, rep, lab = parts
+    v = next(v for v in r.volumes if v.scan_ref == "train_3_a")
+    for rep_ref, lab_ref in ((rep["valid_3_a"].report_ref, lab["train_3_a"].label_source),
+                             (rep["train_3_a"].report_ref, lab["valid_3_a"].label_source),
+                             (rep["train_7_a"].report_ref, lab["train_3_a"].label_source)):
+        d, ev = _decide(rep_ref, lab_ref, v.volume_ref)
+        assert d["ct"] == D.REPORT and not ev
+
+
+def test_collator_raises_on_same_patient_report(parts, monkeypatch):
+    r, rep, lab = parts
+    v = next(v for v in r.volumes if v.scan_ref == "train_2_a")
+    s = _collator_sample(guard_sample(v.volume_ref, rep["train_2_b"].report_ref, lab["train_2_a"].label_source))
+    monkeypatch.setattr(D, "decide_modalities", lambda *a, **k: {"ct": D.REPORT})
+    with pytest.raises(ReportLeakageError, match="same_patient"):
+        Collator(ModalityPolicy({"ct": 1.0}, True), seq_len=8)([s], random.Random(0))
+
+
+def test_other_datasets_verdicts_unchanged():
+    assert report_provenance("mimic-cxr:s50414267", "mimic-cxr:s50414267") == "same_source"
+    assert report_provenance("mimic-cxr:s50414267", "mimic-cxr:s50414268") == "allowed"
+    assert report_provenance("synthetic:a-1-report", "synthetic:a-1-report") == "same_source"
+    assert report_provenance("synthetic:a-1-report", "structured:service") == "allowed"
+    assert report_provenance("ct-rate:train_2_b", "mimic-cxr:s50414267") == "allowed"
+    assert report_provenance("ct-rate:train_2_b", "garbage") == "unverifiable"

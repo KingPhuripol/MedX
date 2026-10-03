@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 
-from .types import (ANCHOR, OFFSETS, PINNED_REVISION, SOURCE, AbnormalityLabels, CTVolume, RadiologyReport,
+from .types import (ANCHOR, LABEL_ORIGIN, OFFSETS, PINNED_REVISION, SOURCE, AbnormalityLabels, CTVolume, RadiologyReport,
                     provenance, report_ref_for, version_string, volume_ref_for)
 
 # ASCII only, no normalization: zero-padded or non-ASCII digits are rejected, never folded.
@@ -104,8 +104,9 @@ def _read_table(root: Path, rel: str, split: str, required: tuple[str, ...], err
 
 def _read_no_chest(root: Path, rel: str, split: str, errors: list[RowError]) -> list[tuple[int, str]]:
     path = root / rel
-    if not path.is_file():
-        return []  # optional: no exclusions listed
+    if not path.is_file():  # listed in manifest expected_files: required. An empty file means zero exclusions.
+        errors.append(RowError(rel, 0, "missing_file", "required file not found"))
+        return []
     out, seen = [], set()
     for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
         if not line.strip():
@@ -237,7 +238,8 @@ def load_tree(root: Path | str, revision: str = PINNED_REVISION) -> LoadResult:
                 vals = dict(r0[3])
                 labels.append(AbnormalityLabels(
                     **common, observed_at=_t("labels"), available_at_time=_t("labels"),
-                    label_source=report_ref_for(scan_ref), values=vals))
+                    label_source=report_ref_for(scan_ref), values=vals,
+                    label_origin=LABEL_ORIGIN))
                 blank_cells[first.split] += sum(v == "missing" for v in vals.values())
 
     if errors:

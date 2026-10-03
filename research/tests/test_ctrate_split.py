@@ -101,3 +101,11 @@ def test_test_gold_sealed(ctrate_raw, tmp_path):
         assert not (tmp_path / "sealed" / sub / "test").exists()
     build(ctrate_raw, tmp_path / "open", unseal_test=True)
     assert (tmp_path / "open/gold/test").is_dir()
+
+
+def test_unseal_help_documents_joint_unseal(capsys):
+    from research.data.ctrate.__main__ import main
+    with pytest.raises(SystemExit):
+        main(["build", "--help"])
+    out = " ".join(capsys.readouterr().out.split()).lower()
+    assert "--unseal-test" in out and "inputs, label sources and gold together" in out
