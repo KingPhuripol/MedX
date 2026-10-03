@@ -510,8 +510,7 @@ def test_no_reader_text_node_means_no_conversation_evidence(env):
     items = [i for i in items if i.data_type not in ("VoiceIntakeFacts", "ClinicalText")]
     t3, mi = _t3_pharma(env, items)
     pharma = t3.by_type(NodeType.PHARMA_AGENT)
-    if any(n.type is NodeType.READER_TEXT for n in t3.nodes):
-        pytest.skip("fixture still produces a Reader:Text node")
+    assert not any(n.type is NodeType.READER_TEXT for n in t3.nodes), "fixture still produces a Reader:Text node"
     # nothing was dropped: no errored input, no fabricated conversation row; record gates are unchanged
     assert pharma.errored_inputs == ()
     assert not {"allergy_conversation", "medication_conversation"} & {c["check"] for c in mi["check_results"]}

@@ -30,6 +30,7 @@ from .compiler import ValidatedGraph, validate
 from app.triage import department as s4_department
 
 from . import pharma_s5, reader_text, triage_bridge  # noqa: F401  (pharma_s5 registers the S5 hook)
+from .conversation_meds import MED_KIND, consumed_refs, parse_medication_facts
 from .data import (
     CLINICAL_TEXT_TYPES,
     PLACEHOLDER_RULE_SET,
@@ -39,6 +40,7 @@ from .data import (
     AllergyList,
     CaseSummary,
     ConfirmedEvidence,
+    ConversationFactUse,
     ConfirmedResult,
     Demographics,
     DepartmentEntry,
@@ -476,14 +478,61 @@ class Executor:
             isinstance(n, str) and n.strip() for n in (allergens["value"] if isinstance(allergens["value"], (list, tuple))
                                                        else ()))
         out: list[tuple[str, tuple[str, ...]]] = []
+        raw = allergens["value"] if allergens is not None and allergens["state"] == "KNOWN" else None
         if allergens is not None and allergens["state"] in ("UNKNOWN", "REFUSED"):
             out.append(("allergy_conversation", (f"conversation.allergens={allergens['state']}",)))
+        elif raw is not None and (not isinstance(raw, (list, tuple))
+                                  or any(not (isinstance(n, str) and n.strip()) for n in raw)):
+            out.append(("allergy_conversation", ("conversation.allergens:unparseable",)))
         elif present and not named:
             out.append(("allergy_conversation", ("conversation.allergens:unnamed_allergy",)))
+        if status is not None and status["state"] in ("UNKNOWN", "REFUSED"):
+            out.append(("allergy_conversation", (f"conversation.allergy_status={status['state']}",)))
         if present and latest is not None and latest.status == "no_known_allergy":
             out.append(("allergy_contradiction", ("AllergyList.status=no_known_allergy vs "
                                                   "conversation.allergy_status=present",)))
         return out
+
+    @staticmethod
+    def _conversation_medication_gaps(facts: tuple[dict[str, Any], ...], checks: tuple[MedicationCheck, ...],
+                                      hook_api: int | None) -> list[tuple[str, tuple[str, ...]]]:
+        """(check, missing_inputs) rows for every conversation medication fact Pharma did not consume. Gated on use:
+        a fact is consumed only if the provider evaluated on its evidence ref (api 2) or states it reads facts."""
+        read = consumed_refs(checks)
+        out: list[tuple[str, tuple[str, ...]]] = []
+        for m in parse_medication_facts(facts):
+            if m.problem is not None:
+                out.append(("medication_conversation", (m.problem,)))
+            if m.names and (hook_api != 2 or m.ref not in read):
+                out.append(("medication_conversation", (f"conversation.current_medications:not_consumed@{m.ref}",)))
+        return out
+
+    @staticmethod
+    def _conversation_fact_use(facts: tuple[dict[str, Any], ...], checks: tuple[MedicationCheck, ...],
+                               hook_api: int | None) -> tuple[ConversationFactUse, ...]:
+        """Per conversation allergy/medication fact: used, or the reason it was not (structured fields only).
+        A fact superseded by a later KNOWN fact of the same kind is not an open input."""
+        out = []
+        read = consumed_refs(checks)
+        for m in parse_medication_facts(facts):
+            reason = m.problem
+            if reason is None and m.names and (hook_api != 2 or m.ref not in read):
+                reason = f"conversation.current_medications:not_consumed@{m.ref}"
+            out.append(ConversationFactUse(kind=MED_KIND, evidence_ref=m.ref, state=m.fact["state"],
+                                           used=reason is None, reason=reason))
+        for kind in ("allergy_status", "allergens"):
+            same = sorted((f for f in facts if f["kind"] == kind), key=lambda f: str(f["available_at_time"]))
+            for n, f in enumerate(same):
+                reason = None
+                if n == len(same) - 1:  # the newest fact of the kind is the one the gates read
+                    if f["state"] != "KNOWN":
+                        reason = f"conversation.{kind}={f['state']}"
+                    elif kind == "allergens" and (not isinstance(f["value"], (list, tuple))
+                                                  or any(not (isinstance(x, str) and x.strip()) for x in f["value"])):
+                        reason = "conversation.allergens:unparseable"
+                out.append(ConversationFactUse(kind=kind, evidence_ref=f"conversation:{kind}#{n}", state=f["state"],
+                                               used=reason is None, reason=reason))
+        return tuple(out)
 
     @staticmethod
     def _errored_conversation(ctx: _Ctx) -> tuple[str, ...]:
@@ -495,7 +544,7 @@ class Executor:
                             if u.edge.data_type == "Findings" and u.node.type is NodeType.READER_TEXT and not u.ok))
 
     def _allergy_gate(self, ctx: _Ctx, allergies: list[AllergyList], hook_api: int | None,
-                      label: str) -> tuple[MedicationCheck, ...]:
+                      label: str, checks: tuple[MedicationCheck, ...] = ()) -> tuple[MedicationCheck, ...]:
         """Allergy evidence that is missing or unknown is ``not_evaluated``, never read as "no allergy" (rule 6).
 
         The placeholder rules (api 1) never cross-check allergies against orders: that check is stated as not
@@ -510,6 +559,8 @@ class Executor:
         elif latest.status == "unknown":
             out.append(gate("allergy_record", ("AllergyList.status=unknown",)))
         for check, missing in self._conversation_allergy_gaps(latest, self._conversation_facts(ctx)):
+            out.append(gate(check, missing))
+        for check, missing in self._conversation_medication_gaps(self._conversation_facts(ctx), checks, hook_api):
             out.append(gate(check, missing))
         if self._errored_conversation(ctx):  # the patient's own allergy/medication statements were not read (rule 6)
             for check in ("allergy_conversation", "medication_conversation"):
@@ -541,7 +592,7 @@ class Executor:
             else:
                 checks, issues = hook.fn(lists)  # type: ignore[arg-type]
             if ctx.stage is not None:  # staged graphs state missing allergy data; legacy graphs are unchanged
-                checks = (*checks, *self._allergy_gate(ctx, allergies, hook.api, hook.label))
+                checks = (*checks, *self._allergy_gate(ctx, allergies, hook.api, hook.label, checks))
             missing = tuple(sorted({m for c in checks for m in c.missing_inputs}))
             output = MedicationIssues(
                 **self._derived(ctx), status=screening_status(checks, missing), issues=issues, check_results=checks,
@@ -550,6 +601,10 @@ class Executor:
                 conversation_allergy_facts=tuple(  # staged only: legacy outputs are unchanged
                     f for f in self._conversation_facts(ctx) if f["kind"] in ("allergy_status", "allergens")
                 ) if ctx.stage is not None else (),
+                conversation_medication_facts=tuple(
+                    f for f in self._conversation_facts(ctx) if f["kind"] == MED_KIND) if ctx.stage is not None else (),
+                conversation_fact_use=self._conversation_fact_use(self._conversation_facts(ctx), checks, hook.api)
+                if ctx.stage is not None else (),
             )
             errored = self._errored_conversation(ctx) if ctx.stage is not None else ()
             return _Result("ok", _dump(output), errored_inputs=errored)

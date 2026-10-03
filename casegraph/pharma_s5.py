@@ -22,6 +22,7 @@ from app.gateway import DataClass
 from app.pharma.models import AllergyRecord, MedEntry, MedSnapshot, MedSource
 from app.pharma.pipeline import PIPELINE_VERSION, issue_signature, reconcile
 
+from .conversation_meds import parse_medication_facts
 from .data import AllergyList, MedicationCheck, MedicationEntry, MedicationIssue, MedicationList, screening_status
 from .library import S5_PHARMA_VERSION
 from .providers import PharmaInput, register_pharma_provider
@@ -78,8 +79,20 @@ def _allergy_records(inp: PharmaInput) -> tuple[AllergyRecord, ...]:
     return tuple(out)
 
 
+def _conversation_sources(inp: PharmaInput) -> tuple[MedSource, ...]:
+    """Medications the patient named in the conversation (Reader:Text ``current_medications``, KNOWN) as
+    ``patient_reported`` sources: each keeps its conversation evidence ref and available_at_time. An explicit empty
+    list ("takes none") adds no source; UNKNOWN/REFUSED/unparseable facts are reported by the executor, not read."""
+    return tuple(
+        MedSource(source_type="patient_reported", evidence_ref=m.ref, available_at_time=m.fact["available_at_time"],
+                  provenance="casegraph.reader_text", version="1", entries=tuple(MedEntry(text=n) for n in m.names))
+        for m in parse_medication_facts(inp.facts) if m.names
+    )
+
+
 def build_med_snapshot(inp: PharmaInput, patient_ref: str) -> MedSnapshot:
     sources = tuple(_source(m) for m in sorted(inp.lists, key=lambda i: (i.available_at_time, i.item_id)))
+    sources += _conversation_sources(inp)
     return MedSnapshot(patient_ref=patient_ref[:128], as_of=inp.T, data_class=DataClass(inp.data_class),
                        sources=sources, allergies=_allergy_records(inp))
 

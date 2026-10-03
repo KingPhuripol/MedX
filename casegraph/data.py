@@ -626,6 +626,16 @@ class MedicationCheck(_CheckResult):
     check: str = Field(min_length=1)  # e.g. duplicate, dose_mismatch
 
 
+class ConversationFactUse(TypedData):
+    """cg-t123 round 4: whether Pharma consumed one conversation allergy/medication fact (structured, no free text)."""
+
+    kind: str = Field(min_length=1, max_length=64)
+    evidence_ref: str = Field(min_length=1, max_length=128)
+    state: Literal["KNOWN", "UNKNOWN", "REFUSED"]
+    used: bool
+    reason: str | None = None  # why it was not used (a missing_inputs-style token); None when used
+
+
 class MedicationIssues(Derived):
     """Pharma output v1.1: same construction invariant as :class:`Alerts`."""
 
@@ -639,6 +649,9 @@ class MedicationIssues(Derived):
     label: str = PLACEHOLDER_LABEL
     # cg-t123: the conversation's allergy statements, shown next to the record for the reviewer (default: none)
     conversation_allergy_facts: tuple[IntakeValue, ...] = ()
+    # cg-t123 round 4: the conversation's medication facts, and per fact (allergy and medication) whether it was used
+    conversation_medication_facts: tuple[IntakeValue, ...] = ()
+    conversation_fact_use: tuple[ConversationFactUse, ...] = ()
 
     @model_validator(mode="after")
     def _invariant(self) -> "MedicationIssues":

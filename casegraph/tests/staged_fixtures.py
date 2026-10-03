@@ -44,6 +44,17 @@ def conv_allergy(pid, iid, t, *, status=("KNOWN", "present"), allergens=None):
     return VoiceIntakeFacts(**_common(pid, iid, t, t), facts=tuple(facts))
 
 
+def conv_meds(pid, iid, t, *, meds=("KNOWN", ["warfarin"]), allergy_status=None, allergens=None):
+    """Conversation medication facts (Reader:Text intake): ``meds`` / ``allergy_status`` / ``allergens`` are
+    (state, value) or None."""
+    facts = []
+    for field, spec in (("current_medications", meds), ("allergy_status", allergy_status), ("allergens", allergens)):
+        if spec is not None:
+            facts.append(VoiceFact(field=field, state=spec[0], value=spec[1], value_text=str(spec[1] or spec[0]),
+                                   event_time=t, available_at_time=t))
+    return VoiceIntakeFacts(**_common(pid, iid, t, t), facts=tuple(facts))
+
+
 def base(pid, *, vs=FRESH, with_allergy=True):
     """The T1 snapshot: intake facts, one fresh vitals, a home list and (optionally) an allergy record."""
     items = [*s4_intake(pid, pid, T1 - 20 * M),
