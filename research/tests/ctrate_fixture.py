@@ -9,7 +9,8 @@ LABELS = ["Cardiomegaly", "Pleural effusion", "Lung nodule"]
 TRAIN_PIDS = list(range(1, 11))
 VALID_PIDS = [3, 7, 9, 21]  # 3, 7, 9 share a pid with a train patient
 # scans per patient: default one scan "a" with one reconstruction
-SCANS = {("train", 2): {"a": 1, "b": 1}, ("train", 3): {"a": 3}, ("train", 10): {"a": 1, "b": 1}}
+SCANS = {("train", 2): {"a": 1, "b": 1}, ("train", 3): {"a": 3}, ("train", 10): {"a": 1, "b": 1},
+         ("valid", 21): {"a": 1, "b": 1}}
 NO_REPORT_SCAN = "train_5_a"
 NO_LABELS_SCAN = "train_6_a"
 BLANK_LABEL = ("train_4_a", "Lung nodule")

@@ -1,4 +1,8 @@
-"""Build a versioned, immutable output tree in the layout scripts/temporal_leakage_audit.py --dataset reads."""
+"""Build a versioned, immutable output tree in the layout scripts/temporal_leakage_audit.py --dataset reads.
+
+``unseal_test`` (CLI ``--unseal-test``) unseals the test split's inputs, label sources and gold TOGETHER; they are
+not separable here. Separating them is deferred to the CT reader eval slice. Gold labels are provider text-classifier
+predictions from the report; metrics are named "agreement with report-derived labels", never clinical accuracy."""
 
 from __future__ import annotations
 
@@ -9,7 +13,7 @@ from pathlib import Path
 
 from .loader import LoadResult, load_tree
 from .split import DEFAULT_SEED, DEV_FRACTION, assign_patients, gold_labels, sealed_report_sources, split_manifest
-from .types import ANCHOR, PINNED_REVISION, T_READ, TIME_CONVENTION
+from .types import ANCHOR, LABEL_METRIC_NAME, LABEL_ORIGIN, PINNED_REVISION, T_READ, TIME_CONVENTION
 
 TASKS = ("abnormality_labels", "report_generation", "image_text_alignment")
 
@@ -85,7 +89,8 @@ def build(raw: Path | str, out: Path | str, *, seed: int = DEFAULT_SEED, dev_fra
     manifest = {
         "schema": "ctrate-build/1", "build_id": out.name, "revision": revision, "seed": seed,
         "dev_fraction": dev_fraction, "time_convention": TIME_CONVENTION, "anchor": ANCHOR.isoformat(),
-        "label_columns": res.label_columns, "unsealed_test": bool(unseal_test),
+        "label_columns": res.label_columns,
+        "label_origin": LABEL_ORIGIN, "label_metric_name": LABEL_METRIC_NAME, "unsealed_test": bool(unseal_test),
         "split_manifest_sha256": sm["manifest_sha256"], "tasks": list(TASKS),
         "counts": {"cases": dict(n_cases), "missing_report_cases": dict(n_missing["report"]),
                    "missing_label_cases": dict(n_missing["labels"]), "blank_label_cells": dict(blank),

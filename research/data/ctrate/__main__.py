@@ -24,14 +24,17 @@ def main(argv=None) -> int:
     p = sub.add_parser("verify")
     p.add_argument("root")
     p.add_argument("--volumes", action="store_true")
+    p.add_argument("--record", action="store_true", help="write <root>/local_sha256.json once, if all checks pass")
     p = sub.add_parser("build")
     p.add_argument("--raw", required=True)
     p.add_argument("--out", required=True)
     p.add_argument("--seed", type=int, default=DEFAULT_SEED)
     p.add_argument("--dev-fraction", type=float, default=DEV_FRACTION)
-    p.add_argument("--unseal-test", action="store_true", help="final evaluation only")
+    p.add_argument("--unseal-test", action="store_true", help="final evaluation only; unseals test inputs, label sources and gold together "
+                   "(separating them is deferred to the CT reader eval slice)")
     p = sub.add_parser("audit")
     p.add_argument("build_dir")
+    p.add_argument("--raw", help="raw CT-RATE root: enables the independent missing-vs-negative check")
     a = ap.parse_args(argv)
     if a.cmd == "plan-download":
         print(access.plan_download())
@@ -45,7 +48,11 @@ def main(argv=None) -> int:
         print("\n".join(out) if isinstance(out, list) and not a.execute else " ".join(out))
         return 0
     if a.cmd == "verify":
-        rep = access.verify(a.root, volumes=a.volumes)
+        try:
+            rep = access.verify(a.root, volumes=a.volumes, record=a.record)
+        except access.RefusedError as exc:
+            print(f"REFUSED: {exc}", file=sys.stderr)
+            return 2
         print(json.dumps({k: v for k, v in rep.items() if k != "files"}, indent=2))
         return 0 if rep["status"] == "PASS" else 1
     if a.cmd == "build":
@@ -53,7 +60,7 @@ def main(argv=None) -> int:
         print(json.dumps({"tree_sha256": m["tree_sha256"], "counts": m["counts"], "unsealed_test": m["unsealed_test"]},
                          indent=2, sort_keys=True))
         return 0
-    rep = run_audit(a.build_dir)
+    rep = run_audit(a.build_dir, raw=a.raw)
     print(json.dumps(rep, indent=2, ensure_ascii=False))
     return 0 if rep["status"] == "PASS" else 1
 

@@ -128,10 +128,12 @@ def _require(study: str | None, ref: Any) -> str:
 
 
 ALLOWED, SAME_SOURCE, UNVERIFIABLE = "allowed", "same_source", "unverifiable"
+SAME_PATIENT = "same_patient"  # CT-RATE only: another scan of the label source's patient
 
 
 def report_provenance(report_ref: Any, label_source: Any) -> str:
-    """May this report replace its image as input? ALLOWED, SAME_SOURCE (it is the label) or UNVERIFIABLE.
+    """May this report replace its image as input? ALLOWED, SAME_SOURCE (it is the label), SAME_PATIENT (CT-RATE:
+    another scan of the same patient as the label source) or UNVERIFIABLE.
 
     Fail closed: an unparseable/unknown report or label reference is UNVERIFIABLE (substitution forbidden).
     A structured, non-report label (`structured:service`) cannot be a report, so it never blocks.
@@ -145,7 +147,11 @@ def report_provenance(report_ref: Any, label_source: Any) -> str:
         return UNVERIFIABLE
     if label[0] == STRUCTURED:
         return ALLOWED
-    return SAME_SOURCE if report == label else ALLOWED
+    if report == label:
+        return SAME_SOURCE
+    if report[0] == "ct-rate" and label[0] == "ct-rate" and report[1].rsplit("_", 1)[0] == label[1].rsplit("_", 1)[0]:
+        return SAME_PATIENT  # `<split>_<pid>_<scan>`: same `<split>_<pid>`, different scan (proposal 3.4)
+    return ALLOWED
 
 
 @dataclass(frozen=True)
@@ -178,7 +184,8 @@ def decide_modalities(sample: dict[str, Any], policy: ModalityPolicy, rng: rando
             verdict = report_provenance(report_ref, sample.get("label_source"))
             can_substitute = verdict == ALLOWED
             if events is not None and not can_substitute:
-                events["fail_closed" if verdict == UNVERIFIABLE else "blocked_label_source"] += 1
+                events["fail_closed" if verdict == UNVERIFIABLE else
+                       "blocked_same_patient" if verdict == SAME_PATIENT else "blocked_label_source"] += 1
         if can_substitute:
             decisions[modality] = REPORT
         elif modality in sample["required_modalities"]:

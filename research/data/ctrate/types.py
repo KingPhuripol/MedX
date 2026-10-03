@@ -24,6 +24,8 @@ T_READ = ANCHOR
 LOADER_VERSION = "ctrate-loader/1"
 SOURCE = "ct-rate"
 LABEL_VALUES = ("1", "0", "missing")
+LABEL_ORIGIN = "provider_text_classifier_prediction_from_report"
+LABEL_METRIC_NAME = "agreement with report-derived labels"  # never "accuracy"/"sensitivity vs ground truth"
 
 
 def version_string(revision: str = PINNED_REVISION) -> str:
@@ -75,6 +77,8 @@ class AbnormalityLabels(CTRateItem):
     label_source: str
     volume_names: tuple[str, ...]
     values: dict[str, Literal["1", "0", "missing"]]
+    # Provider text-classifier predictions from the report, not radiologist ground truth.
+    label_origin: Literal["provider_text_classifier_prediction_from_report"]
 
 
 def report_ref_for(scan_ref: str) -> str:

@@ -1,8 +1,12 @@
 """Data audit for a CT-RATE build: schema, gold separation, identifiers, manifest hashes, times, overlap,
-missing != negative. Read-only; writes nothing."""
+missing != negative. Read-only; writes nothing.
+
+The ``missing_not_negative`` step is independent of the pipeline when ``raw=`` is given: it re-reads the raw label
+CSVs and no_chest files with the stdlib ``csv`` module only (no loader import, no manifest counts)."""
 
 from __future__ import annotations
 
+import csv
 import hashlib
 import json
 import re
@@ -176,7 +180,74 @@ def _step_missing(ds: Path, manifest: dict) -> list[str]:
     return errs
 
 
-def run_audit(ds: Path | str) -> dict:
+# Deliberately re-declared (not imported from the loader): the audit must not share parser code or constants.
+_RAW_LABELS = {"train": "dataset/multi_abnormality_labels/train_predicted_labels.csv",
+               "valid": "dataset/multi_abnormality_labels/valid_predicted_labels.csv"}
+_RAW_NO_CHEST = {"train": "dataset/metadata/no_chest_train.txt", "valid": "dataset/metadata/no_chest_valid.txt"}
+_RAW_NAME = re.compile(r"(train|valid)_([1-9][0-9]*)_([a-z]+)_([1-9][0-9]*)\.nii\.gz", re.ASCII)
+_EXPECT = {"": "missing", "0": "0", "1": "1"}
+
+
+def _step_missing_raw(ds: Path, raw: Path) -> list[str]:
+    """Cell-by-cell comparison of gold against the raw label CSVs (stdlib csv only)."""
+    errs: list[str] = []
+    splits = _load(ds / "splits.json")
+    gold: dict[str, dict] = {}
+    for p in sorted((ds / "gold").glob("*/*.json")):
+        gold[p.stem] = _load(p) | {"_split": p.parent.name}
+    raw_scans: set[str] = set()
+    for off, rel in _RAW_LABELS.items():
+        path = raw / rel
+        if not path.is_file():
+            errs.append(f"raw file missing: {rel}")
+            continue
+        nc_path = raw / _RAW_NO_CHEST[off]
+        if not nc_path.is_file():
+            errs.append(f"raw file missing: {_RAW_NO_CHEST[off]}")
+            continue
+        excluded = {ln.strip() for ln in nc_path.read_text(encoding="utf-8").splitlines() if ln.strip()}
+        with path.open(encoding="utf-8", newline="") as fh:
+            reader = csv.reader(fh)
+            header = next(reader, [])
+            for n, row in enumerate(reader, start=1):
+                if len(row) != len(header):
+                    errs.append(f"{rel}:row={n}: ragged row")
+                    continue
+                name = row[0]
+                m = _RAW_NAME.fullmatch(name)
+                if not m or name in excluded:
+                    if not m:
+                        errs.append(f"{rel}:row={n}: unparseable volume name")
+                    continue
+                scan = f"{m.group(1)}_{m.group(2)}_{m.group(3)}"
+                raw_scans.add(scan)
+                split = splits.get(f"{m.group(1)}_{m.group(2)}")
+                if split is None or not (ds / "gold" / split).is_dir():
+                    continue  # patient not built (excluded) or its split is sealed
+                g = gold.get(scan)
+                if g is None:
+                    errs.append(f"{rel}:row={n}: raw label row of {scan} has no gold case in {split}")
+                    continue
+                if g["labels_status"] != "present" or g["labels"] is None:
+                    errs.append(f"{scan}: raw label row exists but gold labels_status={g['labels_status']}")
+                    continue
+                vals = g["labels"]["values"]
+                if sorted(vals) != sorted(header[1:]):
+                    errs.append(f"{scan}: gold label columns differ from the raw header")
+                    continue
+                for col, cell in zip(header[1:], row[1:]):
+                    want = _EXPECT.get(cell)
+                    if want is None:
+                        errs.append(f"{rel}:row={n}: raw cell {col!r} is {cell!r} (not blank/0/1)")
+                    elif vals[col] != want:
+                        errs.append(f"{scan}: column {col!r} raw {cell!r} must be {want!r} but gold has {vals[col]!r}")
+    for scan, g in sorted(gold.items()):
+        if g["labels_status"] == "present" and scan not in raw_scans:
+            errs.append(f"{scan}: gold has labels but no raw label row exists")
+    return errs
+
+
+def run_audit(ds: Path | str, raw: Path | str | None = None) -> dict:
     ds = Path(ds)
     manifest = _load(ds / "manifest.json")
     steps = {
@@ -186,8 +257,10 @@ def run_audit(ds: Path | str) -> dict:
         "manifest_hashes": _step_manifest(ds, manifest),
         "snapshot_items_after_T": _step_times(ds),
         "patient_overlap": _step_overlap(ds),
-        "missing_not_negative": _step_missing(ds, manifest),
+        "missing_not_negative": _step_missing(ds, manifest) + (_step_missing_raw(ds, Path(raw)) if raw else []),
     }
-    return {"status": "PASS" if not any(steps.values()) else "FAIL",
-            "steps": {k: ("PASS" if not v else f"FAIL ({len(v)})") for k, v in steps.items()},
-            "errors": [e for v in steps.values() for e in v]}
+    summary = {k: ("PASS" if not v else f"FAIL ({len(v)})") for k, v in steps.items()}
+    if raw is None and not steps["missing_not_negative"]:
+        summary["missing_not_negative"] = "NOT_RUN"  # the independent raw check needs --raw
+    status = "FAIL" if any(steps.values()) else ("PASS" if raw is not None else "NOT_RUN")
+    return {"status": status, "steps": summary, "errors": [e for v in steps.values() for e in v]}
