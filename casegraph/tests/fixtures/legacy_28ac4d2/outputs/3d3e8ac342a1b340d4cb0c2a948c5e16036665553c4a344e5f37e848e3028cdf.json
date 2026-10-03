@@ -1,0 +1,35 @@
+{
+  "cache_key": "3d3e8ac342a1b340d4cb0c2a948c5e16036665553c4a344e5f37e848e3028cdf",
+  "ended_at": "2026-10-03T18:22:37.721093+00:00",
+  "errored_inputs": [],
+  "gateway_calls": 0,
+  "missing_inputs": [],
+  "node_type": "reader_vitals_labs",
+  "output": {
+    "Findings": {
+      "facts": [],
+      "input_refs": [
+        "SYN-CXR-vs1"
+      ],
+      "intake": [],
+      "model_version": "placeholder-vitals-reader-0.1",
+      "produced_by": "reader_vitals_labs",
+      "provider": "rules",
+      "source_data_types": [
+        "Vitals"
+      ],
+      "statements": [
+        "SYN-CXR-vs1: consciousness=A",
+        "SYN-CXR-vs1: hr=80",
+        "SYN-CXR-vs1: rr=16",
+        "SYN-CXR-vs1: sbp=124",
+        "SYN-CXR-vs1: spo2=97",
+        "SYN-CXR-vs1: temp_c=37.2"
+      ]
+    }
+  },
+  "output_sha256": "8e1632621c3306f1fec111045d246538f0aa88f401f84147f6650514c57182e0",
+  "reason": null,
+  "started_at": "2026-10-03T18:22:37.720247+00:00",
+  "status": "ok"
+}

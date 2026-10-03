@@ -1,0 +1,83 @@
+{
+  "cache_key": "5f9cdedf3f1501d5bacd647bea3b04eac95f1d26079a561b3ae2ff2efd05c801",
+  "ended_at": "2026-10-03T18:22:37.749348+00:00",
+  "errored_inputs": [],
+  "gateway_calls": 0,
+  "missing_inputs": [],
+  "node_type": "red_flag",
+  "output": {
+    "Alerts": {
+      "alerts": [],
+      "conflicts": [],
+      "input_refs": [
+        "f1-demo",
+        "f1-vitals",
+        "reader_text:d93f107554f93db18c66d6455d16aefa94ee2c0ade4ba3b878c3c099bbb32414",
+        "reader_vitals_labs:7d27f9992cffab6a575f32e6f127d8490e03d1e8f51bf4f6c263c637e6b709bd"
+      ],
+      "label": "PLACEHOLDER — not clinical",
+      "missing_inputs": [],
+      "model_version": "placeholder-redflag-0.2",
+      "produced_by": "red_flag",
+      "provider": "rules",
+      "readings": [],
+      "rule_results": [
+        {
+          "evaluated_on": [
+            "f1-vitals"
+          ],
+          "fired": false,
+          "label": "PLACEHOLDER — not clinical",
+          "missing_inputs": [],
+          "rule_id": "RF-PH-001",
+          "status": "evaluated"
+        },
+        {
+          "evaluated_on": [
+            "f1-vitals"
+          ],
+          "fired": false,
+          "label": "PLACEHOLDER — not clinical",
+          "missing_inputs": [],
+          "rule_id": "RF-PH-002",
+          "status": "evaluated"
+        },
+        {
+          "evaluated_on": [
+            "f1-vitals"
+          ],
+          "fired": false,
+          "label": "PLACEHOLDER — not clinical",
+          "missing_inputs": [],
+          "rule_id": "RF-PH-003",
+          "status": "evaluated"
+        },
+        {
+          "evaluated_on": [
+            "f1-vitals"
+          ],
+          "fired": false,
+          "label": "PLACEHOLDER — not clinical",
+          "missing_inputs": [],
+          "rule_id": "RF-PH-004",
+          "status": "evaluated"
+        }
+      ],
+      "rule_set_version": "placeholder-redflag-0.2",
+      "rules_evaluated": [
+        "RF-PH-001",
+        "RF-PH-002",
+        "RF-PH-003",
+        "RF-PH-004"
+      ],
+      "rules_not_evaluated": [],
+      "scope": null,
+      "status": "evaluated",
+      "unmappable": []
+    }
+  },
+  "output_sha256": "ae408e47fb7321770f3cc636e957c3484d47e0bc11adcf83c12d61a031100bc6",
+  "reason": null,
+  "started_at": "2026-10-03T18:22:37.748659+00:00",
+  "status": "ok"
+}

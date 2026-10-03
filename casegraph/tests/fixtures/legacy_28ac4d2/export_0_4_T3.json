@@ -1,0 +1,1505 @@
+{
+  "T": "2026-01-01T10:10:00Z",
+  "edges": [
+    {
+      "data_type": "Findings",
+      "dst": "red_flag",
+      "src": "reader_text"
+    },
+    {
+      "data_type": "Findings",
+      "dst": "pharma_agent",
+      "src": "reader_text"
+    },
+    {
+      "data_type": "Findings",
+      "dst": "red_flag",
+      "src": "reader_vitals_labs"
+    },
+    {
+      "data_type": "Alerts",
+      "dst": "human_checkpoint",
+      "src": "red_flag"
+    },
+    {
+      "data_type": "MedicationIssues",
+      "dst": "human_checkpoint",
+      "src": "pharma_agent"
+    }
+  ],
+  "evidence": [
+    {
+      "available_at_time": "2025-12-30T09:00:00Z",
+      "data_class": "synthetic",
+      "data_type": "AllergyList",
+      "event_time": "2025-12-30T08:00:00Z",
+      "item_id": "SYN-CXR-allergy",
+      "sha256": "be69e39211a354ecf37622a8d754e471e8824ee5c1eb062cc62383ac13d1495f",
+      "source": "synthetic-fixture",
+      "version": "1"
+    },
+    {
+      "available_at_time": "2025-12-31T09:00:00Z",
+      "data_class": "synthetic",
+      "data_type": "MedicationList",
+      "event_time": "2025-12-31T08:00:00Z",
+      "item_id": "SYN-CXR-home",
+      "sha256": "df94e9842b9d4c1c04c0e98c521154d7ce2529a0751c9e043fcf10a6396806f6",
+      "source": "synthetic-fixture",
+      "version": "1"
+    },
+    {
+      "available_at_time": "2026-01-01T08:40:00Z",
+      "data_class": "synthetic",
+      "data_type": "Demographics",
+      "event_time": "2026-01-01T08:40:00Z",
+      "item_id": "SYN-CXR-demo",
+      "sha256": "bed7bb7291581a4f1b185110fce08da2341e1e1c5f22b7722acd4376942f0ab2",
+      "source": "synthetic-fixture",
+      "version": "1"
+    },
+    {
+      "available_at_time": "2026-01-01T08:40:00Z",
+      "data_class": "synthetic",
+      "data_type": "VoiceIntakeFacts",
+      "event_time": "2026-01-01T08:40:00Z",
+      "item_id": "SYN-CXR-intake",
+      "sha256": "552a5c96b9377deb1fde480e59ea5302d9ade95bf8ad214c2e42fe3ce90baaf8",
+      "source": "synthetic-fixture",
+      "version": "1"
+    },
+    {
+      "available_at_time": "2026-01-01T08:51:00Z",
+      "data_class": "synthetic",
+      "data_type": "Vitals",
+      "event_time": "2026-01-01T08:50:00Z",
+      "item_id": "SYN-CXR-vs1",
+      "sha256": "fb1a65348d97599ab1b65c5d3b944a14db29fcbb0f846d500f42cb94cd4c5244",
+      "source": "synthetic-fixture",
+      "version": "1"
+    },
+    {
+      "available_at_time": "2026-01-01T09:40:00Z",
+      "data_class": "synthetic",
+      "data_type": "CXRImage",
+      "event_time": "2026-01-01T09:35:00Z",
+      "item_id": "SYN-CXR-cxr",
+      "sha256": "4497c666eb8763e3cf7322a9c09b5e2f6eb57ab8c7ec751d25e0db8198d9d582",
+      "source": "synthetic-fixture",
+      "version": "1"
+    },
+    {
+      "available_at_time": "2026-01-01T10:10:00Z",
+      "data_class": "synthetic",
+      "data_type": "MedicationList",
+      "event_time": "2026-01-01T10:10:00Z",
+      "item_id": "SYN-CXR-order",
+      "sha256": "5d37c55b500bfbf76c121557b0c513df51d34f764231602720fc9ccfe4fc47d5",
+      "source": "synthetic-fixture",
+      "version": "1"
+    }
+  ],
+  "graph_id": "SYN-CXR/v3",
+  "nodes": [
+    {
+      "cache_key": "c547c4f566b872389e5176d24b9286cd1b1c82cc4745ed298fbed36c9f925b08",
+      "cached": true,
+      "confirmation": null,
+      "data_class": "synthetic",
+      "ended_at": "2026-10-03T18:22:37.736619+00:00",
+      "errored_inputs": [],
+      "evidence_refs": [
+        "SYN-CXR-intake"
+      ],
+      "gateway_calls": 0,
+      "id": "reader_text",
+      "missing_inputs": [],
+      "model_version": "voice-extract-1.0",
+      "output": {
+        "Findings": {
+          "facts": [],
+          "input_refs": [
+            "SYN-CXR-intake"
+          ],
+          "intake": [
+            {
+              "available_at_time": "2026-01-01T08:40:00Z",
+              "evidence_turns": [],
+              "kind": "chief_complaint",
+              "source_item": "SYN-CXR-intake",
+              "span_text": null,
+              "state": "KNOWN",
+              "value": "synthetic: cough and fever",
+              "value_text": "synthetic: cough and fever"
+            },
+            {
+              "available_at_time": "2026-01-01T08:40:00Z",
+              "evidence_turns": [],
+              "kind": "onset_duration",
+              "source_item": "SYN-CXR-intake",
+              "span_text": null,
+              "state": "KNOWN",
+              "value": "3 days",
+              "value_text": "3 days"
+            }
+          ],
+          "model_version": "voice-extract-1.0",
+          "produced_by": "reader_text",
+          "provider": "voice_extract",
+          "source_data_types": [
+            "VoiceIntakeFacts"
+          ],
+          "statements": [
+            "SYN-CXR-intake: VoiceIntakeFacts passed through (0 calls)"
+          ]
+        }
+      },
+      "output_sha256": "feedc1422f42f96fe5b622c5c8a2ac0e95af323ae5f8bca6505320de7ca6578d",
+      "params": {},
+      "provider": "voice_extract",
+      "reason": null,
+      "reproducible": true,
+      "started_at": "2026-10-03T18:22:37.736494+00:00",
+      "status": "ok",
+      "type": "reader_text"
+    },
+    {
+      "cache_key": "3d3e8ac342a1b340d4cb0c2a948c5e16036665553c4a344e5f37e848e3028cdf",
+      "cached": true,
+      "confirmation": null,
+      "data_class": "synthetic",
+      "ended_at": "2026-10-03T18:22:37.736706+00:00",
+      "errored_inputs": [],
+      "evidence_refs": [
+        "SYN-CXR-vs1"
+      ],
+      "gateway_calls": 0,
+      "id": "reader_vitals_labs",
+      "missing_inputs": [],
+      "model_version": "placeholder-vitals-reader-0.1",
+      "output": {
+        "Findings": {
+          "facts": [],
+          "input_refs": [
+            "SYN-CXR-vs1"
+          ],
+          "intake": [],
+          "model_version": "placeholder-vitals-reader-0.1",
+          "produced_by": "reader_vitals_labs",
+          "provider": "rules",
+          "source_data_types": [
+            "Vitals"
+          ],
+          "statements": [
+            "SYN-CXR-vs1: consciousness=A",
+            "SYN-CXR-vs1: hr=80",
+            "SYN-CXR-vs1: rr=16",
+            "SYN-CXR-vs1: sbp=124",
+            "SYN-CXR-vs1: spo2=97",
+            "SYN-CXR-vs1: temp_c=37.2"
+          ]
+        }
+      },
+      "output_sha256": "8e1632621c3306f1fec111045d246538f0aa88f401f84147f6650514c57182e0",
+      "params": {},
+      "provider": "rules",
+      "reason": null,
+      "reproducible": true,
+      "started_at": "2026-10-03T18:22:37.736632+00:00",
+      "status": "ok",
+      "type": "reader_vitals_labs"
+    },
+    {
+      "cache_key": "ee5a47da35a1ead245f5a24ee0b32d5ec28d72867185ee3bea3b7b5e9bce37e3",
+      "cached": true,
+      "confirmation": null,
+      "data_class": "synthetic",
+      "ended_at": "2026-10-03T18:22:37.736783+00:00",
+      "errored_inputs": [],
+      "evidence_refs": [
+        "SYN-CXR-cxr"
+      ],
+      "gateway_calls": 0,
+      "id": "reader_cxr",
+      "missing_inputs": [],
+      "model_version": "enc2d-mock-0.1",
+      "output": {
+        "ImageTokens": {
+          "encoder_provider": "encoder_2d",
+          "input_refs": [
+            "SYN-CXR-cxr"
+          ],
+          "modality": "CXRImage",
+          "model_version": "enc2d-mock-0.1",
+          "produced_by": "reader_cxr",
+          "provider": "encoder_2d",
+          "token_ref": "gateway-request:f5e30f5781cd97845379e1bff64f3eb5eceebe7109c904fda923680c137b71ab",
+          "token_sha256": "51516b8899354ef1d7fb1044af7983214425dbe7659c11b6704981a7c5fe8acf"
+        }
+      },
+      "output_sha256": "2a4c2a1ee70b43b9011d35ff1c05798d3305880158085004e8e9b0f39a02e83f",
+      "params": {},
+      "provider": "encoder_2d",
+      "reason": null,
+      "reproducible": true,
+      "started_at": "2026-10-03T18:22:37.736715+00:00",
+      "status": "ok",
+      "type": "reader_cxr"
+    },
+    {
+      "cache_key": "83cb45107c2a1a4bb657669c3062fbfb1a165ef02376feda10f2039e2c67815a",
+      "cached": false,
+      "confirmation": null,
+      "data_class": "synthetic",
+      "ended_at": "2026-10-03T18:22:37.738555+00:00",
+      "errored_inputs": [],
+      "evidence_refs": [
+        "SYN-CXR-demo",
+        "SYN-CXR-vs1"
+      ],
+      "gateway_calls": 0,
+      "id": "red_flag",
+      "missing_inputs": [
+        "symptom.abdominal_pain",
+        "symptom.acute_chest_pain",
+        "symptom.airway_breathing_compromise",
+        "symptom.allergen_exposure",
+        "symptom.fever",
+        "symptom.hematemesis",
+        "symptom.melena",
+        "symptom.neck_stiffness",
+        "symptom.non_blanching_rash",
+        "symptom.self_harm",
+        "symptom.sudden_facial_droop",
+        "symptom.sudden_limb_weakness",
+        "symptom.sudden_speech_disturbance",
+        "symptom.sudden_vision_disturbance",
+        "symptom.suicidal_ideation",
+        "symptom.thunderclap_headache",
+        "symptom.vaginal_bleeding",
+        "vital.avpu:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+        "vital.capillary_glucose_mg_dl",
+        "vital.hr:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+        "vital.new_confusion",
+        "vital.rr:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+        "vital.sbp:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+        "vital.spo2:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+        "vital.temp_c:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+      ],
+      "model_version": "rf-1.1.0",
+      "output": {
+        "Alerts": {
+          "alerts": [],
+          "conflicts": [],
+          "input_refs": [
+            "SYN-CXR-demo",
+            "SYN-CXR-vs1",
+            "reader_text:feedc1422f42f96fe5b622c5c8a2ac0e95af323ae5f8bca6505320de7ca6578d",
+            "reader_vitals_labs:8e1632621c3306f1fec111045d246538f0aa88f401f84147f6650514c57182e0"
+          ],
+          "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+          "missing_inputs": [
+            "symptom.abdominal_pain",
+            "symptom.acute_chest_pain",
+            "symptom.airway_breathing_compromise",
+            "symptom.allergen_exposure",
+            "symptom.fever",
+            "symptom.hematemesis",
+            "symptom.melena",
+            "symptom.neck_stiffness",
+            "symptom.non_blanching_rash",
+            "symptom.self_harm",
+            "symptom.sudden_facial_droop",
+            "symptom.sudden_limb_weakness",
+            "symptom.sudden_speech_disturbance",
+            "symptom.sudden_vision_disturbance",
+            "symptom.suicidal_ideation",
+            "symptom.thunderclap_headache",
+            "symptom.vaginal_bleeding",
+            "vital.avpu:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+            "vital.capillary_glucose_mg_dl",
+            "vital.hr:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+            "vital.new_confusion",
+            "vital.rr:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+            "vital.sbp:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+            "vital.spo2:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+            "vital.temp_c:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+          ],
+          "model_version": "rf-1.1.0",
+          "produced_by": "red_flag",
+          "provider": "rules",
+          "readings": [
+            {
+              "age_min": 80.0,
+              "fresh": false,
+              "item_id": "SYN-CXR-vs1",
+              "read_at": "2026-01-01T08:50:00Z",
+              "value": "A",
+              "vital": "avpu",
+              "window_min": 60.0
+            },
+            {
+              "age_min": 80.0,
+              "fresh": false,
+              "item_id": "SYN-CXR-vs1",
+              "read_at": "2026-01-01T08:50:00Z",
+              "value": 80.0,
+              "vital": "hr",
+              "window_min": 60.0
+            },
+            {
+              "age_min": 80.0,
+              "fresh": false,
+              "item_id": "SYN-CXR-vs1",
+              "read_at": "2026-01-01T08:50:00Z",
+              "value": 16.0,
+              "vital": "rr",
+              "window_min": 60.0
+            },
+            {
+              "age_min": 80.0,
+              "fresh": false,
+              "item_id": "SYN-CXR-vs1",
+              "read_at": "2026-01-01T08:50:00Z",
+              "value": 124.0,
+              "vital": "sbp",
+              "window_min": 60.0
+            },
+            {
+              "age_min": 80.0,
+              "fresh": false,
+              "item_id": "SYN-CXR-vs1",
+              "read_at": "2026-01-01T08:50:00Z",
+              "value": 97.0,
+              "vital": "spo2",
+              "window_min": 60.0
+            },
+            {
+              "age_min": 80.0,
+              "fresh": false,
+              "item_id": "SYN-CXR-vs1",
+              "read_at": "2026-01-01T08:50:00Z",
+              "value": 37.2,
+              "vital": "temp_c",
+              "window_min": 60.0
+            }
+          ],
+          "rule_results": [
+            {
+              "evaluated_on": [],
+              "fired": null,
+              "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+              "missing_inputs": [
+                "vital.spo2:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+              ],
+              "rule_id": "RF-SPO2",
+              "status": "not_evaluated"
+            },
+            {
+              "evaluated_on": [],
+              "fired": null,
+              "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+              "missing_inputs": [
+                "vital.rr:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+              ],
+              "rule_id": "RF-RR",
+              "status": "not_evaluated"
+            },
+            {
+              "evaluated_on": [],
+              "fired": null,
+              "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+              "missing_inputs": [
+                "vital.sbp:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+              ],
+              "rule_id": "RF-SBP",
+              "status": "not_evaluated"
+            },
+            {
+              "evaluated_on": [],
+              "fired": null,
+              "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+              "missing_inputs": [
+                "vital.hr:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+              ],
+              "rule_id": "RF-HR",
+              "status": "not_evaluated"
+            },
+            {
+              "evaluated_on": [],
+              "fired": null,
+              "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+              "missing_inputs": [
+                "vital.avpu:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+                "vital.new_confusion"
+              ],
+              "rule_id": "RF-CONSC",
+              "status": "not_evaluated"
+            },
+            {
+              "evaluated_on": [],
+              "fired": null,
+              "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+              "missing_inputs": [
+                "vital.temp_c:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+              ],
+              "rule_id": "RF-TEMP",
+              "status": "not_evaluated"
+            },
+            {
+              "evaluated_on": [],
+              "fired": null,
+              "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+              "missing_inputs": [
+                "vital.avpu:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+                "vital.new_confusion",
+                "vital.rr:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+                "vital.sbp:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+              ],
+              "rule_id": "RF-QSOFA",
+              "status": "not_evaluated"
+            },
+            {
+              "evaluated_on": [],
+              "fired": null,
+              "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+              "missing_inputs": [
+                "symptom.acute_chest_pain"
+              ],
+              "rule_id": "RF-CHEST",
+              "status": "not_evaluated"
+            },
+            {
+              "evaluated_on": [],
+              "fired": null,
+              "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+              "missing_inputs": [
+                "symptom.sudden_facial_droop",
+                "symptom.sudden_limb_weakness",
+                "symptom.sudden_speech_disturbance",
+                "symptom.sudden_vision_disturbance"
+              ],
+              "rule_id": "RF-STROKE",
+              "status": "not_evaluated"
+            },
+            {
+              "evaluated_on": [],
+              "fired": null,
+              "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+              "missing_inputs": [
+                "symptom.thunderclap_headache"
+              ],
+              "rule_id": "RF-THUNDER",
+              "status": "not_evaluated"
+            },
+            {
+              "evaluated_on": [],
+              "fired": null,
+              "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+              "missing_inputs": [
+                "symptom.airway_breathing_compromise",
+                "symptom.allergen_exposure",
+                "vital.sbp:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+              ],
+              "rule_id": "RF-ANAPH",
+              "status": "not_evaluated"
+            },
+            {
+              "evaluated_on": [],
+              "fired": null,
+              "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+              "missing_inputs": [
+                "symptom.self_harm",
+                "symptom.suicidal_ideation"
+              ],
+              "rule_id": "RF-SUICIDE",
+              "status": "not_evaluated"
+            },
+            {
+              "evaluated_on": [],
+              "fired": null,
+              "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+              "missing_inputs": [
+                "symptom.hematemesis",
+                "symptom.melena"
+              ],
+              "rule_id": "RF-GIBLEED",
+              "status": "not_evaluated"
+            },
+            {
+              "evaluated_on": [],
+              "fired": null,
+              "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+              "missing_inputs": [
+                "symptom.abdominal_pain",
+                "symptom.vaginal_bleeding"
+              ],
+              "rule_id": "RF-ECTOPIC",
+              "status": "not_evaluated"
+            },
+            {
+              "evaluated_on": [],
+              "fired": null,
+              "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+              "missing_inputs": [
+                "symptom.fever",
+                "symptom.neck_stiffness",
+                "symptom.non_blanching_rash",
+                "vital.temp_c:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+              ],
+              "rule_id": "RF-MENING",
+              "status": "not_evaluated"
+            },
+            {
+              "evaluated_on": [],
+              "fired": null,
+              "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+              "missing_inputs": [
+                "vital.capillary_glucose_mg_dl"
+              ],
+              "rule_id": "RF-HYPOGLY",
+              "status": "not_evaluated"
+            }
+          ],
+          "rule_set_version": "rf-1.1.0",
+          "rules_evaluated": [],
+          "rules_not_evaluated": [
+            "RF-ANAPH",
+            "RF-CHEST",
+            "RF-CONSC",
+            "RF-ECTOPIC",
+            "RF-GIBLEED",
+            "RF-HR",
+            "RF-HYPOGLY",
+            "RF-MENING",
+            "RF-QSOFA",
+            "RF-RR",
+            "RF-SBP",
+            "RF-SPO2",
+            "RF-STROKE",
+            "RF-SUICIDE",
+            "RF-TEMP",
+            "RF-THUNDER"
+          ],
+          "scope": "rf-1.1.0: 16 declared rules over vitals within their freshness windows and symptoms mentioned in the intake transcript; an unmentioned symptom is unknown, not absent",
+          "status": "not_evaluated",
+          "unmappable": []
+        }
+      },
+      "output_sha256": "f8ca58102648887ca70af0876b98d3a817afc93920123b524e6c0c1c07b798c3",
+      "params": {},
+      "provider": "rules",
+      "reason": null,
+      "reproducible": true,
+      "started_at": "2026-10-03T18:22:37.737090+00:00",
+      "status": "ok",
+      "type": "red_flag"
+    },
+    {
+      "cache_key": "910b1ae0aed50d7aaac0f73227e44a1f6d4599f604c68d85b2df304cdfdbe3ec",
+      "cached": false,
+      "confirmation": null,
+      "data_class": "synthetic",
+      "ended_at": "2026-10-03T18:22:37.739644+00:00",
+      "errored_inputs": [],
+      "evidence_refs": [
+        "SYN-CXR-allergy",
+        "SYN-CXR-home",
+        "SYN-CXR-order"
+      ],
+      "gateway_calls": 3,
+      "id": "pharma_agent",
+      "missing_inputs": [],
+      "model_version": "s5-pipeline-2.6.0",
+      "output": {
+        "MedicationIssues": {
+          "check_results": [
+            {
+              "check": "s5_rules",
+              "evaluated_on": [
+                "SYN-CXR-home",
+                "SYN-CXR-order"
+              ],
+              "fired": true,
+              "label": "S5 Pharma Agent (rules primary; model phrasing supplementary; offline mock provider by default)",
+              "medication": "*",
+              "missing_inputs": [],
+              "status": "evaluated"
+            }
+          ],
+          "checks_not_evaluated": [],
+          "conversation_allergy_facts": [],
+          "conversation_fact_use": [],
+          "conversation_medication_facts": [],
+          "input_refs": [
+            "SYN-CXR-allergy",
+            "SYN-CXR-home",
+            "SYN-CXR-order",
+            "reader_text:feedc1422f42f96fe5b622c5c8a2ac0e95af323ae5f8bca6505320de7ca6578d"
+          ],
+          "issues": [
+            {
+              "conflicting_sources": [
+                {
+                  "available_at_time": "2025-12-30T09:00:00+00:00",
+                  "evidence_ref": "SYN-CXR-allergy#0",
+                  "presence": "present",
+                  "raw_span": "penicillin (rash)",
+                  "source_type": "allergy_record"
+                },
+                {
+                  "available_at_time": "2026-01-01T10:10:00+00:00",
+                  "dose_basis": "stated_amount",
+                  "dose_per_administration": 500.0,
+                  "dose_status": "resolved",
+                  "dose_unit": "mg",
+                  "dose_unverifiable_reason": null,
+                  "dose_value": 500.0,
+                  "drug_name_raw": "Amoxicillin",
+                  "evidence_ref": "SYN-CXR-order",
+                  "frequency_code": "q8h",
+                  "frequency_status": "recognised",
+                  "presence": "present",
+                  "quantity": null,
+                  "raw_span": "Amoxicillin 500 mg q8h",
+                  "route": null,
+                  "source_type": "new_order"
+                }
+              ],
+              "field": null,
+              "ingredients": [
+                "amoxicillin"
+              ],
+              "issue_id": "7f66df6506167515-i01",
+              "kind": "allergy_class",
+              "medication": "amoxicillin",
+              "message": "Mock phrasing. Allergy check (allergy to the drug class): the allergy record lists \"penicillin (rash)\", and amoxicillin appears in the new order. For pharmacist review.",
+              "phrasing_source": "model",
+              "rule_id": "allergy_class@1.1.0",
+              "severity": "high",
+              "severity_rank": 1,
+              "unverifiable": false
+            },
+            {
+              "conflicting_sources": [
+                {
+                  "available_at_time": "2025-12-31T09:00:00+00:00",
+                  "dose_basis": "stated_amount",
+                  "dose_per_administration": 500.0,
+                  "dose_status": "resolved",
+                  "dose_unit": "mg",
+                  "dose_unverifiable_reason": null,
+                  "dose_value": 500.0,
+                  "drug_name_raw": "Paracetamol",
+                  "evidence_ref": "SYN-CXR-home",
+                  "frequency_code": "q6h",
+                  "frequency_status": "recognised",
+                  "presence": "present",
+                  "quantity": null,
+                  "raw_span": "Paracetamol 500 mg q6h",
+                  "route": null,
+                  "source_type": "home_list"
+                },
+                {
+                  "available_at_time": "2026-01-01T10:10:00+00:00",
+                  "evidence_ref": "SYN-CXR-order",
+                  "presence": "absent",
+                  "raw_span": "",
+                  "source_type": "new_order"
+                }
+              ],
+              "field": null,
+              "ingredients": [
+                "acetaminophen"
+              ],
+              "issue_id": "7f66df6506167515-i02",
+              "kind": "omission",
+              "medication": "acetaminophen",
+              "message": "Mock phrasing. acetaminophen is listed in the home list but is absent from the new order, and no intent to end it is recorded. For pharmacist review.",
+              "phrasing_source": "model",
+              "rule_id": "omission@1.0.0",
+              "severity": "review",
+              "severity_rank": 4,
+              "unverifiable": false
+            }
+          ],
+          "label": "S5 Pharma Agent (rules primary; model phrasing supplementary; offline mock provider by default)",
+          "missing_inputs": [],
+          "model_version": "s5-pipeline-2.6.0",
+          "produced_by": "pharma_agent",
+          "provider": "rules",
+          "rule_set_version": "s5-pipeline-2.6.0",
+          "status": "evaluated",
+          "summary": null
+        }
+      },
+      "output_sha256": "dacd67a0375e4466ad3862b108236a23b16934a8a4c3b73d65553b6b528ced58",
+      "params": {},
+      "provider": "rules",
+      "reason": null,
+      "reproducible": true,
+      "started_at": "2026-10-03T18:22:37.736847+00:00",
+      "status": "ok",
+      "type": "pharma_agent"
+    },
+    {
+      "cache_key": "367447001a1a42b9e35020ae1b843520bc078c103bac56fa17e74f5749abf3e2",
+      "cached": false,
+      "confirmation": null,
+      "data_class": "synthetic",
+      "ended_at": "2026-10-03T18:22:37.740133+00:00",
+      "errored_inputs": [],
+      "evidence_refs": [],
+      "gateway_calls": 0,
+      "id": "human_checkpoint",
+      "missing_inputs": [],
+      "model_version": "human",
+      "output": {
+        "pending_review": {
+          "abstained": {},
+          "abstained_outputs": {},
+          "alerts": {
+            "alerts": [],
+            "conflicts": [],
+            "input_refs": [
+              "SYN-CXR-demo",
+              "SYN-CXR-vs1",
+              "reader_text:feedc1422f42f96fe5b622c5c8a2ac0e95af323ae5f8bca6505320de7ca6578d",
+              "reader_vitals_labs:8e1632621c3306f1fec111045d246538f0aa88f401f84147f6650514c57182e0"
+            ],
+            "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+            "missing_inputs": [
+              "symptom.abdominal_pain",
+              "symptom.acute_chest_pain",
+              "symptom.airway_breathing_compromise",
+              "symptom.allergen_exposure",
+              "symptom.fever",
+              "symptom.hematemesis",
+              "symptom.melena",
+              "symptom.neck_stiffness",
+              "symptom.non_blanching_rash",
+              "symptom.self_harm",
+              "symptom.sudden_facial_droop",
+              "symptom.sudden_limb_weakness",
+              "symptom.sudden_speech_disturbance",
+              "symptom.sudden_vision_disturbance",
+              "symptom.suicidal_ideation",
+              "symptom.thunderclap_headache",
+              "symptom.vaginal_bleeding",
+              "vital.avpu:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+              "vital.capillary_glucose_mg_dl",
+              "vital.hr:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+              "vital.new_confusion",
+              "vital.rr:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+              "vital.sbp:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+              "vital.spo2:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+              "vital.temp_c:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+            ],
+            "model_version": "rf-1.1.0",
+            "produced_by": "red_flag",
+            "provider": "rules",
+            "readings": [
+              {
+                "age_min": 80.0,
+                "fresh": false,
+                "item_id": "SYN-CXR-vs1",
+                "read_at": "2026-01-01T08:50:00Z",
+                "value": "A",
+                "vital": "avpu",
+                "window_min": 60.0
+              },
+              {
+                "age_min": 80.0,
+                "fresh": false,
+                "item_id": "SYN-CXR-vs1",
+                "read_at": "2026-01-01T08:50:00Z",
+                "value": 80.0,
+                "vital": "hr",
+                "window_min": 60.0
+              },
+              {
+                "age_min": 80.0,
+                "fresh": false,
+                "item_id": "SYN-CXR-vs1",
+                "read_at": "2026-01-01T08:50:00Z",
+                "value": 16.0,
+                "vital": "rr",
+                "window_min": 60.0
+              },
+              {
+                "age_min": 80.0,
+                "fresh": false,
+                "item_id": "SYN-CXR-vs1",
+                "read_at": "2026-01-01T08:50:00Z",
+                "value": 124.0,
+                "vital": "sbp",
+                "window_min": 60.0
+              },
+              {
+                "age_min": 80.0,
+                "fresh": false,
+                "item_id": "SYN-CXR-vs1",
+                "read_at": "2026-01-01T08:50:00Z",
+                "value": 97.0,
+                "vital": "spo2",
+                "window_min": 60.0
+              },
+              {
+                "age_min": 80.0,
+                "fresh": false,
+                "item_id": "SYN-CXR-vs1",
+                "read_at": "2026-01-01T08:50:00Z",
+                "value": 37.2,
+                "vital": "temp_c",
+                "window_min": 60.0
+              }
+            ],
+            "rule_results": [
+              {
+                "evaluated_on": [],
+                "fired": null,
+                "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+                "missing_inputs": [
+                  "vital.spo2:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+                ],
+                "rule_id": "RF-SPO2",
+                "status": "not_evaluated"
+              },
+              {
+                "evaluated_on": [],
+                "fired": null,
+                "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+                "missing_inputs": [
+                  "vital.rr:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+                ],
+                "rule_id": "RF-RR",
+                "status": "not_evaluated"
+              },
+              {
+                "evaluated_on": [],
+                "fired": null,
+                "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+                "missing_inputs": [
+                  "vital.sbp:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+                ],
+                "rule_id": "RF-SBP",
+                "status": "not_evaluated"
+              },
+              {
+                "evaluated_on": [],
+                "fired": null,
+                "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+                "missing_inputs": [
+                  "vital.hr:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+                ],
+                "rule_id": "RF-HR",
+                "status": "not_evaluated"
+              },
+              {
+                "evaluated_on": [],
+                "fired": null,
+                "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+                "missing_inputs": [
+                  "vital.avpu:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+                  "vital.new_confusion"
+                ],
+                "rule_id": "RF-CONSC",
+                "status": "not_evaluated"
+              },
+              {
+                "evaluated_on": [],
+                "fired": null,
+                "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+                "missing_inputs": [
+                  "vital.temp_c:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+                ],
+                "rule_id": "RF-TEMP",
+                "status": "not_evaluated"
+              },
+              {
+                "evaluated_on": [],
+                "fired": null,
+                "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+                "missing_inputs": [
+                  "vital.avpu:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+                  "vital.new_confusion",
+                  "vital.rr:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+                  "vital.sbp:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+                ],
+                "rule_id": "RF-QSOFA",
+                "status": "not_evaluated"
+              },
+              {
+                "evaluated_on": [],
+                "fired": null,
+                "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+                "missing_inputs": [
+                  "symptom.acute_chest_pain"
+                ],
+                "rule_id": "RF-CHEST",
+                "status": "not_evaluated"
+              },
+              {
+                "evaluated_on": [],
+                "fired": null,
+                "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+                "missing_inputs": [
+                  "symptom.sudden_facial_droop",
+                  "symptom.sudden_limb_weakness",
+                  "symptom.sudden_speech_disturbance",
+                  "symptom.sudden_vision_disturbance"
+                ],
+                "rule_id": "RF-STROKE",
+                "status": "not_evaluated"
+              },
+              {
+                "evaluated_on": [],
+                "fired": null,
+                "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+                "missing_inputs": [
+                  "symptom.thunderclap_headache"
+                ],
+                "rule_id": "RF-THUNDER",
+                "status": "not_evaluated"
+              },
+              {
+                "evaluated_on": [],
+                "fired": null,
+                "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+                "missing_inputs": [
+                  "symptom.airway_breathing_compromise",
+                  "symptom.allergen_exposure",
+                  "vital.sbp:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+                ],
+                "rule_id": "RF-ANAPH",
+                "status": "not_evaluated"
+              },
+              {
+                "evaluated_on": [],
+                "fired": null,
+                "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+                "missing_inputs": [
+                  "symptom.self_harm",
+                  "symptom.suicidal_ideation"
+                ],
+                "rule_id": "RF-SUICIDE",
+                "status": "not_evaluated"
+              },
+              {
+                "evaluated_on": [],
+                "fired": null,
+                "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+                "missing_inputs": [
+                  "symptom.hematemesis",
+                  "symptom.melena"
+                ],
+                "rule_id": "RF-GIBLEED",
+                "status": "not_evaluated"
+              },
+              {
+                "evaluated_on": [],
+                "fired": null,
+                "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+                "missing_inputs": [
+                  "symptom.abdominal_pain",
+                  "symptom.vaginal_bleeding"
+                ],
+                "rule_id": "RF-ECTOPIC",
+                "status": "not_evaluated"
+              },
+              {
+                "evaluated_on": [],
+                "fired": null,
+                "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+                "missing_inputs": [
+                  "symptom.fever",
+                  "symptom.neck_stiffness",
+                  "symptom.non_blanching_rash",
+                  "vital.temp_c:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+                ],
+                "rule_id": "RF-MENING",
+                "status": "not_evaluated"
+              },
+              {
+                "evaluated_on": [],
+                "fired": null,
+                "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+                "missing_inputs": [
+                  "vital.capillary_glucose_mg_dl"
+                ],
+                "rule_id": "RF-HYPOGLY",
+                "status": "not_evaluated"
+              }
+            ],
+            "rule_set_version": "rf-1.1.0",
+            "rules_evaluated": [],
+            "rules_not_evaluated": [
+              "RF-ANAPH",
+              "RF-CHEST",
+              "RF-CONSC",
+              "RF-ECTOPIC",
+              "RF-GIBLEED",
+              "RF-HR",
+              "RF-HYPOGLY",
+              "RF-MENING",
+              "RF-QSOFA",
+              "RF-RR",
+              "RF-SBP",
+              "RF-SPO2",
+              "RF-STROKE",
+              "RF-SUICIDE",
+              "RF-TEMP",
+              "RF-THUNDER"
+            ],
+            "scope": "rf-1.1.0: 16 declared rules over vitals within their freshness windows and symptoms mentioned in the intake transcript; an unmentioned symptom is unknown, not absent",
+            "status": "not_evaluated",
+            "unmappable": []
+          },
+          "conflicts": [],
+          "errored": [],
+          "escalation": true,
+          "escalation_reasons": [
+            "red_flag_not_evaluated"
+          ],
+          "for_review": {
+            "pharma_agent": {
+              "MedicationIssues": {
+                "check_results": [
+                  {
+                    "check": "s5_rules",
+                    "evaluated_on": [
+                      "SYN-CXR-home",
+                      "SYN-CXR-order"
+                    ],
+                    "fired": true,
+                    "label": "S5 Pharma Agent (rules primary; model phrasing supplementary; offline mock provider by default)",
+                    "medication": "*",
+                    "missing_inputs": [],
+                    "status": "evaluated"
+                  }
+                ],
+                "checks_not_evaluated": [],
+                "conversation_allergy_facts": [],
+                "conversation_fact_use": [],
+                "conversation_medication_facts": [],
+                "input_refs": [
+                  "SYN-CXR-allergy",
+                  "SYN-CXR-home",
+                  "SYN-CXR-order",
+                  "reader_text:feedc1422f42f96fe5b622c5c8a2ac0e95af323ae5f8bca6505320de7ca6578d"
+                ],
+                "issues": [
+                  {
+                    "conflicting_sources": [
+                      {
+                        "available_at_time": "2025-12-30T09:00:00+00:00",
+                        "evidence_ref": "SYN-CXR-allergy#0",
+                        "presence": "present",
+                        "raw_span": "penicillin (rash)",
+                        "source_type": "allergy_record"
+                      },
+                      {
+                        "available_at_time": "2026-01-01T10:10:00+00:00",
+                        "dose_basis": "stated_amount",
+                        "dose_per_administration": 500.0,
+                        "dose_status": "resolved",
+                        "dose_unit": "mg",
+                        "dose_unverifiable_reason": null,
+                        "dose_value": 500.0,
+                        "drug_name_raw": "Amoxicillin",
+                        "evidence_ref": "SYN-CXR-order",
+                        "frequency_code": "q8h",
+                        "frequency_status": "recognised",
+                        "presence": "present",
+                        "quantity": null,
+                        "raw_span": "Amoxicillin 500 mg q8h",
+                        "route": null,
+                        "source_type": "new_order"
+                      }
+                    ],
+                    "field": null,
+                    "ingredients": [
+                      "amoxicillin"
+                    ],
+                    "issue_id": "7f66df6506167515-i01",
+                    "kind": "allergy_class",
+                    "medication": "amoxicillin",
+                    "message": "Mock phrasing. Allergy check (allergy to the drug class): the allergy record lists \"penicillin (rash)\", and amoxicillin appears in the new order. For pharmacist review.",
+                    "phrasing_source": "model",
+                    "rule_id": "allergy_class@1.1.0",
+                    "severity": "high",
+                    "severity_rank": 1,
+                    "unverifiable": false
+                  },
+                  {
+                    "conflicting_sources": [
+                      {
+                        "available_at_time": "2025-12-31T09:00:00+00:00",
+                        "dose_basis": "stated_amount",
+                        "dose_per_administration": 500.0,
+                        "dose_status": "resolved",
+                        "dose_unit": "mg",
+                        "dose_unverifiable_reason": null,
+                        "dose_value": 500.0,
+                        "drug_name_raw": "Paracetamol",
+                        "evidence_ref": "SYN-CXR-home",
+                        "frequency_code": "q6h",
+                        "frequency_status": "recognised",
+                        "presence": "present",
+                        "quantity": null,
+                        "raw_span": "Paracetamol 500 mg q6h",
+                        "route": null,
+                        "source_type": "home_list"
+                      },
+                      {
+                        "available_at_time": "2026-01-01T10:10:00+00:00",
+                        "evidence_ref": "SYN-CXR-order",
+                        "presence": "absent",
+                        "raw_span": "",
+                        "source_type": "new_order"
+                      }
+                    ],
+                    "field": null,
+                    "ingredients": [
+                      "acetaminophen"
+                    ],
+                    "issue_id": "7f66df6506167515-i02",
+                    "kind": "omission",
+                    "medication": "acetaminophen",
+                    "message": "Mock phrasing. acetaminophen is listed in the home list but is absent from the new order, and no intent to end it is recorded. For pharmacist review.",
+                    "phrasing_source": "model",
+                    "rule_id": "omission@1.0.0",
+                    "severity": "review",
+                    "severity_rank": 4,
+                    "unverifiable": false
+                  }
+                ],
+                "label": "S5 Pharma Agent (rules primary; model phrasing supplementary; offline mock provider by default)",
+                "missing_inputs": [],
+                "model_version": "s5-pipeline-2.6.0",
+                "produced_by": "pharma_agent",
+                "provider": "rules",
+                "rule_set_version": "s5-pipeline-2.6.0",
+                "status": "evaluated",
+                "summary": null
+              },
+              "red_flag_screening": "not_evaluated"
+            }
+          },
+          "input_hash": "13c9d6637f368c29a379aff81074cd7997a5a91ab529ad02e8f7058adad5e847",
+          "prior_confirmed": [],
+          "red_flag_screening": {
+            "banner": "RED-FLAG SCREENING NOT PERFORMED",
+            "conflicts": [],
+            "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+            "missing_inputs": [
+              "symptom.abdominal_pain",
+              "symptom.acute_chest_pain",
+              "symptom.airway_breathing_compromise",
+              "symptom.allergen_exposure",
+              "symptom.fever",
+              "symptom.hematemesis",
+              "symptom.melena",
+              "symptom.neck_stiffness",
+              "symptom.non_blanching_rash",
+              "symptom.self_harm",
+              "symptom.sudden_facial_droop",
+              "symptom.sudden_limb_weakness",
+              "symptom.sudden_speech_disturbance",
+              "symptom.sudden_vision_disturbance",
+              "symptom.suicidal_ideation",
+              "symptom.thunderclap_headache",
+              "symptom.vaginal_bleeding",
+              "vital.avpu:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+              "vital.capillary_glucose_mg_dl",
+              "vital.hr:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+              "vital.new_confusion",
+              "vital.rr:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+              "vital.sbp:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+              "vital.spo2:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+              "vital.temp_c:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+            ],
+            "n_declared": 16,
+            "n_evaluated": 0,
+            "n_fired": 0,
+            "n_not_evaluated": 16,
+            "performed": false,
+            "readings": [
+              {
+                "age_min": 80.0,
+                "fresh": false,
+                "item_id": "SYN-CXR-vs1",
+                "read_at": "2026-01-01T08:50:00Z",
+                "value": "A",
+                "vital": "avpu",
+                "window_min": 60.0
+              },
+              {
+                "age_min": 80.0,
+                "fresh": false,
+                "item_id": "SYN-CXR-vs1",
+                "read_at": "2026-01-01T08:50:00Z",
+                "value": 80.0,
+                "vital": "hr",
+                "window_min": 60.0
+              },
+              {
+                "age_min": 80.0,
+                "fresh": false,
+                "item_id": "SYN-CXR-vs1",
+                "read_at": "2026-01-01T08:50:00Z",
+                "value": 16.0,
+                "vital": "rr",
+                "window_min": 60.0
+              },
+              {
+                "age_min": 80.0,
+                "fresh": false,
+                "item_id": "SYN-CXR-vs1",
+                "read_at": "2026-01-01T08:50:00Z",
+                "value": 124.0,
+                "vital": "sbp",
+                "window_min": 60.0
+              },
+              {
+                "age_min": 80.0,
+                "fresh": false,
+                "item_id": "SYN-CXR-vs1",
+                "read_at": "2026-01-01T08:50:00Z",
+                "value": 97.0,
+                "vital": "spo2",
+                "window_min": 60.0
+              },
+              {
+                "age_min": 80.0,
+                "fresh": false,
+                "item_id": "SYN-CXR-vs1",
+                "read_at": "2026-01-01T08:50:00Z",
+                "value": 37.2,
+                "vital": "temp_c",
+                "window_min": 60.0
+              }
+            ],
+            "rule_set_version": "rf-1.1.0",
+            "rules_evaluated": [],
+            "rules_not_evaluated": [
+              "RF-ANAPH",
+              "RF-CHEST",
+              "RF-CONSC",
+              "RF-ECTOPIC",
+              "RF-GIBLEED",
+              "RF-HR",
+              "RF-HYPOGLY",
+              "RF-MENING",
+              "RF-QSOFA",
+              "RF-RR",
+              "RF-SBP",
+              "RF-SPO2",
+              "RF-STROKE",
+              "RF-SUICIDE",
+              "RF-TEMP",
+              "RF-THUNDER"
+            ],
+            "scope": "rf-1.1.0: 16 declared rules over vitals within their freshness windows and symptoms mentioned in the intake transcript; an unmentioned symptom is unknown, not absent",
+            "status": "not_evaluated"
+          },
+          "required_role": "pharmacist",
+          "screening_summary": "RED-FLAG SCREENING NOT PERFORMED: 0 of 16 declared rules fired (0 evaluated, 16 not evaluated); rf-1.1.0; rf-1.1.0: 16 declared rules over vitals within their freshness windows and symptoms mentioned in the intake transcript; an unmentioned symptom is unknown, not absent",
+          "vital_readings": [
+            {
+              "age_min": 80.0,
+              "fresh": false,
+              "item_id": "SYN-CXR-vs1",
+              "read_at": "2026-01-01T08:50:00Z",
+              "value": "A",
+              "vital": "avpu",
+              "window_min": 60.0
+            },
+            {
+              "age_min": 80.0,
+              "fresh": false,
+              "item_id": "SYN-CXR-vs1",
+              "read_at": "2026-01-01T08:50:00Z",
+              "value": 80.0,
+              "vital": "hr",
+              "window_min": 60.0
+            },
+            {
+              "age_min": 80.0,
+              "fresh": false,
+              "item_id": "SYN-CXR-vs1",
+              "read_at": "2026-01-01T08:50:00Z",
+              "value": 16.0,
+              "vital": "rr",
+              "window_min": 60.0
+            },
+            {
+              "age_min": 80.0,
+              "fresh": false,
+              "item_id": "SYN-CXR-vs1",
+              "read_at": "2026-01-01T08:50:00Z",
+              "value": 124.0,
+              "vital": "sbp",
+              "window_min": 60.0
+            },
+            {
+              "age_min": 80.0,
+              "fresh": false,
+              "item_id": "SYN-CXR-vs1",
+              "read_at": "2026-01-01T08:50:00Z",
+              "value": 97.0,
+              "vital": "spo2",
+              "window_min": 60.0
+            },
+            {
+              "age_min": 80.0,
+              "fresh": false,
+              "item_id": "SYN-CXR-vs1",
+              "read_at": "2026-01-01T08:50:00Z",
+              "value": 37.2,
+              "vital": "temp_c",
+              "window_min": 60.0
+            }
+          ]
+        }
+      },
+      "output_sha256": "d93278a24187ea3a02f3cf1cf38fe2b4d1f2f182fd533974698d6e7f09a71633",
+      "params": {},
+      "provider": "human:pharmacist",
+      "reason": null,
+      "reproducible": true,
+      "started_at": "2026-10-03T18:22:37.739954+00:00",
+      "status": "pending_confirmation",
+      "type": "human_checkpoint"
+    }
+  ],
+  "parent_version": 2,
+  "patient_ref": "SYN-CXR",
+  "red_flag_screening": {
+    "banner": "RED-FLAG SCREENING NOT PERFORMED",
+    "conflicts": [],
+    "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+    "missing_inputs": [
+      "symptom.abdominal_pain",
+      "symptom.acute_chest_pain",
+      "symptom.airway_breathing_compromise",
+      "symptom.allergen_exposure",
+      "symptom.fever",
+      "symptom.hematemesis",
+      "symptom.melena",
+      "symptom.neck_stiffness",
+      "symptom.non_blanching_rash",
+      "symptom.self_harm",
+      "symptom.sudden_facial_droop",
+      "symptom.sudden_limb_weakness",
+      "symptom.sudden_speech_disturbance",
+      "symptom.sudden_vision_disturbance",
+      "symptom.suicidal_ideation",
+      "symptom.thunderclap_headache",
+      "symptom.vaginal_bleeding",
+      "vital.avpu:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+      "vital.capillary_glucose_mg_dl",
+      "vital.hr:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+      "vital.new_confusion",
+      "vital.rr:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+      "vital.sbp:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+      "vital.spo2:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+      "vital.temp_c:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+    ],
+    "n_declared": 16,
+    "n_evaluated": 0,
+    "n_fired": 0,
+    "n_not_evaluated": 16,
+    "performed": false,
+    "readings": [
+      {
+        "age_min": 80.0,
+        "fresh": false,
+        "item_id": "SYN-CXR-vs1",
+        "read_at": "2026-01-01T08:50:00Z",
+        "value": "A",
+        "vital": "avpu",
+        "window_min": 60.0
+      },
+      {
+        "age_min": 80.0,
+        "fresh": false,
+        "item_id": "SYN-CXR-vs1",
+        "read_at": "2026-01-01T08:50:00Z",
+        "value": 80.0,
+        "vital": "hr",
+        "window_min": 60.0
+      },
+      {
+        "age_min": 80.0,
+        "fresh": false,
+        "item_id": "SYN-CXR-vs1",
+        "read_at": "2026-01-01T08:50:00Z",
+        "value": 16.0,
+        "vital": "rr",
+        "window_min": 60.0
+      },
+      {
+        "age_min": 80.0,
+        "fresh": false,
+        "item_id": "SYN-CXR-vs1",
+        "read_at": "2026-01-01T08:50:00Z",
+        "value": 124.0,
+        "vital": "sbp",
+        "window_min": 60.0
+      },
+      {
+        "age_min": 80.0,
+        "fresh": false,
+        "item_id": "SYN-CXR-vs1",
+        "read_at": "2026-01-01T08:50:00Z",
+        "value": 97.0,
+        "vital": "spo2",
+        "window_min": 60.0
+      },
+      {
+        "age_min": 80.0,
+        "fresh": false,
+        "item_id": "SYN-CXR-vs1",
+        "read_at": "2026-01-01T08:50:00Z",
+        "value": 37.2,
+        "vital": "temp_c",
+        "window_min": 60.0
+      }
+    ],
+    "rule_set_version": "rf-1.1.0",
+    "rules_evaluated": [],
+    "rules_not_evaluated": [
+      "RF-ANAPH",
+      "RF-CHEST",
+      "RF-CONSC",
+      "RF-ECTOPIC",
+      "RF-GIBLEED",
+      "RF-HR",
+      "RF-HYPOGLY",
+      "RF-MENING",
+      "RF-QSOFA",
+      "RF-RR",
+      "RF-SBP",
+      "RF-SPO2",
+      "RF-STROKE",
+      "RF-SUICIDE",
+      "RF-TEMP",
+      "RF-THUNDER"
+    ],
+    "scope": "rf-1.1.0: 16 declared rules over vitals within their freshness windows and symptoms mentioned in the intake transcript; an unmentioned symptom is unknown, not absent",
+    "status": "not_evaluated"
+  },
+  "schema_version": "casegraph-export/0.4",
+  "snapshot_id": "01eb8a9a346e1af00cb3c72be502c2e8373bc6fa46de88cbc3afbaef1e4c1ec3",
+  "stage": "T3",
+  "totals": {
+    "gateway_calls": 3,
+    "node_executions": 3,
+    "wall_time_ms": 4.283
+  },
+  "trigger_refs": [
+    "SYN-CXR-order"
+  ],
+  "version": 3
+}

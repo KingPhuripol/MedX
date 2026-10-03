@@ -1,0 +1,51 @@
+{
+  "cache_key": "c547c4f566b872389e5176d24b9286cd1b1c82cc4745ed298fbed36c9f925b08",
+  "ended_at": "2026-10-03T18:22:37.720542+00:00",
+  "errored_inputs": [],
+  "gateway_calls": 0,
+  "missing_inputs": [],
+  "node_type": "reader_text",
+  "output": {
+    "Findings": {
+      "facts": [],
+      "input_refs": [
+        "SYN-CXR-intake"
+      ],
+      "intake": [
+        {
+          "available_at_time": "2026-01-01T08:40:00Z",
+          "evidence_turns": [],
+          "kind": "chief_complaint",
+          "source_item": "SYN-CXR-intake",
+          "span_text": null,
+          "state": "KNOWN",
+          "value": "synthetic: cough and fever",
+          "value_text": "synthetic: cough and fever"
+        },
+        {
+          "available_at_time": "2026-01-01T08:40:00Z",
+          "evidence_turns": [],
+          "kind": "onset_duration",
+          "source_item": "SYN-CXR-intake",
+          "span_text": null,
+          "state": "KNOWN",
+          "value": "3 days",
+          "value_text": "3 days"
+        }
+      ],
+      "model_version": "voice-extract-1.0",
+      "produced_by": "reader_text",
+      "provider": "voice_extract",
+      "source_data_types": [
+        "VoiceIntakeFacts"
+      ],
+      "statements": [
+        "SYN-CXR-intake: VoiceIntakeFacts passed through (0 calls)"
+      ]
+    }
+  },
+  "output_sha256": "feedc1422f42f96fe5b622c5c8a2ac0e95af323ae5f8bca6505320de7ca6578d",
+  "reason": null,
+  "started_at": "2026-10-03T18:22:37.717896+00:00",
+  "status": "ok"
+}

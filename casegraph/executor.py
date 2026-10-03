@@ -79,7 +79,8 @@ PENDING_KEY = "pending_review"
 # registered S5 pipeline string (s5-pipeline-2.6.0) is pinned by S5's own tests and is deliberately not bumped.
 # 6: bad-time conversation facts fail closed (L1)
 # 7: ConversationFactUse.used is False for superseded (L2)
-PHARMA_GATES_VERSION = "cg-pharma-gates-8"  # 8: L1-F1 bad-time allergy fact_use is not_used
+# 8: L1-F1 bad-time allergy fact_use is not_used
+PHARMA_GATES_VERSION = "cg-pharma-gates-9"  # 9: MedicationIssues carries gates_version (L3)
 PHARMA_FACT_KINDS = frozenset({"allergy_status", "allergens", "current_medications"})
 _ACTION_STATUS = {"confirm": "confirmed", "edit": "edited", "reject": "rejected"}
 
@@ -641,7 +642,7 @@ class Executor:
             output = MedicationIssues(
                 **self._derived(ctx), status=screening_status(checks, missing), issues=issues, check_results=checks,
                 checks_not_evaluated=tuple(c for c in checks if c.missing_inputs), missing_inputs=missing,
-                rule_set_version=ctx.node.model_version, label=hook.label,
+                rule_set_version=ctx.node.model_version, label=hook.label, gates_version=PHARMA_GATES_VERSION,
                 # The echoed facts are typed (IntakeValue: AwareDatetime), so a bad-time fact cannot be echoed; it is
                 # reported by its gate row and its conversation_fact_use row instead (never dropped, never `error`).
                 conversation_allergy_facts=tuple(
@@ -665,7 +666,8 @@ class Executor:
         missing = ("structured_rule_checks",)
         return _Result("ok", _dump(MedicationIssues(
             **self._derived(ctx), status=screening_status((), missing), issues=(), check_results=(),
-            checks_not_evaluated=(), missing_inputs=missing, summary=text)))
+            checks_not_evaluated=(), missing_inputs=missing, summary=text,
+            gates_version=PHARMA_GATES_VERSION)))
 
     def _reasoning(self, ctx: _Ctx) -> _Result:
         errored = tuple(sorted(u.node.id for u in ctx.upstream if u.node.status == "error"))

@@ -1,0 +1,35 @@
+{
+  "cache_key": "3f1902cf96135e9154edea973a02ead531ed60ca7e7a842b09a4576dbccde261",
+  "ended_at": "2026-10-03T18:22:37.747946+00:00",
+  "errored_inputs": [],
+  "gateway_calls": 0,
+  "missing_inputs": [],
+  "node_type": "reader_vitals_labs",
+  "output": {
+    "Findings": {
+      "facts": [],
+      "input_refs": [
+        "f1-vitals"
+      ],
+      "intake": [],
+      "model_version": "placeholder-vitals-reader-0.1",
+      "produced_by": "reader_vitals_labs",
+      "provider": "rules",
+      "source_data_types": [
+        "Vitals"
+      ],
+      "statements": [
+        "f1-vitals: consciousness=A",
+        "f1-vitals: hr=88",
+        "f1-vitals: rr=16",
+        "f1-vitals: sbp=124",
+        "f1-vitals: spo2=97",
+        "f1-vitals: temp_c=37.2"
+      ]
+    }
+  },
+  "output_sha256": "7d27f9992cffab6a575f32e6f127d8490e03d1e8f51bf4f6c263c637e6b709bd",
+  "reason": null,
+  "started_at": "2026-10-03T18:22:37.747031+00:00",
+  "status": "ok"
+}
