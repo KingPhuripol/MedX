@@ -168,10 +168,17 @@ def assess(case_ref: str, body: AssessBody, request: Request, user: CurrentUser 
     # cg-m1: every version built in this call counts (an intermediate version's urgent alert must escalate too)
     refs = []
     for g in built:
-        ids = sorted({x["rule_id"] for x in (casegraph_run.graph_alerts(g) or [])})
+        unreadable = False
+        try:
+            ids = sorted({x["rule_id"] for x in (casegraph_run.graph_alerts(g) or [])})
+            status = g.red_flag_screening.status
+        except Exception:  # a malformed stored Red-flag output: fail safe, never a 500 and never "no alert"
+            ids, status, unreadable = [], "unavailable", True
+            graph_failure = graph_failure or GraphFailure(error_type="graph_alerts_unreadable", stage=g.stage,
+                                                          version=g.version)
         refs.append(BuiltGraphRef(graph_id=g.graph_id, version=g.version, stage=g.stage, T=g.T,
-                                  screening_status=g.red_flag_screening.status, alert_rule_ids=ids,
-                                  escalation=bool(ids)))
+                                  screening_status=status, alert_rule_ids=ids,
+                                  escalation=bool(ids) or unreadable))
     graph_alerts = sorted({i for r in refs for i in r.alert_rule_ids})
     a = a.model_copy(update={
         "graph_id": graph.graph_id if graph is not None else None, "screening": screening,

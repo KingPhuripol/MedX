@@ -200,3 +200,25 @@ def test_rerun_is_deterministic(app, client, login, monkeypatch):
         body = _setup(app, client, login, monkeypatch, f"SYN-M1-det-{n}", PATTERNS["P5"])().json()
         outs.append([{k: v for k, v in g.items() if k not in ("graph_id", "version")} for g in body["built_graphs"]])
     assert outs[0] == outs[1]
+
+
+def test_unreadable_alerts_in_a_built_version_fail_safe(app, client, login, audit_rows, monkeypatch):
+    """Review C2/C3: extracting alerts from a built version must stay inside the fail-safe (no 500, escalate)."""
+    p = "SYN-M1-UNREADABLE"
+    second = _setup(app, client, login, monkeypatch, p, P0)
+    real = casegraph_run.graph_alerts
+
+    def boom(g):
+        if g.stage == "T2":
+            raise KeyError("Alerts")
+        return real(g)
+    monkeypatch.setattr(casegraph_run, "graph_alerts", boom)
+    resp = second()
+    assert resp.status_code == 201, resp.text
+    body = resp.json()
+    t2 = next(g for g in body["built_graphs"] if g["stage"] == "T2")
+    assert t2["screening_status"] == "unavailable" and t2["escalation"] is True
+    assert body["escalation_required"] is True
+    assert body["graph_failure"]["error_type"] == "graph_alerts_unreadable"
+    row = _assess_row(audit_rows, body["assessment_id"])
+    assert row["escalation_required"] is True and row["graph_failure"]["error_type"] == "graph_alerts_unreadable"
