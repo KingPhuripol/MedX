@@ -247,3 +247,17 @@ def test_older_unparseable_allergens_fact_is_never_silently_dropped(env, old_val
     assert "conversation.allergens:unparseable" in mi["missing_inputs"]
     old = [u for u in mi["conversation_fact_use"] if u["kind"] == "allergens" and f"{p}-c1" in u["evidence_ref"]]
     assert [(u["use"], u["used"], u["reason"]) for u in old] == [(use, False, "conversation.allergens:unparseable")]
+
+
+@pytest.mark.parametrize("value", ["Present", "yes", 7, {"present": True}])
+def test_unrecognised_known_allergy_status_is_a_gap_not_no_allergy(env, value):
+    """Safety review L8 / audit N1: a KNOWN allergy_status outside the closed set is never read as "not present"."""
+    p = f"SYN-R5-ALST-{len(str(value))}-{type(value).__name__}"
+    items = [*base(p, with_allergy=False), allergy(p, f"{p}-al", T1 - 48 * 60 * M, status="no_known_allergy"),
+             conv_meds(p, f"{p}-c1", T1 - 15 * M, meds=None, allergy_status=("KNOWN", value)),
+             order(p, f"{p}-o", T1 + 30 * M)]
+    mi = _mi(build_versions(env.executor(), items, T1, T1 + 2 * H)[-1])
+    assert mi["status"] != "evaluated"
+    assert "conversation.allergy_status:unrecognised" in mi["missing_inputs"]
+    st = [(u["use"], u["used"]) for u in mi["conversation_fact_use"] if u["kind"] == "allergy_status"]
+    assert st == [("not_used", False)]

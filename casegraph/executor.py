@@ -30,7 +30,7 @@ from .compiler import ValidatedGraph, validate
 from app.triage import department as s4_department
 
 from . import pharma_s5, reader_text, triage_bridge  # noqa: F401  (pharma_s5 registers the S5 hook)
-from .conversation_meds import MED_KIND, allergen_name_ok, allergens_problem, consumed_refs, newest, ordered, parse_medication_facts, parse_ts, same_time_conflict, fact_refs
+from .conversation_meds import MED_KIND, allergen_name_ok, allergens_problem, allergy_status_problem, consumed_refs, newest, ordered, parse_medication_facts, parse_ts, same_time_conflict, fact_refs
 from .data import (
     CLINICAL_TEXT_TYPES,
     PLACEHOLDER_RULE_SET,
@@ -77,7 +77,7 @@ PENDING_KEY = "pending_review"
 # Version of the executor-side Pharma semantics (allergy/conversation gates, fact ordering, fact_use). It is part of the
 # Pharma node's input hash, so a persistent Output Store entry computed under older semantics can never be served. The
 # registered S5 pipeline string (s5-pipeline-2.6.0) is pinned by S5's own tests and is deliberately not bumped.
-PHARMA_GATES_VERSION = "cg-pharma-gates-4"
+PHARMA_GATES_VERSION = "cg-pharma-gates-5"
 PHARMA_FACT_KINDS = frozenset({"allergy_status", "allergens", "current_medications"})
 _ACTION_STATUS = {"confirm": "confirmed", "edit": "edited", "reject": "rejected"}
 
@@ -491,6 +491,8 @@ class Executor:
             out.append(("allergy_conversation", ("conversation.allergens:unparseable",)))
         if status is not None and status["state"] in ("UNKNOWN", "REFUSED"):
             out.append(("allergy_conversation", (f"conversation.allergy_status={status['state']}",)))
+        elif status is not None and allergy_status_problem(status):
+            out.append(("allergy_conversation", (allergy_status_problem(status),)))
         for kind, cur in (("allergy_status", status), ("allergens", allergens)):
             if cur is not None and same_time_conflict(of(kind), cur):  # a tie is never resolved in favour of "safe"
                 out.append(("allergy_conversation", (f"conversation.{kind}:same_time_conflict",)))
@@ -550,6 +552,8 @@ class Executor:
                 elif f is cur:  # the newest fact of the kind is the one the gates read
                     if f["state"] != "KNOWN":
                         reason = f"conversation.{kind}={f['state']}"
+                    elif kind == "allergy_status":
+                        reason = allergy_status_problem(f)
                     if reason is None and same_time_conflict(same, f):
                         reason = f"conversation.{kind}:same_time_conflict"
                 elif same_time_conflict(same, f) and parse_ts(f["available_at_time"]) == parse_ts(

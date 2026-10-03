@@ -39,6 +39,17 @@ def allergens_problem(fact: dict[str, Any]) -> str | None:
     return None
 
 
+ALLERGY_STATUS_VALUES = frozenset({"present", "none", "absent"})  # voice emits none/present; absent kept for older facts
+
+
+def allergy_status_problem(fact: dict[str, Any]) -> str | None:
+    """A KNOWN ``allergy_status`` outside the closed set is a gap, never read as "not present" (rule 6)."""
+    v = fact["value"]
+    if fact["state"] == "KNOWN" and not (isinstance(v, str) and v in ALLERGY_STATUS_VALUES):
+        return "conversation.allergy_status:unrecognised"
+    return None
+
+
 def parse_ts(value: Any) -> datetime:
     """An aware datetime from an ISO string/datetime. Naive is read as UTC; unparseable sorts oldest (never newest)."""
     if isinstance(value, str):
