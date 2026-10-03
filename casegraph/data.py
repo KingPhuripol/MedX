@@ -632,8 +632,9 @@ class ConversationFactUse(TypedData):
     kind: str = Field(min_length=1, max_length=64)
     evidence_ref: str = Field(min_length=1, max_length=128)
     state: Literal["KNOWN", "UNKNOWN", "REFUSED"]
-    used: bool
-    reason: str | None = None  # why it was not used (a missing_inputs-style token); None when used
+    used: bool  # False exactly for use in (partial, not_used); then ``reason`` is a missing_inputs token of the node
+    reason: str | None = None  # why it was not (fully) used (a missing_inputs-style token); None otherwise
+    use: Literal["used", "partial", "not_used", "superseded"] = "used"  # superseded: closed by a later statement
 
 
 class MedicationIssues(Derived):

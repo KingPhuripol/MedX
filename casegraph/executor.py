@@ -30,7 +30,7 @@ from .compiler import ValidatedGraph, validate
 from app.triage import department as s4_department
 
 from . import pharma_s5, reader_text, triage_bridge  # noqa: F401  (pharma_s5 registers the S5 hook)
-from .conversation_meds import MED_KIND, consumed_refs, parse_medication_facts
+from .conversation_meds import MED_KIND, consumed_refs, newest, ordered, parse_medication_facts, parse_ts, same_time_conflict, fact_refs
 from .data import (
     CLINICAL_TEXT_TYPES,
     PLACEHOLDER_RULE_SET,
@@ -74,6 +74,10 @@ from .store import OutputStore, StateStore, StoreEntry, cache_key
 from .types import NodeType
 
 PENDING_KEY = "pending_review"
+# Version of the executor-side Pharma semantics (allergy/conversation gates, fact ordering, fact_use). It is part of the
+# Pharma node's input hash, so a persistent Output Store entry computed under older semantics can never be served. The
+# registered S5 pipeline string (s5-pipeline-2.6.0) is pinned by S5's own tests and is deliberately not bumped.
+PHARMA_GATES_VERSION = "cg-pharma-gates-3"
 PHARMA_FACT_KINDS = frozenset({"allergy_status", "allergens", "current_medications"})
 _ACTION_STATUS = {"confirm": "confirmed", "edit": "edited", "reject": "rejected"}
 
@@ -250,6 +254,8 @@ class Executor:
         }
         if t_dependent(node):  # cg-t123: a body that reads T must not be served an output computed at another T
             hashed["T"] = spec.T.isoformat()
+        if node.type is NodeType.PHARMA_AGENT:  # round 5: the executor's Pharma gate semantics are part of the input
+            hashed["pharma_gates"] = PHARMA_GATES_VERSION
         input_hash = sha256_json(hashed)
         key = cache_key(node.type.value, node.provider, node.model_version, node.params, input_hash)
         base = node.model_dump()
@@ -468,11 +474,10 @@ class Executor:
                                    ) -> list[tuple[str, tuple[str, ...]]]:
         """(check, missing_inputs) rows for what the conversation says about allergy that no allergen name backs up,
         or that contradicts the record. Never read as "no allergy" (rule 6)."""
-        def newest(kind: str) -> dict[str, Any] | None:
-            same = [f for f in facts if f["kind"] == kind]
-            return max(same, key=lambda f: str(f["available_at_time"]), default=None)
+        def of(kind: str) -> list[dict[str, Any]]:
+            return [f for f in facts if f["kind"] == kind]
 
-        status, allergens = newest("allergy_status"), newest("allergens")
+        status, allergens = newest(of("allergy_status")), newest(of("allergens"))
         present = status is not None and status["state"] == "KNOWN" and status["value"] == "present"
         named = allergens is not None and allergens["state"] == "KNOWN" and any(
             isinstance(n, str) and n.strip() for n in (allergens["value"] if isinstance(allergens["value"], (list, tuple))
@@ -488,6 +493,9 @@ class Executor:
             out.append(("allergy_conversation", ("conversation.allergens:unnamed_allergy",)))
         if status is not None and status["state"] in ("UNKNOWN", "REFUSED"):
             out.append(("allergy_conversation", (f"conversation.allergy_status={status['state']}",)))
+        for kind, cur in (("allergy_status", status), ("allergens", allergens)):
+            if cur is not None and same_time_conflict(of(kind), cur):  # a tie is never resolved in favour of "safe"
+                out.append(("allergy_conversation", (f"conversation.{kind}:same_time_conflict",)))
         if present and latest is not None and latest.status == "no_known_allergy":
             out.append(("allergy_contradiction", ("AllergyList.status=no_known_allergy vs "
                                                   "conversation.allergy_status=present",)))
@@ -510,28 +518,52 @@ class Executor:
     @staticmethod
     def _conversation_fact_use(facts: tuple[dict[str, Any], ...], checks: tuple[MedicationCheck, ...],
                                hook_api: int | None) -> tuple[ConversationFactUse, ...]:
-        """Per conversation allergy/medication fact: used, or the reason it was not (structured fields only).
-        A fact superseded by a later KNOWN fact of the same kind is not an open input."""
+        """Per conversation allergy/medication fact: how Pharma used it (structured fields only).
+
+        ``use`` is used | partial | not_used | superseded. ``used`` is False exactly for partial / not_used, and then
+        ``reason`` is a ``missing_inputs`` token of the node (status is never 'evaluated'). A fact closed by a later
+        statement of the same kind is ``superseded`` (an older non-KNOWN fact is not an open input)."""
         out = []
         read = consumed_refs(checks)
+        refs = fact_refs(facts)
+        unrecognised = [c for c in checks if c.check == "unrecognised_drug"]
         for m in parse_medication_facts(facts):
-            reason = m.problem
-            if reason is None and m.names and (hook_api != 2 or m.ref not in read):
-                reason = f"conversation.current_medications:not_consumed@{m.ref}"
+            reason, use = m.problem, "used"
+            if m.superseded:
+                use = "superseded"
+            elif reason is None and m.names and (hook_api != 2 or m.ref not in read):
+                reason, use = f"conversation.current_medications:not_consumed@{m.ref}", "not_used"
+            elif reason is None and m.names:
+                bad = [c for c in unrecognised if f"formulary@{m.ref}" in c.missing_inputs]
+                if bad:  # some names did not map to the formulary: the fact was only partly consumed
+                    reason = bad[0].missing_inputs[0]
+                    use = "partial" if len(bad) < len(m.names) else "not_used"
+            elif reason is not None:
+                use = "not_used"
             out.append(ConversationFactUse(kind=MED_KIND, evidence_ref=m.ref, state=m.fact["state"],
-                                           used=reason is None, reason=reason))
+                                           used=use in ("used", "superseded"), use=use, reason=reason))
         for kind in ("allergy_status", "allergens"):
-            same = sorted((f for f in facts if f["kind"] == kind), key=lambda f: str(f["available_at_time"]))
-            for n, f in enumerate(same):
-                reason = None
-                if n == len(same) - 1:  # the newest fact of the kind is the one the gates read
+            same = ordered(f for f in facts if f["kind"] == kind)
+            cur = newest(same)
+            for f in same:
+                reason, use = None, "used"
+                if f is cur:  # the newest fact of the kind is the one the gates read
                     if f["state"] != "KNOWN":
                         reason = f"conversation.{kind}={f['state']}"
                     elif kind == "allergens" and (not isinstance(f["value"], (list, tuple))
                                                   or any(not (isinstance(x, str) and x.strip()) for x in f["value"])):
                         reason = "conversation.allergens:unparseable"
-                out.append(ConversationFactUse(kind=kind, evidence_ref=f"conversation:{kind}#{n}", state=f["state"],
-                                               used=reason is None, reason=reason))
+                    if reason is None and same_time_conflict(same, f):
+                        reason = f"conversation.{kind}:same_time_conflict"
+                elif same_time_conflict(same, f) and parse_ts(f["available_at_time"]) == parse_ts(
+                        cur["available_at_time"]):  # type: ignore[index]
+                    reason = f"conversation.{kind}:same_time_conflict"
+                elif f["state"] != "KNOWN" or kind == "allergy_status":
+                    use = "superseded"  # an older statement the newest one replaced
+                if reason is not None:
+                    use = "not_used"
+                out.append(ConversationFactUse(kind=kind, evidence_ref=refs[id(f)], state=f["state"],
+                                               used=reason is None, use=use, reason=reason))
         return tuple(out)
 
     @staticmethod
@@ -591,22 +623,21 @@ class Executor:
                     tuple(lists), tuple(allergies), self._conversation_facts(ctx), ctx.T, dc.value, invoke))
             else:
                 checks, issues = hook.fn(lists)  # type: ignore[arg-type]
-            if ctx.stage is not None:  # staged graphs state missing allergy data; legacy graphs are unchanged
-                checks = (*checks, *self._allergy_gate(ctx, allergies, hook.api, hook.label, checks))
+            # The allergy / conversation gates apply whenever Pharma runs, staged or not (round 5): the output must not
+            # depend on how the graph was compiled, so a shared Output Store can never serve an ungated result.
+            checks = (*checks, *self._allergy_gate(ctx, allergies, hook.api, hook.label, checks))
             missing = tuple(sorted({m for c in checks for m in c.missing_inputs}))
             output = MedicationIssues(
                 **self._derived(ctx), status=screening_status(checks, missing), issues=issues, check_results=checks,
                 checks_not_evaluated=tuple(c for c in checks if c.missing_inputs), missing_inputs=missing,
                 rule_set_version=ctx.node.model_version, label=hook.label,
-                conversation_allergy_facts=tuple(  # staged only: legacy outputs are unchanged
-                    f for f in self._conversation_facts(ctx) if f["kind"] in ("allergy_status", "allergens")
-                ) if ctx.stage is not None else (),
+                conversation_allergy_facts=tuple(
+                    f for f in self._conversation_facts(ctx) if f["kind"] in ("allergy_status", "allergens")),
                 conversation_medication_facts=tuple(
-                    f for f in self._conversation_facts(ctx) if f["kind"] == MED_KIND) if ctx.stage is not None else (),
-                conversation_fact_use=self._conversation_fact_use(self._conversation_facts(ctx), checks, hook.api)
-                if ctx.stage is not None else (),
+                    f for f in self._conversation_facts(ctx) if f["kind"] == MED_KIND),
+                conversation_fact_use=self._conversation_fact_use(self._conversation_facts(ctx), checks, hook.api),
             )
-            errored = self._errored_conversation(ctx) if ctx.stage is not None else ()
+            errored = self._errored_conversation(ctx)
             return _Result("ok", _dump(output), errored_inputs=errored)
         upstream = {u.node.id: u.node.output for u in ctx.upstream if u.ok}
         output, _, err = self._call(ctx, {"evidence": dump_evidence([*lists, *allergies]), "upstream": upstream})

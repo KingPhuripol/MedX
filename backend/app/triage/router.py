@@ -20,6 +20,7 @@ from pydantic import AwareDatetime, BaseModel, Field
 from sqlalchemy.exc import IntegrityError
 
 from casegraph.data import most_restrictive
+from casegraph.export import ImportValidationError
 
 from ..audit import utc_now_iso, write_audit
 from ..deps import CurrentUser, get_engine, request_id, require_user
@@ -202,7 +203,12 @@ def graph_versions(case_ref: str, request: Request, user: CurrentUser = Depends(
     if case_ref not in engine_cases() and stores.state.latest_version(case_ref) is None:
         _audit(request, user, "triage.graph_versions.read", target, "denied", {"status": 404, "reason": "unknown_case"})
         raise HTTPException(status_code=404, detail="unknown_case")
-    versions = casegraph_run.versions(stores, case_ref)
+    try:
+        versions = casegraph_run.versions(stores, case_ref)
+    except ImportValidationError as exc:  # a stored run no longer matches its recorded hash: say so, never a bare 500
+        _audit(request, user, "triage.graph_versions.read", target, "failure",
+               {"case_ref": case_ref, "status": 500, "reason": "stored_graph_integrity", "error": type(exc).__name__})
+        raise HTTPException(status_code=500, detail="stored_graph_integrity") from None
     _audit(request, user, "triage.graph_versions.read", target, "success", {
         "case_ref": case_ref, "n_versions": len(versions), "stages": [v["stage"] for v in versions],
         "graph_ids": [v["graph_id"] for v in versions],

@@ -28,7 +28,7 @@ from casegraph.executor import Executor, ResumeError
 from casegraph.export import ExportedGraph, import_graph
 from casegraph.library import VOICE_EXTRACT, ProviderConfig
 from casegraph.providers import with_explicit_reasoning_keys
-from casegraph.staged import next_stage
+from casegraph.staged import next_stages
 from casegraph.store import MemoryStateStore, OutputStore, SQLiteStateStore, StateStore, next_version
 from casegraph.triage_bridge import evidence_from_case
 from casegraph.types import NodeType
@@ -95,14 +95,20 @@ def run_graph(stores: GraphStores, case: Case, as_of: datetime, engine: Engine, 
     gateways = {pid: AuditedGateway(engine, gw, user, request_id) for pid in GRAPH_PROVIDERS}
     items = evidence_from_case(case)
     with stores.lock:  # one version number per graph (versions are insert-only)
-        version, parent = next_version(stores.state, case.case_ref)
-        # cg-t123: the stage comes from results/orders newer than the previous version's T; with none it inherits
-        # the parent's stage (T1 / nurse when there is no parent). Triage cases carry no results or orders.
+        # cg-t123: every pending stage is built in order (a T2 trigger then a T3 trigger builds both; none is skipped).
+        # The stages come from results/orders newer than the previous version's T; with none the version inherits the
+        # parent's stage (T1 / nurse when there is no parent). Triage cases carry no results or orders.
+        _, parent = next_version(stores.state, case.case_ref)
         parent_spec = stores.state.load_graph(graph_id_for(case.case_ref, parent))[0] if parent else None
-        stage, triggers = next_stage(parent_spec, items, as_of)
-        graph = compile_stage(build_snapshot(items, as_of, case.case_ref), stage, ProviderConfig(), version, parent,
-                              trigger_refs=triggers)
-        return _executor(stores, gateways).run_sync(graph)
+        executor = _executor(stores, gateways)
+        graph = None
+        for plan in next_stages(parent_spec, items, as_of):
+            version, parent = next_version(stores.state, case.case_ref)
+            compiled = compile_stage(build_snapshot(items, plan.T, case.case_ref), plan.stage, ProviderConfig(),
+                                     version, parent, trigger_refs=tuple(sorted(plan.trigger_item_ids)))
+            graph = executor.run_sync(compiled)
+        assert graph is not None
+        return graph
 
 
 def versions(stores: GraphStores, case_ref: str) -> list[dict[str, Any]]:

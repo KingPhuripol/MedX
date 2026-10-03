@@ -4,6 +4,8 @@ Research prototype: not clinical performance."""
 
 from __future__ import annotations
 
+from datetime import timedelta, timezone
+
 import pytest
 
 from casegraph.executor import PHARMA_FACT_KINDS
@@ -14,7 +16,13 @@ from casegraph.types import NodeType
 from .fixtures import M
 from .staged_fixtures import FIXTURES_STAGED, T1, allergy, base, conv_meds, order
 
-CONV_REF = "conversation:current_medications#0"
+BKK = timezone(timedelta(hours=7))
+
+
+def conv_ref(p, n=0, kind="current_medications"):
+    """Real evidence id of the conversation item plus the ordinal among that item's facts of the kind (round 5)."""
+    return f"conversation:{kind}:{p}-conv#{n}"
+
 
 
 @pytest.fixture(scope="module")
@@ -39,6 +47,7 @@ def _rows(mi, check):
 
 def test_warfarin_known_becomes_patient_reported_source_and_reaches_the_pharmacist(env):
     t3, mi = _t3(env, _med_items("SYN-WARF", ("KNOWN", ["warfarin"])))
+    CONV_REF = conv_ref("SYN-WARF")
     pharma = t3.by_type(NodeType.PHARMA_AGENT)
     # S5 evaluated on the conversation source (it is a read ref of the Pharma node's checks)
     assert any(CONV_REF in c["evaluated_on"] for c in mi["check_results"])
@@ -53,7 +62,7 @@ def test_warfarin_known_becomes_patient_reported_source_and_reaches_the_pharmaci
     assert [f["value"] for f in shown["conversation_medication_facts"]] == [["warfarin"]]
     use = [u for u in shown["conversation_fact_use"] if u["kind"] == "current_medications"]
     assert use == [{"kind": "current_medications", "evidence_ref": CONV_REF, "state": "KNOWN", "used": True,
-                    "reason": None}]
+                    "reason": None, "use": "used"}]
     assert pharma.errored_inputs == ()
     assert not _rows(mi, "medication_conversation")
 
@@ -79,6 +88,7 @@ def test_refused_and_malformed_conversation_meds_not_evaluated(env):
 
 def test_unmapped_drug_name_is_not_silently_dropped(env):
     t3, mi = _t3(env, _med_items("SYN-MUNM", ("KNOWN", ["zzzdrugx"])))
+    CONV_REF = conv_ref("SYN-MUNM")
     rows = [c for c in mi["check_results"] if c["check"] == "unrecognised_drug"]
     assert rows and rows[0]["status"] == "not_evaluated"
     assert rows[0]["missing_inputs"] == [f"formulary@{CONV_REF}"]
@@ -119,6 +129,19 @@ VARIANTS = {
     "unknown": {"meds": ("UNKNOWN", None)},
     "malformed": {"meds": ("KNOWN", ["warfarin", 7])},
     "allergy_unknown": {"meds": ("KNOWN", ["warfarin"]), "allergy_status": ("UNKNOWN", None)},
+    # round 5: several conversation items per case; ``minus`` = minutes before T1, ``tz`` = write the time in +07:00
+    "tz_allergy": [  # older "absent" written in +07:00 (string sorts after the newer UTC "present")
+        {"minus": 30, "tz": True, "meds": None, "allergy_status": ("KNOWN", "absent")},
+        {"minus": 15, "meds": None, "allergy_status": ("KNOWN", "present"), "allergens": ("KNOWN", ["penicillin"])}],
+    "tz_meds": [  # a KNOWN list written in +07:00 that is OLDER than the UTC UNKNOWN (string order says newer)
+        {"minus": 10, "tz": True, "meds": ("KNOWN", ["warfarin"])}, {"minus": 5, "meds": ("UNKNOWN", None)}],
+    "tie_allergy": [  # same instant, different statements: never resolved in favour of "no allergy"
+        {"minus": 15, "meds": None, "allergy_status": ("KNOWN", "present"), "allergens": ("KNOWN", ["penicillin"])},
+        {"minus": 15, "meds": None, "allergy_status": ("UNKNOWN", None)}],
+    "tie_meds": [{"minus": 15, "meds": ("KNOWN", ["warfarin"])}, {"minus": 15, "meds": ("UNKNOWN", None)}],
+    "tie_allergens": [
+        {"minus": 15, "meds": None, "allergy_status": ("KNOWN", "present"), "allergens": ("KNOWN", ["penicillin"])},
+        {"minus": 15, "meds": None, "allergens": ("KNOWN", ["sulfa"])}],
 }
 
 
@@ -156,8 +179,12 @@ def test_no_pharma_output_is_evaluated_while_a_conversation_fact_is_unused(env, 
             cases.append((path.parent.name, sc.items[0].patient_ref, sc.items, sc.t1, sc.horizon))
     assert len(cases) >= 40
     for n, (name, p, items, t1, horizon) in enumerate(cases):
-        if VARIANTS[variant]:
-            items = [*items, conv_meds(p, f"{p}-cm-{variant}", t1 - 15 * M, **VARIANTS[variant])]
+        items = list(items)
+        specs = VARIANTS[variant]
+        for k, spec in enumerate(specs if isinstance(specs, list) else ([specs] if specs else [])):
+            kw = dict(spec)
+            t = t1 - kw.pop("minus", 15) * M
+            items.append(conv_meds(p, f"{p}-cm-{variant}-{k}", t.astimezone(BKK) if kw.pop("tz", False) else t, **kw))
         env.root = env.root / f"v{n}"
         graphs = build_versions(env.executor(), items, t1, horizon)
         checked += _check_property(graphs, (variant, name))

@@ -73,17 +73,22 @@ def build_versions(
     return out
 
 
-def next_stage(parent: GraphSpec | None, items: Iterable[Evidence], as_of: datetime) -> tuple[str, tuple[str, ...]]:
-    """The stage of the next version computed at ``as_of`` (backend ``run_graph``).
+def next_stages(parent: GraphSpec | None, items: Iterable[Evidence], as_of: datetime) -> list[StagePlan]:
+    """Every version to build at ``as_of`` (backend ``run_graph``), in order, exactly as :func:`build_versions` plans.
 
-    Triggers newer than the parent's ``T`` (and at most ``as_of``) decide: the latest planned stage wins, with all
-    of that stage's triggers. With no trigger the version inherits the parent's stage and triggers, or is T1
-    when there is no parent."""
+    Each result/order newer than the parent's ``T`` (and at most ``as_of``) is a pending trigger: one version per
+    planned stage, none skipped (a T2 trigger followed by a T3 trigger builds both). The last version is computed at
+    ``as_of``; earlier ones at their own trigger time. With no trigger the single version inherits the parent's stage
+    and triggers, or is T1 when there is no parent."""
     if parent is None:
-        return "T1", ()
+        return [StagePlan("T1", as_of)]
     plans = plan_stages(list(items), parent.T, as_of)[1:]  # [0] is the parent's own T1 slot
     if not plans:
-        return (parent.stage or "T1"), parent.trigger_refs
-    last = plans[-1].stage
-    refs = tuple(sorted({r for p in plans if p.stage == last for r in p.trigger_item_ids}))
-    return last, refs
+        return [StagePlan(parent.stage or "T1", as_of, parent.trigger_refs)]
+    return [*plans[:-1], StagePlan(plans[-1].stage, as_of, plans[-1].trigger_item_ids)]
+
+
+def next_stage(parent: GraphSpec | None, items: Iterable[Evidence], as_of: datetime) -> tuple[str, tuple[str, ...]]:
+    """The stage of the LAST version :func:`next_stages` plans (kept for callers that need only the final stage)."""
+    last = next_stages(parent, items, as_of)[-1]
+    return last.stage, tuple(sorted(last.trigger_item_ids))
