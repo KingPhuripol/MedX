@@ -63,7 +63,14 @@ def test_run_graph_without_trigger_inherits_parent_stage(app, monkeypatch):
     assert [s for s, _ in _stored(app, p)] == ["T1", "T1"]
 
 
-def test_graph_versions_corrupt_stored_run_is_audited_integrity_error(app, client, login, audit_rows, monkeypatch):
+@pytest.mark.parametrize("corrupt", [
+    lambda run: run.replace('"output_sha256": "', '"output_sha256": "0', 1),  # hash mismatch
+    lambda run: "{not json",  # garbage
+    lambda run: run[: len(run) // 2],  # truncated
+    lambda run: run.replace('"schema_version": "', '"schema_version": "x', 1),  # unknown export version
+], ids=["hash", "garbage", "truncated", "version"])
+def test_graph_versions_corrupt_stored_run_is_audited_integrity_error(app, client, login, audit_rows, monkeypatch,
+                                                                      corrupt):
     p = "SYN-R5-corrupt"
     items = _items(p, [("lab", "lab1", 40)])
     _run(app, monkeypatch, p, items, T1)
@@ -71,7 +78,7 @@ def test_graph_versions_corrupt_stored_run_is_audited_integrity_error(app, clien
     gid = casegraph_run.graph_id_for(p, 1)
     run = st.load_run(gid)
     assert run is not None
-    st.save_run(gid, run.replace('"output_sha256": "', '"output_sha256": "0', 1))
+    st.save_run(gid, corrupt(run))
     login("nurse1")
     resp = client.get(f"/api/triage/cases/{p}/graph-versions")
     assert resp.status_code == 500 and resp.json()["detail"] == "stored_graph_integrity"
