@@ -194,7 +194,7 @@ def test_superseded_older_non_known_allergy_fact_is_marked_superseded(env):
     mi = _mi(build_versions(env.executor(), items, T1, T1 + 2 * H)[-1])
     st = [(u["state"], u["use"], u["used"], u["reason"]) for u in mi["conversation_fact_use"]
           if u["kind"] == "allergy_status"]
-    assert st == [("UNKNOWN", "superseded", True, None), ("KNOWN", "used", True, None)]
+    assert st == [("UNKNOWN", "superseded", False, None), ("KNOWN", "used", True, None)]
     assert "conversation.allergy_status=UNKNOWN" not in mi["missing_inputs"]
 
 

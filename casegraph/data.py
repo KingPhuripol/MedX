@@ -632,9 +632,27 @@ class ConversationFactUse(TypedData):
     kind: str = Field(min_length=1, max_length=64)
     evidence_ref: str = Field(min_length=1, max_length=128)
     state: Literal["KNOWN", "UNKNOWN", "REFUSED"]
-    used: bool  # False exactly for use in (partial, not_used); then ``reason`` is a missing_inputs token of the node
-    reason: str | None = None  # why it was not (fully) used (a missing_inputs-style token); None otherwise
+    used: bool = False  # derived: ``use == "used"`` (cg-l2); an explicit value must agree, else construction fails
+    reason: str | None = None  # partial / not_used: a missing_inputs-style token of the node; used / superseded: None
     use: Literal["used", "partial", "not_used", "superseded"] = "used"  # superseded: closed by a later statement
+
+    @model_validator(mode="before")
+    @classmethod
+    def _derive_used(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        use = data.get("use", "used")
+        if use not in ("used", "partial", "not_used", "superseded"):
+            return data  # the Literal check reports it
+        derived = use == "used"
+        if "used" in data and data["used"] is not derived:
+            raise ValueError(f"used={data['used']!r} contradicts use={use!r} (used is derived: use == 'used')")
+        reason = data.get("reason")
+        if use in ("partial", "not_used") and not (isinstance(reason, str) and reason):
+            raise ValueError(f"use={use!r} requires a non-empty reason")
+        if use in ("used", "superseded") and reason is not None:
+            raise ValueError(f"use={use!r} must have reason=None")
+        return {**data, "used": derived}
 
 
 class MedicationIssues(Derived):

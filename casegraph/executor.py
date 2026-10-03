@@ -77,7 +77,9 @@ PENDING_KEY = "pending_review"
 # Version of the executor-side Pharma semantics (allergy/conversation gates, fact ordering, fact_use). It is part of the
 # Pharma node's input hash, so a persistent Output Store entry computed under older semantics can never be served. The
 # registered S5 pipeline string (s5-pipeline-2.6.0) is pinned by S5's own tests and is deliberately not bumped.
-PHARMA_GATES_VERSION = "cg-pharma-gates-6"
+# 6: bad-time conversation facts fail closed (L1)
+# 7: ConversationFactUse.used is False for superseded (L2)
+PHARMA_GATES_VERSION = "cg-pharma-gates-7"
 PHARMA_FACT_KINDS = frozenset({"allergy_status", "allergens", "current_medications"})
 _ACTION_STATUS = {"confirm": "confirmed", "edit": "edited", "reject": "rejected"}
 
@@ -524,8 +526,8 @@ class Executor:
                                hook_api: int | None) -> tuple[ConversationFactUse, ...]:
         """Per conversation allergy/medication fact: how Pharma used it (structured fields only).
 
-        ``use`` is used | partial | not_used | superseded. ``used`` is False exactly for partial / not_used, and then
-        ``reason`` is a ``missing_inputs`` token of the node (status is never 'evaluated'). A fact closed by a later
+        ``use`` is used | partial | not_used | superseded. ``used`` is derived from ``use`` (False unless "used"); for partial /
+        not_used ``reason`` is a ``missing_inputs`` token of the node (status is never 'evaluated'). A fact closed by a later
         statement of the same kind is ``superseded`` (an older non-KNOWN fact is not an open input)."""
         out = []
         read = consumed_refs(checks)
@@ -545,7 +547,7 @@ class Executor:
             elif reason is not None:
                 use = "not_used"
             out.append(ConversationFactUse(kind=MED_KIND, evidence_ref=m.ref, state=m.fact["state"],
-                                           used=use in ("used", "superseded"), use=use, reason=reason))
+                                           use=use, reason=reason))
         for kind in ("allergy_status", "allergens"):
             same = ordered(f for f in facts if f["kind"] == kind)
             cur = newest(same)
@@ -569,7 +571,7 @@ class Executor:
                     use = "partial" if reason.endswith(":unparseable") and isinstance(f["value"], (list, tuple)) and any(
                         allergen_name_ok(x) for x in f["value"]) else "not_used"
                 out.append(ConversationFactUse(kind=kind, evidence_ref=refs[id(f)], state=f["state"],
-                                               used=reason is None, use=use, reason=reason))
+                                               use=use, reason=reason))
         return tuple(out)
 
     @staticmethod

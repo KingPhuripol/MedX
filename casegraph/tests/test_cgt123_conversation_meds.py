@@ -4,6 +4,7 @@ Research prototype: not clinical performance."""
 
 from __future__ import annotations
 
+import collections
 from datetime import timedelta, timezone
 
 import pytest
@@ -107,6 +108,8 @@ def test_superseded_unknown_is_not_an_open_input(env):
     items = [*_med_items(p, ("UNKNOWN", None)), conv_meds(p, f"{p}-conv2", T1 - 10 * M, meds=("KNOWN", ["warfarin"]))]
     _, mi = _t3(env, items)
     assert not _rows(mi, "medication_conversation")
+    old = [u for u in mi["conversation_fact_use"] if u["kind"] == "current_medications" and u["state"] == "UNKNOWN"]
+    assert [(u["use"], u["used"], u["reason"]) for u in old] == [("superseded", False, None)]
 
 
 def test_conversation_allergy_status_unknown_is_not_evaluated(env):
@@ -147,10 +150,25 @@ VARIANTS = {
         {"minus": 30, "meds": None, "allergy_status": ("KNOWN", "present"),
          "allergens": ("KNOWN", ["penicillin", {"name": "amoxicillin"}])},
         {"minus": 15, "meds": None, "allergens": ("KNOWN", ["sulfa"])}],
+    # cg-l2: every superseded kind (an older non-KNOWN statement closed by a strictly later KNOWN one)
+    "sup_allergy_unknown": [
+        {"minus": 30, "meds": None, "allergy_status": ("UNKNOWN", None)},
+        {"minus": 15, "meds": None, "allergy_status": ("KNOWN", "present"), "allergens": ("KNOWN", ["penicillin"])}],
+    "sup_allergy_refused": [
+        {"minus": 30, "meds": None, "allergy_status": ("REFUSED", None)},
+        {"minus": 15, "meds": None, "allergy_status": ("KNOWN", "absent")}],
+    "sup_allergens_unknown": [
+        {"minus": 30, "meds": None, "allergens": ("UNKNOWN", None)},
+        {"minus": 15, "meds": None, "allergy_status": ("KNOWN", "present"), "allergens": ("KNOWN", ["sulfa"])}],
+    "sup_meds_unknown": [
+        {"minus": 30, "meds": ("UNKNOWN", None)}, {"minus": 10, "meds": ("KNOWN", ["warfarin"])}],
     "old_allergens_nonlist": [
         {"minus": 30, "meds": None, "allergens": ("KNOWN", "penicillin")},
         {"minus": 15, "meds": None, "allergens": ("KNOWN", ["sulfa"])}],
 }
+
+
+SUPERSEDED_SEEN = collections.Counter()  # superseded rows seen per kind across the sweep (L2c)
 
 
 def _check_property(graphs, label):
@@ -165,9 +183,16 @@ def _check_property(graphs, label):
     use = mi["conversation_fact_use"]
     assert len(use) == len(present), (label, len(use), len(present))  # every conversation fact is accounted for
     for u in use:
-        if not u["used"]:
+        if u["use"] in ("partial", "not_used"):
+            assert u["used"] is False, (label, u)
             assert mi["status"] != "evaluated", (label, u)
             assert u["reason"] in mi["missing_inputs"], (label, u, mi["missing_inputs"])
+        elif u["use"] == "superseded":
+            assert u["used"] is False and u["reason"] is None, (label, u)
+            assert not any(u["evidence_ref"] in t for t in mi["missing_inputs"]), (label, u, mi["missing_inputs"])
+            SUPERSEDED_SEEN[u["kind"]] += 1
+        else:
+            assert u["use"] == "used" and u["used"] is True and u["reason"] is None, (label, u)
     for c in mi["check_results"]:
         if c["status"] == "evaluated" and c["check"] in ("allergy_conversation", "medication_conversation"):
             raise AssertionError((label, c))
@@ -197,3 +222,7 @@ def test_no_pharma_output_is_evaluated_while_a_conversation_fact_is_unused(env, 
         graphs = build_versions(env.executor(), items, t1, horizon)
         checked += _check_property(graphs, (variant, name))
     assert checked >= 20
+    target = {"sup_allergy_unknown": "allergy_status", "sup_allergy_refused": "allergy_status",
+              "sup_allergens_unknown": "allergens", "sup_meds_unknown": "current_medications"}.get(variant)
+    if target:
+        assert SUPERSEDED_SEEN[target] >= 1, (variant, dict(SUPERSEDED_SEEN))
