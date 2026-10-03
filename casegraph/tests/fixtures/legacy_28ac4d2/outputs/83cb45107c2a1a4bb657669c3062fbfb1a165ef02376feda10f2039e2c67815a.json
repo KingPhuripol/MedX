@@ -1,0 +1,337 @@
+{
+  "cache_key": "83cb45107c2a1a4bb657669c3062fbfb1a165ef02376feda10f2039e2c67815a",
+  "ended_at": "2026-10-03T18:22:37.738555+00:00",
+  "errored_inputs": [],
+  "gateway_calls": 0,
+  "missing_inputs": [
+    "symptom.abdominal_pain",
+    "symptom.acute_chest_pain",
+    "symptom.airway_breathing_compromise",
+    "symptom.allergen_exposure",
+    "symptom.fever",
+    "symptom.hematemesis",
+    "symptom.melena",
+    "symptom.neck_stiffness",
+    "symptom.non_blanching_rash",
+    "symptom.self_harm",
+    "symptom.sudden_facial_droop",
+    "symptom.sudden_limb_weakness",
+    "symptom.sudden_speech_disturbance",
+    "symptom.sudden_vision_disturbance",
+    "symptom.suicidal_ideation",
+    "symptom.thunderclap_headache",
+    "symptom.vaginal_bleeding",
+    "vital.avpu:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+    "vital.capillary_glucose_mg_dl",
+    "vital.hr:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+    "vital.new_confusion",
+    "vital.rr:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+    "vital.sbp:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+    "vital.spo2:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+    "vital.temp_c:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+  ],
+  "node_type": "red_flag",
+  "output": {
+    "Alerts": {
+      "alerts": [],
+      "conflicts": [],
+      "input_refs": [
+        "SYN-CXR-demo",
+        "SYN-CXR-vs1",
+        "reader_text:feedc1422f42f96fe5b622c5c8a2ac0e95af323ae5f8bca6505320de7ca6578d",
+        "reader_vitals_labs:8e1632621c3306f1fec111045d246538f0aa88f401f84147f6650514c57182e0"
+      ],
+      "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+      "missing_inputs": [
+        "symptom.abdominal_pain",
+        "symptom.acute_chest_pain",
+        "symptom.airway_breathing_compromise",
+        "symptom.allergen_exposure",
+        "symptom.fever",
+        "symptom.hematemesis",
+        "symptom.melena",
+        "symptom.neck_stiffness",
+        "symptom.non_blanching_rash",
+        "symptom.self_harm",
+        "symptom.sudden_facial_droop",
+        "symptom.sudden_limb_weakness",
+        "symptom.sudden_speech_disturbance",
+        "symptom.sudden_vision_disturbance",
+        "symptom.suicidal_ideation",
+        "symptom.thunderclap_headache",
+        "symptom.vaginal_bleeding",
+        "vital.avpu:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+        "vital.capillary_glucose_mg_dl",
+        "vital.hr:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+        "vital.new_confusion",
+        "vital.rr:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+        "vital.sbp:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+        "vital.spo2:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+        "vital.temp_c:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+      ],
+      "model_version": "rf-1.1.0",
+      "produced_by": "red_flag",
+      "provider": "rules",
+      "readings": [
+        {
+          "age_min": 80.0,
+          "fresh": false,
+          "item_id": "SYN-CXR-vs1",
+          "read_at": "2026-01-01T08:50:00Z",
+          "value": "A",
+          "vital": "avpu",
+          "window_min": 60.0
+        },
+        {
+          "age_min": 80.0,
+          "fresh": false,
+          "item_id": "SYN-CXR-vs1",
+          "read_at": "2026-01-01T08:50:00Z",
+          "value": 80.0,
+          "vital": "hr",
+          "window_min": 60.0
+        },
+        {
+          "age_min": 80.0,
+          "fresh": false,
+          "item_id": "SYN-CXR-vs1",
+          "read_at": "2026-01-01T08:50:00Z",
+          "value": 16.0,
+          "vital": "rr",
+          "window_min": 60.0
+        },
+        {
+          "age_min": 80.0,
+          "fresh": false,
+          "item_id": "SYN-CXR-vs1",
+          "read_at": "2026-01-01T08:50:00Z",
+          "value": 124.0,
+          "vital": "sbp",
+          "window_min": 60.0
+        },
+        {
+          "age_min": 80.0,
+          "fresh": false,
+          "item_id": "SYN-CXR-vs1",
+          "read_at": "2026-01-01T08:50:00Z",
+          "value": 97.0,
+          "vital": "spo2",
+          "window_min": 60.0
+        },
+        {
+          "age_min": 80.0,
+          "fresh": false,
+          "item_id": "SYN-CXR-vs1",
+          "read_at": "2026-01-01T08:50:00Z",
+          "value": 37.2,
+          "vital": "temp_c",
+          "window_min": 60.0
+        }
+      ],
+      "rule_results": [
+        {
+          "evaluated_on": [],
+          "fired": null,
+          "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+          "missing_inputs": [
+            "vital.spo2:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+          ],
+          "rule_id": "RF-SPO2",
+          "status": "not_evaluated"
+        },
+        {
+          "evaluated_on": [],
+          "fired": null,
+          "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+          "missing_inputs": [
+            "vital.rr:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+          ],
+          "rule_id": "RF-RR",
+          "status": "not_evaluated"
+        },
+        {
+          "evaluated_on": [],
+          "fired": null,
+          "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+          "missing_inputs": [
+            "vital.sbp:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+          ],
+          "rule_id": "RF-SBP",
+          "status": "not_evaluated"
+        },
+        {
+          "evaluated_on": [],
+          "fired": null,
+          "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+          "missing_inputs": [
+            "vital.hr:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+          ],
+          "rule_id": "RF-HR",
+          "status": "not_evaluated"
+        },
+        {
+          "evaluated_on": [],
+          "fired": null,
+          "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+          "missing_inputs": [
+            "vital.avpu:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+            "vital.new_confusion"
+          ],
+          "rule_id": "RF-CONSC",
+          "status": "not_evaluated"
+        },
+        {
+          "evaluated_on": [],
+          "fired": null,
+          "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+          "missing_inputs": [
+            "vital.temp_c:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+          ],
+          "rule_id": "RF-TEMP",
+          "status": "not_evaluated"
+        },
+        {
+          "evaluated_on": [],
+          "fired": null,
+          "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+          "missing_inputs": [
+            "vital.avpu:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+            "vital.new_confusion",
+            "vital.rr:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)",
+            "vital.sbp:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+          ],
+          "rule_id": "RF-QSOFA",
+          "status": "not_evaluated"
+        },
+        {
+          "evaluated_on": [],
+          "fired": null,
+          "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+          "missing_inputs": [
+            "symptom.acute_chest_pain"
+          ],
+          "rule_id": "RF-CHEST",
+          "status": "not_evaluated"
+        },
+        {
+          "evaluated_on": [],
+          "fired": null,
+          "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+          "missing_inputs": [
+            "symptom.sudden_facial_droop",
+            "symptom.sudden_limb_weakness",
+            "symptom.sudden_speech_disturbance",
+            "symptom.sudden_vision_disturbance"
+          ],
+          "rule_id": "RF-STROKE",
+          "status": "not_evaluated"
+        },
+        {
+          "evaluated_on": [],
+          "fired": null,
+          "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+          "missing_inputs": [
+            "symptom.thunderclap_headache"
+          ],
+          "rule_id": "RF-THUNDER",
+          "status": "not_evaluated"
+        },
+        {
+          "evaluated_on": [],
+          "fired": null,
+          "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+          "missing_inputs": [
+            "symptom.airway_breathing_compromise",
+            "symptom.allergen_exposure",
+            "vital.sbp:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+          ],
+          "rule_id": "RF-ANAPH",
+          "status": "not_evaluated"
+        },
+        {
+          "evaluated_on": [],
+          "fired": null,
+          "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+          "missing_inputs": [
+            "symptom.self_harm",
+            "symptom.suicidal_ideation"
+          ],
+          "rule_id": "RF-SUICIDE",
+          "status": "not_evaluated"
+        },
+        {
+          "evaluated_on": [],
+          "fired": null,
+          "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+          "missing_inputs": [
+            "symptom.hematemesis",
+            "symptom.melena"
+          ],
+          "rule_id": "RF-GIBLEED",
+          "status": "not_evaluated"
+        },
+        {
+          "evaluated_on": [],
+          "fired": null,
+          "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+          "missing_inputs": [
+            "symptom.abdominal_pain",
+            "symptom.vaginal_bleeding"
+          ],
+          "rule_id": "RF-ECTOPIC",
+          "status": "not_evaluated"
+        },
+        {
+          "evaluated_on": [],
+          "fired": null,
+          "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+          "missing_inputs": [
+            "symptom.fever",
+            "symptom.neck_stiffness",
+            "symptom.non_blanching_rash",
+            "vital.temp_c:stale(read_at=2026-01-01T08:50:00+00:00, age_min=80.00)"
+          ],
+          "rule_id": "RF-MENING",
+          "status": "not_evaluated"
+        },
+        {
+          "evaluated_on": [],
+          "fired": null,
+          "label": "provisional research prototype; thresholds copied from the cited source, pending clinical expert review",
+          "missing_inputs": [
+            "vital.capillary_glucose_mg_dl"
+          ],
+          "rule_id": "RF-HYPOGLY",
+          "status": "not_evaluated"
+        }
+      ],
+      "rule_set_version": "rf-1.1.0",
+      "rules_evaluated": [],
+      "rules_not_evaluated": [
+        "RF-ANAPH",
+        "RF-CHEST",
+        "RF-CONSC",
+        "RF-ECTOPIC",
+        "RF-GIBLEED",
+        "RF-HR",
+        "RF-HYPOGLY",
+        "RF-MENING",
+        "RF-QSOFA",
+        "RF-RR",
+        "RF-SBP",
+        "RF-SPO2",
+        "RF-STROKE",
+        "RF-SUICIDE",
+        "RF-TEMP",
+        "RF-THUNDER"
+      ],
+      "scope": "rf-1.1.0: 16 declared rules over vitals within their freshness windows and symptoms mentioned in the intake transcript; an unmentioned symptom is unknown, not absent",
+      "status": "not_evaluated",
+      "unmappable": []
+    }
+  },
+  "output_sha256": "f8ca58102648887ca70af0876b98d3a817afc93920123b524e6c0c1c07b798c3",
+  "reason": null,
+  "started_at": "2026-10-03T18:22:37.737090+00:00",
+  "status": "ok"
+}

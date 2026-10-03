@@ -671,6 +671,8 @@ class MedicationIssues(Derived):
     # cg-t123 round 4: the conversation's medication facts, and per fact (allergy and medication) whether it was used
     conversation_medication_facts: tuple[IntakeValue, ...] = ()
     conversation_fact_use: tuple[ConversationFactUse, ...] = ()
+    # cg-l3: executor Pharma gate-semantics version that produced this output; None = made before cg-l3 (not recorded)
+    gates_version: str | None = None
 
     @model_validator(mode="after")
     def _invariant(self) -> "MedicationIssues":

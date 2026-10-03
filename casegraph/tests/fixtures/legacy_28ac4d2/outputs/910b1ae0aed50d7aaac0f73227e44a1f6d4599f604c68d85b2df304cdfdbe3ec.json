@@ -1,0 +1,134 @@
+{
+  "cache_key": "910b1ae0aed50d7aaac0f73227e44a1f6d4599f604c68d85b2df304cdfdbe3ec",
+  "ended_at": "2026-10-03T18:22:37.739644+00:00",
+  "errored_inputs": [],
+  "gateway_calls": 3,
+  "missing_inputs": [],
+  "node_type": "pharma_agent",
+  "output": {
+    "MedicationIssues": {
+      "check_results": [
+        {
+          "check": "s5_rules",
+          "evaluated_on": [
+            "SYN-CXR-home",
+            "SYN-CXR-order"
+          ],
+          "fired": true,
+          "label": "S5 Pharma Agent (rules primary; model phrasing supplementary; offline mock provider by default)",
+          "medication": "*",
+          "missing_inputs": [],
+          "status": "evaluated"
+        }
+      ],
+      "checks_not_evaluated": [],
+      "conversation_allergy_facts": [],
+      "conversation_fact_use": [],
+      "conversation_medication_facts": [],
+      "input_refs": [
+        "SYN-CXR-allergy",
+        "SYN-CXR-home",
+        "SYN-CXR-order",
+        "reader_text:feedc1422f42f96fe5b622c5c8a2ac0e95af323ae5f8bca6505320de7ca6578d"
+      ],
+      "issues": [
+        {
+          "conflicting_sources": [
+            {
+              "available_at_time": "2025-12-30T09:00:00+00:00",
+              "evidence_ref": "SYN-CXR-allergy#0",
+              "presence": "present",
+              "raw_span": "penicillin (rash)",
+              "source_type": "allergy_record"
+            },
+            {
+              "available_at_time": "2026-01-01T10:10:00+00:00",
+              "dose_basis": "stated_amount",
+              "dose_per_administration": 500.0,
+              "dose_status": "resolved",
+              "dose_unit": "mg",
+              "dose_unverifiable_reason": null,
+              "dose_value": 500.0,
+              "drug_name_raw": "Amoxicillin",
+              "evidence_ref": "SYN-CXR-order",
+              "frequency_code": "q8h",
+              "frequency_status": "recognised",
+              "presence": "present",
+              "quantity": null,
+              "raw_span": "Amoxicillin 500 mg q8h",
+              "route": null,
+              "source_type": "new_order"
+            }
+          ],
+          "field": null,
+          "ingredients": [
+            "amoxicillin"
+          ],
+          "issue_id": "7f66df6506167515-i01",
+          "kind": "allergy_class",
+          "medication": "amoxicillin",
+          "message": "Mock phrasing. Allergy check (allergy to the drug class): the allergy record lists \"penicillin (rash)\", and amoxicillin appears in the new order. For pharmacist review.",
+          "phrasing_source": "model",
+          "rule_id": "allergy_class@1.1.0",
+          "severity": "high",
+          "severity_rank": 1,
+          "unverifiable": false
+        },
+        {
+          "conflicting_sources": [
+            {
+              "available_at_time": "2025-12-31T09:00:00+00:00",
+              "dose_basis": "stated_amount",
+              "dose_per_administration": 500.0,
+              "dose_status": "resolved",
+              "dose_unit": "mg",
+              "dose_unverifiable_reason": null,
+              "dose_value": 500.0,
+              "drug_name_raw": "Paracetamol",
+              "evidence_ref": "SYN-CXR-home",
+              "frequency_code": "q6h",
+              "frequency_status": "recognised",
+              "presence": "present",
+              "quantity": null,
+              "raw_span": "Paracetamol 500 mg q6h",
+              "route": null,
+              "source_type": "home_list"
+            },
+            {
+              "available_at_time": "2026-01-01T10:10:00+00:00",
+              "evidence_ref": "SYN-CXR-order",
+              "presence": "absent",
+              "raw_span": "",
+              "source_type": "new_order"
+            }
+          ],
+          "field": null,
+          "ingredients": [
+            "acetaminophen"
+          ],
+          "issue_id": "7f66df6506167515-i02",
+          "kind": "omission",
+          "medication": "acetaminophen",
+          "message": "Mock phrasing. acetaminophen is listed in the home list but is absent from the new order, and no intent to end it is recorded. For pharmacist review.",
+          "phrasing_source": "model",
+          "rule_id": "omission@1.0.0",
+          "severity": "review",
+          "severity_rank": 4,
+          "unverifiable": false
+        }
+      ],
+      "label": "S5 Pharma Agent (rules primary; model phrasing supplementary; offline mock provider by default)",
+      "missing_inputs": [],
+      "model_version": "s5-pipeline-2.6.0",
+      "produced_by": "pharma_agent",
+      "provider": "rules",
+      "rule_set_version": "s5-pipeline-2.6.0",
+      "status": "evaluated",
+      "summary": null
+    }
+  },
+  "output_sha256": "dacd67a0375e4466ad3862b108236a23b16934a8a4c3b73d65553b6b528ced58",
+  "reason": null,
+  "started_at": "2026-10-03T18:22:37.736847+00:00",
+  "status": "ok"
+}

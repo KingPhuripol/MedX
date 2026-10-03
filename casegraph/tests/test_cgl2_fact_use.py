@@ -89,7 +89,7 @@ def test_superseded_is_not_a_gap(env, kind, state):
 
 
 def test_gates_7_constant_and_no_stale_hit(env, monkeypatch):
-    assert executor_mod.PHARMA_GATES_VERSION == "cg-pharma-gates-8"
+    assert executor_mod.PHARMA_GATES_VERSION == "cg-pharma-gates-9"
     p = "SYN-L2-VER"
     items = [*base(p), order(p, f"{p}-o", T1)]
     ex = env.executor()
