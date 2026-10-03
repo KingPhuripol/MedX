@@ -218,3 +218,14 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
   - Access goes through the existing nurse login, plus the voice access code when set.
 - **Not approved:** a permanent deployment of `medx-mobile` (D5 is still pending).
 - **Approved by:** project owner (chat, 2026-09-30).
+
+## 2026-10-01 — Proposal v9 wording per advisor comments
+- **What:** Objective 2 now states the required multimodal capabilities rather than a parameter count. The ~27B flagship target (DEC-0009) is unchanged and now appears in the scope section (1.3.1) as a target that is adjusted to GPU resources. New 1.3.5 fallback table: a smaller model is reported at its true scale. Table 1.1 marks Case Graph as the main contribution and Front Door as the demonstration system. The medication flow is sequential: doctor orders → Case Graph T3 → Pharma Agent → pharmacist (Figures 3.2 and 3.4).
+- **Approved by:** project owner (chat, 2026-10-01, approved v9 edit plan).
+- **Scope:** proposal document wording only; no change to splits, labels, success criteria, or the 27B target. `docs/PROPOSAL.md` is not yet synced to v9.
+
+## 2026-10-03 — Publish repository to public GitHub
+- **What:** push all local branches and tags to `https://github.com/KingPhuripol/MedX.git`, which is a **public** repository.
+- **Checked before the push:** a full-history scan found no real API keys; the only key-like strings are `sk-SENTINEL…` test fixtures. `.env`, `data/raw|interim|processed|synthetic/`, artifacts and checkpoints are gitignored. No patient data is tracked.
+- **Not included:** untracked files (Proposal v8/v9 `.docx`/`.pdf`, `.claude/agent-memory/`).
+- **Approved by:** project owner (chat, 2026-10-03; chose public visibility and all branches + tags).
