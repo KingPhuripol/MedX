@@ -112,14 +112,20 @@ def same_time_conflict(facts: Any, fact: dict[str, Any]) -> bool:
 
 def fact_refs(facts: tuple[dict[str, Any], ...]) -> dict[int, str]:
     """Evidence ref per fact (keyed by ``id(fact)``): the real source item id plus the ordinal among facts of that
-    kind from that item, in the order the Reader:Text node emitted them."""
-    seen: dict[tuple[str, str], int] = {}
+    kind from that item, in the order the Reader:Text node emitted them.
+
+    Only valid-time facts advance the ordinal; a bad-time fact gets its own ``#bad-time-k`` counter. So the ref of a
+    valid fact is the same whether it is numbered over the full tuple (gates, fact_use) or over the tuple with bad-time
+    facts removed (provider input): one fact, one ref."""
+    seen: dict[tuple[str, str, bool], int] = {}
     out: dict[int, str] = {}
     for f in facts:
         src = str(f.get("source_item") or "turns")[:70]
-        k = seen.get((f["kind"], src), 0)
-        seen[(f["kind"], src)] = k + 1
-        out[id(f)] = f"conversation:{f['kind']}:{src}#{k}"
+        bad = time_problem(f) is not None
+        key = (f["kind"], src, bad)
+        k = seen.get(key, 0)
+        seen[key] = k + 1
+        out[id(f)] = f"conversation:{f['kind']}:{src}#{'bad-time-' if bad else ''}{k}"
     return out
 
 

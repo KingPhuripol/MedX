@@ -270,3 +270,51 @@ def test_cgl1_gates_version_bumped(env, monkeypatch):
     monkeypatch.setattr(executor_mod, "PHARMA_GATES_VERSION", "cg-pharma-gates-5")
     b = ex.run_sync(graph(2))
     assert _node(a).cache_key != _node(b).cache_key and not _node(b).cached
+
+
+# ------------------------------------------------------------------------------------- one fact, one evidence ref
+
+def test_cgl1_fact_refs_independent_of_bad_time_filter():
+    from casegraph.conversation_meds import fact_refs
+    a = fact("current_medications", value=["aspirin"], t="not-a-time", source_item="P-c1")
+    w = fact("current_medications", value=["warfarin"], source_item="P-c1")
+    w2 = fact("current_medications", value=["ibuprofen"], source_item="P-c1")
+    full, filt = fact_refs((a, w, w2)), fact_refs((w, w2))
+    assert full[id(w)] == filt[id(w)] == "conversation:current_medications:P-c1#0"
+    assert full[id(w2)] == filt[id(w2)] == "conversation:current_medications:P-c1#1"
+    assert full[id(a)] == "conversation:current_medications:P-c1#bad-time-0"
+
+
+@pytest.mark.parametrize("mode", MODES)
+@pytest.mark.parametrize("kind", ["current_medications", "allergens"])
+def test_cgl1_same_source_item_refs_agree(env, monkeypatch, kind, mode):
+    """Bad-time fact FIRST, valid fact of the same kind in the SAME source item: every ref the provider evidence
+    cites must be the executor's own ref of the valid fact, and the consumed fact is not reported not_consumed."""
+    p = "SYN-L1R"
+    bad_name, good_name = ("aspirin", "warfarin") if kind == "current_medications" else ("latex", "penicillin")
+    items = _items(p, mode, [("c1", -10, {kind: ("KNOWN", [good_name])})])
+    orig = Executor._conversation_facts
+
+    def wrapped(ctx):
+        out = []
+        for f in orig(ctx):
+            if f.get("source_item") == f"{p}-c1" and f["kind"] == kind:
+                bad = {**f, "value": [bad_name], "value_text": bad_name, "available_at_time": "not-a-time"}
+                out += [bad, f]
+            else:
+                out.append(f)
+        return tuple(out)
+
+    monkeypatch.setattr(Executor, "_conversation_facts", staticmethod(wrapped))
+    mi = _mi(_run(env, items, p, mode))
+    good_ref, bad_ref = f"conversation:{kind}:{p}-c1#0", f"conversation:{kind}:{p}-c1#bad-time-0"
+    assert tok(kind) in mi["missing_inputs"] and mi["status"] != "evaluated"
+    blob = json.dumps(mi["check_results"])
+    assert bad_ref not in blob and bad_name not in blob.lower()
+    assert not any(f"not_consumed@{good_ref}" in m for m in mi["missing_inputs"])  # consumed valid fact: not a gap
+    cited = {r for c in mi["check_results"] for r in c.get("evaluated_on", []) if r.startswith(f"conversation:{kind}:")}
+    assert all(r.startswith(good_ref) for r in cited), cited  # never the bad fact's (or a shifted) ref
+    if kind == "current_medications":
+        assert good_ref in cited
+        uses = {u["evidence_ref"]: u for u in mi["conversation_fact_use"] if u["kind"] == kind}
+        assert uses[good_ref]["use"] != "not_used" and uses[bad_ref]["reason"] == tok(kind)
