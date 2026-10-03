@@ -1,0 +1,133 @@
+{
+  "access": {
+    "approval_ref": null,
+    "gated": "auto",
+    "requires_user_agreement": true,
+    "token_owner": "each user's own Hugging Face account (HF_TOKEN)"
+  },
+  "citation": {
+    "doi": "10.1038/s41551-025-01599-y",
+    "proposal_ref": "[11]"
+  },
+  "dataset_id": "ct-rate",
+  "deletion_obligations": [
+    "On access revocation or project end, delete data/raw/ctrate and every derivative (data/processed/ctrate/*, caches, features).",
+    "No redistribution: no CT-RATE row, report or volume is committed to this repository."
+  ],
+  "expected_counts": {
+    "patients": 21304,
+    "scans": 25692,
+    "source": "provider-stated, dataset README at the pinned revision (unverified until an authorized download)",
+    "train_patients": 20000,
+    "valid_patients": 1304,
+    "volumes": 50188
+  },
+  "expected_files": [
+    {
+      "checksum_note": "LFS file: git_blob_sha1 is the pointer-file oid; the LFS sha256 is masked in the unauthenticated API, so verify checks size only until it is recorded after an authorized download.",
+      "git_blob_sha1": "b37ed5aff71192d67510481f8604277c9fddccc4",
+      "lfs": true,
+      "lfs_sha256": null,
+      "path": "dataset/metadata/train_metadata.csv",
+      "size": 14922140
+    },
+    {
+      "git_blob_sha1": "9bd612019abfa79af0e67df871c9b8f9978f1e86",
+      "lfs": false,
+      "lfs_sha256": null,
+      "path": "dataset/metadata/validation_metadata.csv",
+      "size": 948083
+    },
+    {
+      "checksum_note": "LFS file: git_blob_sha1 is the pointer-file oid; the LFS sha256 is masked in the unauthenticated API, so verify checks size only until it is recorded after an authorized download.",
+      "git_blob_sha1": "249c248ea3b07e7e967f79295c4a8ade38a51591",
+      "lfs": true,
+      "lfs_sha256": null,
+      "path": "dataset/radiology_text_reports/train_reports.csv",
+      "size": 79667286
+    },
+    {
+      "git_blob_sha1": "c8226376032d067895d0c8dc074f72d798d62d8a",
+      "lfs": false,
+      "lfs_sha256": null,
+      "path": "dataset/radiology_text_reports/validation_reports.csv",
+      "size": 5152619
+    },
+    {
+      "git_blob_sha1": "97afa1ece6866fb1e33846a8c53c9be66e6927aa",
+      "lfs": false,
+      "lfs_sha256": null,
+      "path": "dataset/multi_abnormality_labels/train_predicted_labels.csv",
+      "size": 2755808
+    },
+    {
+      "git_blob_sha1": "1f653aae7050628e2ba6029fe469cbe7c5a4294b",
+      "lfs": false,
+      "lfs_sha256": null,
+      "path": "dataset/multi_abnormality_labels/valid_predicted_labels.csv",
+      "size": 174015
+    },
+    {
+      "git_blob_sha1": "a4d5d6c77303b0d0785d757898e3736b73dbb86d",
+      "lfs": false,
+      "lfs_sha256": null,
+      "path": "dataset/metadata/no_chest_train.txt",
+      "size": 40027
+    },
+    {
+      "git_blob_sha1": "207a6f8b7dd4c1b75ca5df514364c06b4bbe125c",
+      "lfs": false,
+      "lfs_sha256": null,
+      "path": "dataset/metadata/no_chest_valid.txt",
+      "size": 1831
+    }
+  ],
+  "hf_repo": "ibrahimhamamci/CT-RATE",
+  "license": {
+    "name": "CC BY-NC-SA 4.0",
+    "retrieved_on": "2026-10-03",
+    "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/"
+  },
+  "local_root": "data/raw/ctrate",
+  "revision": "deeca4d89e9f978d4d1bccd88a55071ddbb146bb",
+  "source_url": "https://huggingface.co/datasets/ibrahimhamamci/CT-RATE",
+  "split_policy": {
+    "dev_fraction": 0.1,
+    "method": "dev = round(0.10*N_train_patients) train patients with the lowest sha256(f'{seed}:{patient_key}'); official valid is the sealed test split",
+    "official_train": [
+      "train",
+      "dev"
+    ],
+    "official_valid": "test",
+    "patient_key": "<official_split>_<int pid>",
+    "seed": 20260926,
+    "unit": "patient"
+  },
+  "terms": {
+    "retrieved_on": "2026-10-03",
+    "source_url": "https://huggingface.co/datasets/ibrahimhamamci/CT-RATE",
+    "summary": [
+      "Academic, research and educational use only; no commercial use without permission.",
+      "Comply with privacy law (GDPR/HIPAA); no re-identification.",
+      "Cite the dataset; no ownership claims.",
+      "No redistribution of the dataset or any portion of it.",
+      "Derived data must respect confidentiality.",
+      "Access may be revoked and terms may change."
+    ],
+    "verbatim_sha256": "7e18d8bc9bf8aa94d06f6790c2bdd7e700d06dbd0ee43dcc2108cc2094eea545"
+  },
+  "time_convention": {
+    "anchor": "2000-01-01T00:00:00+00:00",
+    "name": "ctrate_synthetic_anchor_v1",
+    "note": "CT-RATE has no clinical timestamps. The anchor is a sentinel, never a real clinical time. Volume <= report < labels; only volumes are reader input. One case = one scan; no cross-scan evidence.",
+    "offsets": {
+      "labels": "P2D",
+      "report": "P1D",
+      "volume": "P0D"
+    },
+    "reader_decision_time": "2000-01-01T00:00:00+00:00",
+    "time_basis": "synthetic_anchor"
+  },
+  "volume_root": "train",
+  "volume_root_decision": "open: train vs train_fixed to be decided after reading the gated dataset/data_correction_note.md"
+}

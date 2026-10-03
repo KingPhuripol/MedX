@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dataset-manifest.schema.json",
+  "title": "Dataset manifest (source, licence, access, expected files, time convention, split policy)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["dataset_id", "source_url", "hf_repo", "revision", "license", "terms", "access", "deletion_obligations",
+               "citation", "expected_files", "expected_counts", "volume_root", "local_root", "time_convention",
+               "split_policy"],
+  "$defs": {
+    "date": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "str": {"type": "string", "minLength": 1}
+  },
+  "properties": {
+    "dataset_id": {"$ref": "#/$defs/str"},
+    "source_url": {"type": "string", "pattern": "^https://"},
+    "hf_repo": {"$ref": "#/$defs/str"},
+    "revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "license": {
+      "type": "object", "additionalProperties": false, "required": ["name", "url", "retrieved_on"],
+      "properties": {"name": {"$ref": "#/$defs/str"}, "url": {"type": "string", "pattern": "^https://"},
+                     "retrieved_on": {"$ref": "#/$defs/date"}}
+    },
+    "terms": {
+      "type": "object", "additionalProperties": false,
+      "required": ["summary", "verbatim_sha256", "retrieved_on", "source_url"],
+      "properties": {"summary": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/str"}},
+                     "verbatim_sha256": {"$ref": "#/$defs/sha256"}, "retrieved_on": {"$ref": "#/$defs/date"},
+                     "source_url": {"type": "string", "pattern": "^https://"}}
+    },
+    "access": {
+      "type": "object", "additionalProperties": false,
+      "required": ["gated", "requires_user_agreement", "token_owner", "approval_ref"],
+      "properties": {"gated": {"$ref": "#/$defs/str"}, "requires_user_agreement": {"type": "boolean"},
+                     "token_owner": {"$ref": "#/$defs/str"}, "approval_ref": {"type": ["string", "null"]}}
+    },
+    "deletion_obligations": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/str"}},
+    "citation": {
+      "type": "object", "additionalProperties": false, "required": ["proposal_ref", "doi"],
+      "properties": {"proposal_ref": {"$ref": "#/$defs/str"}, "doi": {"$ref": "#/$defs/str"}}
+    },
+    "expected_files": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["path", "size", "git_blob_sha1", "lfs", "lfs_sha256"],
+        "properties": {
+          "path": {"$ref": "#/$defs/str"}, "size": {"type": "integer", "minimum": 0},
+          "git_blob_sha1": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+          "lfs": {"type": "boolean"},
+          "lfs_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+          "checksum_note": {"type": "string"}
+        }
+      }
+    },
+    "expected_counts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["patients", "train_patients", "valid_patients", "scans", "volumes", "source"],
+      "properties": {"patients": {"type": "integer"}, "train_patients": {"type": "integer"},
+                     "valid_patients": {"type": "integer"}, "scans": {"type": "integer"},
+                     "volumes": {"type": "integer"}, "source": {"$ref": "#/$defs/str"}}
+    },
+    "volume_root": {"enum": ["train", "train_fixed"]},
+    "volume_root_decision": {"$ref": "#/$defs/str"},
+    "local_root": {"const": "data/raw/ctrate"},
+    "time_convention": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "anchor", "time_basis", "offsets", "reader_decision_time", "note"],
+      "properties": {"name": {"$ref": "#/$defs/str"}, "anchor": {"$ref": "#/$defs/str"},
+                     "time_basis": {"const": "synthetic_anchor"},
+                     "offsets": {"type": "object", "required": ["volume", "report", "labels"]},
+                     "reader_decision_time": {"$ref": "#/$defs/str"}, "note": {"$ref": "#/$defs/str"}}
+    },
+    "split_policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["unit", "patient_key", "official_valid", "official_train", "method", "seed", "dev_fraction"],
+      "properties": {"unit": {"const": "patient"}, "patient_key": {"$ref": "#/$defs/str"},
+                     "official_valid": {"const": "test"}, "official_train": {"type": "array"},
+                     "method": {"$ref": "#/$defs/str"}, "seed": {"type": "integer"},
+                     "dev_fraction": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1}}
+    }
+  }
+}
