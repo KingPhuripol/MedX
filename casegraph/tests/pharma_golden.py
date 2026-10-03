@@ -4,7 +4,7 @@ Synthetic, offline, mock only. Research prototype: not clinical performance. A g
 not a proof that behaviour is unchanged outside that corpus.
 
     python -m casegraph.tests.pharma_golden --check
-    python -m casegraph.tests.pharma_golden --write [--accept-input-drift]   # only after a deliberate version bump
+    python -m casegraph.tests.pharma_golden --write [--accept-input-drift] [--accept-key-drift]   # only after a deliberate version bump
 """
 
 from __future__ import annotations
@@ -75,7 +75,8 @@ def _add(entries, prefix, graphs, items):
     for g in graphs:
         node = g.by_type(NodeType.PHARMA_AGENT)
         if node is not None:
-            entries[f"{prefix}|{g.stage or "-"}|v{g.version}"] = _entry(g, node, items_by_id)
+            stage = g.stage or "-"  # no nested quotes in f-strings: requires-python is >=3.11 (PEP 701 is 3.12)
+            entries[f"{prefix}|{stage}|v{g.version}"] = _entry(g, node, items_by_id)
 
 
 def syn_subset(dataset: Path) -> list[str]:
@@ -183,8 +184,10 @@ def changed_semantics(golden: dict[str, Any], current: dict[str, Any]) -> list[s
                   if golden["entries"][k]["semantic_sha256"] != current["entries"][k]["semantic_sha256"])
 
 
-def write_golden(path: Path, current: dict[str, Any], *, accept_input_drift: bool = False, out=print) -> int:
-    """Rewrite ``path``. Exit 2 (file untouched) on an unbumped semantics change or unaccepted input drift."""
+def write_golden(path: Path, current: dict[str, Any], *, accept_input_drift: bool = False,
+                 accept_key_drift: bool = False, out=print) -> int:
+    """Rewrite ``path``. Exit 2 (file untouched) on an unbumped semantics change, or on input or key drift (corpus
+    entries added/removed) that was not explicitly accepted."""
     if path.exists():
         golden = json.loads(path.read_text())
         rep = compare(golden, current)
@@ -194,6 +197,12 @@ def write_golden(path: Path, current: dict[str, Any], *, accept_input_drift: boo
             return 2
         if rep.keys(INPUT_DRIFT) and not accept_input_drift:
             out(f"REFUSED: input drift in {len(rep.keys(INPUT_DRIFT))} entries; review and pass --accept-input-drift")
+            return 2
+        added, removed = sorted(set(current["entries"]) - set(golden["entries"])), sorted(
+            set(golden["entries"]) - set(current["entries"]))
+        if (added or removed) and not accept_key_drift:
+            out(f"REFUSED: corpus keys changed (+{len(added)} -{len(removed)}), e.g. +{added[:3]} -{removed[:3]}; "
+                "review and pass --accept-key-drift")
             return 2
         changed = changed_semantics(golden, current)
     else:
@@ -211,6 +220,7 @@ def main(argv: list[str] | None = None, *, current: dict[str, Any] | None = None
     mode.add_argument("--check", action="store_true")
     mode.add_argument("--write", action="store_true")
     ap.add_argument("--accept-input-drift", action="store_true")
+    ap.add_argument("--accept-key-drift", action="store_true")
     ap.add_argument("--golden", type=Path, default=GOLDEN_PATH)
     ap.add_argument("--dataset", type=Path, help="existing S1r dataset (default: generate seed 20260926 in a temp dir)")
     args = ap.parse_args(argv)
@@ -224,7 +234,8 @@ def main(argv: list[str] | None = None, *, current: dict[str, Any] | None = None
                                cwd=Path(__file__).resolve().parents[2], check=True, capture_output=True)
                 current = build_corpus(out)
     if args.write:
-        return write_golden(args.golden, current, accept_input_drift=args.accept_input_drift)
+        return write_golden(args.golden, current, accept_input_drift=args.accept_input_drift,
+                            accept_key_drift=args.accept_key_drift)
     rep = compare(json.loads(args.golden.read_text()), current)
     print(rep.text())
     return 0 if rep.ok else 1

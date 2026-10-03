@@ -194,3 +194,15 @@ def test_golden_corpus_coverage(current, dataset):
         e = corpus["entries"].values()
         assert {"evaluated", "partially_evaluated", "not_evaluated"} <= {x["status"] for x in e}
         assert {"used", "partial", "not_used", "superseded"} <= {u for x in e for u in x["fact_use"]}
+
+
+def test_write_refuses_unaccepted_key_drift(tmp_path):
+    """Review C2: a regenerate must not quietly add or drop corpus entries."""
+    from casegraph.tests import pharma_golden as pg
+    golden = json.loads(pg.GOLDEN_PATH.read_text())
+    shrunk = dict(golden, entries=dict(list(golden["entries"].items())[:-1]))
+    path = tmp_path / "g.json"
+    path.write_text(json.dumps(golden, sort_keys=True, indent=2) + "\n")
+    before = path.read_bytes()
+    assert pg.write_golden(path, shrunk, out=lambda *_: None) == 2 and path.read_bytes() == before
+    assert pg.write_golden(path, shrunk, accept_key_drift=True, out=lambda *_: None) == 0
