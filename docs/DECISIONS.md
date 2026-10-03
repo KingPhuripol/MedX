@@ -299,3 +299,17 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
 - **Residual (tracked under L3):** Pharma outputs stored under gates ≤7 replay unchanged and may show used=True on superseded rows. UI-DAG must render from `use`, never `used`.
 - **Approved by:** project owner (chat, 2026-10-03/04: "แก้ condition … คู่ขนาน" for each slice). Merges followed the loop verdicts.
 - **Scope:** synthetic data only. This is system behaviour, not clinical performance. Pharmacist sign-off on the supersession rules is still pending.
+
+## 2026-10-04 — cg-l3 merged: Pharma gate version visible + golden tripwire
+- **What changed:**
+  - Every Pharma output now carries `MedicationIssues.gates_version`. A null value means the output was made before cg-l3.
+  - `PHARMA_GATES_VERSION` is now `cg-pharma-gates-9`. Adding the field changed the output bytes, so the version had to be bumped.
+  - A committed golden file of Pharma output hashes (`casegraph/tests/golden/pharma_gates_golden.json`) now fails the tests if gate behaviour changes without a version bump, or if the version is bumped without regenerating the golden file. Regenerating with `python -m casegraph.tests.pharma_golden --write` is refused on an unbumped change; input drift needs `--accept-input-drift` and key drift needs `--accept-key-drift`.
+  - Legacy 0.3 and 0.4 exports from main at 28ac4d2 still import, replay with 0 calls and re-export byte-identically.
+- **Loop result:** checker PASS. Reviewers gave PASS and CONDITIONAL_PASS. Before merge I fixed a Python 3.11 f-string incompatibility and added the key-drift refusal.
+- **Limit:** the golden file covers only its fixed corpus. It is never proof that behaviour is unchanged.
+- **Open:**
+  - L3-N1: non-Pharma node bodies have no semantics version.
+  - L3-N1a: no guard enforces a fresh Output Store before a demo or evaluation run; until one exists, wipe the store manually.
+  - L3-F1: ui-dag must render `gates_version`, and render fact use from `use`.
+- **Approved by:** project owner (chat, 2026-10-03, "แก้ condition L3"). The merge followed the loop verdicts.
