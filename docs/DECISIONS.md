@@ -288,3 +288,14 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
   - pre-run orders being folded into T1.
 - **Approved by:** project owner (chat, 2026-10-03: started the slice; approved rounds 4 and 5). The merge followed the loop verdicts.
 - **Scope:** synthetic data only. This is a check of system behaviour, not clinical performance.
+
+## 2026-10-04 — Condition fixes merged: ctrate-r1, cg-m1, cg-l1, cg-l2
+- **What:** four condition slices, each run through the loop (planner → builder → checker → 2 reviewers). Each got checker PASS and reviewers CONDITIONAL_PASS; MEDIUM findings were fixed before merge.
+  - **ctrate-r1** closes the 6 non-human CT-RATE loader conditions. An empty `--raw` is never PASS, and a raw row whose patient was dropped is an audit error. The approval-gate edge cases remain LOW conditions, due before `prepare --execute`. The CT-RATE download is still not approved.
+  - **cg-m1** closes M1. Every version built in one assess escalates on its own alerts, and every graph_id is linked. Alert extraction is fail-safe. Follow-ups M1-R2..R5 are tracked; R3 and R4 need a clinician decision.
+  - **cg-l1** closes L1. A conversation fact with an unparseable time fails closed and is never sent to the provider.
+  - **cg-l2** closes L2 and L1-F1. `ConversationFactUse.used` is derived from `use`: superseded means used=False, and a bad-time allergy fact is not_used.
+- **Pharma gate semantics:** `PHARMA_GATES_VERSION` is now `cg-pharma-gates-8`.
+- **Residual (tracked under L3):** Pharma outputs stored under gates ≤7 replay unchanged and may show used=True on superseded rows. UI-DAG must render from `use`, never `used`.
+- **Approved by:** project owner (chat, 2026-10-03/04: "แก้ condition … คู่ขนาน" for each slice). Merges followed the loop verdicts.
+- **Scope:** synthetic data only. This is system behaviour, not clinical performance. Pharmacist sign-off on the supersession rules is still pending.
