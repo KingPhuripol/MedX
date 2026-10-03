@@ -50,25 +50,48 @@ def allergy_status_problem(fact: dict[str, Any]) -> str | None:
     return None
 
 
-def parse_ts(value: Any) -> datetime:
-    """An aware datetime from an ISO string/datetime. Naive is read as UTC; unparseable sorts oldest (never newest)."""
+def _aware(value: Any) -> datetime | None:
+    """An aware datetime from an ISO string/datetime (naive is read as UTC), or None when there is no valid time."""
     if isinstance(value, str):
         try:
             value = datetime.fromisoformat(value)
         except ValueError:
-            return _MIN
+            return None
     if not isinstance(value, datetime):
-        return _MIN
+        return None
     return value if value.tzinfo is not None else value.replace(tzinfo=timezone.utc)
 
 
+def _ts(f: Any) -> datetime | None:
+    try:
+        return _aware(f.get("available_at_time"))
+    except Exception:  # noqa: BLE001 - a crafted fact must never raise out of the ordering helpers
+        return None
+
+
+def time_problem(fact: Any) -> str | None:
+    """``conversation.<kind>:unparseable_time`` when the fact has no valid ``available_at_time`` (missing, None, not a
+    str/datetime, not ISO-parseable); else None. Never raises. Such a fact cannot be placed at or before T (rules 2-3)."""
+    if _ts(fact) is not None:
+        return None
+    kind = fact.get("kind") if isinstance(fact, dict) else None
+    return f"conversation.{kind if isinstance(kind, str) else 'unknown'}:unparseable_time"
+
+
+def parse_ts(value: Any) -> datetime:
+    """An aware datetime from an ISO string/datetime. Naive is read as UTC; unparseable sorts oldest (never newest).
+    Ordering helpers below never let an unparseable time win: they exclude it via ``time_problem``."""
+    return _aware(value) or _MIN
+
+
 def _payload(f: dict[str, Any]) -> str:
-    return json.dumps([f["state"], f.get("value"), f.get("value_text", "")], sort_keys=True, default=str)
+    return json.dumps([f.get("state"), f.get("value"), f.get("value_text", "")], sort_keys=True, default=str)
 
 
 def order_key(f: dict[str, Any]) -> tuple[datetime, int, str]:
-    """Total order on conversation facts: time, then non-KNOWN above KNOWN (conservative tie-break), then content."""
-    return parse_ts(f["available_at_time"]), 0 if f["state"] == "KNOWN" else 1, _payload(f)
+    """Total order on conversation facts: time (bad time sorts oldest), then non-KNOWN above KNOWN (conservative
+    tie-break), then content. Never raises."""
+    return _ts(f) or _MIN, 0 if f.get("state") == "KNOWN" else 1, _payload(f)
 
 
 def ordered(facts: Any) -> list[dict[str, Any]]:
@@ -76,27 +99,33 @@ def ordered(facts: Any) -> list[dict[str, Any]]:
 
 
 def newest(facts: Any) -> dict[str, Any] | None:
-    """The fact every consumer treats as current (same helper for gate, fact_use and supersede)."""
-    return max(facts, key=order_key, default=None)
+    """The fact every consumer treats as current (same helper for gate, fact_use and supersede). A bad-time fact is
+    never chosen: None when no fact has a valid time (the gate reports the bad-time facts)."""
+    return max((f for f in facts if time_problem(f) is None), key=order_key, default=None)
 
 
 def same_time_conflict(facts: Any, fact: dict[str, Any]) -> bool:
-    """Another fact of the same kind at the same instant that says something different."""
-    t = parse_ts(fact["available_at_time"])
-    return any(g is not fact and parse_ts(g["available_at_time"]) == t and _payload(g) != _payload(fact)
-               for g in facts)
+    """Another fact of the same kind at the same instant that says something different (bad times never tie)."""
+    t = _ts(fact)
+    return t is not None and any(g is not fact and _ts(g) == t and _payload(g) != _payload(fact) for g in facts)
 
 
 def fact_refs(facts: tuple[dict[str, Any], ...]) -> dict[int, str]:
     """Evidence ref per fact (keyed by ``id(fact)``): the real source item id plus the ordinal among facts of that
-    kind from that item, in the order the Reader:Text node emitted them."""
-    seen: dict[tuple[str, str], int] = {}
+    kind from that item, in the order the Reader:Text node emitted them.
+
+    Only valid-time facts advance the ordinal; a bad-time fact gets its own ``#bad-time-k`` counter. So the ref of a
+    valid fact is the same whether it is numbered over the full tuple (gates, fact_use) or over the tuple with bad-time
+    facts removed (provider input): one fact, one ref."""
+    seen: dict[tuple[str, str, bool], int] = {}
     out: dict[int, str] = {}
     for f in facts:
         src = str(f.get("source_item") or "turns")[:70]
-        k = seen.get((f["kind"], src), 0)
-        seen[(f["kind"], src)] = k + 1
-        out[id(f)] = f"conversation:{f['kind']}:{src}#{k}"
+        bad = time_problem(f) is not None
+        key = (f["kind"], src, bad)
+        k = seen.get(key, 0)
+        seen[key] = k + 1
+        out[id(f)] = f"conversation:{f['kind']}:{src}#{'bad-time-' if bad else ''}{k}"
     return out
 
 
@@ -118,6 +147,10 @@ def parse_medication_facts(facts: tuple[dict[str, Any], ...]) -> tuple[Conversat
         ref = refs[id(fact)]
         names: tuple[str, ...] = ()
         problem: str | None = None
+        bad_time = time_problem(fact)
+        if bad_time is not None:  # no valid time: an open gap, never superseded, never read by S5
+            out.append(ConversationMeds(ref, fact, (), f"conversation.{MED_KIND}:unparseable_time", False))
+            continue
         if fact["state"] != "KNOWN":
             problem = f"conversation.{MED_KIND}={fact['state']}"
         elif not isinstance(fact["value"], (list, tuple)):
@@ -128,8 +161,8 @@ def parse_medication_facts(facts: tuple[dict[str, Any], ...]) -> tuple[Conversat
             if len(names) != len(raw):
                 problem = f"conversation.{MED_KIND}:unparseable"
         superseded = fact["state"] != "KNOWN" and any(
-            g["state"] == "KNOWN" and parse_ts(g["available_at_time"]) > parse_ts(fact["available_at_time"])
-            for g in same)  # strictly later only: a same-time KNOWN never closes it
+            g["state"] == "KNOWN" and time_problem(g) is None and parse_ts(g["available_at_time"]) > parse_ts(
+                fact["available_at_time"]) for g in same)  # strictly later only: a same-time KNOWN never closes it
         if superseded:
             problem = None  # superseded by a later KNOWN statement: not an open input
         out.append(ConversationMeds(ref, fact, names, problem, superseded))

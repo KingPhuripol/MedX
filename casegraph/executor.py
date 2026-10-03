@@ -30,7 +30,7 @@ from .compiler import ValidatedGraph, validate
 from app.triage import department as s4_department
 
 from . import pharma_s5, reader_text, triage_bridge  # noqa: F401  (pharma_s5 registers the S5 hook)
-from .conversation_meds import MED_KIND, allergen_name_ok, allergens_problem, allergy_status_problem, consumed_refs, newest, ordered, parse_medication_facts, parse_ts, same_time_conflict, fact_refs
+from .conversation_meds import MED_KIND, allergen_name_ok, allergens_problem, allergy_status_problem, consumed_refs, newest, ordered, parse_medication_facts, parse_ts, same_time_conflict, fact_refs, time_problem
 from .data import (
     CLINICAL_TEXT_TYPES,
     PLACEHOLDER_RULE_SET,
@@ -77,7 +77,7 @@ PENDING_KEY = "pending_review"
 # Version of the executor-side Pharma semantics (allergy/conversation gates, fact ordering, fact_use). It is part of the
 # Pharma node's input hash, so a persistent Output Store entry computed under older semantics can never be served. The
 # registered S5 pipeline string (s5-pipeline-2.6.0) is pinned by S5's own tests and is deliberately not bumped.
-PHARMA_GATES_VERSION = "cg-pharma-gates-5"
+PHARMA_GATES_VERSION = "cg-pharma-gates-6"
 PHARMA_FACT_KINDS = frozenset({"allergy_status", "allergens", "current_medications"})
 _ACTION_STATUS = {"confirm": "confirmed", "edit": "edited", "reject": "rejected"}
 
@@ -483,6 +483,10 @@ class Executor:
             isinstance(n, str) and n.strip() for n in (allergens["value"] if isinstance(allergens["value"], (list, tuple))
                                                        else ()))
         out: list[tuple[str, tuple[str, ...]]] = []
+        for kind in ("allergy_status", "allergens"):  # a fact with no valid time is a gap in any state (rules 2, 3, 6)
+            bad = next((p for p in map(time_problem, of(kind)) if p), None)
+            if bad is not None:
+                out.append(("allergy_conversation", (bad,)))
         if allergens is not None and allergens["state"] in ("UNKNOWN", "REFUSED"):
             out.append(("allergy_conversation", (f"conversation.allergens={allergens['state']}",)))
         elif present and not named and (allergens is None or allergens_problem(allergens) is None):
@@ -622,7 +626,8 @@ class Executor:
                     return response
 
                 checks, issues = hook.fn(PharmaInput(  # type: ignore[arg-type]
-                    tuple(lists), tuple(allergies), self._conversation_facts(ctx), ctx.T, dc.value, invoke))
+                    tuple(lists), tuple(allergies),  # a bad-time fact cannot be placed at or before T: gates see it, the provider does not
+                    tuple(f for f in self._conversation_facts(ctx) if time_problem(f) is None), ctx.T, dc.value, invoke))
             else:
                 checks, issues = hook.fn(lists)  # type: ignore[arg-type]
             # The allergy / conversation gates apply whenever Pharma runs, staged or not (round 5): the output must not
@@ -633,10 +638,13 @@ class Executor:
                 **self._derived(ctx), status=screening_status(checks, missing), issues=issues, check_results=checks,
                 checks_not_evaluated=tuple(c for c in checks if c.missing_inputs), missing_inputs=missing,
                 rule_set_version=ctx.node.model_version, label=hook.label,
+                # The echoed facts are typed (IntakeValue: AwareDatetime), so a bad-time fact cannot be echoed; it is
+                # reported by its gate row and its conversation_fact_use row instead (never dropped, never `error`).
                 conversation_allergy_facts=tuple(
-                    f for f in self._conversation_facts(ctx) if f["kind"] in ("allergy_status", "allergens")),
+                    f for f in self._conversation_facts(ctx)
+                    if f["kind"] in ("allergy_status", "allergens") and time_problem(f) is None),
                 conversation_medication_facts=tuple(
-                    f for f in self._conversation_facts(ctx) if f["kind"] == MED_KIND),
+                    f for f in self._conversation_facts(ctx) if f["kind"] == MED_KIND and time_problem(f) is None),
                 conversation_fact_use=self._conversation_fact_use(self._conversation_facts(ctx), checks, hook.api),
             )
             errored = self._errored_conversation(ctx)
