@@ -39,7 +39,7 @@ Every slice below passed its loop with CONDITIONAL_PASS. These conditions must c
 ## cg-t123 (CONDITIONAL_PASS ×2, 2026-10-03)
 | ID | Sev | Condition | Gate |
 |---|---|---|---|
-| M1 | MEDIUM | When one assess builds several versions, only the last version's graph_id and alerts reach the assessment, `escalation_required` and its audit row (`casegraph_run.py`, triage `router.py`). An intermediate version's urgent alert must also escalate. | Before any backend source of results/orders (CG-F3) |
+| M1 | MEDIUM | When one assess builds several versions, only the last version's graph_id and alerts reach the assessment, `escalation_required` and its audit row (`casegraph_run.py`, triage `router.py`). An intermediate version's urgent alert must also escalate. | **CLOSED (cg-m1)**: `test_cg_m1_multiversion.py::test_intermediate_alert_escalates[P1..P5]`, `::test_no_alert_any_version_does_not_escalate`, `::test_built_graphs_linked_in_order`, `::test_last_version_failure_records_built_and_escalates[compile,execute]`, `::test_middle_version_failure_stops_and_escalates`. Follow-ups R2/R3/R4/R5 stay open (see slices/cg-m1/SPEC.md). |
 | L1 | LOW | An unparseable conversation timestamp sorts as oldest; it should fail closed (open, never superseded). Unreachable today (`AwareDatetime`). | Next cg change |
 | L2 | LOW | `ConversationFactUse.used=True` for `use=superseded`; consumers must read `use`, or set used=False for superseded. | Before UI-DAG renders `conversation_fact_use` |
 | L3 | LOW | The gate-semantics version is not visible in exports, and there is no golden test that fails if gate behaviour changes without a version bump. | Before cg-t123 output is cited as evidence |

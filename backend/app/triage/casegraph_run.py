@@ -89,8 +89,13 @@ def _executor(stores: GraphStores, gateways: dict[str, Any] | None = None, clock
 
 
 def run_graph(stores: GraphStores, case: Case, as_of: datetime, engine: Engine, provider: Provider,
-              user: CurrentUser, request_id: str) -> ExportedGraph:
-    """Compile and execute the next graph version for ``case`` at ``as_of``. Raises on a compile error."""
+              user: CurrentUser, request_id: str, *, built: list[ExportedGraph] | None = None) -> ExportedGraph:
+    """Compile and execute the next graph version(s) for ``case`` at ``as_of``; returns the last one.
+
+    cg-m1: when given, ``built`` receives every executed version in build order (right after each run), so the
+    caller still sees the earlier versions when a later one raises. A failing version is not in ``built``; the
+    exception propagates with ``casegraph_stage`` / ``casegraph_version`` attributes naming it.
+    """
     gw = _graph_provider(provider)
     gateways = {pid: AuditedGateway(engine, gw, user, request_id) for pid in GRAPH_PROVIDERS}
     items = evidence_from_case(case)
@@ -104,9 +109,15 @@ def run_graph(stores: GraphStores, case: Case, as_of: datetime, engine: Engine, 
         graph = None
         for plan in next_stages(parent_spec, items, as_of):
             version, parent = next_version(stores.state, case.case_ref)
-            compiled = compile_stage(build_snapshot(items, plan.T, case.case_ref), plan.stage, ProviderConfig(),
-                                     version, parent, trigger_refs=tuple(sorted(plan.trigger_item_ids)))
-            graph = executor.run_sync(compiled)
+            try:
+                compiled = compile_stage(build_snapshot(items, plan.T, case.case_ref), plan.stage, ProviderConfig(),
+                                         version, parent, trigger_refs=tuple(sorted(plan.trigger_item_ids)))
+                graph = executor.run_sync(compiled)
+            except Exception as exc:
+                exc.casegraph_stage, exc.casegraph_version = plan.stage, version  # type: ignore[attr-defined]
+                raise
+            if built is not None:
+                built.append(graph)
         assert graph is not None
         return graph
 
