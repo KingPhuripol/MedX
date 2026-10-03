@@ -30,7 +30,7 @@ from . import casegraph_run, store
 from . import engine as triage_engine
 from .departments import BY_CODE, DEPARTMENT_LIST_VERSION, DEPARTMENTS
 from .fixtures import engine_cases
-from .models import TriageAssessment
+from .models import BuiltGraphRef, GraphFailure, TriageAssessment
 
 router = APIRouter(prefix="/api/triage")
 
@@ -155,20 +155,36 @@ def assess(case_ref: str, body: AssessBody, request: Request, user: CurrentUser 
         return gateway_service.invoke(engine, provider, req, user, request_id=request_id(request))
 
     a = triage_engine.assess(case, body.as_of, invoke, actor_id=user.id)
-    graph_error = None
+    graph_error, graph_failure = None, None
+    built: list = []
     try:  # i2 scope 7: the Case Graph over the same evidence at the same as_of
         graph = casegraph_run.run_graph(request.app.state.casegraph, case, body.as_of, engine, provider, user,
-                                        request_id(request))
+                                        request_id(request), built=built)
         screening = casegraph_run.screening_block(graph)
-        graph_alerts = sorted({x["rule_id"] for x in (casegraph_run.graph_alerts(graph) or [])})
-        a = a.model_copy(update={
-            "graph_id": graph.graph_id, "screening": screening,
-            # an alert the graph raised always escalates, even if the engine did not raise it
-            "escalation_required": a.escalation_required or bool(graph_alerts),
-        })
     except Exception as exc:  # fail safe: screening shows NOT PERFORMED (unavailable) and the case escalates
-        graph_error, graph_alerts = type(exc).__name__, []
-        a = a.model_copy(update={"screening": casegraph_run.unavailable_screening(), "escalation_required": True})
+        graph, screening, graph_error = None, casegraph_run.unavailable_screening(), type(exc).__name__
+        graph_failure = GraphFailure(error_type=graph_error, stage=getattr(exc, "casegraph_stage", None),
+                                     version=getattr(exc, "casegraph_version", None))
+    # cg-m1: every version built in this call counts (an intermediate version's urgent alert must escalate too)
+    refs = []
+    for g in built:
+        unreadable = False
+        try:
+            ids = sorted({x["rule_id"] for x in (casegraph_run.graph_alerts(g) or [])})
+            status = g.red_flag_screening.status
+        except Exception:  # a malformed stored Red-flag output: fail safe, never a 500 and never "no alert"
+            ids, status, unreadable = [], "unavailable", True
+            graph_failure = graph_failure or GraphFailure(error_type="graph_alerts_unreadable", stage=g.stage,
+                                                          version=g.version)
+        refs.append(BuiltGraphRef(graph_id=g.graph_id, version=g.version, stage=g.stage, T=g.T,
+                                  screening_status=status, alert_rule_ids=ids,
+                                  escalation=bool(ids) or unreadable))
+    graph_alerts = sorted({i for r in refs for i in r.alert_rule_ids})
+    a = a.model_copy(update={
+        "graph_id": graph.graph_id if graph is not None else None, "screening": screening,
+        "escalation_required": a.escalation_required or bool(graph_alerts) or graph_failure is not None,
+        "built_graphs": refs, "graph_alert_rule_ids": graph_alerts, "graph_failure": graph_failure,
+    })
     store.insert_assessment(engine, a)
     dept = a.department
     _audit(request, user, "triage.assess", f"assessment/{a.assessment_id}", "success", {
@@ -188,6 +204,8 @@ def assess(case_ref: str, body: AssessBody, request: Request, user: CurrentUser 
         "graph_id": a.graph_id,
         "graph_error": graph_error,
         "graph_alert_rule_ids": graph_alerts,
+        "built_graphs": [r.model_dump(mode="json") for r in refs],
+        "graph_failure": graph_failure.model_dump(mode="json") if graph_failure else None,
         "screening_status": (a.screening or {}).get("status"),
     })
     return a.model_dump(mode="json")

@@ -168,7 +168,7 @@ def test_assessment_deterministic(client, login):
 
     def strip(d):
         # i2 (modified): each assessment executes a new Case Graph version, so graph_id differs by design
-        return {k: v for k, v in d.items() if k not in ("assessment_id", "created_at", "graph_id")}
+        return {k: v for k, v in d.items() if k not in ("assessment_id", "created_at", "graph_id", "built_graphs")}
 
     for ref in ("SYN-S4-002", "SYN-S4-026", "SYN-S4-036"):
         a, b = _assess(client, ref).json(), _assess(client, ref).json()

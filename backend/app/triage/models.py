@@ -296,6 +296,24 @@ class DepartmentSuggestion(_Strict):
     request_sha256: str | None
 
 
+class BuiltGraphRef(_Strict):
+    """cg-m1: one Case Graph version built by one assess call (the response and audit record of every version)."""
+
+    graph_id: str
+    version: int
+    stage: Literal["T1", "T2", "T3"] | None
+    T: AwareDatetime
+    screening_status: str
+    alert_rule_ids: list[str]
+    escalation: bool  # alert_rule_ids is non-empty
+
+
+class GraphFailure(_Strict):
+    error_type: str
+    stage: str | None = None
+    version: int | None = None
+
+
 class TriageAssessment(_Strict):
     """Serialized in field order: alerts come before the department section."""
 
@@ -310,6 +328,9 @@ class TriageAssessment(_Strict):
     conflicts: list[Conflict] = Field(default_factory=list)  # i2: same-timestamp conflicts, shown at review
     graph_id: str | None = None  # i2: the executed Case Graph behind this assessment
     screening: dict[str, Any] | None = None  # i2: RedFlagScreening block of that graph
+    built_graphs: list[BuiltGraphRef] = Field(default_factory=list)  # cg-m1: every version this call built
+    graph_alert_rule_ids: list[str] = Field(default_factory=list)  # cg-m1: union over built_graphs
+    graph_failure: GraphFailure | None = None
     review_status: Literal["pending_review", "confirmed", "edited", "rejected"] = "pending_review"
     confirmed_department: str | None = None
     output_label: str = "Suggestion for nurse review"
