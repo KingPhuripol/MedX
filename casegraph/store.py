@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Any, Protocol
 
 from pydantic import BaseModel, ConfigDict
 
-from .compiler import build_snapshot, compile_graph, config_from_spec
+from .compiler import build_snapshot, compile_graph, compile_stage, config_from_spec
 from .data import Evidence, dump_evidence, load_evidence, sha256_json
 from .export import ExportedGraph, GraphSpec, NodeStatus, import_graph, to_json
 from .library import ProviderAssignment
@@ -260,5 +260,9 @@ def regenerate(
         excluded.add(remove_node)
     snapshot = build_snapshot(items, spec.T, patient_ref=spec.patient_ref)
     version, _ = next_version(executor.state, spec.patient_ref)
-    graph = compile_graph(snapshot, config, version=version, parent_version=spec.version, exclude=excluded)
+    if spec.stage is not None:  # cg-t123: a staged version regenerates as the same stage with the same triggers
+        graph = compile_stage(snapshot, spec.stage, config, version, spec.version, trigger_refs=spec.trigger_refs,
+                              exclude=excluded)
+    else:
+        graph = compile_graph(snapshot, config, version=version, parent_version=spec.version, exclude=excluded)
     return executor.run_sync(graph)

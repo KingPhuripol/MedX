@@ -269,3 +269,22 @@ Dated approvals and material decisions. Old log (DEC-0001..0022) is in tag `arch
 - **What:** `factory/ctrate-loader` is merged. It adds the CT-RATE manifest (revision `deeca4d8…`, CC BY-NC-SA 4.0, gated HF access), a loader, a patient-level split with the official valid set as sealed test, a synthetic-anchor `available_at_time` convention, an audit, and a download command that is refused unless an approval is recorded. The checker passed B1–B9. Both reviewers gave CONDITIONAL_PASS; the conditions are in `slices/CONDITIONS.md`.
 - **Not approved:** downloading CT-RATE. That needs a separate owner decision covering who accepts the terms, who gets access, and multi-TB storage.
 - **Approved by:** project owner (chat, 2026-10-03, "เริ่ม CT-RATE loader คู่ขนาน"); the merge followed the loop verdicts.
+
+## 2026-10-03 — cg-t123 merged: staged Case Graph versions T1 nurse → T2 physician → T3 pharmacist
+- **What:** `factory/cg-t123` is merged. It implements PROPOSAL v9.6 §3.2.2–3.2.4 and Figure 3.2:
+  - Stages come from a fixed rule over `available_at_time`. T2 is created when results arrive, T3 when new orders arrive. Every pending stage is built.
+  - Each version has one Human Checkpoint for its role. Red-flag runs in every version and alerts that version's checkpoint directly.
+  - Unchanged nodes are cache hits. Versions are immutable, and replay makes 0 calls.
+  - S5 is the Pharma provider. Conversation medications and allergies are consumed as sources.
+  - `GET /api/triage/cases/{case_ref}/graph-versions` is read-only and audited.
+  - The export schema is `casegraph-export/0.4`; 0.3 exports still load.
+- **Loop:** 5 build rounds plus 3 targeted fixes. The owner approved rounds 4 and 5. Final checker result: A1–A8 PASS. Both reviewers gave CONDITIONAL_PASS. Full pytest: 2353 passed, 3 skipped (Postgres).
+- **Owner decision R5-1 (2026-10-03):** the Pharma allergy and conversation gates apply whenever Pharma runs, staged or not. The gate-semantics version (`PHARMA_GATES_VERSION`, now `cg-pharma-gates-5`) is part of the Pharma input hash instead of a bump to `s5-pipeline-2.6.0`. Legacy unstaged Pharma output changed as a result. Edited test: `casegraph/tests/test_executor.py::test_pharma_missing_dose_not_evaluated`. Tests also changed: the round 4/5 conversation-meds ref format.
+- **Accepted for this slice only:** `used=True` for superseded facts (condition L2). It must be fixed before any UI renders `conversation_fact_use`.
+- **Not approved, needs a licensed pharmacist:**
+  - the supersession rule: a later KNOWN statement closes an earlier UNKNOWN or REFUSED one;
+  - the tie rule;
+  - KNOWN `[]` meaning "takes none";
+  - pre-run orders being folded into T1.
+- **Approved by:** project owner (chat, 2026-10-03: started the slice; approved rounds 4 and 5). The merge followed the loop verdicts.
+- **Scope:** synthetic data only. This is a check of system behaviour, not clinical performance.

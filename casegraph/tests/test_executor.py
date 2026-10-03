@@ -263,12 +263,14 @@ def test_pharma_missing_dose_not_evaluated(env):
     pid = "SYN-PH1"
     items = [_meds(pid, "ph-a", {"name": "Paracetamol", "dose": "500 mg"}, {"name": "Amlodipine", "dose": "5 mg"}),
              _meds(pid, "ph-b", {"name": "paracetamol"})]  # second entry has no dose
-    graph = env.executor().run_sync(compile_graph(build_snapshot(items, DAY + 9 * H)))
+    graph = env.executor().run_sync(compile_graph(build_snapshot(items, DAY + 9 * H), s2_config()))
     mi = graph.node("pharma_agent").output["MedicationIssues"]
     gaps = [(c["medication"], c["check"], c["missing_inputs"]) for c in mi["checks_not_evaluated"]]
-    assert gaps == [("paracetamol", "dose_mismatch", ["MedicationList.dose@ph-b"])]
+    # round 5: the allergy gates apply whenever Pharma runs (no AllergyList here; placeholder provider checks nothing)
+    assert gaps[0] == ("paracetamol", "dose_mismatch", ["MedicationList.dose@ph-b"])
+    assert ("*", "allergy_record", ["AllergyList"]) in gaps
     assert mi["status"] == "partially_evaluated" and mi["status"] != "evaluated"
-    assert mi["missing_inputs"] == ["MedicationList.dose@ph-b"]
+    assert "MedicationList.dose@ph-b" in mi["missing_inputs"] and "AllergyList" in mi["missing_inputs"]
     assert {i["kind"] for i in mi["issues"]} == {"duplicate"}  # no mismatch claimed, none silently cleared
     assert mi["rule_set_version"] == "placeholder-pharma-0.2"
 

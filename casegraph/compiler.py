@@ -21,7 +21,9 @@ from .library import (
     ProviderAssignment,
     ProviderConfig,
     output_types,
+    requirement_key,
 )
+from .stages import REASONING_TASK, RESULT_READER, RESULT_TYPES, STAGE_ROLE, STAGES, is_order, is_result
 from .types import NodeType
 
 NODE_ORDER: tuple[NodeType, ...] = (
@@ -106,6 +108,28 @@ def _node_params(node_type: NodeType, a: ProviderAssignment, lib: LibraryConfig)
     return params
 
 
+def _stage_params(
+    node_type: NodeType, params: dict, stage: str, snapshot: Snapshot, trigger_refs: tuple[str, ...],
+    cfg: ProviderConfig,
+) -> dict:
+    """Staged Reasoning: ``task`` per stage, and T2 requires the output of each triggering result's Reader."""
+    if node_type is not NodeType.REASONING:
+        return params
+    params = {**params, "task": REASONING_TASK[stage]}
+    if stage == "T2":
+        by_id = {i.item_id: i for i in snapshot.items}
+        extra = []
+        for rid in trigger_refs:
+            item = by_id.get(rid)
+            if item is None or item.data_type not in RESULT_READER:
+                continue
+            reader = RESULT_READER[item.data_type]
+            out = output_types(reader, cfg.assignments[reader].provider)[0]
+            extra.append(requirement_key(out, item.data_type))
+        params["required_inputs"] = list(dict.fromkeys([*params["required_inputs"], *sorted(extra)]))
+    return params
+
+
 def build_draft(
     snapshot: Snapshot,
     config: ProviderConfig | None = None,
@@ -113,28 +137,47 @@ def build_draft(
     version: int = 1,
     parent_version: int | None = None,
     exclude: Iterable[NodeType] = (),
+    stage: str | None = None,
+    trigger_refs: Iterable[str] = (),
 ) -> GraphSpec:
-    """Steps 2-4: select nodes from the data present, assign providers, wire by type. Not validated."""
+    """Steps 2-4: select nodes from the data present, assign providers, wire by type. Not validated.
+
+    ``stage`` (cg-t123) selects the staged shape: T1 nurse / T2 physician / T3 pharmacist. Without a stage the
+    graph is the legacy single-checkpoint graph (Pharma whenever a MedicationList exists).
+    """
     cfg = config or ProviderConfig()
     excluded = set(exclude)
+    triggers = tuple(sorted(trigger_refs))
     present = snapshot.data_types()
     selected: list[NodeType] = []
     for t in NODE_ORDER:
         decl = LIBRARY[t]
-        if t in READERS or t is NodeType.PHARMA_AGENT:
+        if t is NodeType.PHARMA_AGENT:
+            if stage is None and "MedicationList" not in present:
+                continue
+            if stage is not None and stage != "T3":
+                continue  # Pharma runs on new physician orders only (3.2.2): never at T1/T2
+        elif t in READERS:
             if not present & set(decl.evidence_types):
                 continue
+        elif t is NodeType.REASONING and stage == "T3":
+            continue  # decision P-1: the pharmacist is not shown an unconfirmed Reasoning suggestion
         if t not in excluded:
             selected.append(t)
 
     specs: dict[str, NodeSpec] = {}
     for t in selected:
         a = cfg.assignments[t]
+        if stage is not None and t is NodeType.HUMAN_CHECKPOINT:
+            a = ProviderAssignment(provider=f"human:{STAGE_ROLE[stage]}", model_version=a.model_version)
         decl = LIBRARY[t]
         refs = tuple(sorted(i.item_id for i in snapshot.items if i.data_type in decl.evidence_types))
+        params = _node_params(t, a, cfg.library)
+        if stage is not None:
+            params = _stage_params(t, params, stage, snapshot, triggers, cfg)
         specs[t.value] = NodeSpec(
             id=t.value, type=t, provider=a.provider, model_version=a.model_version,
-            params=_node_params(t, a, cfg.library), data_class="synthetic",
+            params=params, data_class="synthetic",
             reproducible=a.provider != "external_model", evidence_refs=refs,
         )
 
@@ -143,6 +186,9 @@ def build_draft(
         for data_type in output_types(src.type, src.provider):
             for dst in specs.values():
                 if dst.id != src.id and data_type in LIBRARY[dst.type].input_types:
+                    if (stage is not None and data_type == "Findings" and dst.type is NodeType.PHARMA_AGENT
+                            and src.type is not NodeType.READER_TEXT):
+                        continue  # Pharma reads the conversation's allergy/medication facts only (3.2.4)
                     edges.append(EdgeSpec(src=src.id, dst=dst.id, data_type=data_type))
     edges.sort(key=lambda e: (NODE_ORDER.index(NodeType(e.src)), NODE_ORDER.index(NodeType(e.dst)), e.data_type))
 
@@ -157,6 +203,8 @@ def build_draft(
         nodes=nodes,
         edges=tuple(edges),
         evidence=snapshot.refs(),
+        stage=stage,  # type: ignore[arg-type]
+        trigger_refs=triggers,
     )
 
 
@@ -220,6 +268,41 @@ def _reachable(start: str, edges: tuple[EdgeSpec, ...]) -> set[str]:
                 seen.add(e.dst)
                 stack.append(e.dst)
     return seen
+
+
+def _validate_stage(spec: GraphSpec, types: dict[NodeType, NodeSpec], ref_by_id: dict[str, EvidenceRef]) -> None:
+    """cg-t123: a staged graph has the shape of its stage (checkpoint role, Pharma iff T3, Reasoning task)."""
+    E = GraphValidationError
+    if spec.stage is None:
+        if spec.trigger_refs:
+            raise E("stage_structure", "an unstaged graph carries no trigger_refs")
+        return
+    if spec.stage not in STAGES:
+        raise E("stage_structure", f"unknown stage {spec.stage!r}")
+    hc = types[NodeType.HUMAN_CHECKPOINT]
+    if hc.provider != f"human:{STAGE_ROLE[spec.stage]}":
+        raise E("stage_structure", f"{spec.stage} checkpoint must be human:{STAGE_ROLE[spec.stage]}, not {hc.provider}")
+    if (NodeType.PHARMA_AGENT in types) != (spec.stage == "T3"):
+        raise E("stage_structure", f"Pharma Agent must be present exactly at T3 (stage {spec.stage})")
+    task = REASONING_TASK[spec.stage]
+    if task is None:
+        if NodeType.REASONING in types:
+            raise E("stage_structure", f"{spec.stage} has no Reasoning node")
+    elif NodeType.REASONING not in types or types[NodeType.REASONING].params.get("task") != task:
+        raise E("stage_structure", f"{spec.stage} requires a Reasoning node with task={task!r}")
+    if spec.stage == "T1":
+        if spec.trigger_refs:
+            raise E("stage_trigger", "T1 has no trigger")
+        return
+    if not spec.trigger_refs or len(set(spec.trigger_refs)) != len(spec.trigger_refs):
+        raise E("stage_trigger", f"{spec.stage} needs distinct trigger_refs")
+    for rid in spec.trigger_refs:
+        ref = ref_by_id.get(rid)
+        if ref is None:
+            raise E("stage_trigger", f"trigger {rid} is not evidence of this graph")
+        ok = ref.data_type in RESULT_TYPES if spec.stage == "T2" else ref.data_type == "MedicationList"
+        if not ok:
+            raise E("stage_trigger", f"{rid} ({ref.data_type}) cannot trigger {spec.stage}")
 
 
 def validate(spec: GraphSpec, snapshot: Snapshot | None = None) -> ValidatedGraph:
@@ -289,6 +372,8 @@ def validate(spec: GraphSpec, snapshot: Snapshot | None = None) -> ValidatedGrap
             if ref_by_id[rid].data_type not in LIBRARY[n.type].evidence_types:
                 raise E("type_mismatch", f"{n.id} cannot read evidence type {ref_by_id[rid].data_type}")
 
+    _validate_stage(spec, types, ref_by_id)
+
     dc = _effective_data_classes(spec.nodes, spec.edges, spec.evidence)
     for n in spec.nodes:
         if n.data_class != dc[n.id]:
@@ -308,6 +393,39 @@ def compile_graph(
     exclude: Iterable[NodeType] = (),
 ) -> ValidatedGraph:
     spec = build_draft(snapshot, config, version=version, parent_version=parent_version, exclude=exclude)
+    return validate(spec, snapshot)
+
+
+def compile_stage(
+    snapshot: Snapshot,
+    stage: str,
+    config: ProviderConfig | None = None,
+    version: int = 1,
+    parent_version: int | None = None,
+    *,
+    trigger_refs: Iterable[str] | None = None,
+    exclude: Iterable[NodeType] = (),
+) -> ValidatedGraph:
+    """Compile one staged version (T1 nurse / T2 physician / T3 pharmacist). Raises ``GraphValidationError``.
+
+    ``trigger_refs`` are the items whose arrival created the version; by default the results (T2) or new orders
+    (T3) available exactly at the snapshot ``T``. A trigger must lie in the snapshot, so a future item raises.
+    """
+    if stage not in STAGES:
+        raise GraphValidationError("stage_structure", f"unknown stage {stage!r}")
+    by_id = {i.item_id: i for i in snapshot.items}
+    if trigger_refs is None:
+        pick = {"T1": lambda i: False, "T2": is_result, "T3": is_order}[stage]
+        trigger_refs = [i.item_id for i in snapshot.items if i.available_at_time == snapshot.T and pick(i)]
+    triggers = tuple(sorted(trigger_refs))
+    for rid in triggers:
+        item = by_id.get(rid)
+        if item is None:
+            raise GraphValidationError("stage_trigger", f"trigger {rid} is not in the snapshot")
+        if not (is_result(item) if stage == "T2" else is_order(item)):
+            raise GraphValidationError("stage_trigger", f"{rid} ({item.data_type}) cannot trigger {stage}")
+    spec = build_draft(snapshot, config, version=version, parent_version=parent_version, exclude=exclude,
+                       stage=stage, trigger_refs=triggers)
     return validate(spec, snapshot)
 
 

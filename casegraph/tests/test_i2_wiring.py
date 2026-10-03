@@ -231,20 +231,20 @@ def _with_meds(dev_graphs):
 
 
 def test_pharma_hook_default(dev_graphs):
+    # cg-t123: the default Pharma is the S5 pipeline; the placeholder stays reachable by explicit assignment only
+    from casegraph.library import S5_PHARMA_VERSION
+
     config = ProviderConfig()
-    assert config.assignments[NodeType.PHARMA_AGENT].model_version == PLACEHOLDER_PHARMA_VERSION
+    assert config.assignments[NodeType.PHARMA_AGENT].model_version == S5_PHARMA_VERSION
     hook = resolve_pharma(PLACEHOLDER_PHARMA_VERSION)
     assert hook.fn is pharma_rules and hook.label == d.PLACEHOLDER_LABEL
     with_meds = _with_meds(dev_graphs)
     assert with_meds
     for snap, graph in with_meds:
         node = graph.by_type(NodeType.PHARMA_AGENT)
-        assert node.status == "ok" and node.model_version == PLACEHOLDER_PHARMA_VERSION
+        assert node.status == "ok" and node.model_version == S5_PHARMA_VERSION
         issues = node.output["MedicationIssues"]
-        assert issues["label"] == d.PLACEHOLDER_LABEL and issues["rule_set_version"] == PLACEHOLDER_PHARMA_VERSION
-        names = {m.generic_name.strip().lower() for i in snap.items if isinstance(i, d.MedicationList)
-                 for m in i.entries}
-        assert {c["medication"] for c in issues["check_results"]} == names  # S1r entries -> placeholder inputs
+        assert issues["label"] != d.PLACEHOLDER_LABEL and issues["rule_set_version"] == S5_PHARMA_VERSION
 
 
 def test_pharma_hook_swap(dev_graphs, monkeypatch):

@@ -36,6 +36,22 @@ Every slice below passed its loop with CONDITIONAL_PASS. These conditions must c
 | ctrate-loader | LOW | `AbnormalityLabels` needs a `label_origin` field (provider text-classifier predictions from the report); metrics must be named "agreement with report-derived labels". `--unseal-test` unseals inputs and gold together; revisit in the CT reader eval slice. |
 | ctrate-loader | — (human) | Download approval (who accepts terms, accessors, multi-TB storage); `train` vs `train_fixed` volumes; CC BY-NC-SA flow-down to released weights; confirm 10% dev / seed 20260926. |
 
+## cg-t123 (CONDITIONAL_PASS ×2, 2026-10-03)
+| ID | Sev | Condition | Gate |
+|---|---|---|---|
+| M1 | MEDIUM | When one assess builds several versions, only the last version's graph_id and alerts reach the assessment, `escalation_required` and its audit row (`casegraph_run.py`, triage `router.py`). An intermediate version's urgent alert must also escalate. | Before any backend source of results/orders (CG-F3) |
+| L1 | LOW | An unparseable conversation timestamp sorts as oldest; it should fail closed (open, never superseded). Unreachable today (`AwareDatetime`). | Next cg change |
+| L2 | LOW | `ConversationFactUse.used=True` for `use=superseded`; consumers must read `use`, or set used=False for superseded. | Before UI-DAG renders `conversation_fact_use` |
+| L3 | LOW | The gate-semantics version is not visible in exports, and there is no golden test that fails if gate behaviour changes without a version bump. | Before cg-t123 output is cited as evidence |
+| L5 | LOW | Transcript-derived conversation facts cite `turns` instead of a real item id; refs are truncated to 70 chars; `next_stage` is dead code. | Next cg change |
+| L6 | LOW | `tests/e2e/cgt123_inprocess_check.py` is not part of `make test`. | Next checker change |
+| L9 | LOW | `AllergyList` record text is still cut at 300 chars (`pharma_s5.py` `_allergy_text`). | Next cg change |
+| N2 | LOW | graph-versions maps any `ValueError` (including a code bug) to `stored_graph_integrity`; it is audited, but the error type is broad. | Carry |
+| C3 | LOW | The s2 provider config skips VoiceIntakeFacts (non-default config). | Carry |
+| C5 | LOW | The backend has no `pharma_agent` gateway, so a backend T3 fails safe as `not_evaluated`. | CG-F3 |
+| — | — | A7b secondary agreement with SYN gold is not measurable; never cite it. | Standing |
+| — | human | Pharmacist sign-off on supersession, ties, KNOWN [] = "takes none", and pre-run orders folded into T1. | Before any clinical use |
+
 ## Standing (human)
 - D1: licensed clinical review of red-flag rules/thresholds, department list, Thai dialogue templates, cross-reactivity table, `missing_field` severity.
 - SCBXBeta2 font licence before any public push/deploy.

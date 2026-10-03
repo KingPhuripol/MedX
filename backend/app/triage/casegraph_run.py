@@ -22,12 +22,13 @@ from typing import Any
 
 from sqlalchemy import Engine
 
-from casegraph.compiler import build_snapshot, compile_graph
+from casegraph.compiler import build_snapshot, compile_stage, graph_id_for
 from casegraph.data import RF_110, RedFlagScreening
 from casegraph.executor import Executor, ResumeError
 from casegraph.export import ExportedGraph, import_graph
 from casegraph.library import VOICE_EXTRACT, ProviderConfig
 from casegraph.providers import with_explicit_reasoning_keys
+from casegraph.staged import next_stages
 from casegraph.store import MemoryStateStore, OutputStore, SQLiteStateStore, StateStore, next_version
 from casegraph.triage_bridge import evidence_from_case
 from casegraph.types import NodeType
@@ -94,10 +95,57 @@ def run_graph(stores: GraphStores, case: Case, as_of: datetime, engine: Engine, 
     gateways = {pid: AuditedGateway(engine, gw, user, request_id) for pid in GRAPH_PROVIDERS}
     items = evidence_from_case(case)
     with stores.lock:  # one version number per graph (versions are insert-only)
-        version, parent = next_version(stores.state, case.case_ref)
-        graph = compile_graph(build_snapshot(items, as_of, case.case_ref), ProviderConfig(), version=version,
-                              parent_version=parent)
-        return _executor(stores, gateways).run_sync(graph)
+        # cg-t123: every pending stage is built in order (a T2 trigger then a T3 trigger builds both; none is skipped).
+        # The stages come from results/orders newer than the previous version's T; with none the version inherits the
+        # parent's stage (T1 / nurse when there is no parent). Triage cases carry no results or orders.
+        _, parent = next_version(stores.state, case.case_ref)
+        parent_spec = stores.state.load_graph(graph_id_for(case.case_ref, parent))[0] if parent else None
+        executor = _executor(stores, gateways)
+        graph = None
+        for plan in next_stages(parent_spec, items, as_of):
+            version, parent = next_version(stores.state, case.case_ref)
+            compiled = compile_stage(build_snapshot(items, plan.T, case.case_ref), plan.stage, ProviderConfig(),
+                                     version, parent, trigger_refs=tuple(sorted(plan.trigger_item_ids)))
+            graph = executor.run_sync(compiled)
+        assert graph is not None
+        return graph
+
+
+def versions(stores: GraphStores, case_ref: str) -> list[dict[str, Any]]:
+    """Every stored version of ``case_ref`` (data only; cg-t123): stage, T, triggers, checkpoint, alerts, cost.
+
+    A version whose run was not recorded (execution failed) is listed with ``executed: false``, never hidden.
+    """
+    out: list[dict[str, Any]] = []
+    latest = stores.state.latest_version(case_ref) or 0
+    for v in range(1, latest + 1):
+        graph_id = graph_id_for(case_ref, v)
+        graph = load(stores, graph_id)
+        if graph is None:
+            try:
+                spec, _ = stores.state.load_graph(graph_id)
+            except KeyError:
+                continue
+            out.append({"graph_id": graph_id, "version": v, "parent_version": spec.parent_version,
+                        "stage": spec.stage, "T": spec.T.isoformat(), "trigger_refs": list(spec.trigger_refs),
+                        "executed": False})
+            continue
+        hc = graph.by_type(NodeType.HUMAN_CHECKPOINT)
+        payload = (hc.output or {}).get("pending_review") if hc is not None else None
+        out.append({
+            "graph_id": graph_id, "version": v, "parent_version": graph.parent_version, "stage": graph.stage,
+            "T": graph.T.isoformat(), "trigger_refs": list(graph.trigger_refs), "executed": True,
+            "data_class": hc.data_class if hc is not None else "unknown",
+            "checkpoint_role": hc.provider.split(":", 1)[1] if hc is not None else None,
+            "checkpoint_status": hc.status if hc is not None else None,
+            "escalation": bool(payload["escalation"]) if payload else None,
+            "alert_rule_ids": sorted({a["rule_id"] for a in (graph_alerts(graph) or [])}),
+            "screening_status": graph.red_flag_screening.status,
+            "nodes": [{"id": n.id, "type": n.type.value, "provider": n.provider, "status": n.status,
+                       "cached": n.cached, "gateway_calls": n.gateway_calls} for n in graph.nodes],
+            "totals": graph.totals.model_dump(mode="json") if graph.totals else None,
+        })
+    return out
 
 
 def unavailable_screening() -> dict[str, Any]:

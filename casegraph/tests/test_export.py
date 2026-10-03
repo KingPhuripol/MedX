@@ -121,7 +121,7 @@ def _partial_graph(env):
 def test_export_red_flag_screening(env, name, T):
     graph = env.executor().run_sync(compile_case(name, T))
     data = json.loads(to_json(graph))
-    assert data["schema_version"] == SCHEMA_VERSION == "casegraph-export/0.3"  # i2 (D-I2-5)
+    assert data["schema_version"] == SCHEMA_VERSION == "casegraph-export/0.4"  # cg-t123: 0.4 adds stage/trigger_refs
     payload = graph.node("human_checkpoint").output[PENDING_KEY]
     assert data["red_flag_screening"] == payload["red_flag_screening"]
     assert data["red_flag_screening"]["status"] == graph.node("red_flag").output["Alerts"]["status"]

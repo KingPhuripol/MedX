@@ -88,3 +88,24 @@ def load_split(dataset: Path, split: str) -> list[S1rSnapshot]:
 def roundtrip(item: Evidence) -> dict[str, Any]:
     """The item as source JSON: exactly the fields that were given (plus ``data_class``)."""
     return json.loads(item.model_dump_json(exclude_unset=True))
+
+
+@dataclass(frozen=True)
+class StagedCase:
+    """One encounter for staged versions (cg-t123): every item up to ``horizon`` and the nurse time ``t1``."""
+
+    split: str
+    case_id: str
+    patient_ref: str
+    t1: datetime
+    horizon: datetime
+    items: tuple[Evidence, ...]
+
+
+def load_staged_case(dataset: Path, split: str, case_id: str, horizon_point: str = "T2") -> StagedCase:
+    """``t1`` = ``snapshot_T1.as_of``; items and ``horizon`` = the ``snapshot_<horizon_point>`` (a superset of T1)."""
+    dc = manifest_data_class(dataset)
+    case_dir = Path(dataset) / "inputs" / split / case_id
+    first = load_snapshot(case_dir / "snapshot_T1.json", dc, split)
+    last = load_snapshot(case_dir / f"snapshot_{horizon_point}.json", dc, split)
+    return StagedCase(split, case_id, last.patient_ref, first.T, last.T, last.items)
