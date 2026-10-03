@@ -36,6 +36,7 @@ from .data import (
     RF_110,
     Alerts,
     CareSuggestion,
+    AllergyList,
     CaseSummary,
     ConfirmedEvidence,
     ConfirmedResult,
@@ -46,6 +47,7 @@ from .data import (
     IntakeTranscript,
     Findings,
     ImageTokens,
+    MedicationCheck,
     MedicationIssues,
     MedicationList,
     RedFlagScreening,
@@ -57,11 +59,20 @@ from .data import (
 )
 from .export import EdgeSpec, ExportedGraph, ExportedNode, GraphSpec, NodeSpec, Totals, import_graph, to_json
 from .library import MODEL_PROVIDERS, VOICE_EXTRACT, output_types
-from .providers import GatewayClient, red_flag_rules, resolve_pharma, vitals_reader_rules
+from .providers import (
+    PHARMA_HOOK,
+    PLACEHOLDER_PHARMA_VERSION,
+    GatewayClient,
+    PharmaInput,
+    red_flag_rules,
+    resolve_pharma,
+    vitals_reader_rules,
+)
 from .store import OutputStore, StateStore, StoreEntry, cache_key
 from .types import NodeType
 
 PENDING_KEY = "pending_review"
+PHARMA_FACT_KINDS = frozenset({"allergy_status", "allergens", "current_medications"})
 _ACTION_STATUS = {"confirm": "confirmed", "edit": "edited", "reject": "rejected"}
 
 
@@ -109,7 +120,23 @@ class _Ctx:
     input_hash: str
     T: datetime
     patient_ref: str
+    stage: str | None = None
     calls: int = field(default=0)
+
+
+def t_dependent(node: NodeSpec) -> bool:
+    """Whether the node body reads the decision time ``T`` itself (beyond the evidence it is given).
+
+    Red-flag rf-1.1.0 derives vital freshness and age from ``T`` (a vital fresh at an earlier ``T`` can be stale
+    now), and a registered Pharma provider receives ``T`` as its snapshot ``as_of``. Reader:Text, Reasoning,
+    the Vitals/Labs reader, imaging readers and the placeholder rules do not: that is tested, not assumed
+    (``casegraph/tests/test_cg_t123_cache.py``). Red-flag is T-dependent by default (fail safe).
+    """
+    if node.type is NodeType.RED_FLAG:
+        return node.model_version != PLACEHOLDER_RULE_SET
+    if node.type is NodeType.PHARMA_AGENT and node.provider == "rules":
+        return node.model_version != PLACEHOLDER_PHARMA_VERSION
+    return False
 
 
 def _dump(*models) -> dict[str, Any]:
@@ -118,6 +145,13 @@ def _dump(*models) -> dict[str, Any]:
 
 class _SchemaInvalid(Exception):
     pass
+
+
+def _source_types(output: dict[str, Any]) -> set[str]:
+    """Evidence types a Findings / ImageTokens output was derived from (ImageTokens carry ``modality``)."""
+    types = set(output.get("source_data_types", ()))
+    modality = output.get("modality")
+    return types | (set(modality.split("+")) if isinstance(modality, str) else set())
 
 
 def _alerts_of(nodes: list[ExportedNode] | tuple[ExportedNode, ...]) -> dict[str, Any] | None:
@@ -208,12 +242,13 @@ class Executor:
         started = _now()
         upstream = [_Upstream(e, results[e.src]) for e in spec.edges if e.dst == node.id]
         evidence = [items[r] for r in node.evidence_refs]
-        input_hash = sha256_json(
-            {
-                "evidence": [[i.item_id, i.content_sha256()] for i in evidence],
-                "upstream": sorted([u.node.id, u.edge.data_type, u.node.status, u.node.output_sha256] for u in upstream),
-            }
-        )
+        hashed: dict[str, Any] = {
+            "evidence": [[i.item_id, i.content_sha256()] for i in evidence],
+            "upstream": sorted([u.node.id, u.edge.data_type, u.node.status, u.node.output_sha256] for u in upstream),
+        }
+        if t_dependent(node):  # cg-t123: a body that reads T must not be served an output computed at another T
+            hashed["T"] = spec.T.isoformat()
+        input_hash = sha256_json(hashed)
         key = cache_key(node.type.value, node.provider, node.model_version, node.params, input_hash)
         base = node.model_dump()
         entry = self.outputs.get(key)
@@ -224,7 +259,7 @@ class Executor:
                 missing_inputs=entry.missing_inputs, errored_inputs=entry.errored_inputs, reason=entry.reason,
             )
         self.node_executions[node.id] += 1
-        ctx = _Ctx(node, evidence, upstream, input_hash, spec.T, spec.patient_ref)
+        ctx = _Ctx(node, evidence, upstream, input_hash, spec.T, spec.patient_ref, spec.stage)
         try:
             res = await asyncio.to_thread(self._body, ctx)
         except Exception:  # fail safe: never fabricate an output
@@ -266,9 +301,11 @@ class Executor:
         return {"produced_by": ctx.node.id, "input_refs": tuple(refs), "provider": ctx.node.provider,
                 "model_version": ctx.node.model_version}
 
-    def _invoke(self, ctx: _Ctx, request: GatewayRequest) -> GatewayResponse | None:
-        """Send one request through the node provider's gateway (None: no such gateway). Counts the call."""
-        gateway = self.gateways.get(ctx.node.provider)
+    def _invoke(self, ctx: _Ctx, request: GatewayRequest, key: str | None = None) -> GatewayResponse | None:
+        """Send one request through the node provider's gateway (None: no such gateway). Counts the call.
+
+        ``key`` names another gateway (the Pharma hook uses ``pharma_agent``: its node provider is ``rules``)."""
+        gateway = self.gateways.get(key or ctx.node.provider)
         if gateway is None:
             return None
         ctx.calls += 1
@@ -414,13 +451,59 @@ class Executor:
                         **triage_bridge.screen_fields(adapted, screen))
         return _Result("ok", _dump(output), missing_inputs=output.missing_inputs, errored_inputs=errored)
 
+    @staticmethod
+    def _conversation_facts(ctx: _Ctx) -> tuple[dict[str, Any], ...]:
+        """Reader:Text intake values (allergy / medication facts from the conversation), the only Findings Pharma reads."""
+        out = []
+        for u in ctx.upstream:
+            if u.ok and u.edge.data_type == "Findings" and u.node.type is NodeType.READER_TEXT:
+                out += [v for v in u.node.output["Findings"].get("intake", ())  # type: ignore[index]
+                        if v["kind"] in PHARMA_FACT_KINDS]
+        return tuple(out)
+
+    def _allergy_gate(self, ctx: _Ctx, allergies: list[AllergyList], hook_api: int | None,
+                      label: str) -> tuple[MedicationCheck, ...]:
+        """Allergy evidence that is missing or unknown is ``not_evaluated``, never read as "no allergy" (rule 6).
+
+        The placeholder rules (api 1) never cross-check allergies against orders: that check is stated as not
+        evaluated instead of being silently skipped."""
+        def gate(check: str, missing: tuple[str, ...]) -> MedicationCheck:
+            return MedicationCheck(medication="*", check=check, missing_inputs=missing, evaluated_on=(), fired=None,
+                                   status=screening_status([False], missing, allow_partial=False), label=label)
+        out: list[MedicationCheck] = []
+        latest = max(allergies, key=lambda a: (a.available_at_time, a.item_id), default=None)
+        if latest is None:
+            out.append(gate("allergy_record", ("AllergyList",)))
+        elif latest.status == "unknown":
+            out.append(gate("allergy_record", ("AllergyList.status=unknown",)))
+        if hook_api == 1:
+            out.append(gate("allergy_conflict", ("allergy_conflict_check:not_implemented_by_provider",)))
+        return tuple(out)
+
     def _pharma(self, ctx: _Ctx) -> _Result:
         lists = [i for i in ctx.evidence if isinstance(i, MedicationList)]
+        allergies = [i for i in ctx.evidence if isinstance(i, AllergyList)]
         if ctx.node.provider == "rules":
             hook = resolve_pharma(ctx.node.model_version)  # the named Pharma Agent hook (i2 scope 8)
             if hook is None:
                 return _Result("error", reason="pharma_provider_unregistered")
-            checks, issues = hook.fn(lists)
+            if hook.api == 2:
+                dc = DataClass(ctx.node.data_class)
+
+                def invoke(request: GatewayRequest) -> GatewayResponse:
+                    response = self._invoke(ctx, request, key=PHARMA_HOOK)
+                    if response is None:
+                        return GatewayResponse(status="error", provider="none", model_version="unknown", output=None,
+                                               reason="provider_unavailable", latency_ms=0.0,
+                                               request_sha256=canonical_sha256(request))
+                    return response
+
+                checks, issues = hook.fn(PharmaInput(  # type: ignore[arg-type]
+                    tuple(lists), tuple(allergies), self._conversation_facts(ctx), ctx.T, dc.value, invoke))
+            else:
+                checks, issues = hook.fn(lists)  # type: ignore[arg-type]
+            if ctx.stage is not None:  # staged graphs state missing allergy data; legacy graphs are unchanged
+                checks = (*checks, *self._allergy_gate(ctx, allergies, hook.api, hook.label))
             missing = tuple(sorted({m for c in checks for m in c.missing_inputs}))
             output = MedicationIssues(
                 **self._derived(ctx), status=screening_status(checks, missing), issues=issues, check_results=checks,
@@ -429,7 +512,7 @@ class Executor:
             )
             return _Result("ok", _dump(output))
         upstream = {u.node.id: u.node.output for u in ctx.upstream if u.ok}
-        output, _, err = self._call(ctx, {"evidence": dump_evidence(lists), "upstream": upstream})
+        output, _, err = self._call(ctx, {"evidence": dump_evidence([*lists, *allergies]), "upstream": upstream})
         if err:
             return _Result("error", reason=err)
         try:
@@ -454,7 +537,7 @@ class Executor:
             sources = set(CLINICAL_TEXT_TYPES) if source == "ClinicalText" else {source}
             satisfied = any(
                 u.ok and u.edge.data_type == data_type
-                and (not source or sources & set(u.node.output.get(data_type, {}).get("source_data_types", ())))
+                and (not source or sources & _source_types(u.node.output.get(data_type, {})))
                 for u in ctx.upstream
             )
             if not satisfied:
@@ -533,9 +616,26 @@ class Executor:
             # direct upstream failures plus failures that upstream nodes reported from further up
             "errored": sorted({nid for nid, n in by_node.items() if n.status == "error"}
                               | {e for n in by_node.values() for e in n.errored_inputs}),
+            # cg-t123: results earlier checkpoints confirmed/edited and that were available at T (never rejected ones:
+            # a reject appends nothing). Context for the reviewer, shown apart from this version's `for_review`.
+            "prior_confirmed": self._prior_confirmed(ctx),
             "input_hash": ctx.input_hash,
         }
         return _Result("pending_confirmation", {PENDING_KEY: payload})
+
+    @staticmethod
+    def _prior_confirmed(ctx: _Ctx) -> list[dict[str, Any]]:
+        out = []
+        for c in sorted((i for i in ctx.evidence if isinstance(i, ConfirmedEvidence)),
+                        key=lambda i: (i.available_at_time, i.item_id)):
+            r = c.result
+            payload = r.payload
+            content = payload.get("for_review") if r.action == "confirm" and isinstance(payload, dict) else payload
+            out.append({"item_id": c.item_id, "graph_id": r.graph_id, "action": r.action,
+                        "reviewer_role": r.reviewer_role, "reviewer_id": r.reviewer_id,
+                        "confirmed_at": _iso(r.confirmed_at), "available_at_time": _iso(c.available_at_time),
+                        "content": content})
+        return out
 
     # --------------------------------------------------------------------------- export/resume
 

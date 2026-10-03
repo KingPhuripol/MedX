@@ -85,7 +85,7 @@ def node_decls(library_config: LibraryConfig | None = None) -> dict[NodeType, No
         ),
         NodeType.PHARMA_AGENT: NodeDecl(
             NodeType.PHARMA_AGENT, ("MedicationList", "Findings"), ("MedicationIssues",), ("MedicationList",),
-            ("project_model", "rules"), evidence_types=("MedicationList",),
+            ("project_model", "rules"), evidence_types=("MedicationList", "AllergyList"),  # cg-t123: + allergies
         ),
         # i2: Reasoning reads Demographics/Vitals directly to build the S4 Case for department.suggest.
         NodeType.REASONING: NodeDecl(
@@ -96,6 +96,7 @@ def node_decls(library_config: LibraryConfig | None = None) -> dict[NodeType, No
         NodeType.HUMAN_CHECKPOINT: NodeDecl(
             NodeType.HUMAN_CHECKPOINT, ("Alerts", "MedicationIssues", *REASONING_OUTPUTS), ("ConfirmedResult",),
             ("Alerts",), HUMAN_PROVIDERS, mandatory=True,
+            evidence_types=("ConfirmedResult",),  # cg-t123: earlier confirmed results, listed as prior_confirmed
         ),
     }
 

@@ -22,7 +22,13 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validato
 from .data import Alerts, RedFlagScreening, sha256_json
 from .types import NodeType
 
-SCHEMA_VERSION = "casegraph-export/0.3"
+SCHEMA_VERSION = "casegraph-export/0.4"
+# cg-t123 (0.4): ``stage`` ("T1" nurse / "T2" physician / "T3" pharmacist, or null for an unstaged graph) and
+# ``trigger_refs`` on the graph. 0.3 exports import read-only (stage null) and re-export as 0.3, byte-identical.
+LEGACY_SCHEMA_VERSION = "casegraph-export/0.3"
+READABLE_SCHEMA_VERSIONS = (LEGACY_SCHEMA_VERSION, SCHEMA_VERSION)
+Stage = Literal["T1", "T2", "T3"]
+STAGE_FIELDS = frozenset({"stage", "trigger_refs"})
 
 
 class ExportVersionError(ValueError):
@@ -74,6 +80,8 @@ class GraphSpec(_Frozen):
     nodes: tuple[NodeSpec, ...]
     edges: tuple[EdgeSpec, ...]
     evidence: tuple[EvidenceRef, ...]
+    stage: Stage | None = None  # cg-t123: which staged version this is (None: an unstaged graph)
+    trigger_refs: tuple[str, ...] = ()  # evidence item_ids whose arrival created this version
 
     def node(self, node_id: str) -> NodeSpec:
         return next(n for n in self.nodes if n.id == node_id)
@@ -110,8 +118,10 @@ class ExportedGraph(GraphSpec):
 
     @model_validator(mode="after")
     def _screening_matches_red_flag(self) -> "ExportedGraph":
-        if self.schema_version != SCHEMA_VERSION:
+        if self.schema_version not in READABLE_SCHEMA_VERSIONS:
             raise ExportVersionError(f"unsupported export schema {self.schema_version!r}; expected {SCHEMA_VERSION}")
+        if self.schema_version == LEGACY_SCHEMA_VERSION and (self.stage is not None or self.trigger_refs):
+            raise ValueError("a 0.3 export carries no stage or trigger_refs")
         rf = self.by_type(NodeType.RED_FLAG)
         alerts = (rf.output or {}).get("Alerts") if rf is not None and rf.status == "ok" else None
         expected = "unavailable" if alerts is None else alerts.get("status")
@@ -133,7 +143,10 @@ class ExportedGraph(GraphSpec):
 
 
 def to_json(model: BaseModel) -> str:
-    return json.dumps(model.model_dump(mode="json"), sort_keys=True, indent=2, ensure_ascii=False) + "\n"
+    data = model.model_dump(mode="json")
+    if data.get("schema_version") == LEGACY_SCHEMA_VERSION:  # a 0.3 graph re-exports as 0.3 (no 0.4 fields)
+        data = {k: v for k, v in data.items() if k not in STAGE_FIELDS}
+    return json.dumps(data, sort_keys=True, indent=2, ensure_ascii=False) + "\n"
 
 
 class ImportValidationError(ValueError):
@@ -143,7 +156,7 @@ class ImportValidationError(ValueError):
 def import_graph(text: str | bytes) -> ExportedGraph:
     data = json.loads(text)
     version = data.get("schema_version") if isinstance(data, dict) else None
-    if version != SCHEMA_VERSION:
+    if version not in READABLE_SCHEMA_VERSIONS:
         raise ExportVersionError(f"unsupported export schema {version!r}; expected {SCHEMA_VERSION}")
     graph = ExportedGraph.model_validate_json(text)
     for n in graph.nodes:
@@ -161,6 +174,7 @@ def inspect_lines(graph: ExportedGraph) -> list[str]:
     lines = [
         f"graph {graph.graph_id} patient={graph.patient_ref} T={graph.T.isoformat()} "
         f"version={graph.version} parent={graph.parent_version} snapshot={graph.snapshot_id[:12]}"
+        + (f" stage={graph.stage} triggers={list(graph.trigger_refs)}" if graph.stage else "")
     ]
     rfs = graph.red_flag_screening
     if rfs.status == "partially_evaluated":

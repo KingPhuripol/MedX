@@ -27,6 +27,7 @@ from app.gateway.service import audit_details, invoke_provider
 
 from .data import (
     PLACEHOLDER_LABEL,
+    AllergyList,
     Alert,
     LabSeries,
     MedicationCheck,
@@ -287,9 +288,27 @@ PLACEHOLDER_PHARMA_VERSION = "placeholder-pharma-0.2"
 
 
 @dataclass(frozen=True)
+class PharmaInput:
+    """What a v2 Pharma provider receives (3.2.4): the medication lists (home, patient-reported, new orders), the
+    AllergyList items, the Reader:Text intake facts (allergy and medication facts from the conversation), the
+    decision time ``T``, the node's ``data_class`` and ``invoke``: the node's audited gateway (every call counted)."""
+
+    lists: tuple[MedicationList, ...]
+    allergies: tuple[AllergyList, ...]
+    facts: tuple[dict[str, Any], ...]
+    T: datetime
+    data_class: str
+    invoke: Callable[[GatewayRequest], GatewayResponse]
+
+
+PharmaFnV2 = Callable[[PharmaInput], tuple[tuple[MedicationCheck, ...], tuple[MedicationIssue, ...]]]
+
+
+@dataclass(frozen=True)
 class PharmaProvider:
-    fn: PharmaFn
+    fn: PharmaFn | PharmaFnV2
     label: str
+    api: int = 1  # 1: fn(lists); 2: fn(PharmaInput). The v1 signature stays supported.
 
 
 _PHARMA_PROVIDERS: dict[str, PharmaProvider] = {
@@ -297,16 +316,19 @@ _PHARMA_PROVIDERS: dict[str, PharmaProvider] = {
 }
 
 
-def register_pharma_provider(version: str, fn: PharmaFn, *, label: str) -> None:
+def register_pharma_provider(version: str, fn: PharmaFn | PharmaFnV2, *, label: str, api: int = 1) -> None:
     """Register a Pharma Agent provider on the ``pharma_agent`` hook under ``version``.
 
-    A node assigned ``rules``/<version> runs it with no Executor change (the S5 swap is a follow-up
-    slice). Re-registering a version with a different function raises.
+    A node assigned ``rules``/<version> runs it with no Executor change. ``api=2`` receives a
+    :class:`PharmaInput` (lists, allergies, facts, T, data_class, audited invoke). Re-registering a version with a
+    different function raises.
     """
+    if api not in (1, 2):
+        raise ValueError(f"unknown pharma hook api {api!r}")
     current = _PHARMA_PROVIDERS.get(version)
     if current is not None and current.fn is not fn:
         raise ValueError(f"pharma provider {version!r} is already registered")
-    _PHARMA_PROVIDERS[version] = PharmaProvider(fn, label)
+    _PHARMA_PROVIDERS[version] = PharmaProvider(fn, label, api)
 
 
 def resolve_pharma(version: str) -> PharmaProvider | None:
