@@ -202,6 +202,7 @@ def _check_property(graphs, label):
 @pytest.mark.parametrize("variant", sorted(VARIANTS))
 def test_no_pharma_output_is_evaluated_while_a_conversation_fact_is_unused(env, dataset, variant):
     checked = 0
+    seen_before = collections.Counter(SUPERSEDED_SEEN)  # count superseded rows for THIS variant only (review C3)
     cases = []
     for name, fx in sorted(FIXTURES_STAGED.items()):
         p, items, horizon = fx()
@@ -225,4 +226,4 @@ def test_no_pharma_output_is_evaluated_while_a_conversation_fact_is_unused(env, 
     target = {"sup_allergy_unknown": "allergy_status", "sup_allergy_refused": "allergy_status",
               "sup_allergens_unknown": "allergens", "sup_meds_unknown": "current_medications"}.get(variant)
     if target:
-        assert SUPERSEDED_SEEN[target] >= 1, (variant, dict(SUPERSEDED_SEEN))
+        assert SUPERSEDED_SEEN[target] - seen_before[target] >= 1, (variant, dict(SUPERSEDED_SEEN))

@@ -5,6 +5,8 @@ is an ``AwareDatetime``): it shows the Pharma gates fail closed on crafted input
 
 from __future__ import annotations
 
+import re
+
 import itertools
 import json
 from datetime import timezone
@@ -261,8 +263,9 @@ def test_cgl1_known_bad_time_not_sent_to_provider(env, monkeypatch, bad, mode):
 # ------------------------------------------------------------------------------------------------ L1e
 
 def test_cgl1_gates_version_bumped(env, monkeypatch):
-    # L1 bumped to 6; a later slice (L2) owns 7. Only require it moved past gates-5.
-    assert executor_mod.PHARMA_GATES_VERSION not in ("cg-pharma-gates-5",)
+    # L1 bumped to 6; later slices bump further. Require the format and a version at or past 6 (never a rollback).
+    m = re.fullmatch(r"cg-pharma-gates-(\d+)", executor_mod.PHARMA_GATES_VERSION)
+    assert m and int(m.group(1)) >= 6
     p = "SYN-L1V"
     items = _items(p, "unstaged", [])
     ex = env.executor()
@@ -319,3 +322,21 @@ def test_cgl1_same_source_item_refs_agree(env, monkeypatch, kind, mode):
         assert good_ref in cited
         uses = {u["evidence_ref"]: u for u in mi["conversation_fact_use"] if u["kind"] == kind}
         assert uses[good_ref]["use"] != "not_used" and uses[bad_ref]["reason"] == tok(kind)
+
+
+@pytest.mark.parametrize("mode", MODES)
+@pytest.mark.parametrize("bad", BAD, ids=BAD_IDS)
+@pytest.mark.parametrize("order", ["bad_newer", "bad_older"])
+@pytest.mark.parametrize("kind", ["allergy_status", "allergens"])
+def test_cgl1_f1_bad_time_allergy_fact_use_is_not_used(env, monkeypatch, kind, order, bad, mode):
+    """L1-F1: an allergy-kind fact with a bad time is never sent to the provider, so fact_use must say not_used with the
+    unparseable_time reason (never used / superseded), whether it would sort newer or older than the valid fact."""
+    p = f"SYN-L1F1-{kind}-{order}"
+    off_bad = -10 if order == "bad_newer" else -20
+    items = _items(p, mode, [("c0", -15, _spec(kind, "KNOWN", KNOWN_VALUE[kind])),
+                             ("c1", off_bad, _spec(kind, "KNOWN", OTHER_KNOWN[kind]))])
+    _craft(monkeypatch, p, "c1", bad)
+    mi = _mi(_run(env, items, p, mode))
+    rows = [u for u in mi["conversation_fact_use"] if u["kind"] == kind and f"{p}-c1" in u["evidence_ref"]]
+    assert [(u["use"], u["used"], u["reason"]) for u in rows] == [("not_used", False, tok(kind))]
+    assert tok(kind) in mi["missing_inputs"] and mi["status"] != "evaluated"

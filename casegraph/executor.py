@@ -79,7 +79,7 @@ PENDING_KEY = "pending_review"
 # registered S5 pipeline string (s5-pipeline-2.6.0) is pinned by S5's own tests and is deliberately not bumped.
 # 6: bad-time conversation facts fail closed (L1)
 # 7: ConversationFactUse.used is False for superseded (L2)
-PHARMA_GATES_VERSION = "cg-pharma-gates-7"
+PHARMA_GATES_VERSION = "cg-pharma-gates-8"  # 8: L1-F1 bad-time allergy fact_use is not_used
 PHARMA_FACT_KINDS = frozenset({"allergy_status", "allergens", "current_medications"})
 _ACTION_STATUS = {"confirm": "confirmed", "edit": "edited", "reject": "rejected"}
 
@@ -553,7 +553,9 @@ class Executor:
             cur = newest(same)
             for f in same:
                 reason, use = None, "used"
-                if kind == "allergens" and allergens_problem(f) is not None:  # any KNOWN fact S5 reads, newest or not
+                if time_problem(f) is not None:  # L1-F1: never sent to the provider, so never used/superseded
+                    reason = time_problem(f)
+                elif kind == "allergens" and allergens_problem(f) is not None:  # any KNOWN fact S5 reads, newest or not
                     reason = allergens_problem(f)
                 elif f is cur:  # the newest fact of the kind is the one the gates read
                     if f["state"] != "KNOWN":
