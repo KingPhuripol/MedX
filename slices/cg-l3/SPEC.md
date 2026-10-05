@@ -112,8 +112,8 @@
 Worktrees have no `.venv` or `node_modules`, so use the main checkout's (no install, no network).
 
 ```bash
-cd /Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent/.claude/worktrees/cg-l3
-MAIN=/Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent
+cd /Users/king_phuripol/AI-Engineer/Workstreams/SeniorProject/Full-Agent/.claude/worktrees/cg-l3
+MAIN=/Users/king_phuripol/AI-Engineer/Workstreams/SeniorProject/Full-Agent
 PY="env PYTHONPATH=backend:. $MAIN/.venv/bin/python"
 $PY -m pytest -q casegraph/tests/test_cgl3_pharma_golden.py
 $PY -m casegraph.tests.pharma_golden --check            # tripwire report; exit 1 on any non-ok class

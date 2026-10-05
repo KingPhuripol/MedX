@@ -127,7 +127,7 @@ Every named test in the acceptance table must exist and pass.
 ## Run commands
 
 ```bash
-cd /Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent-casegraph
+cd /Users/king_phuripol/AI-Engineer/Workstreams/SeniorProject/Full-Agent-casegraph
 make test                                                     # full suite (s0 + s2 + s2r), offline
 .venv/bin/python -m pytest -q casegraph/tests                 # casegraph only (PYTHONPATH=.:backend via Makefile)
 .venv/bin/python -m pytest -q casegraph/tests/test_red_flag_screening.py casegraph/tests/test_static_guards.py

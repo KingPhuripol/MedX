@@ -73,7 +73,7 @@ Thresholds apply to the frozen `test` split **and** to all patients. Report both
 ## Run commands
 
 ```bash
-cd /Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent-s5
+cd /Users/king_phuripol/AI-Engineer/Workstreams/SeniorProject/Full-Agent-s5
 make test
 cd backend && ../.venv/bin/python -m pytest tests/test_pharma_s5r4.py tests/test_pharma_s5r3.py -q && cd ..
 make pharma-eval                                     # results.json == 1c1f476 except versions/notes

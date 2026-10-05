@@ -200,7 +200,7 @@ Anything else found necessary goes back to the planner. It is not edited silentl
 ## Run commands
 
 ```bash
-cd /Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent-i2
+cd /Users/king_phuripol/AI-Engineer/Workstreams/SeniorProject/Full-Agent-i2
 make test                                   # worktree
 git clone -q --branch factory/int2 . ../int2-clean && (cd ../int2-clean && make test)   # clean checkout, NOT under a temp dir (note A01)
 make data && make audit

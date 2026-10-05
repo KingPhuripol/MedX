@@ -265,7 +265,7 @@ A dash in the Freq column means frequency is not asserted. `UT` is `unverifiable
 ## Run commands
 
 ```bash
-cd /Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent-s5
+cd /Users/king_phuripol/AI-Engineer/Workstreams/SeniorProject/Full-Agent-s5
 make test                                                  # all tests incl. probes, sweeps, fuzz (offline)
 cd backend && ../.venv/bin/python -m pytest tests/test_pharma_s5r4.py tests/test_pharma_s5r3.py -q   # grammar focus
 make pharma-eval                                           # results.json == 1c1f476 except versions/notes

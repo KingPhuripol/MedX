@@ -126,7 +126,7 @@ Other required tests:
 ## Run commands
 
 ```bash
-cd /Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent/.claude/worktrees/cg-m1
+cd /Users/king_phuripol/AI-Engineer/Workstreams/SeniorProject/Full-Agent/.claude/worktrees/cg-m1
 python3 -m pytest -q backend/tests/triage/test_cg_m1_multiversion.py
 python3 -m pytest -q backend/tests/triage
 git diff f9dd06e -- casegraph/                    # must be empty (M1e)

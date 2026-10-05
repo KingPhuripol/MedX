@@ -96,7 +96,7 @@ The E1 reviewers set conditions that must close before `factory/e1` merges into 
 ## Run commands
 
 ```bash
-cd /Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent-e1
+cd /Users/king_phuripol/AI-Engineer/Workstreams/SeniorProject/Full-Agent-e1
 .venv/bin/python -m eval.posthoc.e1_findings            # writes eval/results/e1/POSTHOC_FINDINGS.{json,md}
 .venv/bin/python -m eval.posthoc.e1_findings --check    # byte-identical regeneration
 .venv/bin/python -m pytest -q eval/tests/test_e1_posthoc.py tests/e1r/test_syne0196_replay.py

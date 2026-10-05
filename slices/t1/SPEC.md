@@ -138,7 +138,7 @@ Forbidden for normal-size text: purple-1 / grey-1 (4.47), purple-1 / grey-2 (3.9
 ## Run commands
 
 ```bash
-cd /Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent-theme
+cd /Users/king_phuripol/AI-Engineer/Workstreams/SeniorProject/Full-Agent-theme
 make test        # pytest + Vitest (includes theme/wordmark tests)
 make e2e         # Playwright + axe; writes artifacts/factory/t1/*.png
 # T1-A07 cross-check: must print nothing

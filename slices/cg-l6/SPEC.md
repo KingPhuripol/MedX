@@ -82,8 +82,8 @@ Other committed probes on `28ac4d2`: `cgt123_allergy_probe.py` 80 combos / 0 bad
 Worktrees have no `.venv`/`node_modules`; use the main checkout's. Do not run `make test` in the worktree: `requirements.lock` is newer than `$MAIN/.venv/.installed`, so make would re-run pip into the main venv (network, mutates main).
 
 ```bash
-cd /Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent/.claude/worktrees/cg-l6
-MAIN=/Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent
+cd /Users/king_phuripol/AI-Engineer/Workstreams/SeniorProject/Full-Agent/.claude/worktrees/cg-l6
+MAIN=/Users/king_phuripol/AI-Engineer/Workstreams/SeniorProject/Full-Agent
 export PYTHONPATH=backend:.
 $MAIN/.venv/bin/python -m pytest -q --durations=0 casegraph/tests/test_cgl6_*.py
 # L6b: CLI on this branch vs 28ac4d2 (same dataset)

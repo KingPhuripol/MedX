@@ -480,7 +480,7 @@ Each of these still asserts `unverifiable`, a null dose and quantity, and `missi
 ## Run commands
 
 ```bash
-cd /Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent-s5
+cd /Users/king_phuripol/AI-Engineer/Workstreams/SeniorProject/Full-Agent-s5
 make test                                   # unit/contract tests incl. grammar, probes, fuzz (offline)
 cd backend && python -m pytest tests/test_pharma_s5r3.py -q   # this slice only
 make pharma-eval                            # results.json must equal 1c1f476 except versions/notes

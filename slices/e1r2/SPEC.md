@@ -106,7 +106,7 @@ In `tests/e1r/test_syne0196_replay.py`:
 ## Run commands
 
 ```bash
-cd /Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent-e1
+cd /Users/king_phuripol/AI-Engineer/Workstreams/SeniorProject/Full-Agent-e1
 .venv/bin/python -m eval.posthoc.e1_findings
 .venv/bin/python -m eval.posthoc.e1_findings --check
 .venv/bin/python -m pytest -q eval/tests/test_e1_posthoc.py tests/e1r/test_syne0196_replay.py

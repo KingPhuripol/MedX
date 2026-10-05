@@ -128,7 +128,7 @@ Gold stage lists are re-derived independently in the checker from `available_at_
 ## Run commands
 
 ```bash
-cd /Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent/.claude/worktrees/cg-t123
+cd /Users/king_phuripol/AI-Engineer/Workstreams/SeniorProject/Full-Agent/.claude/worktrees/cg-t123
 make data                                   # data/synthetic/v1, seed 20260926 (Tier 0)
 PYTHONPATH=backend:. .venv/bin/python -m pytest -q casegraph/tests backend/tests/triage -k "stage or cg_t123 or t3 or replay or executor"
 python3 scripts/temporal_leakage_audit.py --dataset data/synthetic/v1

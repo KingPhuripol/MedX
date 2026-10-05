@@ -81,7 +81,7 @@
 ## Run commands
 
 ```bash
-cd /Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent/.claude/worktrees/cg-l1
+cd /Users/king_phuripol/AI-Engineer/Workstreams/SeniorProject/Full-Agent/.claude/worktrees/cg-l1
 PYTHONPATH=backend:. .venv/bin/python -m pytest -q casegraph/tests/test_cgl1_unparseable_time.py
 PYTHONPATH=backend:. .venv/bin/python -m pytest -q casegraph/tests
 make data && PYTHONPATH=backend:. .venv/bin/python tests/e2e/cgt123_inprocess_check.py data/synthetic/v1 <scratch> <out.json>

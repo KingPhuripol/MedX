@@ -69,8 +69,8 @@ Note: `FIXTURES_STAGED` has **7** fixtures (F-CXR, F-FUTURE, F-PRE, F-RED, F-SAM
 Worktrees have no `.venv` or `node_modules`; use the main checkout's (no install, no network).
 
 ```bash
-cd /Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent/.claude/worktrees/cg-l2
-MAIN=/Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent
+cd /Users/king_phuripol/AI-Engineer/Workstreams/SeniorProject/Full-Agent/.claude/worktrees/cg-l2
+MAIN=/Users/king_phuripol/AI-Engineer/Workstreams/SeniorProject/Full-Agent
 PYTHONPATH=backend:. $MAIN/.venv/bin/python -m pytest -q casegraph/tests/test_cgl2_fact_use.py \
   casegraph/tests/test_cgt123_conversation_meds.py casegraph/tests/test_cgt123_round5.py
 PYTHONPATH=backend:. $MAIN/.venv/bin/python -m pytest -q casegraph
