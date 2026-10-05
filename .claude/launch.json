@@ -4,7 +4,7 @@
     {
       "name": "medx-factory",
       "runtimeExecutable": "bash",
-      "runtimeArgs": ["-c", "cd /Users/king_phuripol/AI-Engineer/01_Projects/Senior-Project/Full-Agent-factory && exec make dev"],
+      "runtimeArgs": ["-c", "cd /Users/king_phuripol/AI-Engineer/Workstreams/SeniorProject/Full-Agent-factory && exec make dev"],
       "port": 3000
     }
   ]
